@@ -1,0 +1,26 @@
+# WordPress
+wp-config.php
+.htaccess
+.DS_Store
+
+# Uploads y cache
+wp-content/uploads/
+wp-content/cache/
+wp-content/backups-dup-lite/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+wp-content/wflogs/
+
+# Logs
+*.log
+debug.log
+
+# Archivos temporales
+*.bak
+*.tmp
+*.swp
+*~
+.wp-config.php.un~
+
+# Node modules (si los usas)
+node_modules/

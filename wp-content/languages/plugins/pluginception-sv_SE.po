@@ -1,0 +1,101 @@
+# Translation of Plugins - Pluginception - Development (trunk) in Swedish
+# This file is distributed under the same license as the Plugins - Pluginception - Development (trunk) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2017-12-25 13:40:13+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: GlotPress/2.4.0-alpha\n"
+"Language: sv_SE\n"
+"Project-Id-Version: Plugins - Pluginception - Development (trunk)\n"
+
+#. Author URI of the plugin/theme
+msgid "http://ottopress.com"
+msgstr "http://ottopress.com"
+
+#. Author of the plugin/theme
+msgid "Otto"
+msgstr "Otto"
+
+#. Description of the plugin/theme
+msgid "A plugin to create other plugins. Pluginception."
+msgstr "Ett tillägg som skapar andra tillägg. Pluginception."
+
+#. Plugin URI of the plugin/theme
+msgid "http://ottopress.com/wordpress-plugins/pluginception"
+msgstr "http://ottopress.com/wordpress-plugins/pluginception"
+
+#. Plugin Name of the plugin/theme
+msgid "Pluginception"
+msgstr "Pluginception"
+
+#. translators: inline link to plugin editor
+#: pluginception.php:179
+msgid "The new plugin has been created and activated. You can %1$sgo to the editor%2$s if your browser does not redirect you."
+msgstr "Det nya tillägget har skapats och aktiverats. Du kan %1$sfortsätta till redigeraren%2$s om din webbläsare inte omdirigerar dig automatiskt."
+
+#: pluginception.php:166
+msgid "Unable to activate the new plugin."
+msgstr "Det gick inte att aktivera det nya tillägget."
+
+#: pluginception.php:159
+msgid "Unable to create the plugin file."
+msgstr "Det gick inte att skapa tilläggets fil."
+
+#: pluginception.php:135
+msgid "Unable to create the plugin directory."
+msgstr "Det gick inte att skapa tilläggets katalog."
+
+#: pluginception.php:108
+msgid "That plugin appears to already exist. Use a different slug or name."
+msgstr "Det tillägget verkar redan finnas. Använd en annan permalänk (slug) eller ett annat namn."
+
+#: pluginception.php:97
+msgid "Plugin Name is required"
+msgstr "Det krävs ett namn för tillägget"
+
+#: pluginception.php:81
+msgid "Create a blank plugin and activate it!"
+msgstr "Skapa ett tomt tillägg och aktivera det!"
+
+#: pluginception.php:71
+msgid "License URI (optional)"
+msgstr "Licens-URI (valfritt)"
+
+#: pluginception.php:70
+msgid "License (optional)"
+msgstr "Licens (valfritt)"
+
+#: pluginception.php:69
+msgid "Author URI (optional)"
+msgstr "Författarens URI (valfritt)"
+
+#: pluginception.php:68
+msgid "Author (optional)"
+msgstr "Författare (valfritt)"
+
+#: pluginception.php:67
+msgid "Version (optional)"
+msgstr "Version (valfritt)"
+
+#: pluginception.php:66
+msgid "Description (optional)"
+msgstr "Beskrivning (valfritt)"
+
+#: pluginception.php:65
+msgid "Plugin URI (optional)"
+msgstr "Tilläggets URI (valfritt)"
+
+#: pluginception.php:64
+msgid "Plugin Slug (optional)"
+msgstr "Tilläggets permalänk (slug, valfritt)"
+
+#: pluginception.php:63
+msgid "Plugin Name"
+msgstr "Tilläggets namn"
+
+#: pluginception.php:41 pluginception.php:42 pluginception.php:56
+msgid "Create a New Plugin"
+msgstr "Skapa ett nytt tillägg"

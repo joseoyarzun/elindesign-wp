@@ -1,0 +1,36 @@
+<forms>
+	<form name="ninja-forms">
+		<settings>
+			<property>title</property>
+			<property>mp_prev_label</property>
+			<property>mp_next_label</property>
+			<property>not_logged_in_msg</property>
+			<property>sub_limit_msg</property>
+			<property>unique_field_error</property>
+			<property>changeEmailErrorMsg</property>
+			<property>changeDateErrorMsg</property>
+			<property>confirmFieldErrorMsg</property>
+			<property>fieldNumberNumMinError</property>
+			<property>fieldNumberNumMaxError</property>
+			<property>fieldNumberIncrementBy</property>
+			<property>formErrorsCorrectErrors</property>
+			<property>validateRequiredField</property>
+			<property>honeypotHoneypotError</property>
+			<property>fieldsMarkedRequired</property>
+			<property type="ARRAY" properties="title">formContentData</property>
+		</settings>
+		<field>
+			<property>label</property>
+			<property>input_limit_msg</property>
+			<property>help_text</property>
+			<property>desc_text</property>
+			<property>processing_label</property>
+			<property type="ARRAY" properties="label">options</property>
+			<property type="ARRAY" properties="label">image_options</property>
+			<property>placeholder</property>
+			<property>default</property>
+			<property>select_files_text</property>
+			<property>button_text</property>
+		</field>
+	</form>
+</forms>

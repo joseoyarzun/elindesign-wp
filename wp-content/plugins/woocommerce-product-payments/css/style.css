@@ -1,0 +1,131 @@
+.wrap-mc-paid{margin:10px 0 0 0;}
+.wrap-mc-paid h2.title{    border-bottom: 1px solid #ccc;padding: 15px 0;margin-bottom: 20px;}
+.left-mc-paid{width:64.666%; float:left; border-right:1px solid #ccc}
+.left-mc-paid .postbox{padding: 0 10px 10px; margin: 0 10px 0px; background:none; border:none; margin:0; padding:0; box-shadow:none;}
+.left-mc-paid .postbox .hndle{margin-top:0}
+.left-mc-paid .postbox .positive{background-color: #32cd32; color:#fff; padding:3px 6px;font-weight:700; font-size:12px;}
+.left-mc-paid .postbox .neutral{background-color:red; color:#fff; padding:3px 6px;font-weight:700; font-size:12px;}
+.right-mc-paid{width:31.333%; float:left; padding:0 20px; }
+.right-mc-paid .mc4wp-box{border-top:1px solid #ccc;}
+#wpfooter {margin-left: 0;padding-left: 0;}
+.left-mc-paid .license-key-new{margin-top: 30px;padding: 15px 0 0; border-top: 1px solid #ccc;}
+.left-mc-paid .license-key-new > p{font-weight: 700; margin: 5px 0;}
+ul.quick_payment {
+    margin: 0 !important;
+    height: 12em;
+    border: 1px solid #ddd;
+    padding: 0 5px;
+    background: white;
+    overflow-y: scroll;
+    width: 97%;
+}
+#woocommerce-fields-bulk ul.quick_payment li label {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.wrap-dd_paid{margin:10px 0 0 0;}
+
+.wrap-dd_paid h2.title{    border-bottom: 1px solid #ccc;padding: 15px 0;margin-bottom: 20px;}
+
+.left-dd-paid{width:15.5%; float:left; }
+
+.left-dd-paid .postbox{padding: 0 10px 10px; margin: 0 10px 0px; background:none; border:none; margin:0; padding:0; box-shadow:none;}
+
+.left-dd-paid .postbox .hndle{margin-top:0}
+
+.left-dd-paid .postbox .positive{background-color: #32cd32; color:#fff; padding:3px 6px;font-weight:700; font-size:12px;}
+
+.left-dd-paid .postbox .neutral{background-color:red; color:#fff; padding:3px 6px;font-weight:700; font-size:12px;}
+
+.right-dd-paid{    
+	float: left;
+    background: #fff;
+    padding: 0px 20px 10px 25px;
+    border-left: 1px solid #ccc;
+    min-height: 516px;
+    position: relative; width: 80%; }
+
+.right-dd-paid .mc4wp-box{border-top:1px solid #ccc;}
+
+#wpfooter {margin-left: 0;padding-left: 0;}
+
+.left-dd-paid .license-key-new{margin-top: 30px;padding: 15px 0 0; border-top: 1px solid #ccc;}
+
+.left-dd-paid .license-key-new > p{font-weight: 700; margin: 5px 0;}
+
+.left_box_container {
+	        border: 1px solid #ccc;
+    float: left;
+    border-right: 0;
+    padding-left: 2px;
+    min-height: 525px;
+    width: 100%;
+}
+
+.horz_tabs {
+	float: left;
+	width:100%;
+}
+
+.horz_tabs li {
+	padding:7px 5px;
+}
+
+.horz_tabs li a, .horz_tabs li a:hover {
+	text-decoration: none;
+	    display: block;
+    padding: 5px 0px 5px 13px;
+}
+
+.horz_tabs li a:focus, .horz_tabs li a:active {
+	border: 0;
+	-webkit-box-shadow:none;
+	box-shadow:none;
+}
+
+.horz_tabs li.active {
+	    background: #fff;
+    border-left: 2px solid #00a0d2;
+    margin-left: -6px;
+    position: relative;
+    /* border-right: 1px solid #fff; */
+    width: 167px;
+    z-index: 9999;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+        padding-left: 8px;
+        font-weight: bold;
+}
+
+.right-dd-paid  .postbox {
+	border: 0 !important;
+	display: none;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.right-dd-paid  .postbox.active {
+	display: block;
+}
+
+#non_license {
+	position: absolute;
+	top: -50px;
+	right: 10px;
+}
+
+.right-dd-paid  .postbox .hndle {
+	    padding-bottom: 5px;
+}
+
+.wrap-dd-paid h2 {
+	margin-bottom:14px !important; 
+}
+.dfm-field select {
+	width: 400px;
+	max-width: 25em;
+}
+#wpfooter {
+	position: static;
+}

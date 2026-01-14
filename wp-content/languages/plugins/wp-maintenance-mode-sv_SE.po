@@ -1,0 +1,1075 @@
+# Translation of Plugins - LightStart &#8211; Maintenance Mode, Coming Soon and Landing Page Builder - Stable (latest release) in Swedish
+# This file is distributed under the same license as the Plugins - LightStart &#8211; Maintenance Mode, Coming Soon and Landing Page Builder - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2023-11-27 11:24:23+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: GlotPress/4.0.0-alpha.11\n"
+"Language: sv_SE\n"
+"Project-Id-Version: Plugins - LightStart &#8211; Maintenance Mode, Coming Soon and Landing Page Builder - Stable (latest release)\n"
+
+#: views/settings.php:197
+msgid "You are using a custom template from your theme/child theme folder."
+msgstr "Du använder en anpassad mall från en mapp från ditt tema/barntema."
+
+#: includes/classes/wp-maintenance-mode.php:211
+msgid "Maintenance mode"
+msgstr "Underhållsläge"
+
+#: views/network-settings.php:25
+msgid "Enable network mode"
+msgstr "Aktivera nätverksläge"
+
+#: views/network-settings.php:36
+msgid "Activated on all sites"
+msgstr "Aktiverat på alla webbplatser"
+
+#: views/network-settings.php:37
+msgid "Deactivated for all sites"
+msgstr "Inaktiverat för alla webbplatser"
+
+#: views/wizard.php:71
+msgid "Image and speed optimisation"
+msgstr "Bild- och hastighetsoptimering"
+
+#: views/wizard.php:37
+msgid "Pick your template below, you can always customise it later."
+msgstr "Välj din mall nedan, du kan alltid anpassa den senare."
+
+#: views/wizard.php:22
+msgid "Select the type of page you want"
+msgstr "Välj typen av sida du vill ha"
+
+#: includes/classes/wp-maintenance-mode-admin.php:1250
+msgid "Learn more about Otter."
+msgstr "Lär dig mer om Otter."
+
+#: includes/classes/wp-maintenance-mode-admin.php:211 views/wizard.php:90
+msgid "I don’t want to use a template"
+msgstr "Jag vill inte använda en mall"
+
+#: includes/classes/wp-maintenance-mode-admin.php:208
+msgid "I don’t want to use a Coming Soon Template"
+msgstr "Jag vill inte använda en mall för ”Kommer snart”"
+
+#: includes/classes/wp-maintenance-mode-admin.php:207
+msgid "I don’t want to use a Maintenance Template"
+msgstr "Jag vill inte använda en mall för ”Underhåll”"
+
+#: includes/classes/wp-maintenance-mode-admin.php:209
+msgid "I don’t want to use a Landing Page Template"
+msgstr "Jag vill inte använda en mall för ”Landningssida”"
+
+#: includes/classes/wp-maintenance-mode.php:226
+msgid "Coming Soon Page"
+msgstr "Sida ”Kommer snart”"
+
+#: includes/classes/wp-maintenance-mode.php:212
+#: includes/classes/wp-maintenance-mode.php:228
+msgid "Landing Page"
+msgstr "Målsida"
+
+#: includes/classes/wp-maintenance-mode-admin.php:330
+#: includes/classes/wp-maintenance-mode-admin.php:331
+msgid "LightStart"
+msgstr "LightStart"
+
+#: includes/classes/wp-maintenance-mode.php:1053
+msgid "LightStart template"
+msgstr "LightStart-mall"
+
+#. Plugin Name of the plugin
+msgid "LightStart - Maintenance Mode, Coming Soon and Landing Page Builder"
+msgstr "LightStart - Maintenance Mode, Coming Soon and Landing Page Builder"
+
+#: views/settings.php:305
+msgid "Import template"
+msgstr "Importera mall"
+
+#: views/settings.php:242
+msgid "All Templates"
+msgstr "Alla mallar"
+
+#: views/settings.php:238
+msgid "Pick a template"
+msgstr "Välj en mall"
+
+#: views/settings.php:224
+msgid "Edit page"
+msgstr "Redigera sida"
+
+#: views/settings.php:206 views/settings.php:216
+msgid "Select page"
+msgstr "Välj sida"
+
+#: views/wizard.php:113
+msgid "Go to settings"
+msgstr "Gå till inställningar"
+
+#: views/wizard.php:112
+msgid "View page"
+msgstr "Visa sida"
+
+#: views/wizard.php:109
+msgid "Your page is ready!"
+msgstr "Din sida är klar!"
+
+#: includes/classes/wp-maintenance-mode.php:210
+msgid "Coming Soon"
+msgstr "Kommer snart"
+
+#: includes/classes/wp-maintenance-mode-admin.php:200
+msgid "Go back"
+msgstr "Gå tillbaka"
+
+#: includes/classes/wp-maintenance-mode-admin.php:199 views/wizard.php:89
+msgid "Continue"
+msgstr "Fortsätt"
+
+#: includes/classes/wp-maintenance-mode-admin.php:197
+msgid "Import this template?"
+msgstr "Importera denna mall?"
+
+#: includes/classes/wp-maintenance-mode-admin.php:194
+msgid "Go to Settings"
+msgstr "Gå till inställningar"
+
+#: includes/classes/wp-maintenance-mode-admin.php:193
+msgid "Go to page"
+msgstr "Gå till sida"
+
+#: includes/classes/wp-maintenance-mode-admin.php:191
+msgid "The template has been imported!"
+msgstr "Mallen har importerats!"
+
+#: includes/classes/wp-maintenance-mode-admin.php:164
+msgid "Invalid email, please try again."
+msgstr "Ogiltig e-post, försök igen."
+
+#: includes/classes/wp-maintenance-mode-admin.php:163
+msgid "Done"
+msgstr "Klart"
+
+#: includes/classes/wp-maintenance-mode-admin.php:162
+msgid "Importing"
+msgstr "Importerar"
+
+#: includes/classes/wp-maintenance-mode-admin.php:160
+msgid "Something went wrong, please try again."
+msgstr "Något gick fel, försök igen."
+
+#: views/wizard.php:103
+msgid "I'll skip for now, thanks!"
+msgstr "Jag hoppar över nu, tack!"
+
+#: views/wizard.php:101
+msgid "Sign me up"
+msgstr "Registrera mig"
+
+#: includes/classes/wp-maintenance-mode-admin.php:818
+msgid "Empty field: category."
+msgstr "Tomt fält: kategori."
+
+#: includes/classes/wp-maintenance-mode-admin.php:772
+msgid "Empty field: email"
+msgstr "Tomt fält: e-post"
+
+#: includes/classes/wp-maintenance-mode-admin.php:167
+msgid "Your coming soon page is ready!"
+msgstr "Din sida för ”Kommer snart” är klar!"
+
+#: includes/classes/wp-maintenance-mode-admin.php:166
+msgid "Your maintenance page is ready!"
+msgstr "Din sida för ”Underhåll” är klar!"
+
+#: views/settings.php:257
+msgid "<b>Note</b>: You need at least WP 5.8 to use new generation maintenance pages."
+msgstr "<b>Obs</b>: Du behöver minst WP 5.8 för att använda den nya generationens underhållssidor."
+
+#: includes/classes/wp-maintenance-mode-admin.php:1034
+msgid "<strong>Action required</strong>: you don't have a page as Maintenance page. Visit <a href=\"%s\">settings page</a> to select one."
+msgstr "<strong>Åtgärd krävs</strong>: du har ingen sida som underhållssida. Besök <a href=\"%s\">inställningssidan</a> för att välja en."
+
+#: includes/classes/wp-maintenance-mode-admin.php:192
+msgid "The template has been imported to a new draft page. You can take a look and enable it from plugin settings."
+msgstr "Mallen har importerats till en ny utkastsida. Du kan ta en titt och aktivera den från tilläggsinställningarna."
+
+#: includes/classes/wp-maintenance-mode-admin.php:161
+msgid "Doing some magic..."
+msgstr "Gör något magiskt …"
+
+#: views/wizard.php:97
+msgid "Stay in the loop!"
+msgstr "Håll dig informerad!"
+
+#: includes/classes/wp-maintenance-mode-admin.php:835
+msgid "The source filed must not be empty."
+msgstr "Källfilen kan inte vara tom."
+
+#. Author URI of the plugin
+msgid "https://themeisle.com/"
+msgstr "https://themeisle.com/"
+
+#. Author of the plugin
+msgid "Themeisle"
+msgstr "Themeisle"
+
+#: views/settings.php:475
+msgid "Custom CSS"
+msgstr "Anpassad CSS"
+
+#: views/settings.php:430
+msgid "Choose Background"
+msgstr "Välj bakgrund"
+
+#: views/settings.php:429
+msgid "Upload Background"
+msgstr "Ladda upp bakgrund"
+
+#: views/settings.php:426
+msgctxt "upload background button"
+msgid "Upload"
+msgstr "Ladda upp"
+
+#: views/settings.php:384
+msgid "Footer links"
+msgstr "Sidfotslänkar"
+
+#. translators: shortcode tag
+#: views/settings.php:366
+msgid "%s - display a login form"
+msgstr "%s – visa ett inloggningsformulär"
+
+#: views/settings.php:358
+msgid "See available shortcodes"
+msgstr "Se tillgängliga kortkoder"
+
+#: views/settings.php:357
+msgid "Hide available shortcodes"
+msgstr "Dölj tillgängliga kortkoder"
+
+#: includes/classes/wp-maintenance-mode.php:1352
+msgid "Something happened! Please try again later."
+msgstr "Något hände! Försök igen senare."
+
+#: includes/classes/wp-maintenance-mode.php:748
+msgctxt "<meta> keywords default"
+msgid "Maintenance Mode"
+msgstr "Underhållsläge"
+
+#: includes/classes/wp-maintenance-mode.php:258
+msgctxt "heading default"
+msgid "Maintenance mode"
+msgstr "Underhållsläge"
+
+#: includes/classes/wp-maintenance-mode.php:257
+msgctxt "<title> default"
+msgid "Maintenance mode"
+msgstr "Underhållsläge"
+
+#: includes/classes/wp-maintenance-mode-admin.php:204
+msgctxt "image_uploader default button_text"
+msgid "Choose Image"
+msgstr "Välj bild"
+
+#: includes/classes/wp-maintenance-mode-admin.php:203
+msgctxt "image_uploader default title"
+msgid "Upload Image"
+msgstr "Ladda upp bild"
+
+#: views/settings.php:853
+msgctxt "upload avatar button"
+msgid "Upload"
+msgstr "Ladda upp"
+
+#: views/settings.php:856
+msgid "Upload Avatar"
+msgstr "Ladda upp profilbild"
+
+#: views/settings.php:857
+msgid "Choose picture"
+msgstr "Välj bild"
+
+#: views/settings.php:479
+msgid "Do not add <style> tags."
+msgstr "Lägg inte till <style>-taggar."
+
+#: views/settings.php:388
+msgid "\"Dashboard\" and \"Privacy Policy\" links."
+msgstr "Länkar för ”Adminpanel” och ”Integritetspolicy”."
+
+#: views/sidebar.php:36
+msgid "Recommended"
+msgstr "Rekommenderat"
+
+#: views/maintenance.php:211
+msgctxt "contact form"
+msgid "I've read and agree with the site's privacy policy"
+msgstr "Jag har läst och godkänner webbplatsens integritetspolicy"
+
+#: views/maintenance.php:128
+msgctxt "subscribe form"
+msgid "I've read and agree with the site's privacy policy"
+msgstr "Jag har läst och godkänner webbplatsens integritetspolicy"
+
+#. translators: Google Analytics documentation url
+#: views/settings.php:788
+msgid "Read about IP anonymization on <a href=\"%s\" rel=\"noreferrer\" target=\"_blank\">Google Analytics</a> docs. It is always enabled on Google Analytics 4."
+msgstr "Läs om IP-anonymisering i <a href=\"%s\" rel=\"noreferrer\" target=\"_blank\">Google Analytics</a>-dokumentation. Det är alltid aktiverat i Google Analytics 4."
+
+#: views/settings.php:469
+msgid "Other"
+msgstr "Övrigt"
+
+#: views/settings.php:949
+msgctxt "response for message 7"
+msgid "Visitor's response will be here."
+msgstr "Besökarens svar kommer vara här."
+
+#: views/settings.php:900
+msgctxt "response for message 3"
+msgid "Visitor's response will be here."
+msgstr "Besökarens svar kommer vara här."
+
+#: views/settings.php:966
+msgctxt "response for message 8 (click on button one)"
+msgid "Visitor's response will be here."
+msgstr "Besökarens svar kommer vara här."
+
+#: views/settings.php:824
+msgid "If you want to see the list of subscribers, go to Modules &raquo; Subscribe &raquo; Export as CSV."
+msgstr "Om du vill se listan med prenumeranter går du till Moduler &raquo; Prenumerera &raquo; Exportera som CSV."
+
+#: views/settings.php:1065
+msgid "Subscribe form 'tail'"
+msgstr "”Slutkläm” i prenumerationsformulär"
+
+#: views/settings.php:1060 views/settings.php:1069
+msgid "This will be shown together with the acceptance checkbox below the form"
+msgstr "Detta kommer att visas tillsammans med en kryssruta för samtycke nedanför formuläret"
+
+#: views/settings.php:1056
+msgid "Contact form 'tail'"
+msgstr "”Slutkläm” i kontaktformulär"
+
+#: views/settings.php:1034
+msgid "P. Policy page link"
+msgstr "Länk t. integritetspolicy"
+
+#: views/settings.php:1029
+msgid "Label the link that will be shown on frontend footer"
+msgstr "Sätt ett namn på denn länk som kommer att visas i sidfoten i front-end"
+
+#: views/settings.php:1025
+msgid "Link name"
+msgstr "Länknamn"
+
+#: views/settings.php:1011
+msgid "Here we added some generic texts that you may want to review, change or remove."
+msgstr "Här har vi lagt till några allmänna texter som du kan behöva granska, ändra eller ta bort."
+
+#: views/settings.php:1010
+msgid "To make the plugin GDPR compliant, fill in the details and enable this section."
+msgstr "För att göra detta tillägg GDPR-kompatibelt behöver du fylla i uppgifterna och aktivera denna sektion."
+
+#: views/settings.php:66
+msgid "GDPR"
+msgstr "GDPR"
+
+#: includes/classes/wp-maintenance-mode.php:329
+msgid "This form collects your email so that we can add you to our newsletter list. Check out our <a href=\"#\">Privacy Policy</a> page to fully understand how we protect and manage your submitted data."
+msgstr "Detta formulär ber om din e-postadress för att vi ska kunna lägga till dig i sändlistan för vårt nyhetsbrev. Läs vår <a href=\"#\">integritetspolicy</a> för att ta reda på hur vi skyddar och hanterar de uppgifter du skickat in."
+
+#: includes/classes/wp-maintenance-mode.php:328
+msgid "This form collects your name and email so that we can reach you back. Check out our <a href=\"#\">Privacy Policy</a> page to fully understand how we protect and manage your submitted data."
+msgstr "Detta formulär ber om ditt namn och din e-postadress för att vi ska kunna kontakta dig. Läs vår <a href=\"#\">integritetspolicy</a> för att ta reda på hur vi skyddar och hanterar de uppgifter du skickat in."
+
+#: includes/classes/wp-maintenance-mode.php:325
+msgid "Privacy Policy"
+msgstr "Integritetspolicy"
+
+#: includes/classes/wp-maintenance-mode-admin.php:1218
+msgid "No privacy features detected for your WordPress version. Update WordPress to get this field automatically filled in or type in the URL that points to your privacy policy page."
+msgstr "För din version av WordPress hittades inga integritetsfunktioner. Uppdatera WordPress för att detta fält ska fyllas i automatiskt eller skriv in vilken URL som pekar på er integritetspolicy."
+
+#: includes/classes/wp-maintenance-mode-admin.php:1205
+msgid "Your WordPress version supports Privacy settings but you haven't set any privacy policy page yet. Go to Settings ➡ Privacy to set one."
+msgstr "Din WordPress-version har stöd för integritetsinställningar, men du har ännu inte konfigurerat någon sida för integritetspolicy. Du kan göra det under Inställningar ➡ Integritet."
+
+#: views/settings.php:377
+msgid "This text will not be shown when the bot feature is enabled."
+msgstr "Den här texten kommer inte visas när bot-funktionen är aktiverad."
+
+#: views/settings.php:988
+msgid "Message 10"
+msgstr "Meddelande 10"
+
+#: views/settings.php:980
+msgid "Message 9"
+msgstr "Meddelande 9"
+
+#: views/settings.php:972
+msgid "(click on button two)"
+msgstr "(klicka på knapp två)"
+
+#: views/settings.php:954 views/settings.php:980 views/settings.php:988
+msgid "(click on button one)"
+msgstr "(klicka på knapp ett)"
+
+#: views/settings.php:954 views/settings.php:972
+msgid "Message 8"
+msgstr "Meddelande 8"
+
+#: views/settings.php:947
+msgid "Edit button two"
+msgstr "Redigera knapp två"
+
+#: views/settings.php:943
+msgid "Edit button one"
+msgstr "Redigera knapp ett"
+
+#: views/settings.php:930
+msgid "Message 7"
+msgstr "Meddelande 7"
+
+#: views/settings.php:922
+msgid "Message 6"
+msgstr "Meddelande 6"
+
+#: views/settings.php:914
+msgid "Message 5"
+msgstr "Meddelande 5"
+
+#: views/settings.php:906
+msgid "Message 4"
+msgstr "Meddelande 4"
+
+#: views/settings.php:901 views/settings.php:967
+msgid "Edit the placeholder's text"
+msgstr "Redigera platshållarens text"
+
+#: views/settings.php:896 views/settings.php:938 views/settings.php:962
+msgid "Response"
+msgstr "Svar"
+
+#: views/settings.php:888
+msgid "Message 3"
+msgstr "Meddelande 3"
+
+#: views/settings.php:880
+msgid "Message 2"
+msgstr "Meddelande 2"
+
+#: views/settings.php:872
+msgid "Message 1"
+msgstr "Meddelande 1"
+
+#: views/settings.php:866
+msgid "Customize Messages"
+msgstr "Anpassa meddelanden"
+
+#: views/settings.php:860
+msgid "A 512 x 512 px will work just fine."
+msgstr "En 512x512 px fungerar bra."
+
+#: views/settings.php:847
+msgid "Upload avatar"
+msgstr "Ladda upp avatar"
+
+#: views/settings.php:842
+msgid "This name will appear when the bot is typing."
+msgstr "Detta namn kommer att visas när boten skriver."
+
+#: views/settings.php:823
+msgid "It is also ok if you don't fill in all the conversation steps if you don't need to."
+msgstr "Det är också okej om du inte fyller i alla konversationsstegen om du inte behöver."
+
+#: views/settings.php:822
+msgid "You may also want to use these wildcards: {bot_name} and {visitor_name} to make the conversation even more realistic."
+msgstr "Du vill kanske även använda jokertecknen {bot_name} och {visitor_name} för att göra konversationen ännu mer realistisk."
+
+#: includes/classes/wp-maintenance-mode.php:800
+msgid "Please type in a valid email address."
+msgstr "Ange en giltig e-postadress."
+
+#: includes/classes/wp-maintenance-mode.php:799
+msgid "Please type in your name."
+msgstr "Ange ditt namn."
+
+#: includes/classes/wp-maintenance-mode.php:319
+msgid "Boring"
+msgstr "Tråkigt"
+
+#: includes/classes/wp-maintenance-mode.php:318
+msgid "Tell me more"
+msgstr "Berätta mer"
+
+#: includes/classes/wp-maintenance-mode.php:314
+msgid "Have a great day!"
+msgstr "Ha en bra dag!"
+
+#: includes/classes/wp-maintenance-mode.php:313
+msgid "Got it! Thank you and see you soon here!"
+msgstr "Förstått! Tack och ses snart här!"
+
+#: includes/classes/wp-maintenance-mode.php:311
+msgid "Cool! Please leave your email here and I will send you a message when it's ready."
+msgstr "Häftigt! Ange din e-postadress så kommer jag att skicka ett meddelande när den är klar."
+
+#: includes/classes/wp-maintenance-mode.php:310
+msgid "Would you like to be first to see it?"
+msgstr "Vill du vara bland de första att se den?"
+
+#: includes/classes/wp-maintenance-mode.php:309
+msgid "I know, you are very excited to see it, but we need a few days to finish it."
+msgstr "Jag vet att du väldigt gärna vill se den, men vi behöver några dagar för att göra klart den."
+
+#: includes/classes/wp-maintenance-mode.php:307
+msgid "Nice to meet you here, {visitor_name}!"
+msgstr "Trevligt att träffa dig här, {visitor_name}!"
+
+#: includes/classes/wp-maintenance-mode.php:306
+msgid "What is your name?"
+msgstr "Vad är ditt namn?"
+
+#: includes/classes/wp-maintenance-mode.php:305
+msgid "I have just a few questions."
+msgstr "Jag har bara några korta frågor."
+
+#: includes/classes/wp-maintenance-mode.php:304
+msgid "Hey! My name is {bot_name}, I'm the owner of this website and I'd like to be your assistant here."
+msgstr "Hej! Jag heter {bot_name}, jag är ägare till denna webbplats och jag skulle vilja vara din assistent här."
+
+#: includes/classes/wp-maintenance-mode-admin.php:941
+msgid "WPMM: The file data.js could not be written, the bot will not work correctly."
+msgstr "WPMM: Filen data.js kunde inte skrivas, boten kommer inte fungera korrekt."
+
+#: views/settings.php:1051
+msgid "Choose how the link will open."
+msgstr "Välj hur länken ska öppnas."
+
+#: views/settings.php:776
+msgid "Enable IP anonymization?"
+msgstr "Aktivera IP-anonymisering?"
+
+#. translators: number of subscribers
+#: views/settings.php:575 views/settings.php:745
+msgctxt "settings page"
+msgid "You have %d subscriber"
+msgid_plural "You have %d subscribers"
+msgstr[0] "Du har %d prenumerant"
+msgstr[1] "Du har %s prenumeranter"
+
+#. translators: number of subscribers
+#: includes/classes/wp-maintenance-mode-admin.php:311
+msgctxt "ajax response"
+msgid "You have %d subscriber"
+msgid_plural "You have %d subscribers"
+msgstr[0] "Du har %d prenumerant"
+msgstr[1] "Du har %s prenumeranter"
+
+#: includes/classes/wp-maintenance-mode.php:308
+msgid "How you can see, our website will be launched very soon."
+msgstr "Som du kan se kommer vår webbplats snart att lanseras."
+
+#: views/settings.php:1044
+msgid "P. Policy link target"
+msgstr "Länkmål för integritetspolicy"
+
+#: includes/classes/wp-maintenance-mode-admin.php:1215
+msgid "Your Privacy page is pointing to a different URL in WordPress settings. If that's correct ignore this message, otherwise UPDATE VALUE TO NEW URL"
+msgstr "I inställningarna för WordPress pekar sidan för integritetspolicy på en annan URL. Du kan ignorera detta meddelande om det är korrekt, annars UPPDATERA VÄRDET TILL NY URL"
+
+#: includes/classes/wp-maintenance-mode.php:317
+#: includes/classes/wp-maintenance-mode.php:802
+msgid "Type your name here…"
+msgstr "Skriv ditt namn här …"
+
+#: includes/classes/wp-maintenance-mode.php:320
+#: includes/classes/wp-maintenance-mode.php:803
+msgid "Type your email here…"
+msgstr "Skriv din e-post här …"
+
+#: views/settings.php:838
+msgid "Bot Name"
+msgstr "Robotens namn"
+
+#: includes/classes/wp-maintenance-mode.php:312
+msgid "Sad to hear that, {visitor_name} :( See you next time…"
+msgstr "Tråkigt att höra detta {visitor_name} :( Ses nästa gång …"
+
+#: views/settings.php:58
+msgid "Manage Bot"
+msgstr "Hantera bot"
+
+#: includes/classes/wp-maintenance-mode-admin.php:253
+#: includes/classes/wp-maintenance-mode-admin.php:300
+#: includes/classes/wp-maintenance-mode-admin.php:385
+#: includes/classes/wp-maintenance-mode-admin.php:618
+#: includes/classes/wp-maintenance-mode-admin.php:655
+#: includes/classes/wp-maintenance-mode-admin.php:689
+#: includes/classes/wp-maintenance-mode-admin.php:743
+#: includes/classes/wp-maintenance-mode-admin.php:763
+#: includes/classes/wp-maintenance-mode-admin.php:809
+#: includes/classes/wp-maintenance-mode-admin.php:840
+#: includes/classes/wp-maintenance-mode-admin.php:866
+#: includes/classes/wp-maintenance-mode-admin.php:1084
+msgid "The nonce field must not be empty."
+msgstr "Fältet för engångskod får inte vara tomt."
+
+#: includes/classes/wp-maintenance-mode-admin.php:258
+#: includes/classes/wp-maintenance-mode-admin.php:305
+#: includes/classes/wp-maintenance-mode-admin.php:395
+#: includes/classes/wp-maintenance-mode-admin.php:628
+#: includes/classes/wp-maintenance-mode-admin.php:660
+#: includes/classes/wp-maintenance-mode-admin.php:694
+#: includes/classes/wp-maintenance-mode-admin.php:748
+#: includes/classes/wp-maintenance-mode-admin.php:768
+#: includes/classes/wp-maintenance-mode-admin.php:814
+#: includes/classes/wp-maintenance-mode-admin.php:845
+#: includes/classes/wp-maintenance-mode-admin.php:871
+#: includes/classes/wp-maintenance-mode-admin.php:1089
+#: includes/classes/wp-maintenance-mode.php:1292
+#: includes/classes/wp-maintenance-mode.php:1320
+msgid "Security check."
+msgstr "Säkerhetskontroll."
+
+#: views/settings.php:803
+msgid "Allowed formats: UA-XXXXXXXX, UA-XXXXXXXX-XXXX, G-XXXXXXXX. Eg: UA-12345678-1 is valid"
+msgstr "Tillåtna format: UA-XXXXXXXX, UA-XXXXXXXX-XXXX, G-XXXXXXXX. Till exempel: UA-12345678-1 är giltigt"
+
+#. translators: link to plugin reviews page on wp.org
+#: includes/classes/wp-maintenance-mode-admin.php:1137
+msgid "If you like <strong>Lightstart</strong> please leave us a %s rating. A huge thank you from WP Maintenance Mode makers in advance!"
+msgstr "Om du gillar <strong>WP Maintenance Mode</strong>, vänligen lämna ett %s-betyg. Ett stort tack från skaparna bakom WP Maintenance Mode i förväg!"
+
+#: views/contact.php:103
+msgid "Content:"
+msgstr "Innehåll:"
+
+#: views/contact.php:88
+msgid "Email:"
+msgstr "E-post:"
+
+#: views/contact.php:76
+msgid "Name:"
+msgstr "Namn:"
+
+#. translators: name of the blog
+#: views/contact.php:54
+msgid "You have been contacted via %s."
+msgstr "Du har blivit kontaktad via %s."
+
+#: views/settings.php:581 views/settings.php:751
+msgid "Empty subscribers list"
+msgstr "Tom prenumerantlista"
+
+#: views/settings.php:119
+msgid "Which user role is allowed to access the frontend of the website? Administrators will always have access."
+msgstr "Vilken användarroll tillåts åtkomst till front-end för denna webbplats? Administratörer kommer alltid ha åtkomst."
+
+#: views/settings.php:106
+msgid "Which user role is allowed to access the backend of the website? Administrators will always have access."
+msgstr "Vilken användarroll tillåts åtkomst till back-end för denna webbplats? Administratörer kommer alltid ha åtkomst."
+
+#: includes/classes/wp-maintenance-mode-admin.php:1081
+msgid "Notice key cannot be empty."
+msgstr "Meddelandenyckel får inte vara tom."
+
+#: includes/classes/wp-maintenance-mode-admin.php:401
+#: includes/classes/wp-maintenance-mode-admin.php:634
+msgid "The tab slug must exist."
+msgstr "Fliken slug måste finnas."
+
+#: includes/classes/wp-maintenance-mode-admin.php:390
+#: includes/classes/wp-maintenance-mode-admin.php:623
+msgid "The tab slug must not be empty."
+msgstr "Flikens slug får inte vara tom."
+
+#: includes/classes/wp-maintenance-mode-admin.php:249
+#: includes/classes/wp-maintenance-mode-admin.php:296
+#: includes/classes/wp-maintenance-mode-admin.php:380
+#: includes/classes/wp-maintenance-mode-admin.php:613
+msgid "You do not have access to this resource."
+msgstr "Du har inte åtkomst till denna resurs."
+
+#: views/settings.php:101 views/settings.php:114
+msgid "Select role(s)"
+msgstr "Välj roll/roller"
+
+#: views/maintenance.php:126 views/maintenance.php:190
+#: views/maintenance.php:193 views/maintenance.php:201
+#: views/maintenance.php:209
+msgid "This field is required."
+msgstr "Detta fält är obligatoriskt."
+
+#: includes/classes/wp-maintenance-mode-admin.php:974
+msgid "Settings"
+msgstr "Inställningar"
+
+#: includes/classes/wp-maintenance-mode.php:280
+msgid "Notify me when it's ready"
+msgstr "Meddela mig när sidan är färdig"
+
+#. translators: plugin settings url
+#: includes/classes/wp-maintenance-mode.php:462
+msgid "WP Maintenance Mode plugin was relaunched and you MUST revise <a href=\"%s\">settings</a>."
+msgstr "Tillägget WP Underhållsläge återlanserades nyligen med massa nya <a href=\"%s\">inställningar</a>."
+
+#: includes/classes/wp-maintenance-mode.php:734
+msgid "Maintenance Mode"
+msgstr "Underhållsläge"
+
+#: views/maintenance.php:121 views/settings.php:542 views/settings.php:732
+msgid "Subscribe"
+msgstr "Prenumerera"
+
+#: views/maintenance.php:190 views/sidebar.php:16
+msgid "Name"
+msgstr "Namn"
+
+#: views/maintenance.php:193
+msgid "E-mail"
+msgstr "E-post"
+
+#: views/maintenance.php:201
+msgid "Your message"
+msgstr "Ditt meddelande"
+
+#: includes/classes/wp-maintenance-mode.php:804 views/maintenance.php:220
+msgid "Send"
+msgstr "Skicka"
+
+#: views/maintenance.php:227
+msgid "Contact us"
+msgstr "Kontakta oss"
+
+#: includes/classes/wp-maintenance-mode-admin.php:1263
+msgid "Settings saved."
+msgstr "Inställningarna sparades."
+
+#: views/settings.php:38
+msgid "General"
+msgstr "Allmänt"
+
+#: views/settings.php:45
+msgid "Design"
+msgstr "Design"
+
+#: views/settings.php:51
+msgid "Modules"
+msgstr "Moduler"
+
+#: views/network-settings.php:33 views/settings.php:77 views/settings.php:829
+#: views/settings.php:1016
+msgid "Status"
+msgstr "Status"
+
+#: views/settings.php:80 views/settings.php:832 views/settings.php:1019
+msgid "Activated"
+msgstr "Aktiverad"
+
+#: views/settings.php:86
+msgid "Bypass for Search Bots"
+msgstr "Låt sökrobotar gå förbi"
+
+#: views/settings.php:90 views/settings.php:161 views/settings.php:174
+#: views/settings.php:508 views/settings.php:552 views/settings.php:599
+#: views/settings.php:703 views/settings.php:769 views/settings.php:780
+msgid "Yes"
+msgstr "Ja"
+
+#: views/settings.php:91 views/settings.php:162 views/settings.php:175
+#: views/settings.php:509 views/settings.php:553 views/settings.php:600
+#: views/settings.php:704 views/settings.php:770 views/settings.php:781
+msgid "No"
+msgstr "Nej"
+
+#: views/settings.php:93
+msgid "Allow Search Bots to bypass maintenance mode?"
+msgstr "Tillåt sökrobotar att gå förbi underhållsläget? "
+
+#: views/settings.php:124
+msgid "Robots Meta Tag"
+msgstr "Robots meta-tagg"
+
+#: views/settings.php:131
+msgid "The robots meta tag lets you use a granular, page-specific approach to control how an individual page should be indexed and served to users in search results."
+msgstr "Metataggen för sökrobotar låter dig använda ett granulärt, sidspecifikt tillvägagångssätt för att kontrollera hur en enskild sida ska indexeras och visas för användare i sökresultat. "
+
+#: views/settings.php:136
+msgid "Redirection"
+msgstr "Omdirigering"
+
+#: views/settings.php:145
+msgid "Exclude"
+msgstr "Exkludera"
+
+#: views/settings.php:164
+msgid "Do you want to see notices when maintenance mode is activated?"
+msgstr "Vill du se ett meddelande när underhållsläget är aktiverat?"
+
+#: views/settings.php:185 views/settings.php:486 views/settings.php:811
+#: views/settings.php:999 views/settings.php:1077
+msgid "Reset settings"
+msgstr "Återställ inställningar"
+
+#: views/settings.php:320
+msgid "Title (HTML tag)"
+msgstr "Titel (HTML-tagg)"
+
+#: views/settings.php:328
+msgid "Heading"
+msgstr "Rubrik"
+
+#: views/settings.php:337 views/settings.php:559
+msgid "Text"
+msgstr "Text"
+
+#: views/settings.php:394
+msgid "Background"
+msgstr "Bakgrund"
+
+#: views/settings.php:400
+msgid "Choose type"
+msgstr "Välj typ"
+
+#: views/settings.php:405
+msgid "Uploaded background"
+msgstr "Uppladdad bakgrund"
+
+#: views/settings.php:406
+msgid "Predefined background"
+msgstr "Fördefinierad bakgrund"
+
+#: views/settings.php:412
+msgid "Choose color"
+msgstr "Välj färg"
+
+#: views/settings.php:420
+msgid "Upload background"
+msgstr "Ladda upp bakgrund"
+
+#: views/settings.php:438
+msgid "Choose background"
+msgstr "Välj bakgrund"
+
+#: views/settings.php:498
+msgid "Countdown"
+msgstr "Nedräkning"
+
+#: views/settings.php:504
+msgid "Show countdown?"
+msgstr "Visa nedräkning?"
+
+#: views/settings.php:515
+msgid "Start date"
+msgstr "Startdatum"
+
+#: views/settings.php:523
+msgid "Countdown (remaining time)"
+msgstr "Nedräkning (återstående tid)"
+
+#: views/settings.php:526
+msgid "Days"
+msgstr "Dagar"
+
+#: views/settings.php:527
+msgid "Hours"
+msgstr "Timmar"
+
+#: views/settings.php:528
+msgid "Minutes"
+msgstr "Minuter"
+
+#: views/settings.php:533
+msgid "Color"
+msgstr "Färg"
+
+#: views/settings.php:548
+msgid "Show subscribe?"
+msgstr "Visa prenumerationsknapp?"
+
+#: views/settings.php:568 views/settings.php:738
+msgid "Stats"
+msgstr "Statistik"
+
+#: views/settings.php:580 views/settings.php:750
+msgid "Export as CSV"
+msgstr "Exportera som CSV"
+
+#: views/settings.php:589
+msgid "Social Networks"
+msgstr "Sociala nätverk"
+
+#: views/settings.php:595
+msgid "Show social networks?"
+msgstr "Visa sociala nätverk?"
+
+#: views/settings.php:693
+msgid "Contact"
+msgstr "Kontakt"
+
+#: views/settings.php:710
+msgid "Email address"
+msgstr "E-postadress"
+
+#: views/settings.php:718
+msgid "Effects"
+msgstr "Effekter"
+
+#: views/settings.php:723
+msgid "Zoom - Zoomed"
+msgstr "Zoom"
+
+#: views/settings.php:724
+msgid "Fold - Unfold"
+msgstr "Vik"
+
+#: views/sidebar.php:12
+msgid "Plugin Info"
+msgstr "Information om tillägg"
+
+#: views/sidebar.php:22
+msgid "Author"
+msgstr "Författare"
+
+#: views/sidebar.php:24
+msgid "Twitter"
+msgstr "Twitter"
+
+#: views/sidebar.php:25
+msgid "GitHub"
+msgstr "GitHub"
+
+#: views/settings.php:759
+msgid "Google Analytics"
+msgstr "Google Analytics"
+
+#: views/settings.php:799
+msgid "Tracking code"
+msgstr "Spårningskod"
+
+#: views/settings.php:765
+msgid "Use Google Analytics?"
+msgstr "Använd Google Analytics?"
+
+#: views/settings.php:611 views/settings.php:1049
+msgid "Same page"
+msgstr "Samma sida"
+
+#: views/settings.php:610 views/settings.php:1048
+msgid "New page"
+msgstr "Ny sida"
+
+#: views/settings.php:606
+msgid "Links target?"
+msgstr "Länkmål?"
+
+#: views/settings.php:177
+msgid "Do you want to add a link to the dashboard on your maintenance mode page?"
+msgstr "Vill du lägga till en länk till adminpanelen på din underhållssida?"
+
+#: views/loginform.php:17
+msgid "Login"
+msgstr "Logga in"
+
+#: includes/classes/wp-maintenance-mode.php:1297
+msgid "You successfully subscribed. Thanks!"
+msgstr "Din prenumeration registrerades. Tack! "
+
+#: views/maintenance.php:239
+msgid "Dashboard"
+msgstr "Adminpanel"
+
+#: views/settings.php:170
+msgid "Dashboard link"
+msgstr "Länk till adminpanel"
+
+#: includes/classes/wp-maintenance-mode.php:260
+msgid "<p>Sorry for the inconvenience.<br />Our website is currently undergoing scheduled maintenance.<br />Thank you for your understanding.</p>"
+msgstr "<p>Ursäkta besväret.<br />Vår hemsida genomgår för närvarande planerat underhåll.<br />Tack för din förståelse.</p>"
+
+#. translators: plugin settings url
+#: includes/classes/wp-maintenance-mode-admin.php:1008
+msgid "The Maintenance Mode is <strong>active</strong>. Please don't forget to <a href=\"%s\">deactivate</a> as soon as you are done."
+msgstr "Underhållsläget är <strong>aktiverat</strong>. Glöm inte att <a href=\"%s\">inaktivera</a> det när du är klar."
+
+#: views/settings.php:81 views/settings.php:833 views/settings.php:1020
+msgid "Deactivated"
+msgstr "Inaktiverad"
+
+#: views/settings.php:111
+msgid "Frontend Role"
+msgstr "Roll för front-end"
+
+#: views/settings.php:98
+msgid "Backend Role"
+msgstr "Roll för back-end"
+
+#: views/settings.php:404
+msgid "Custom color"
+msgstr "Anpassad färg"
+
+#: views/settings.php:433
+msgid "Backgrounds should have 1920x1280 px size."
+msgstr "En bakgrund bör vara minst 1920x1280 px stor."
+
+#: views/sidebar.php:23
+msgid "Website"
+msgstr "Webbplats"
+
+#: views/settings.php:699
+msgid "Show contact?"
+msgstr "Visa kontakt?"
+
+#: views/network-settings.php:43 views/settings.php:184 views/settings.php:485
+#: views/settings.php:810 views/settings.php:998 views/settings.php:1076
+msgid "Save settings"
+msgstr "Spara inställningar"
+
+#: includes/classes/wp-maintenance-mode.php:1355
+msgid "Your email was sent to the website administrator. Thanks!"
+msgstr "Ditt meddelande skickades till webbplatsen administratör. Tack! "
+
+#: includes/classes/wp-maintenance-mode.php:1330
+msgid "Message via contact"
+msgstr "Meddelande via kontakt"
+
+#: includes/classes/wp-maintenance-mode.php:1316
+msgid "All fields required."
+msgstr "Alla fält obligatoriska."
+
+#: includes/classes/wp-maintenance-mode.php:1288
+#: includes/classes/wp-maintenance-mode.php:1323 views/maintenance.php:193
+msgid "Please enter a valid email address."
+msgstr "Ange en giltig e-postadress."
+
+#: views/settings.php:157
+msgid "Notice"
+msgstr "Avisering"
+
+#: views/settings.php:613
+msgid "Choose how the links will open."
+msgstr "Välj hur länkarna ska öppnas."
+
+#. translators: free photos url
+#: views/settings.php:445
+msgid "* source <a href=\"%s\" target=\"_blank\">Free Photos</a>"
+msgstr "* källa <a href=\"%s\" target=\"_blank\">Gratis foton</a>"
+
+#: views/maintenance.php:119
+msgid "your e-mail..."
+msgstr "din e-post …"
+
+#: includes/classes/wp-maintenance-mode-admin.php:714
+#: includes/classes/wp-maintenance-mode.php:224
+msgid "Maintenance Page"
+msgstr "Underhållssida"
+
+#: views/settings.php:722
+msgid "Move top - Move bottom"
+msgstr "Flytta till toppen – flytta till botten"

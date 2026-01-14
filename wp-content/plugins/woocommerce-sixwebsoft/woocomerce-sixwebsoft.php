@@ -1,0 +1,648 @@
+<?php
+/**
+ * Plugin Name: WooCommerce sixwebsoft
+ * Description:  size , width etc vaiants calculation,
+ * Author: Drake
+ * Author URI: https://sixwebsoft.com
+ * Text Domain: sixwebsoft.com
+ * Domain Path:
+ * Version: 2.0
+ *
+ *
+ *
+ */
+
+if (!defined('ABSPATH')) {
+	exit;
+}
+
+/**
+ * Check if WooCommerce is active
+ **/
+if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+	// Put your plugin code here
+}
+
+// Our custom post type function
+function variants_post() {
+
+	register_post_type('variants_setting',
+		// CPT Options
+		array(
+			'labels' => array(
+				'name' => __('Variants Setting'),
+				'singular_name' => __('Variants Setting'),
+			),
+			'public' => true,
+			//'has_archive' => true,
+			'supports' => array('custom-fields'),
+			'rewrite' => array('slug' => 'variants_setting'),
+			//'capabilities' => array('create_posts' => false),
+		)
+	);
+}
+// Hooking up our function to theme setup
+add_action('init', 'variants_post');
+
+/**
+ * Gives custom product type a template
+ *
+ * @return void
+ */
+function se47910821_answer() {
+	wc_get_template('single-product/add-to-cart/auto_varient.php');
+}
+add_action('woocommerce_auto_varient_add_to_cart', 'se47910821_answer');
+
+function custom_attribute($product) {
+
+	$fields = get_post_meta($product->get_id(), 'auto_varient_data');
+	//$product = wc_get_product($product_id);
+	if (!$fields) {
+		$six_original_id = apply_filters('wpml_object_id', $product->get_id(), 'any', FALSE, 'sv');
+
+		$fields = get_post_meta($six_original_id, 'auto_varient_data');
+	}
+
+	$attributes = $product->get_attributes();
+
+	include "template/form.php";
+
+}
+
+//add_action('woocommerce_before_add_to_cart_button', 'calc_price');
+
+function calc_price($array) {
+
+	$goldprice = $array['goldprice'];
+	$laborcost = $array['laborcost'];
+	$size = $array['size'];
+	$width = $array['width'];
+	$thickness = $array['thickness'];
+	$metal = $array['metal'];
+	$engravement = $array['engravement'];
+	$stone = $array['stone'];
+	$density = $array['density'];
+
+	/*if($engravement == 'Straight' || $engravement == 'Cursive')
+											{
+												$engravement=200;
+											}*/
+	$size_thickness = $size + $thickness;
+	$pi = 3.15;
+	$circumference = ($size_thickness) * $pi;
+	$massa = $circumference * $width * $thickness;
+
+	$grams = ($massa * $density) / 1000;
+	$ringprice = ($grams * $goldprice) + $laborcost;
+
+	$total_price = $ringprice;
+	$total_price = $total_price + $engravement;
+	$total_price = $total_price + $stone;
+
+	$formated_price = number_format($total_price,0,'.',' ');
+	
+	//return $total_price = round($formated_price);
+	return $total_price = $formated_price;
+
+}
+
+//  The following goes inside the constructor ##
+
+add_filter('woocommerce_add_cart_item_data', 'wdm_add_item_data', 1, 10);
+function wdm_add_item_data($cart_item_data, $product_id) {
+
+	global $woocommerce;
+	if (!empty($_POST['new_custom_attr']) && !empty($_POST['custom_price']) && !empty($_POST['custom_attr'])) {
+		$new_value = array();
+		$new_value['_custom_options'] = $_POST['new_custom_attr'];
+		$new_value['_my_custom_price'] = $_POST['custom_price'];
+		$new_value['_custom_calculation'] = $_POST['custom_attr'];
+
+		if (empty($cart_item_data)) {
+			return $new_value;
+		} else {
+			return array_merge($cart_item_data, $new_value);
+		}
+	}
+}
+
+add_filter('woocommerce_get_cart_item_from_session', 'wdm_get_cart_items_from_session', 1, 3);
+function wdm_get_cart_items_from_session($item, $values, $key) {
+	// echo "<pre>";
+	// //print_r($item);
+	// print_r($key);
+	// echo "---------------";
+	// print_r($values);
+	// echo "</pre>";
+
+	if (array_key_exists('_custom_options', $values)) {
+		$item['_custom_options'] = $values['_custom_options'];
+
+	}
+
+	return $item;
+}
+
+add_filter('woocommerce_cart_item_name', 'add_usr_custom_session', 1, 3);
+function add_usr_custom_session($product_name, $values, $cart_item_key) {
+	if (!empty($values['_custom_calculation']) && !empty($values['_custom_options'])) {
+		$names = $values['_custom_options'];
+
+		$return_string = $product_name . "<br />";
+		$i = 0;
+
+		$return_string .= '<dl class="variation">';
+		foreach ($names as $key => $values) {
+
+			if ($i >= 7) {
+				break;
+			}
+			?>
+
+
+			<?php
+$return_string .= '<dt class="variation-Lngd">' . $key . '</dt>';
+			$return_string .= '<dd class="variation-Lngd"><p>' . $values . '</p></dd>';
+			$i++;
+
+		}
+		$return_string .= "</dl>";
+		// . "<br />" . print_r($values['_custom_options']);
+		return $return_string;
+	}
+	return $product_name;
+
+}
+
+add_action('woocommerce_add_order_item_meta', 'six_add_values_to_order_item_meta', 1, 2);
+if (!function_exists('six_add_values_to_order_item_meta')) {
+	function six_add_values_to_order_item_meta($item_id, $values) {
+		global $woocommerce, $wpdb;
+		if (!empty($values['_custom_calculation']) && !empty($values['_custom_options'])) {
+			$user_custom_values = $values['_custom_options'];
+			if (!empty($user_custom_values)) {
+				$i = 0;
+				foreach ($user_custom_values as $key => $value) {
+					if ($i >= 7) {
+						break;
+					}
+					wc_add_order_item_meta($item_id, $key, $value);
+					$i++;
+				}
+			}
+		}
+	}
+}
+
+// add_action('woocommerce_admin_order_data_after_billing_address', 'my_custom_checkout_field_display_admin_order_meta', 10, 1);
+
+// function my_custom_checkout_field_display_admin_order_meta($order) {
+// 	// echo "Asasasasas";
+// 	// echo $order->get_id();
+// 	$data = get_post_meta($order->get_id());
+// 	print_r($data);
+// }
+
+add_action('woocommerce_before_calculate_totals', 'update_custom_price', 1, 1);
+function update_custom_price($cart_object) {
+	foreach ($cart_object->cart_contents as $cart_item_key => $value) {
+		// Version 2.x
+		//$value['data']->price = $value['_custom_options']['custom_price'];
+		// Version 3.x / 4.x
+		if (!empty($value['_custom_calculation']) && !empty($value['_custom_options'])) {
+			$POST = $value['_custom_calculation'];
+			$POST1 = $value['_custom_options'];
+			$data = array(
+				'goldprice' => get_options_six($POST['metal'])[1],
+				'laborcost' => $POST1['laborcost'],
+				'size' => $POST['size'],
+				'width' => $POST['width'],
+				'thickness' => $POST['thickness'],
+				'surface' => $POST['surface'],
+				'metal' => get_options_six($POST['metal'])[0],
+				'engravement' => get_options_six($POST['engravement'])[1],
+				'stone' => get_options_six($POST['stone'])[1],
+				'density' => get_options_six($POST['metal'])[2],
+			);
+			$pp = calc_price($data);
+			
+			$value['data']->set_price($pp);
+		}
+
+	}
+}
+
+//add_filter( 'woocommerce_product_get_sale_price', 'update_custom_price', 20, 2 );
+
+function sv_change_product_price_cart($price, $cart_item, $cart_item_key) {
+
+	if (!empty($cart_item['_custom_calculation']) && !empty($cart_item['_custom_options'])) {
+		$POST = $cart_item['_custom_calculation'];
+		$POST1 = $cart_item['_custom_options'];
+		$data = array(
+			'goldprice' => get_options_six($POST['metal'])[1],
+			'laborcost' => $POST1['laborcost'],
+			'size' => $POST['size'],
+			'width' => $POST['width'],
+			'thickness' => $POST['thickness'],
+			'surface' => $POST['surface'],
+			'metal' => get_options_six($POST['metal'])[0],
+			'engravement' => get_options_six($POST['engravement'])[1],
+			'stone' => get_options_six($POST['stone'])[1],
+			'density' => get_options_six($POST['metal'])[2],
+		);
+		$pp = calc_price($data);
+		
+		return '<span class="woocommerce-Price-amount amount">' . $pp . '&nbsp;<span class="woocommerce-Price-currencySymbol">' . get_woocommerce_currency_symbol() . '</span></span>';
+	} else {
+		return $price;
+	}
+}
+add_filter('woocommerce_cart_item_price', 'sv_change_product_price_cart', 10, 3);
+
+// add_filter('woocommerce_cart_item_price', 'modify_cart_product_price', 10, 3);
+
+// function modify_cart_product_price($price, $cart_item, $cart_item_key) {
+// 	$price = wc_price($custom_price, 4);
+// 	return $price;
+// }
+
+add_action('woocommerce_before_order_itemmeta', 'so_32457241_before_order_itemmeta', 10, 3);
+function so_32457241_before_order_itemmeta($item_id, $item, $_product) {
+
+	$data = get_field("laborcost", $item->get_product_id());
+	if (!empty($data)) {
+		?>
+	<table cellspacing="0" class="display_meta">
+		<tr>
+			<th>Labour Cost :</th>
+			<td><?php echo $data; ?></td>
+		</tr>
+	</table>
+	<?php
+}
+}
+
+function woocommerce_wp_select_multiple($field) {
+
+	global $thepostid, $post, $woocommerce;
+
+	$thepostid = empty($thepostid) ? $post->ID : $thepostid;
+	$field['class'] = isset($field['class']) ? $field['class'] : 'select short ';
+	$field['wrapper_class'] = isset($field['wrapper_class']) ? $field['wrapper_class'] : '';
+	$field['name'] = isset($field['name']) ? $field['name'] : $field['id'];
+	$field['value'] = isset($field['value']) ? $field['value'] : (get_post_meta($thepostid, $field['meta'], true) ? get_post_meta($thepostid, $field['meta'], true) : array());
+	// print_r($$field['value']);
+	$array_field = array();
+	if (!empty($field['value'][$field['id']])) {
+		$array_field = $field['value'][$field['id']];
+	}
+	echo '<p class="form-field ' . esc_attr($field['id']) . '_field ' . esc_attr($field['wrapper_class']) . '"><label for="' . esc_attr($field['id']) . '">' . wp_kses_post($field['label']) . '</label><select id="' . esc_attr($field['id']) . '" name="' . esc_attr($field['name']) . '" class="' . esc_attr($field['class']) . '" multiple="multiple">';
+
+	foreach ($field['options'] as $key => $value) {
+
+		echo '<option value="' . esc_attr($key) . '" ' . (in_array($key, $array_field) ? 'selected="selected"' : '') . '>' . esc_html($value) . '</option>';
+
+	}
+
+	echo '</select> ';
+
+	if (!empty($field['description'])) {
+
+		if (isset($field['desc_tip']) && false !== $field['desc_tip']) {
+			echo '<img class="help_tip" data-tip="' . esc_attr($field['description']) . '" src="' . esc_url(WC()->plugin_url()) . '/assets/images/help.png" height="16" width="16" />';
+		} else {
+			echo '<span class="description">' . wp_kses_post($field['description']) . '</span>';
+		}
+
+	}
+	// echo '<span class="description select_check select_all"><a href="javascript:void(0)" onclick="select_all(' . esc_attr($field['id']) . ',true)" class="button">Select All</a></span>';
+	// echo '<span class="description" select_check unselect_all><a href="javascript:void(0)" onclick="select_all(' . esc_attr($field['id']) . ',false)" class="button">UnSelect All</a></span>';
+	echo '</p>';
+}
+
+add_action('init', 'register_auto_varient_type');
+
+function register_auto_varient_type() {
+
+	class WC_Product_Auto_Varient extends WC_Product {
+
+		public function __construct($product) {
+			//$this->product_type = 'auto_varient';
+			parent::__construct($product);
+		}
+        
+        // Needed since Woocommerce version 3
+        public function get_type() {
+            return 'auto_varient';
+        }
+	}
+}
+
+add_filter('product_type_selector', 'add_auto_varient_type');
+
+function add_auto_varient_type($types) {
+	$types['auto_varient'] = __('Auto Varient');
+
+	return $types;
+}
+
+add_filter('woocommerce_product_data_tabs', 'auto_varient_tab');
+
+function auto_varient_tab($tabs) {
+
+	$tabs['auto_varient'] = array(
+		'label' => __('Auto Varient Product'),
+		'target' => 'auto_varient_options',
+		'class' => 'show_if_auto_varient',
+		'priority' => 20,
+	);
+
+	return $tabs;
+}
+
+add_action('woocommerce_product_data_panels', 'auto_varient_tab_content');
+
+function auto_varient_tab_content() {
+	global $thepostid, $post, $woocommerce;
+	$thepostid = empty($thepostid) ? $post->ID : $thepostid;
+	$data = get_fields(389);
+
+	// echo "<pre>";
+	//get_post_meta($thepostid, 'auto_varient_data', true));
+	// echo "</pre>";
+	$laborcost = 0;
+	if (!empty(get_post_meta($thepostid, 'auto_varient_data', true))) {
+		$laborcost = get_post_meta($thepostid, 'auto_varient_data', true)['laborcost'];
+	}
+	$engravement = array();
+	foreach ($data['engravement'] as $row) {
+		//$value = $row['text'] . "|" . $row['value'];
+		$value = $row['text'];
+		$engravement[$value] = $row['text'];
+	}
+	$stone = array();
+	foreach ($data['stone'] as $row) {
+		//$value = $row['text'] . "|" . $row['value'];
+		$value = $row['text'];
+		$stone[$value] = $row['text'];
+	}
+	$metal = array();
+	foreach ($data['metal'] as $row) {
+		//$value = $row['text'] . "|" . $row['value'] . "|" . $row['density'];
+		$value = $row['text'];
+		$metal[$value] = $row['text'];
+	}
+	$size = array();
+	foreach ($data['size'] as $row) {
+		$size[$row['value']] = $row['value'];
+	}
+	$thickness = array();
+	foreach ($data['thickness'] as $row) {
+
+		$thickness[$row['value']] = $row['value'];
+	}
+	$width = array();
+	foreach ($data['width'] as $row) {
+
+		$width[$row['value']] = $row['value'];
+	}
+	$surface = array();
+	foreach ($data['surface'] as $row) {
+
+		$surface[$row['text']] = $row['text'];
+	}
+	?>
+	<style>
+		.auto_varient_options{
+		    display: block !important;
+		}
+		#auto_varient_options span.select2.select2-container {
+		    width: 80% !important;
+		}
+		span.select2.select2-container {
+		    max-height: 200px;
+		    overflow: hidden;
+		    overflow-y: auto;
+		}
+	</style>
+	<div id='auto_varient_options' class='panel woocommerce_options_panel'>
+	<div style="padding: 10px;color: red;">**All the fields are mandatory without it Auto Varient won't work</div>
+	<div style="padding: 10px;color: red;">**Please add any price e.g "0" in "Allmänt" Tab</div>
+		<?php
+?><div class='options_group'><?php
+
+	woocommerce_wp_text_input(
+		array(
+			'id' => 'product__auto[laborcost]',
+			'label' => __('Labour Cost', 'woocommerce'),
+			'placeholder' => 'Labour Cost',
+			'desc_tip' => 'true',
+			'type' => "number",
+			'value' => $laborcost,
+			'description' => __('Labour Cost', 'woocommerce'),
+		)
+	);
+	woocommerce_wp_select_multiple(array(
+		'id' => 'metal',
+		'name' => 'product__auto[metal][]',
+		'class' => 'stone select2 select2-search__field my_cus_select2',
+		'label' => __('Metal', 'woocommerce'),
+		'meta' => 'auto_varient_data',
+		'options' => $metal)
+	);
+	woocommerce_wp_select_multiple(array(
+		'id' => 'stone',
+		'name' => 'product__auto[stone][]',
+		'class' => 'stone select2 select2-search__field my_cus_select2',
+		'label' => __('Stone', 'woocommerce'),
+		'meta' => 'auto_varient_data',
+		'options' => $stone)
+	);
+	woocommerce_wp_select_multiple(array(
+		'id' => 'engravement',
+		'name' => 'product__auto[engravement][]',
+		'class' => 'engravement select2 select2-search__field my_cus_select2',
+		'label' => __('Engravement', 'woocommerce'),
+		'meta' => 'auto_varient_data',
+		'options' => $engravement)
+	);
+	woocommerce_wp_select_multiple(array(
+		'id' => 'size',
+		'name' => 'product__auto[size][]',
+		'class' => 'stone select2 select2-search__field my_cus_select2',
+		'label' => __('Size', 'woocommerce'),
+		'meta' => 'auto_varient_data',
+		'options' => $size)
+	);
+	woocommerce_wp_select_multiple(array(
+		'id' => 'surface',
+		'name' => 'product__auto[surface][]',
+		'class' => 'stone select2 select2-search__field my_cus_select2',
+		'label' => __('Surface', 'woocommerce'),
+		'meta' => 'auto_varient_data',
+		'options' => $surface)
+	);
+	woocommerce_wp_select_multiple(array(
+		'id' => 'thickness',
+		'name' => 'product__auto[thickness][]',
+		'class' => 'stone select2 select2-search__field my_cus_select2',
+		'label' => __('Thickness', 'woocommerce'),
+		'meta' => 'auto_varient_data',
+		'options' => $thickness)
+	);
+	woocommerce_wp_select_multiple(array(
+		'id' => 'width',
+		'name' => 'product__auto[width][]',
+		'class' => 'stone select2 select2-search__field my_cus_select2',
+		'label' => __('Width', 'woocommerce'),
+		'meta' => 'auto_varient_data',
+		'options' => $width)
+	);
+	?></div>
+	<!-- <input type="hidden" name="_regular_price" value="0"> -->
+ </div>
+<script>
+$.fn.select2.amd.define('select2/selectAllAdapter', [
+    'select2/utils',
+    'select2/dropdown',
+    'select2/dropdown/attachBody'
+], function (Utils, Dropdown, AttachBody) {
+
+    function SelectAll() { }
+    SelectAll.prototype.render = function (decorated) {
+        var self = this,
+            $rendered = decorated.call(this),
+            $selectAll = $(
+                '<button class="button btn btn-xs btn-default" type="button" style="margin-left:6px;"><i class="fa fa-check-square-o"></i> Select All</button>'
+            ),
+            $unselectAll = $(
+                '<button class="button btn btn-xs btn-default" type="button" style="margin-left:6px;"><i class="fa fa-square-o"></i> Unselect All</button>'
+            ),
+            $btnContainer = $('<div style="margin-top:3px;">').append($selectAll).append($unselectAll);
+        if (!this.$element.prop("multiple")) {
+            // this isn't a multi-select -> don't add the buttons!
+            return $rendered;
+        }
+        $rendered.find('.select2-dropdown').prepend($btnContainer);
+        $selectAll.on('click', function (e) {
+            var $results = $rendered.find('.select2-results__option[aria-selected=false]');
+            $results.each(function () {
+                self.trigger('select', {
+                    data: $(this).data('data')
+                });
+            });
+            self.trigger('close');
+        });
+        $unselectAll.on('click', function (e) {
+            var $results = $rendered.find('.select2-results__option[aria-selected=true]');
+            $results.each(function () {
+                self.trigger('unselect', {
+                    data: $(this).data('data')
+                });
+            });
+            self.trigger('close');
+        });
+        return $rendered;
+    };
+
+    return Utils.Decorate(
+        Utils.Decorate(
+            Dropdown,
+            AttachBody
+        ),
+        SelectAll
+    );
+
+});
+$(".select2.my_cus_select2").select2({
+	placeholder: 'Select',
+    dropdownAdapter: $.fn.select2.amd.require('select2/selectAllAdapter')
+});
+
+</script>
+
+ <?php
+}
+
+add_action('woocommerce_process_product_meta', 'save_auto_varient_settings');
+
+function save_auto_varient_settings($post_id) {
+
+	$product__auto = $_POST['product__auto'];
+
+	// print_r($product__auto);
+	// die();
+
+	if (!empty($product__auto)) {
+
+		update_post_meta($post_id, 'auto_varient_data', $product__auto);
+	}
+}
+
+// Adding Price fields & inventory to custom product type
+add_action('admin_footer', 'pd_custom_product_admin_custom_js');
+function pd_custom_product_admin_custom_js() {
+
+	if ('product' != get_post_type()):
+		return;
+	endif;
+	?>
+    <script type='text/javascript'>
+        jQuery(document).ready(function () {
+        	check_auto_varient();
+        	jQuery("#product-type").on("change", function() {
+           		check_auto_varient();
+        	});
+        });
+
+
+       function check_auto_varient() {
+       		if(jQuery("#product-type").val() == 'auto_varient'){
+	            jQuery('.options_group.pricing').show();
+	            //for Inventory tab
+	            jQuery('.inventory_options').show();
+	            jQuery('.general_options').show();
+
+	            jQuery('#inventory_product_data ._manage_stock_field').show();
+	            jQuery('#inventory_product_data ._sold_individually_field').parent().show();
+	            jQuery('#inventory_product_data ._sold_individually_field').show();
+        	}
+       }
+       function select_all() {
+    		alert("dada");
+    	}
+    </script>
+    <?php
+}
+
+if (!empty($_GET['action']) && $_GET['action'] == 'auto_varient') {
+
+	//print_r($_POST);
+	$POST = $_POST['custom_attr'];
+	$fields = get_fields(389);
+
+	$data = array(
+		'goldprice' => get_options_six($POST['metal'])[1],
+		'laborcost' => $_POST['new_custom_attr']['laborcost'],
+		'size' => $POST['size'],
+		'width' => $POST['width'],
+		'thickness' => $POST['thickness'],
+		'metal' => get_options_six($POST['metal'])[0],
+		'engravement' => get_options_six($POST['engravement'])[1],
+		'stone' => get_options_six($POST['stone'])[1],
+		'density' => get_options_six($POST['metal'])[2],
+	);
+	$total_price = calc_price($data);
+	$data['stone'] = get_options_six($POST['stone'])[0];
+	$data['engravement'] = get_options_six($POST['engravement'])[0];
+	$data['surface'] = $POST['surface'];
+	echo json_encode(array("status" => "true", "price" => $total_price, "data" => $data));
+	die();
+
+}
+
+function get_options_six($value) {
+	return explode("|", $value);
+}
