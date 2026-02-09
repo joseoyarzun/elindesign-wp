@@ -1,6 +1,6 @@
 <?php
 
-$global = get_fields(389);
+$global = sixwebsoft_get_config();
 $array = array("stone", "engravement", "metal");
 
 // DEBUG: Verificar datos

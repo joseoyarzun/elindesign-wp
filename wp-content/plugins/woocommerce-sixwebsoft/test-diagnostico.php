@@ -35,25 +35,48 @@
     }
 
     // Check ACF
-    echo "<h2>3. Advanced Custom Fields</h2>";
+    echo "<h2>3. Advanced Custom Fields (ACF)</h2>";
     if (function_exists('get_field')) {
-        echo '<div class="test success">✓ ACF disponible</div>';
+        echo '<div class="test success">✓ ACF disponible (OPCIONAL - ya no es necesario)</div>';
         
         $test_data = get_fields(389);
         if ($test_data) {
-            echo '<div class="test success">✓ Configuración encontrada en post 389</div>';
+            echo '<div class="test warning">⚠️ Configuración encontrada en ACF (post 389)</div>';
+            echo '<div class="test">Puedes migrar estos datos al sistema interno desde: WooCommerce → Variantes SixWebSoft</div>';
             echo '<pre>';
-            echo "Campos disponibles:\n";
+            echo "Campos ACF disponibles:\n";
             if (isset($test_data['metal'])) echo "  - Metal: " . count($test_data['metal']) . " opciones\n";
             if (isset($test_data['stone'])) echo "  - Stone: " . count($test_data['stone']) . " opciones\n";
             if (isset($test_data['engravement'])) echo "  - Engravement: " . count($test_data['engravement']) . " opciones\n";
             if (isset($test_data['size'])) echo "  - Size: " . count($test_data['size']) . " opciones\n";
             echo '</pre>';
         } else {
-            echo '<div class="test warning">⚠ No hay configuración en post 389</div>';
+            echo '<div class="test">ACF activo pero sin configuración en post 389</div>';
         }
     } else {
-        echo '<div class="test error">✗ ACF NO está disponible - get_field() no existe</div>';
+        echo '<div class="test success">✓ ACF NO está activo (correcto - ya no es necesario)</div>';
+    }
+    
+    // Check Internal Config System
+    echo "<h2>3b. Sistema de Configuración Interno (NUEVO)</h2>";
+    $config = SixWebSoft_Variants_Config::get_all();
+    $summary = SixWebSoft_Variants_Config::get_summary();
+    
+    if (!SixWebSoft_Variants_Config::is_empty()) {
+        echo '<div class="test success">✓ Sistema interno configurado correctamente</div>';
+        echo '<pre>';
+        echo "Configuración interna:\n";
+        foreach ($summary as $type => $count) {
+            echo "  - " . ucfirst($type) . ": $count opciones\n";
+        }
+        echo '</pre>';
+    } else {
+        echo '<div class="test warning">⚠️ Sistema interno SIN configuración</div>';
+        if (function_exists('get_field')) {
+            echo '<div class="test">Ve a: WooCommerce → Variantes SixWebSoft → Migrar desde ACF</div>';
+        } else {
+            echo '<div class="test">Ve a: WooCommerce → Variantes SixWebSoft y agrega las opciones manualmente</div>';
+        }
     }
 
     // Check plugin functions

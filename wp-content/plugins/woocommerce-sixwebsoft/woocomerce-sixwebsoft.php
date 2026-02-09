@@ -52,6 +52,55 @@ function sixwebsoft_woocommerce_missing_notice() {
 // Only load plugin if WooCommerce is active
 if (sixwebsoft_check_woocommerce_active()) {
 	// Plugin code continues here
+	
+// Load plugin classes
+require_once SIXWEBSOFT_PLUGIN_DIR . 'includes/class-variants-config.php';
+require_once SIXWEBSOFT_PLUGIN_DIR . 'includes/admin/settings-page.php';
+
+/**
+ * Helper function to get variant configuration
+ * Replaces get_fields(389) calls
+ * 
+ * @return array Configuration data
+ */
+function sixwebsoft_get_config() {
+	return SixWebSoft_Variants_Config::get_all();
+}
+
+/**
+ * Helper function for backward compatibility
+ * Mimics ACF's get_fields() but uses our internal system
+ * 
+ * @param int $post_id Post ID (ignored, kept for compatibility)
+ * @return array Configuration data
+ */
+function sixwebsoft_get_fields($post_id = null) {
+	// Try internal system first
+	$config = SixWebSoft_Variants_Config::get_all();
+	
+	// If empty and ACF is available, try ACF as fallback
+	if (SixWebSoft_Variants_Config::is_empty() && function_exists('get_fields')) {
+		$acf_data = get_fields(389);
+		if (!empty($acf_data)) {
+			return $acf_data;
+		}
+	}
+	
+	return $config;
+}
+
+/**
+ * Helper function for backward compatibility
+ * Mimics ACF's get_field() but uses our internal system
+ * 
+ * @param string $field_name Field name
+ * @param int $post_id Post ID (ignored)
+ * @return mixed Field value
+ */
+function sixwebsoft_get_field($field_name, $post_id = null) {
+	$config = sixwebsoft_get_fields($post_id);
+	return isset($config[$field_name]) ? $config[$field_name] : null;
+}
 
 // Our custom post type function
 function variants_post() {
@@ -350,7 +399,7 @@ add_filter('woocommerce_cart_item_price', 'sv_change_product_price_cart', 10, 3)
 add_action('woocommerce_before_order_itemmeta', 'so_32457241_before_order_itemmeta', 10, 3);
 function so_32457241_before_order_itemmeta($item_id, $item, $_product) {
 
-	$data = get_field("laborcost", $item->get_product_id());
+	$data = sixwebsoft_get_field("laborcost", $item->get_product_id());
 	if (!empty($data)) {
 		?>
 	<table cellspacing="0" class="display_meta">
@@ -456,7 +505,7 @@ add_action('woocommerce_product_data_panels', 'auto_varient_tab_content');
 function auto_varient_tab_content() {
 	global $thepostid, $post, $woocommerce;
 	$thepostid = empty($thepostid) ? $post->ID : $thepostid;
-	$data = get_fields(389);
+	$data = sixwebsoft_get_config();
 
 	// echo "<pre>";
 	//get_post_meta($thepostid, 'auto_varient_data', true));
@@ -725,7 +774,7 @@ function sixwebsoft_ajax_calculate_price() {
 	}
 
 	$POST = $_POST['custom_attr'];
-	$fields = get_fields(389);
+	$fields = sixwebsoft_get_config();
 
 	// Validate required fields
 	if (empty($POST['metal']) || empty($_POST['new_custom_attr']['laborcost'])) {
@@ -760,7 +809,7 @@ function sixwebsoft_ajax_calculate_price() {
 // Legacy support for old AJAX method
 if (!empty($_GET['action']) && $_GET['action'] == 'auto_varient') {
 	$POST = $_POST['custom_attr'];
-	$fields = get_fields(389);
+	$fields = sixwebsoft_get_config();
 
 	$data = array(
 		'goldprice' => get_options_six($POST['metal'])[1],

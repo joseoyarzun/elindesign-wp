@@ -80,9 +80,15 @@ Ahora el plugin:
 - **PHP:** 7.2 o superior
 - **WooCommerce:** 3.0 o superior (probado hasta 8.0)
 
+### ✅ Ya NO Requiere ACF
+- ~~Advanced Custom Fields~~ - **ELIMINADO en v2.1**
+- El plugin ahora tiene su propio sistema de configuración
+- Si migraste desde una versión anterior con ACF, puedes desactivarlo de forma segura
+
 ### Dependencias Opcionales Eliminadas
 - ~~Ya no depende de archivos en el theme~~
 - ~~Ya no depende de plugins adicionales (excepto WooCommerce)~~
+- ~~Ya no depende de ACF (Advanced Custom Fields)~~ ← **NUEVO**
 
 ## 🚀 Instalación/Actualización
 
@@ -99,7 +105,21 @@ Ahora el plugin:
 1. Sube la carpeta `woocommerce-sixwebsoft` a `/wp-content/plugins/`
 2. Activa el plugin desde el panel de WordPress
 3. Asegúrate de que WooCommerce esté activo
-4. Listo para usar
+4. Ve a **WooCommerce → Variantes SixWebSoft**
+5. Configura las opciones de variantes (metal, piedras, tamaños, etc.)
+6. Listo para usar
+
+### Si Vienes desde Versión Anterior (con ACF):
+
+1. **Mantén ACF activo temporalmente**
+2. Actualiza el plugin a v2.1
+3. Ve a **WooCommerce → Variantes SixWebSoft**
+4. Verás un aviso para **"Migrar desde ACF"**
+5. Haz clic en **"Migrar Ahora"**
+6. Verifica que todo funcione correctamente
+7. **Desactiva y elimina ACF** (ya no lo necesitas)
+
+**📖 Guía detallada:** Ver [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md)
 
 ## 🔍 Verificación Post-Actualización
 
@@ -140,17 +160,22 @@ Si necesitas personalizar la plantilla `auto_varient.php`:
 ### Después de actualizar WooCommerce
 - ✅ Tu plugin seguirá funcionando (las plantillas están en el plugin, no en WooCommerce)
 
-### Mensaje "Requiere WooCommerce"
-- Activa WooCommerce primero
-- Si WooCommerce está activo, verifica que no esté deshabilitado por algún conflicto
+### Mensaje "6-02-09)
+- ✨ **INDEPENDENCIA DE ACF** - Sistema de configuración propio
+- ✨ Nueva interfaz de administración en WooCommerce → Variantes SixWebSoft
+- ✨ Migración automática desde ACF con un clic
+- ✨ Sistema de plantillas independiente del theme
+- ✨ Filtro `woocommerce_locate_template` implementado
+- ✨ Constantes del plugin definidas
+- ✨ Mejor verificación de dependencia WooCommerce
+- ✨ Notificaciones en el admin si falta WooCommerce
+- 📝 Documentación completa agregada
+- 🐛 Solucionado: Plantillas se borran al actualizar WooCommerce
+- 🐛 Solucionado: Precio no se actualiza en productos Auto Varient
+- 🔥 REMOVIDO: Dependencia de Advanced Custom Fields (ACF)
 
-## 📞 Soporte
-
-**Desarrollador:** Drake  
-**Web:** https://sixwebsoft.com  
-**Versión:** 2.1
-
----
+### v2.0
+- Versión anterior con dependencia de ACF
 
 ## Changelog Completo
 
