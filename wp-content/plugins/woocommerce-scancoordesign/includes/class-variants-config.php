@@ -5,7 +5,7 @@
  * Manages all variant options (metal, stone, engravement, etc.)
  * Replaces ACF dependency with native WordPress options
  *
- * @package WooCommerce-SixWebSoft
+ * @package WooCommerce-ScancoorDesign
  * @version 2.1
  */
 
@@ -13,12 +13,12 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-class SixWebSoft_Variants_Config {
+class ScancoorDesign_Variants_Config {
 	
 	/**
 	 * Option name in wp_options table
 	 */
-	private static $option_name = 'sixwebsoft_variants_settings';
+	private static $option_name = 'scancoordesign_variants_settings';
 	
 	/**
 	 * Get all variant options

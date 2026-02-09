@@ -1,4 +1,4 @@
-# Análisis de Dependencias - WooCommerce SixWebSoft
+# Análisis de Dependencias - WooCommerce ScancoorDesign
 
 ## 🔍 Plugin Dependencies Analysis
 
@@ -22,15 +22,15 @@
 #### ✅ Lo que se hizo:
 
 **Nuevo Sistema Propio:**
-- Clase `SixWebSoft_Variants_Config` para gestionar configuración
+- Clase `scancoordesign_Variants_Config` para gestionar configuración
 - Almacenamiento en `wp_options` table
-- Interfaz de administración en: WooCommerce → Variantes SixWebSoft
+- Interfaz de administración en: WooCommerce → Variantes ScancoorDesign
 - Migración automática desde ACF con un clic
 
 **Funciones Creadas:**
 ```php
 // Nueva clase principal
-class SixWebSoft_Variants_Config {
+class scancoordesign_Variants_Config {
     public static function get_all()      // Obtener toda la config
     public static function save($data)    // Guardar config
     public static function get($type)     // Obtener tipo específico
@@ -38,13 +38,13 @@ class SixWebSoft_Variants_Config {
 }
 
 // Funciones helper
-sixwebsoft_get_config()        // Reemplaza get_fields(389)
-sixwebsoft_get_fields()        // Compatibilidad con código antiguo
-sixwebsoft_get_field($name)    // Compatibilidad con código antiguo
+scancoordesign_get_config()        // Reemplaza get_fields(389)
+scancoordesign_get_fields()        // Compatibilidad con código antiguo
+scancoordesign_get_field($name)    // Compatibilidad con código antiguo
 ```
 
 **Nueva Interfaz de Admin:**
-- Ubicación: `WooCommerce → Variantes SixWebSoft`
+- Ubicación: `WooCommerce → Variantes ScancoorDesign`
 - Pestañas para cada tipo (Metal, Piedras, Grabados, etc.)
 - Agregar/Editar/Eliminar opciones visualmente
 - Migración automática desde ACF
@@ -76,7 +76,7 @@ sixwebsoft_get_field($name)    // Compatibilidad con código antiguo
 Si vienes de una versión anterior:
 
 ```
-1. Ve a: WooCommerce → Variantes SixWebSoft
+1. Ve a: WooCommerce → Variantes ScancoorDesign
 2. Haz clic: "Migrar Ahora"
 3. Verifica que todo esté correcto
 4. Desactiva ACF
@@ -162,7 +162,7 @@ Todas las fases han sido implementadas en v2.1:
 - [ ] Exportar datos de ACF a JSON para respaldo
 
 ### Desarrollo
-- [ ] Crear clase `SixWebSoft_Variants_Config`
+- [ ] Crear clase `scancoordesign_Variants_Config`
 - [ ] Crear página de settings en admin
 - [ ] Crear función de migración de datos ACF → nuevo sistema
 - [ ] Actualizar todas las referencias a `get_fields()` y `get_field()`
@@ -187,7 +187,7 @@ Si prefieres **NO** eliminar ACF, puedes:
 if (!function_exists('get_field')) {
     add_action('admin_notices', function() {
         echo '<div class="notice notice-error">';
-        echo '<p><strong>WooCommerce SixWebSoft:</strong> Requiere Advanced Custom Fields.</p>';
+        echo '<p><strong>WooCommerce ScancoorDesign:</strong> Requiere Advanced Custom Fields.</p>';
         echo '</div>';
     })Completado en v2.1
 
@@ -199,7 +199,7 @@ if (!function_exists('get_field')) {
 
 ### ✅ Implementado Exitosamente
 
-1. ✅ Clase `SixWebSoft_Variants_Config` creada
+1. ✅ Clase `scancoordesign_Variants_Config` creada
 2. ✅ Página de administración implementada
 3. ✅ Migración automática desde ACF
 4. ✅ Todas las referencias actualizadas
@@ -213,7 +213,7 @@ if (!function_exists('get_field')) {
 Si estás migrando desde una versión anterior:
 
 - [ ] Actualizar plugin a v2.1
-- [ ] Ir a WooCommerce → Variantes SixWebSoft
+- [ ] Ir a WooCommerce → Variantes ScancoorDesign
 - [ ] Ejecutar migración desde ACF
 - [ ] Verificar que todas las opciones estén presentes
 - [ ] Probar en un producto Auto Varient
@@ -262,4 +262,4 @@ Así que puedes probar sin riesgo.
 **Ahora puedes:**
 1. Migrar desde ACF si vienes de versión anterior
 2. O empezar desde cero sin ACF
-3. Gestionar todo desde WooCommerce → Variantes SixWebSoft
+3. Gestionar todo desde WooCommerce → Variantes ScancoorDesign

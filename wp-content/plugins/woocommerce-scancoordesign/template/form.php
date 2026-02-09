@@ -1,6 +1,6 @@
 <?php
 
-$global = sixwebsoft_get_config();
+$global = scancoordesign_get_config();
 $array = array("stone", "engravement", "metal");
 
 // DEBUG: Verificar datos

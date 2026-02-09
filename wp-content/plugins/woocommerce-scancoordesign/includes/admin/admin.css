@@ -1,10 +1,10 @@
-/* SixWebSoft Admin Styles */
+/* ScancoorDesign Admin Styles */
 
-.sixwebsoft-tabs {
+.ScancoorDesign-tabs {
 	margin-top: 20px;
 }
 
-.sixwebsoft-tab-content {
+.ScancoorDesign-tab-content {
 	display: none;
 	padding: 20px;
 	background: #fff;
@@ -12,25 +12,25 @@
 	border-top: 0;
 }
 
-.sixwebsoft-tab-content.active {
+.ScancoorDesign-tab-content.active {
 	display: block;
 }
 
-.sixwebsoft-tab-content h2 {
+.ScancoorDesign-tab-content h2 {
 	margin-top: 0;
 }
 
-.sixwebsoft-tab-content p {
+.ScancoorDesign-tab-content p {
 	color: #666;
 	font-style: italic;
 }
 
-.sixwebsoft-tab-content table {
+.ScancoorDesign-tab-content table {
 	margin-top: 15px;
 }
 
-.sixwebsoft-tab-content input[type="text"],
-.sixwebsoft-tab-content input[type="number"] {
+.ScancoorDesign-tab-content input[type="text"],
+.ScancoorDesign-tab-content input[type="number"] {
 	width: 100%;
 }
 
@@ -53,19 +53,19 @@
 }
 
 /* Success/Error Messages */
-.sixwebsoft-notice {
+.ScancoorDesign-notice {
 	padding: 12px;
 	margin: 15px 0;
 	border-left: 4px solid;
 	background: #fff;
 }
 
-.sixwebsoft-notice.success {
+.ScancoorDesign-notice.success {
 	border-color: #46b450;
 	background: #ecf7ed;
 }
 
-.sixwebsoft-notice.error {
+.ScancoorDesign-notice.error {
 	border-color: #dc3232;
 	background: #fef7f7;
 }
@@ -84,12 +84,12 @@
 
 /* Responsive */
 @media screen and (max-width: 782px) {
-	.sixwebsoft-tab-content table {
+	.ScancoorDesign-tab-content table {
 		font-size: 14px;
 	}
 	
-	.sixwebsoft-tab-content input[type="text"],
-	.sixwebsoft-tab-content input[type="number"] {
+	.ScancoorDesign-tab-content input[type="text"],
+	.ScancoorDesign-tab-content input[type="number"] {
 		font-size: 14px;
 	}
 }

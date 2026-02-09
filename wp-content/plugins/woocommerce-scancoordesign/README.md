@@ -1,4 +1,4 @@
-# WooCommerce SixWebSoft - Plugin Independiente
+# WooCommerce ScancoorDesign - Plugin Independiente
 
 ## Versión 2.1 - Cambios Importantes
 
@@ -14,15 +14,15 @@ Este plugin ahora es **completamente independiente** del tema OceanWP y de las a
 - El plugin dejaba de funcionar después de actualizar
 
 **AHORA (v2.1):**
-- Todas las plantillas están dentro del plugin en: `wp-content/plugins/woocommerce-sixwebsoft/templates/`
+- Todas las plantillas están dentro del plugin en: `wp-content/plugins/woocommerce-scancoordesign/templates/`
 - Las actualizaciones **NO afectan** las plantillas del plugin
 - El plugin funciona de manera independiente
 
 ## 📁 Nueva Estructura de Archivos
 
 ```
-woocommerce-sixwebsoft/
-├── woocomerce-sixwebsoft.php          (Archivo principal)
+woocommerce-scancoordesign/
+├── woocomerce-scancoordesign.php          (Archivo principal)
 ├── readme.txt
 ├── README.md                          (Este archivo)
 ├── templates/                         (📌 NUEVO - Plantillas propias)
@@ -60,10 +60,10 @@ Se agregó el filtro `woocommerce_locate_template` que:
 ### 3. Constantes Definidas
 
 ```php
-SIXWEBSOFT_VERSION          // Versión del plugin
-SIXWEBSOFT_PLUGIN_DIR       // Ruta del directorio del plugin
-SIXWEBSOFT_PLUGIN_URL       // URL del plugin
-SIXWEBSOFT_TEMPLATES_DIR    // Directorio de plantillas
+scancoordesign_VERSION          // Versión del plugin
+scancoordesign_PLUGIN_DIR       // Ruta del directorio del plugin
+scancoordesign_PLUGIN_URL       // URL del plugin
+scancoordesign_TEMPLATES_DIR    // Directorio de plantillas
 ```
 
 ### 4. Verificación de WooCommerce
@@ -102,10 +102,10 @@ Ahora el plugin:
 
 ### Instalación Nueva:
 
-1. Sube la carpeta `woocommerce-sixwebsoft` a `/wp-content/plugins/`
+1. Sube la carpeta `woocommerce-scancoordesign` a `/wp-content/plugins/`
 2. Activa el plugin desde el panel de WordPress
 3. Asegúrate de que WooCommerce esté activo
-4. Ve a **WooCommerce → Variantes SixWebSoft**
+4. Ve a **WooCommerce → Variantes ScancoorDesign**
 5. Configura las opciones de variantes (metal, piedras, tamaños, etc.)
 6. Listo para usar
 
@@ -113,7 +113,7 @@ Ahora el plugin:
 
 1. **Mantén ACF activo temporalmente**
 2. Actualiza el plugin a v2.1
-3. Ve a **WooCommerce → Variantes SixWebSoft**
+3. Ve a **WooCommerce → Variantes ScancoorDesign**
 4. Verás un aviso para **"Migrar desde ACF"**
 5. Haz clic en **"Migrar Ahora"**
 6. Verifica que todo funcione correctamente
@@ -142,13 +142,13 @@ La carpeta `replace_files/` con sus archivos de respaldo puede mantenerse por se
 ### Modificar Plantillas
 
 Si necesitas personalizar la plantilla `auto_varient.php`:
-1. Edita: `wp-content/plugins/woocommerce-sixwebsoft/templates/single-product/add-to-cart/auto_varient.php`
+1. Edita: `wp-content/plugins/woocommerce-scancoordesign/templates/single-product/add-to-cart/auto_varient.php`
 2. Los cambios **NO** se perderán con actualizaciones de WooCommerce o Theme
 
 ### Agregar Nuevas Plantillas
 
 1. Crea el archivo en `templates/` siguiendo la estructura de WooCommerce
-2. El filtro `sixwebsoft_woocommerce_locate_template` las detectará automáticamente
+2. El filtro `scancoordesign_woocommerce_locate_template` las detectará automáticamente
 
 ## ⚠️ Troubleshooting
 
@@ -162,7 +162,7 @@ Si necesitas personalizar la plantilla `auto_varient.php`:
 
 ### Mensaje "6-02-09)
 - ✨ **INDEPENDENCIA DE ACF** - Sistema de configuración propio
-- ✨ Nueva interfaz de administración en WooCommerce → Variantes SixWebSoft
+- ✨ Nueva interfaz de administración en WooCommerce → Variantes ScancoorDesign
 - ✨ Migración automática desde ACF con un clic
 - ✨ Sistema de plantillas independiente del theme
 - ✨ Filtro `woocommerce_locate_template` implementado

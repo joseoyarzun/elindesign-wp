@@ -4,7 +4,7 @@
  * 
  * Provides UI to manage all variant options without ACF
  *
- * @package WooCommerce-SixWebSoft
+ * @package WooCommerce-scancoordesign
  * @version 2.1
  */
 
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-class SixWebSoft_Admin_Settings {
+class ScancoorDesign_Admin_Settings {
 	
 	/**
 	 * Initialize admin hooks
@@ -20,8 +20,8 @@ class SixWebSoft_Admin_Settings {
 	public static function init() {
 		add_action('admin_menu', array(__CLASS__, 'add_menu'));
 		add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_scripts'));
-		add_action('wp_ajax_sixwebsoft_save_variant', array(__CLASS__, 'ajax_save_variant'));
-		add_action('wp_ajax_sixwebsoft_delete_variant', array(__CLASS__, 'ajax_delete_variant'));
+		add_action('wp_ajax_scancoordesign_save_variant', array(__CLASS__, 'ajax_save_variant'));
+		add_action('wp_ajax_scancoordesign_delete_variant', array(__CLASS__, 'ajax_delete_variant'));
 		add_action('admin_notices', array(__CLASS__, 'admin_notices'));
 	}
 	
@@ -32,9 +32,9 @@ class SixWebSoft_Admin_Settings {
 		add_submenu_page(
 			'woocommerce',
 			'Configuración de Variantes',
-			'Variantes SixWebSoft',
+			'Variantes scancoordesign',
 			'manage_woocommerce',
-			'sixwebsoft-variants',
+			'scancoordesign-variants',
 			array(__CLASS__, 'render_page')
 		);
 	}
@@ -43,16 +43,16 @@ class SixWebSoft_Admin_Settings {
 	 * Enqueue admin scripts and styles
 	 */
 	public static function enqueue_scripts($hook) {
-		if ($hook !== 'woocommerce_page_sixwebsoft-variants') {
+		if ($hook !== 'woocommerce_page_scancoordesign-variants') {
 			return;
 		}
 		
-		wp_enqueue_style('sixwebsoft-admin', SIXWEBSOFT_PLUGIN_URL . 'includes/admin/admin.css', array(), SIXWEBSOFT_VERSION);
-		wp_enqueue_script('sixwebsoft-admin', SIXWEBSOFT_PLUGIN_URL . 'includes/admin/admin.js', array('jquery'), SIXWEBSOFT_VERSION, true);
+		wp_enqueue_style('scancoordesign-admin', SCANCOORDESIGN_PLUGIN_URL . 'includes/admin/admin.css', array(), SCANCOORDESIGN_VERSION);
+		wp_enqueue_script('scancoordesign-admin', SCANCOORDESIGN_PLUGIN_URL . 'includes/admin/admin.js', array('jquery'), SCANCOORDESIGN_VERSION, true);
 		
-		wp_localize_script('sixwebsoft-admin', 'sixwebsoft_admin', array(
+		wp_localize_script('scancoordesign-admin', 'scancoordesign_admin', array(
 			'ajax_url' => admin_url('admin-ajax.php'),
-			'nonce' => wp_create_nonce('sixwebsoft_admin_nonce'),
+			'nonce' => wp_create_nonce('scancoordesign_admin_nonce'),
 		));
 	}
 	
@@ -63,15 +63,15 @@ class SixWebSoft_Admin_Settings {
 		// Check if migration is needed
 		if (function_exists('get_fields')) {
 			$acf_data = get_fields(389);
-			$current_data = SixWebSoft_Variants_Config::get_all();
+			$current_data = ScancoorDesign_Variants_Config::get_all();
 			
-			$is_empty = SixWebSoft_Variants_Config::is_empty();
+			$is_empty = ScancoorDesign_Variants_Config::is_empty();
 			
 			if (!empty($acf_data) && $is_empty) {
 				?>
 				<div class="notice notice-warning is-dismissible">
-					<p><strong>WooCommerce SixWebSoft:</strong> Detectamos configuración en ACF. 
-					<a href="<?php echo admin_url('admin.php?page=sixwebsoft-variants&action=migrate'); ?>" class="button button-primary">Migrar Ahora</a></p>
+					<p><strong>WooCommerce scancoordesign:</strong> Detectamos configuración en ACF. 
+					<a href="<?php echo admin_url('admin.php?page=scancoordesign-variants&action=migrate'); ?>" class="button button-primary">Migrar Ahora</a></p>
 				</div>
 				<?php
 			}
@@ -82,7 +82,7 @@ class SixWebSoft_Admin_Settings {
 	 * AJAX: Save variant option
 	 */
 	public static function ajax_save_variant() {
-		check_ajax_referer('sixwebsoft_admin_nonce', 'nonce');
+		check_ajax_referer('scancoordesign_admin_nonce', 'nonce');
 		
 		if (!current_user_can('manage_woocommerce')) {
 			wp_send_json_error(array('message' => 'Permisos insuficientes'));
@@ -96,7 +96,7 @@ class SixWebSoft_Admin_Settings {
 		}
 		
 		// Add new option
-		if (SixWebSoft_Variants_Config::add_option($type, $data)) {
+		if (ScancoorDesign_Variants_Config::add_option($type, $data)) {
 			wp_send_json_success(array('message' => 'Opción guardada correctamente'));
 		} else {
 			wp_send_json_error(array('message' => 'Error al guardar'));
@@ -107,7 +107,7 @@ class SixWebSoft_Admin_Settings {
 	 * AJAX: Delete variant option
 	 */
 	public static function ajax_delete_variant() {
-		check_ajax_referer('sixwebsoft_admin_nonce', 'nonce');
+		check_ajax_referer('scancoordesign_admin_nonce', 'nonce');
 		
 		if (!current_user_can('manage_woocommerce')) {
 			wp_send_json_error(array('message' => 'Permisos insuficientes'));
@@ -120,7 +120,7 @@ class SixWebSoft_Admin_Settings {
 			wp_send_json_error(array('message' => 'Datos inválidos'));
 		}
 		
-		if (SixWebSoft_Variants_Config::remove_option($type, $index)) {
+		if (ScancoorDesign_Variants_Config::remove_option($type, $index)) {
 			wp_send_json_success(array('message' => 'Opción eliminada'));
 		} else {
 			wp_send_json_error(array('message' => 'Error al eliminar'));
@@ -138,23 +138,23 @@ class SixWebSoft_Admin_Settings {
 		}
 		
 		// Handle bulk save
-		if (isset($_POST['sixwebsoft_save_all']) && check_admin_referer('sixwebsoft_save_all')) {
+		if (isset($_POST['scancoordesign_save_all']) && check_admin_referer('scancoordesign_save_all')) {
 			self::handle_bulk_save();
 		}
 		
-		$config = SixWebSoft_Variants_Config::get_all();
-		$summary = SixWebSoft_Variants_Config::get_summary();
+		$config = ScancoorDesign_Variants_Config::get_all();
+		$summary = ScancoorDesign_Variants_Config::get_summary();
 		
 		?>
 		<div class="wrap">
-			<h1>⚙️ Configuración de Variantes - SixWebSoft</h1>
+			<h1>⚙️ Configuración de Variantes - scancoordesign</h1>
 			<p>Gestiona todas las opciones de variantes para tus productos personalizados.</p>
 			
-			<?php if (SixWebSoft_Variants_Config::is_empty()): ?>
+			<?php if (ScancoorDesign_Variants_Config::is_empty()): ?>
 				<div class="notice notice-warning">
 					<p><strong>⚠️ No hay configuración.</strong> Agrega opciones abajo o 
 					<?php if (function_exists('get_fields')): ?>
-						<a href="?page=sixwebsoft-variants&action=migrate">migra desde ACF</a>.
+						<a href="?page=scancoordesign-variants&action=migrate">migra desde ACF</a>.
 					<?php else: ?>
 						agrega opciones manualmente.
 					<?php endif; ?>
@@ -162,10 +162,10 @@ class SixWebSoft_Admin_Settings {
 				</div>
 			<?php endif; ?>
 			
-			<form method="post" action="" id="sixwebsoft-config-form">
-				<?php wp_nonce_field('sixwebsoft_save_all'); ?>
+			<form method="post" action="" id="scancoordesign-config-form">
+				<?php wp_nonce_field('scancoordesign_save_all'); ?>
 				
-				<div class="sixwebsoft-tabs">
+				<div class="scancoordesign-tabs">
 					<nav class="nav-tab-wrapper">
 						<a href="#tab-metal" class="nav-tab nav-tab-active">Metal (<?php echo $summary['metal']; ?>)</a>
 						<a href="#tab-stone" class="nav-tab">Piedras (<?php echo $summary['stone']; ?>)</a>
@@ -177,49 +177,49 @@ class SixWebSoft_Admin_Settings {
 					</nav>
 					
 					<!-- METAL TAB -->
-					<div id="tab-metal" class="sixwebsoft-tab-content active">
+					<div id="tab-metal" class="scancoordesign-tab-content active">
 						<h2>⚙️ Configuración de Metales</h2>
 						<p>Formato: Nombre, Precio por gramo (SEK), Densidad (g/cm³)</p>
 						<?php self::render_variant_table('metal', $config['metal']); ?>
 					</div>
 					
 					<!-- STONE TAB -->
-					<div id="tab-stone" class="sixwebsoft-tab-content">
+					<div id="tab-stone" class="scancoordesign-tab-content">
 						<h2>💎 Configuración de Piedras</h2>
 						<p>Formato: Nombre, Precio adicional (SEK)</p>
 						<?php self::render_variant_table('stone', $config['stone']); ?>
 					</div>
 					
 					<!-- ENGRAVEMENT TAB -->
-					<div id="tab-engravement" class="sixwebsoft-tab-content">
+					<div id="tab-engravement" class="scancoordesign-tab-content">
 						<h2>✍️ Configuración de Grabados</h2>
 						<p>Formato: Nombre, Precio adicional (SEK)</p>
 						<?php self::render_variant_table('engravement', $config['engravement']); ?>
 					</div>
 					
 					<!-- SIZE TAB -->
-					<div id="tab-size" class="sixwebsoft-tab-content">
+					<div id="tab-size" class="scancoordesign-tab-content">
 						<h2>📏 Configuración de Tamaños</h2>
 						<p>Valores numéricos del tamaño del anillo</p>
 						<?php self::render_variant_table('size', $config['size']); ?>
 					</div>
 					
 					<!-- WIDTH TAB -->
-					<div id="tab-width" class="sixwebsoft-tab-content">
+					<div id="tab-width" class="scancoordesign-tab-content">
 						<h2>↔️ Configuración de Anchos</h2>
 						<p>Valores numéricos del ancho en mm</p>
 						<?php self::render_variant_table('width', $config['width']); ?>
 					</div>
 					
 					<!-- THICKNESS TAB -->
-					<div id="tab-thickness" class="sixwebsoft-tab-content">
+					<div id="tab-thickness" class="scancoordesign-tab-content">
 						<h2>⬍ Configuración de Grosores</h2>
 						<p>Valores numéricos del grosor en mm</p>
 						<?php self::render_variant_table('thickness', $config['thickness']); ?>
 					</div>
 					
 					<!-- SURFACE TAB -->
-					<div id="tab-surface" class="sixwebsoft-tab-content">
+					<div id="tab-surface" class="scancoordesign-tab-content">
 						<h2>✨ Configuración de Superficies</h2>
 						<p>Tipos de acabado de superficie</p>
 						<?php self::render_variant_table('surface', $config['surface']); ?>
@@ -227,7 +227,7 @@ class SixWebSoft_Admin_Settings {
 				</div>
 				
 				<p class="submit">
-					<input type="submit" name="sixwebsoft_save_all" class="button button-primary button-large" value="💾 Guardar Todos los Cambios">
+					<input type="submit" name="scancoordesign_save_all" class="button button-primary button-large" value="💾 Guardar Todos los Cambios">
 				</p>
 			</form>
 		</div>
@@ -355,7 +355,7 @@ class SixWebSoft_Admin_Settings {
 		
 		$config = isset($_POST['config']) ? $_POST['config'] : array();
 		
-		if (SixWebSoft_Variants_Config::save($config)) {
+		if (ScancoorDesign_Variants_Config::save($config)) {
 			echo '<div class="notice notice-success"><p>✅ Configuración guardada correctamente.</p></div>';
 		} else {
 			echo '<div class="notice notice-error"><p>❌ Error al guardar la configuración.</p></div>';
@@ -381,8 +381,8 @@ class SixWebSoft_Admin_Settings {
 			return;
 		}
 		
-		if (SixWebSoft_Variants_Config::import_from_acf($acf_data)) {
-			$summary = SixWebSoft_Variants_Config::get_summary();
+		if (ScancoorDesign_Variants_Config::import_from_acf($acf_data)) {
+			$summary = ScancoorDesign_Variants_Config::get_summary();
 			?>
 			<div class="wrap">
 				<h1>✅ Migración Completada</h1>
@@ -409,7 +409,7 @@ class SixWebSoft_Admin_Settings {
 				</table>
 				
 				<p>
-					<a href="<?php echo admin_url('admin.php?page=sixwebsoft-variants'); ?>" class="button button-primary">
+					<a href="<?php echo admin_url('admin.php?page=scancoordesign-variants'); ?>" class="button button-primary">
 						Ver Configuración
 					</a>
 				</p>
@@ -427,4 +427,4 @@ class SixWebSoft_Admin_Settings {
 }
 
 // Initialize
-SixWebSoft_Admin_Settings::init();
+ScancoorDesign_Admin_Settings::init();

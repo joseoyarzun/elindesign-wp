@@ -1,5 +1,5 @@
 /**
- * SixWebSoft Admin JavaScript
+ * ScancoorDesign Admin JavaScript
  * Handles the variants configuration interface
  */
 
@@ -7,7 +7,7 @@
 	'use strict';
 	
 	$(document).ready(function() {
-		console.log('SixWebSoft Admin JS loaded');
+		console.log('ScancoorDesign Admin JS loaded');
 		
 		// Tab switching
 		$('.nav-tab').on('click', function(e) {
@@ -20,7 +20,7 @@
 			$(this).addClass('nav-tab-active');
 			
 			// Update content
-			$('.sixwebsoft-tab-content').removeClass('active');
+			$('.ScancoorDesign-tab-content').removeClass('active');
 			$(target).addClass('active');
 		});
 		
@@ -79,7 +79,7 @@
 		});
 		
 		// Form submit confirmation
-		$('#sixwebsoft-config-form').on('submit', function() {
+		$('#ScancoorDesign-config-form').on('submit', function() {
 			var hasChanges = true; // Could implement change tracking
 			
 			if (hasChanges) {
@@ -92,7 +92,7 @@
 		// Auto-save warning on page leave
 		var formChanged = false;
 		
-		$('#sixwebsoft-config-form').on('change', 'input', function() {
+		$('#ScancoorDesign-config-form').on('change', 'input', function() {
 			formChanged = true;
 		});
 		
@@ -102,7 +102,7 @@
 			}
 		});
 		
-		$('#sixwebsoft-config-form').on('submit', function() {
+		$('#ScancoorDesign-config-form').on('submit', function() {
 			formChanged = false;
 		});
 	});

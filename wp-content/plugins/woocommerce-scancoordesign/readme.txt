@@ -24,7 +24,7 @@ Dependencies
 Documentation English
 ****************************************
 
-**File: woocommerce-sixwebsoft.php**
+**File: woocommerce-scancoordesign.php**
 -----------------------------------
 This code is a WordPress plugin intended for WooCommerce. Here's a summary of the main functions and features of the plugin:
 
@@ -258,7 +258,7 @@ In summary, this code generates the add-to-cart form for simple products in WooC
 Documentation spanish
 ****************************************
 
-ARCHIVO woocommerce-sixwebsoft.php
+ARCHIVO woocommerce-scancoordesign.php
 -----------------------------------
 Este código es un plugin de WordPress destinado a WooCommerce. Aquí hay un resumen de las principales funciones y características del plugin:
 

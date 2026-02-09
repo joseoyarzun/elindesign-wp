@@ -2,10 +2,10 @@
 /**
  * Auto Variant product add to cart
  *
- * This template is part of WooCommerce sixwebsoft plugin.
+ * This template is part of WooCommerce scancoordesign plugin.
  * It will not be overridden by theme or WooCommerce updates.
  *
- * @package WooCommerce-SixWebSoft
+ * @package WooCommerce-scancoordesign
  * @version 2.0
  */
 

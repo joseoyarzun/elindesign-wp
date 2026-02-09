@@ -2,7 +2,7 @@
 
 ## ✅ ¡Ya No Dependes de ACF!
 
-Tu plugin WooCommerce SixWebSoft ahora tiene su propio sistema de configuración. Ya no necesitas Advanced Custom Fields.
+Tu plugin WooCommerce ScancoorDesign ahora tiene su propio sistema de configuración. Ya no necesitas Advanced Custom Fields.
 
 ---
 
@@ -12,7 +12,7 @@ Tu plugin WooCommerce SixWebSoft ahora tiene su propio sistema de configuración
 
 Ve a WordPress Admin:
 ```
-WooCommerce → Variantes SixWebSoft
+WooCommerce → Variantes ScancoorDesign
 ```
 
 ### 2. Ejecuta la Migración Automática
@@ -38,7 +38,7 @@ Después de migrar, verás un resumen mostrando cuántas opciones se importaron 
 
 **Ir a verificar:**
 ```
-WooCommerce → Variantes SixWebSoft
+WooCommerce → Variantes ScancoorDesign
 ```
 
 Deberías ver todas tus opciones organizadas en pestañas.
@@ -49,7 +49,7 @@ Deberías ver todas tus opciones organizadas en pestañas.
 
 No hay problema. Puedes agregar la configuración manualmente:
 
-1. Ve a: **WooCommerce → Variantes SixWebSoft**
+1. Ve a: **WooCommerce → Variantes ScancoorDesign**
 2. Selecciona cada pestaña (Metal, Piedras, etc.)
 3. Haz clic en **"➕ Agregar Nueva Opción"**
 4. Completa los campos
@@ -144,13 +144,13 @@ Campos:
 
 ### Test 1: Página de Configuración
 ```
-http://localhost/elindesign/wp-admin/admin.php?page=sixwebsoft-variants
+http://localhost/elindesign/wp-admin/admin.php?page=scancoordesign-variants
 ```
 ✅ Deberías ver todas tus opciones organizadas en pestañas
 
 ### Test 2: Diagnóstico
 ```
-http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-diagnostico.php
+http://localhost/elindesign/wp-content/plugins/woocommerce-scancoordesign/test-diagnostico.php
 ```
 ✅ Debe decir "Sistema interno configurado correctamente"
 
@@ -161,7 +161,7 @@ http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-diagn
 
 ### Test 4: Test AJAX
 ```
-http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-ajax.php
+http://localhost/elindesign/wp-content/plugins/woocommerce-scancoordesign/test-ajax.php
 ```
 ✅ El formulario debe calcular el precio correctamente
 
@@ -172,7 +172,7 @@ http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-ajax.
 ### No veo mis opciones después de migrar
 
 **Solución:**
-1. Ve a: **WooCommerce → Variantes SixWebSoft**
+1. Ve a: **WooCommerce → Variantes ScancoorDesign**
 2. Verifica que las pestañas tengan números (ej: "Metal (5)")
 3. Si dice "(0)", la migración no funcionó
 4. Verifica que ACF esté activo y tenga datos en post 389
@@ -192,7 +192,7 @@ http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-ajax.
 
 **Solución:**
 - Si ya migraste los datos, todo está bien
-- El plugin usa ahora `sixwebsoft_get_config()` internamente
+- El plugin usa ahora `scancoordesign_get_config()` internamente
 - No necesitas hacer nada
 
 ---
@@ -227,27 +227,27 @@ http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-ajax.
 
 ```php
 // Obtener toda la configuración
-$config = SixWebSoft_Variants_Config::get_all();
+$config = scancoordesign_Variants_Config::get_all();
 
 // Obtener un tipo específico
-$metales = SixWebSoft_Variants_Config::get('metal');
+$metales = scancoordesign_Variants_Config::get('metal');
 
 // Agregar una opción
-SixWebSoft_Variants_Config::add_option('metal', array(
+scancoordesign_Variants_Config::add_option('metal', array(
     'text' => 'Platinum',
     'value' => 800,
     'density' => 21.45
 ));
 
 // Guardar todo
-SixWebSoft_Variants_Config::save($config);
+scancoordesign_Variants_Config::save($config);
 
 // Obtener resumen
-$summary = SixWebSoft_Variants_Config::get_summary();
+$summary = scancoordesign_Variants_Config::get_summary();
 // ['metal' => 5, 'stone' => 3, ...]
 
 // Verificar si está vacío
-if (SixWebSoft_Variants_Config::is_empty()) {
+if (scancoordesign_Variants_Config::is_empty()) {
     // No hay configuración
 }
 ```
@@ -258,16 +258,16 @@ Para facilitar la migración, existen funciones de compatibilidad:
 
 ```php
 // Estas funcionan igual, pero usan el sistema interno
-$config = sixwebsoft_get_config();
-$fields = sixwebsoft_get_fields(); // Reemplaza get_fields(389)
-$field = sixwebsoft_get_field('metal'); // Reemplaza get_field()
+$config = scancoordesign_get_config();
+$fields = scancoordesign_get_fields(); // Reemplaza get_fields(389)
+$field = scancoordesign_get_field('metal'); // Reemplaza get_field()
 ```
 
 ---
 
 ## ⚡ Migración Express (Resumen)
 
-1. **WooCommerce → Variantes SixWebSoft**
+1. **WooCommerce → Variantes ScancoorDesign**
 2. **Clic en "Migrar Ahora"**
 3. **Verificar que todo esté OK**
 4. **Desactivar ACF**

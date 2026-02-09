@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test AJAX - SixWebSoft</title>
+    <title>Test AJAX - ScancoorDesign</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -31,14 +31,14 @@
     }
     
     // Get configuration from internal system
-    $config = sixwebsoft_get_config();
+    $config = ScancoorDesign_get_config();
     
-    if (SixWebSoft_Variants_Config::is_empty()) {
+    if (ScancoorDesign_Variants_Config::is_empty()) {
         echo '<div class="container">';
         echo '<h1>⚠️ No hay configuración</h1>';
-        echo '<p>El sistema interno no tiene configuración. Ve a: <a href="' . admin_url('admin.php?page=sixwebsoft-variants') . '">WooCommerce → Variantes SixWebSoft</a></p>';
+        echo '<p>El sistema interno no tiene configuración. Ve a: <a href="' . admin_url('admin.php?page=ScancoorDesign-variants') . '">WooCommerce → Variantes ScancoorDesign</a></p>';
         if (function_exists('get_field')) {
-            echo '<p>O <a href="' . admin_url('admin.php?page=sixwebsoft-variants&action=migrate') . '">migra desde ACF</a>.</p>';
+            echo '<p>O <a href="' . admin_url('admin.php?page=ScancoorDesign-variants&action=migrate') . '">migra desde ACF</a>.</p>';
         }
         echo '</div>';
         exit;
@@ -160,7 +160,7 @@
         <div style="background:#f8f9fa; padding:10px; border-radius:4px;">
             <p><strong>AJAX URL:</strong> <?php echo admin_url('admin-ajax.php'); ?></p>
             <p><strong>Action:</strong> auto_varient_calculate</p>
-            <p><strong>Sistema de Configuración:</strong> Interno (SixWebSoft)</p>
+            <p><strong>Sistema de Configuración:</strong> Interno (ScancoorDesign)</p>
             <p><strong>Configuración ACF:</strong> <?php echo function_exists('get_field') ? 'Disponible (no requerido)' : 'No disponible'; ?></p>
         </div>
     </div>

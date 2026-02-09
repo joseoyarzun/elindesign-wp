@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test SixWebSoft - Diagnóstico</title>
+    <title>Test ScancoorDesign - Diagnóstico</title>
     <style>
         body { font-family: monospace; padding: 20px; background: #2d2d2d; color: #fff; }
         .test { margin: 10px 0; padding: 10px; border-left: 4px solid #666; background: #3d3d3d; }
@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-    <h1>🔧 SixWebSoft Plugin - Diagnóstico</h1>
+    <h1>🔧 ScancoorDesign Plugin - Diagnóstico</h1>
     <p>Fecha: <?php echo date('Y-m-d H:i:s'); ?></p>
     <hr>
 
@@ -42,7 +42,7 @@
         $test_data = get_fields(389);
         if ($test_data) {
             echo '<div class="test warning">⚠️ Configuración encontrada en ACF (post 389)</div>';
-            echo '<div class="test">Puedes migrar estos datos al sistema interno desde: WooCommerce → Variantes SixWebSoft</div>';
+            echo '<div class="test">Puedes migrar estos datos al sistema interno desde: WooCommerce → Variantes ScancoorDesign</div>';
             echo '<pre>';
             echo "Campos ACF disponibles:\n";
             if (isset($test_data['metal'])) echo "  - Metal: " . count($test_data['metal']) . " opciones\n";
@@ -59,10 +59,10 @@
     
     // Check Internal Config System
     echo "<h2>3b. Sistema de Configuración Interno (NUEVO)</h2>";
-    $config = SixWebSoft_Variants_Config::get_all();
-    $summary = SixWebSoft_Variants_Config::get_summary();
+    $config = ScancoorDesign_Variants_Config::get_all();
+    $summary = ScancoorDesign_Variants_Config::get_summary();
     
-    if (!SixWebSoft_Variants_Config::is_empty()) {
+    if (!ScancoorDesign_Variants_Config::is_empty()) {
         echo '<div class="test success">✓ Sistema interno configurado correctamente</div>';
         echo '<pre>';
         echo "Configuración interna:\n";
@@ -73,9 +73,9 @@
     } else {
         echo '<div class="test warning">⚠️ Sistema interno SIN configuración</div>';
         if (function_exists('get_field')) {
-            echo '<div class="test">Ve a: WooCommerce → Variantes SixWebSoft → Migrar desde ACF</div>';
+            echo '<div class="test">Ve a: WooCommerce → Variantes ScancoorDesign → Migrar desde ACF</div>';
         } else {
-            echo '<div class="test">Ve a: WooCommerce → Variantes SixWebSoft y agrega las opciones manualmente</div>';
+            echo '<div class="test">Ve a: WooCommerce → Variantes ScancoorDesign y agrega las opciones manualmente</div>';
         }
     }
 

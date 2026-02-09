@@ -27,7 +27,7 @@
 
 Accede a este archivo para probar el sistema sin productos:
 ```
-http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-ajax.php
+http://localhost/elindesign/wp-content/plugins/woocommerce-scancoordesign/test-ajax.php
 ```
 
 ✅ **Qué debes ver:**
@@ -47,7 +47,7 @@ http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-ajax.
 
 Accede a este archivo para ver el estado del plugin:
 ```
-http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-diagnostico.php
+http://localhost/elindesign/wp-content/plugins/woocommerce-scancoordesign/test-diagnostico.php
 ```
 
 ✅ **Verifica que todo esté en verde:**
@@ -108,7 +108,7 @@ calculate_price() llamada
    - Si dice "Error 0": Problema de conectividad
 
 3. **Falta configuración ACF**
-   - Verifica en: `http://localhost/elindesign/wp-content/plugins/woocommerce-sixwebsoft/test-diagnostico.php`
+   - Verifica en: `http://localhost/elindesign/wp-content/plugins/woocommerce-scancoordesign/test-diagnostico.php`
    - Debe decir "✓ ACF disponible" y "✓ Configuración encontrada en post 389"
 
 4. **El producto no tiene configuración**
@@ -168,8 +168,8 @@ Antes de usar en producción:
 
 **ELIMINA estos archivos de prueba por seguridad:**
 ```
-wp-content/plugins/woocommerce-sixwebsoft/test-ajax.php
-wp-content/plugins/woocommerce-sixwebsoft/test-diagnostico.php
+wp-content/plugins/woocommerce-scancoordesign/test-ajax.php
+wp-content/plugins/woocommerce-scancoordesign/test-diagnostico.php
 ```
 
 O puedes dejarlos para debug futuro, pero **agrega esta línea al inicio:**
@@ -202,9 +202,9 @@ Si después de todo esto el precio aún no se actualiza:
 
 ### Archivos Modificados:
 
-1. **woocomerce-sixwebsoft.php**
-   - Agregado: `sixwebsoft_ajax_calculate_price()` - Nuevo handler AJAX
-   - Agregado: `sixwebsoft_auto_varient_price_html()` - Filtro para precio inicial
+1. **woocomerce-scancoordesign.php**
+   - Agregado: `scancoordesign_ajax_calculate_price()` - Nuevo handler AJAX
+   - Agregado: `scancoordesign_auto_varient_price_html()` - Filtro para precio inicial
    - Mejorado: `WC_Product_Auto_Varient::get_price_html()` - Muestra precio por defecto
    - Limpiado: Código JavaScript de admin
 
