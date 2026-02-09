@@ -87,6 +87,31 @@ foreach ($fields[0] as $key => $value) {
 
 <!--<span id="total_price" > </span>-->
 
+<!-- Price Calculation Loader -->
+<div id="price-loader" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); padding: 30px 50px; border-radius: 12px; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+	<div style="text-align: center;">
+		<div class="loader-spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
+		<p style="color: white; margin: 0; font-size: 16px; font-weight: 500;">Calculating price...</p>
+	</div>
+</div>
+<style>
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+#price-loader-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,0.3);
+	z-index: 9998;
+	display: none;
+}
+</style>
+<div id="price-loader-overlay"></div>
+
  						 <script>
 							console.log('╔═══════════════════════════════════════╗');
 							console.log('║  CALCULADORA DE ANILLOS - DEBUG      ║');
@@ -113,6 +138,18 @@ foreach ($fields[0] as $key => $value) {
 								}
 							});
 							
+							// Show loader function
+							function showPriceLoader() {
+								jQuery('#price-loader').fadeIn(200);
+								jQuery('#price-loader-overlay').fadeIn(200);
+							}
+							
+							// Hide loader function
+							function hidePriceLoader() {
+								jQuery('#price-loader').fadeOut(300);
+								jQuery('#price-loader-overlay').fadeOut(300);
+							}
+							
  						 	function calculate_price(ele='',id='')
  						 	{
 								console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -135,9 +172,13 @@ foreach ($fields[0] as $key => $value) {
 									data: formData,
 									beforeSend: function() {
 										console.log('⏳ Enviando petición AJAX...');
+										showPriceLoader(); // Show loader
 									},
 									success:function(response){
 										console.log('✓ Respuesta recibida:', response);
+										
+										// Hide loader after a short delay for better UX
+										setTimeout(hidePriceLoader, 400);
 										
 										// WordPress AJAX returns response in 'data' property
 										var r = response.data || response;
@@ -200,6 +241,8 @@ foreach ($fields[0] as $key => $value) {
 										console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 									},
 									error: function(xhr, status, error) {
+										hidePriceLoader(); // Hide loader on error
+										
 										console.error('╔═══════════════════════════════════════╗');
 										console.error('║       ERROR AJAX CRÍTICO              ║');
 										console.error('╚═══════════════════════════════════════╝');

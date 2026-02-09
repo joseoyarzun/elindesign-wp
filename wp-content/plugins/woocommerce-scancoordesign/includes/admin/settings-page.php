@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Admin Settings Page for Variants Configuration
  * 
@@ -31,8 +31,8 @@ class ScancoorDesign_Admin_Settings {
 	public static function add_menu() {
 		add_submenu_page(
 			'woocommerce',
-			'Configuración de Variantes',
-			'Variantes scancoordesign',
+			'Variants Configuration',
+			'ScancoorDesign Variants',
 			'manage_woocommerce',
 			'scancoordesign-variants',
 			array(__CLASS__, 'render_page')
@@ -70,8 +70,8 @@ class ScancoorDesign_Admin_Settings {
 			if (!empty($acf_data) && $is_empty) {
 				?>
 				<div class="notice notice-warning is-dismissible">
-					<p><strong>WooCommerce scancoordesign:</strong> Detectamos configuración en ACF. 
-					<a href="<?php echo admin_url('admin.php?page=scancoordesign-variants&action=migrate'); ?>" class="button button-primary">Migrar Ahora</a></p>
+					<p><strong>WooCommerce scancoordesign:</strong> ACF configuration detected. 
+					<a href="<?php echo admin_url('admin.php?page=scancoordesign-variants&action=migrate'); ?>" class="button button-primary">Migrate Now</a></p>
 				</div>
 				<?php
 			}
@@ -85,21 +85,21 @@ class ScancoorDesign_Admin_Settings {
 		check_ajax_referer('scancoordesign_admin_nonce', 'nonce');
 		
 		if (!current_user_can('manage_woocommerce')) {
-			wp_send_json_error(array('message' => 'Permisos insuficientes'));
+			wp_send_json_error(array('message' => 'Insufficient permissions'));
 		}
 		
 		$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
 		$data = isset($_POST['data']) ? $_POST['data'] : array();
 		
 		if (empty($type)) {
-			wp_send_json_error(array('message' => 'Tipo no especificado'));
+			wp_send_json_error(array('message' => 'Type not specified'));
 		}
 		
 		// Add new option
 		if (ScancoorDesign_Variants_Config::add_option($type, $data)) {
-			wp_send_json_success(array('message' => 'Opción guardada correctamente'));
+			wp_send_json_success(array('message' => 'Option saved successfully'));
 		} else {
-			wp_send_json_error(array('message' => 'Error al guardar'));
+			wp_send_json_error(array('message' => 'Error saving'));
 		}
 	}
 	
@@ -110,20 +110,20 @@ class ScancoorDesign_Admin_Settings {
 		check_ajax_referer('scancoordesign_admin_nonce', 'nonce');
 		
 		if (!current_user_can('manage_woocommerce')) {
-			wp_send_json_error(array('message' => 'Permisos insuficientes'));
+			wp_send_json_error(array('message' => 'Insufficient permissions'));
 		}
 		
 		$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
 		$index = isset($_POST['index']) ? intval($_POST['index']) : -1;
 		
 		if (empty($type) || $index < 0) {
-			wp_send_json_error(array('message' => 'Datos inválidos'));
+			wp_send_json_error(array('message' => 'Invalid data'));
 		}
 		
 		if (ScancoorDesign_Variants_Config::remove_option($type, $index)) {
-			wp_send_json_success(array('message' => 'Opción eliminada'));
+			wp_send_json_success(array('message' => 'Option deleted'));
 		} else {
-			wp_send_json_error(array('message' => 'Error al eliminar'));
+			wp_send_json_error(array('message' => 'Error deleting'));
 		}
 	}
 	
@@ -147,16 +147,16 @@ class ScancoorDesign_Admin_Settings {
 		
 		?>
 		<div class="wrap">
-			<h1>⚙️ Configuración de Variantes - scancoordesign</h1>
-			<p>Gestiona todas las opciones de variantes para tus productos personalizados.</p>
+			<h1>⚙️ Variants Configuration - scancoordesign</h1>
+			<p>Manage all variant options for your custom products.</p>
 			
 			<?php if (ScancoorDesign_Variants_Config::is_empty()): ?>
 				<div class="notice notice-warning">
-					<p><strong>⚠️ No hay configuración.</strong> Agrega opciones abajo o 
+					<p><strong>⚠️ No configuration.</strong> Add options below or 
 					<?php if (function_exists('get_fields')): ?>
-						<a href="?page=scancoordesign-variants&action=migrate">migra desde ACF</a>.
+						<a href="?page=scancoordesign-variants&action=migrate">migrate from ACF</a>.
 					<?php else: ?>
-						agrega opciones manualmente.
+						add options manually.
 					<?php endif; ?>
 					</p>
 				</div>
@@ -168,66 +168,66 @@ class ScancoorDesign_Admin_Settings {
 				<div class="scancoordesign-tabs">
 					<nav class="nav-tab-wrapper">
 						<a href="#tab-metal" class="nav-tab nav-tab-active">Metal (<?php echo $summary['metal']; ?>)</a>
-						<a href="#tab-stone" class="nav-tab">Piedras (<?php echo $summary['stone']; ?>)</a>
-						<a href="#tab-engravement" class="nav-tab">Grabados (<?php echo $summary['engravement']; ?>)</a>
-						<a href="#tab-size" class="nav-tab">Tamaños (<?php echo $summary['size']; ?>)</a>
-						<a href="#tab-width" class="nav-tab">Anchos (<?php echo $summary['width']; ?>)</a>
-						<a href="#tab-thickness" class="nav-tab">Grosores (<?php echo $summary['thickness']; ?>)</a>
-						<a href="#tab-surface" class="nav-tab">Superficies (<?php echo $summary['surface']; ?>)</a>
+						<a href="#tab-stone" class="nav-tab">Stones (<?php echo $summary['stone']; ?>)</a>
+						<a href="#tab-engravement" class="nav-tab">Engravings (<?php echo $summary['engravement']; ?>)</a>
+						<a href="#tab-size" class="nav-tab">Sizes (<?php echo $summary['size']; ?>)</a>
+						<a href="#tab-width" class="nav-tab">Widths (<?php echo $summary['width']; ?>)</a>
+						<a href="#tab-thickness" class="nav-tab">Thicknesses (<?php echo $summary['thickness']; ?>)</a>
+						<a href="#tab-surface" class="nav-tab">Surfaces (<?php echo $summary['surface']; ?>)</a>
 					</nav>
 					
 					<!-- METAL TAB -->
 					<div id="tab-metal" class="scancoordesign-tab-content active">
-						<h2>⚙️ Configuración de Metales</h2>
-						<p>Formato: Nombre, Precio por gramo (SEK), Densidad (g/cm³)</p>
+						<h2>⚙️ Metal Configuration</h2>
+						<p>Format: Name, Price per gram (SEK), Density (g/cm³)</p>
 						<?php self::render_variant_table('metal', $config['metal']); ?>
 					</div>
 					
 					<!-- STONE TAB -->
 					<div id="tab-stone" class="scancoordesign-tab-content">
-						<h2>💎 Configuración de Piedras</h2>
-						<p>Formato: Nombre, Precio adicional (SEK)</p>
+						<h2>💎 Stone Configuration</h2>
+						<p>Format: Name, Additional price (SEK)</p>
 						<?php self::render_variant_table('stone', $config['stone']); ?>
 					</div>
 					
 					<!-- ENGRAVEMENT TAB -->
 					<div id="tab-engravement" class="scancoordesign-tab-content">
-						<h2>✍️ Configuración de Grabados</h2>
-						<p>Formato: Nombre, Precio adicional (SEK)</p>
+						<h2>✍️ Engraving Configuration</h2>
+						<p>Format: Name, Additional price (SEK)</p>
 						<?php self::render_variant_table('engravement', $config['engravement']); ?>
 					</div>
 					
 					<!-- SIZE TAB -->
 					<div id="tab-size" class="scancoordesign-tab-content">
-						<h2>📏 Configuración de Tamaños</h2>
-						<p>Valores numéricos del tamaño del anillo</p>
+						<h2>📏 Size Configuration</h2>
+						<p>Numeric values for ring size</p>
 						<?php self::render_variant_table('size', $config['size']); ?>
 					</div>
 					
 					<!-- WIDTH TAB -->
 					<div id="tab-width" class="scancoordesign-tab-content">
-						<h2>↔️ Configuración de Anchos</h2>
-						<p>Valores numéricos del ancho en mm</p>
+						<h2>↔️ Width Configuration</h2>
+						<p>Numeric values for width in mm</p>
 						<?php self::render_variant_table('width', $config['width']); ?>
 					</div>
 					
 					<!-- THICKNESS TAB -->
 					<div id="tab-thickness" class="scancoordesign-tab-content">
-						<h2>⬍ Configuración de Grosores</h2>
-						<p>Valores numéricos del grosor en mm</p>
+						<h2>⬍ Thickness Configuration</h2>
+						<p>Numeric values for thickness in mm</p>
 						<?php self::render_variant_table('thickness', $config['thickness']); ?>
 					</div>
 					
 					<!-- SURFACE TAB -->
 					<div id="tab-surface" class="scancoordesign-tab-content">
-						<h2>✨ Configuración de Superficies</h2>
-						<p>Tipos de acabado de superficie</p>
+						<h2>✨ Surface Configuration</h2>
+						<p>Surface finish types</p>
 						<?php self::render_variant_table('surface', $config['surface']); ?>
 					</div>
 				</div>
 				
 				<p class="submit">
-					<input type="submit" name="scancoordesign_save_all" class="button button-primary button-large" value="💾 Guardar Todos los Cambios">
+					<input type="submit" name="scancoordesign_save_all" class="button button-primary button-large" value="💾 Save All Changes">
 				</p>
 			</form>
 		</div>
@@ -247,17 +247,17 @@ class ScancoorDesign_Admin_Settings {
 			<thead>
 				<tr>
 					<th width="5%">#</th>
-					<th width="<?php echo $has_value ? '35%' : '70%'; ?>">Nombre/Texto</th>
+					<th width="<?php echo $has_value ? '35%' : '70%'; ?>">Name/Text</th>
 					<?php if ($has_value): ?>
-						<th width="25%">Precio/Valor (SEK)</th>
+						<th width="25%">Price/Value (SEK)</th>
 					<?php endif; ?>
 					<?php if ($has_density): ?>
-						<th width="20%">Densidad (g/cm³)</th>
+						<th width="20%">Density (g/cm³)</th>
 					<?php endif; ?>
 					<?php if ($is_numeric): ?>
-						<th width="25%">Valor</th>
+						<th width="25%">Value</th>
 					<?php endif; ?>
-					<th width="15%">Acciones</th>
+					<th width="15%">Actions</th>
 				</tr>
 			</thead>
 			<tbody id="<?php echo esc_attr($type); ?>-list">
@@ -289,7 +289,7 @@ class ScancoorDesign_Admin_Settings {
 							<?php endif; ?>
 							<td>
 								<button type="button" class="button button-small delete-option" data-type="<?php echo $type; ?>" data-index="<?php echo $index; ?>">
-									🗑️ Eliminar
+									🗑️ Delete
 								</button>
 							</td>
 						</tr>
@@ -297,7 +297,7 @@ class ScancoorDesign_Admin_Settings {
 				<?php else: ?>
 					<tr class="no-items">
 						<td colspan="<?php echo $has_density ? 5 : ($has_value ? 4 : 4); ?>" style="text-align:center;">
-							No hay opciones configuradas. Haz clic en "Agregar Nueva" abajo.
+							No options configured. Click "Add New" below.
 						</td>
 					</tr>
 				<?php endif; ?>
@@ -306,7 +306,7 @@ class ScancoorDesign_Admin_Settings {
 				<tr>
 					<td colspan="<?php echo $has_density ? 5 : ($has_value ? 4 : 4); ?>">
 						<button type="button" class="button add-option" data-type="<?php echo $type; ?>">
-							➕ Agregar Nueva Opción
+							➕ Add New Option
 						</button>
 					</td>
 				</tr>
@@ -337,7 +337,7 @@ class ScancoorDesign_Admin_Settings {
 				<?php endif; ?>
 				<td>
 					<button type="button" class="button button-small delete-option" data-type="<?php echo $type; ?>" data-index="__INDEX__">
-						🗑️ Eliminar
+						🗑️ Delete
 					</button>
 				</td>
 			</tr>
@@ -350,15 +350,15 @@ class ScancoorDesign_Admin_Settings {
 	 */
 	private static function handle_bulk_save() {
 		if (!current_user_can('manage_woocommerce')) {
-			wp_die('Permisos insuficientes');
+			wp_die('Insufficient permissions');
 		}
 		
 		$config = isset($_POST['config']) ? $_POST['config'] : array();
 		
 		if (ScancoorDesign_Variants_Config::save($config)) {
-			echo '<div class="notice notice-success"><p>✅ Configuración guardada correctamente.</p></div>';
+			echo '<div class="notice notice-success"><p>✅ Configuration saved successfully.</p></div>';
 		} else {
-			echo '<div class="notice notice-error"><p>❌ Error al guardar la configuración.</p></div>';
+			echo '<div class="notice notice-error"><p>❌ Error saving configuration.</p></div>';
 		}
 	}
 	
@@ -367,17 +367,17 @@ class ScancoorDesign_Admin_Settings {
 	 */
 	private static function handle_migration() {
 		if (!function_exists('get_fields')) {
-			wp_die('ACF no está disponible para migración');
+			wp_die('ACF is not available for migration');
 		}
 		
 		if (!current_user_can('manage_woocommerce')) {
-			wp_die('Permisos insuficientes');
+			wp_die('Insufficient permissions');
 		}
 		
 		$acf_data = get_fields(389);
 		
 		if (empty($acf_data)) {
-			echo '<div class="wrap"><h1>⚠️ No hay datos en ACF</h1><p>No se encontró configuración en el post 389.</p></div>';
+			echo '<div class="wrap"><h1>⚠️ No data in ACF</h1><p>No configuration found in post 389.</p></div>';
 			return;
 		}
 		
@@ -385,24 +385,24 @@ class ScancoorDesign_Admin_Settings {
 			$summary = ScancoorDesign_Variants_Config::get_summary();
 			?>
 			<div class="wrap">
-				<h1>✅ Migración Completada</h1>
+				<h1>✅ Migration Completed</h1>
 				<div class="notice notice-success">
-					<p><strong>¡Éxito!</strong> Los datos de ACF han sido migrados al sistema interno.</p>
-				</div>
-				
-				<h2>📊 Resumen de Migración:</h2>
+				<p><strong>Success!</strong> ACF data has been migrated to the internal system.</p>
+			</div>
+			
+			<h2>📊 Migration Summary:</h2>
 				<table class="wp-list-table widefat">
 					<thead>
 						<tr>
-							<th>Tipo</th>
-							<th>Cantidad</th>
+							<th>Type</th>
+							<th>Quantity</th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php foreach ($summary as $type => $count): ?>
 							<tr>
 								<td><?php echo ucfirst($type); ?></td>
-								<td><?php echo $count; ?> opciones</td>
+								<td><?php echo $count; ?> options</td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
@@ -410,21 +410,25 @@ class ScancoorDesign_Admin_Settings {
 				
 				<p>
 					<a href="<?php echo admin_url('admin.php?page=scancoordesign-variants'); ?>" class="button button-primary">
-						Ver Configuración
+						View Configuration
 					</a>
 				</p>
 				
 				<div class="notice notice-info">
-					<p><strong>ℹ️ Nota:</strong> Los datos originales de ACF (post 389) no han sido eliminados. 
-					Puedes desactivar ACF de forma segura ahora.</p>
+					<p><strong>ℹ️ Note:</strong> The original ACF data (post 389) has not been deleted. 
+					You can safely disable ACF now.</p>
 				</div>
 			</div>
 			<?php
 		} else {
-			echo '<div class="wrap"><h1>❌ Error en Migración</h1><p>Hubo un error al migrar los datos.</p></div>';
+			echo '<div class="wrap"><h1>❌ Migration Error</h1><p>There was an error migrating the data.</p></div>';
 		}
 	}
 }
 
 // Initialize
 ScancoorDesign_Admin_Settings::init();
+
+
+
+

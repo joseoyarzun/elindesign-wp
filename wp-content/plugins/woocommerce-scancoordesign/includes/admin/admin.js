@@ -20,7 +20,7 @@
 			$(this).addClass('nav-tab-active');
 			
 			// Update content
-			$('.ScancoorDesign-tab-content').removeClass('active');
+			$('.scancoordesign-tab-content').removeClass('active');
 			$(target).addClass('active');
 		});
 		
@@ -49,7 +49,7 @@
 		
 		// Delete option
 		$(document).on('click', '.delete-option', function() {
-			if (!confirm('¿Estás seguro de eliminar esta opción?')) {
+			if (!confirm('Are you sure you want to delete this option?')) {
 				return;
 			}
 			
@@ -65,7 +65,7 @@
 					$tbody.append(
 						'<tr class="no-items">' +
 						'<td colspan="' + colspan + '" style="text-align:center;">' +
-						'No hay opciones configuradas. Haz clic en "Agregar Nueva" abajo.' +
+						'No options configured. Click "Add New" below.' +
 						'</td>' +
 						'</tr>'
 					);
@@ -79,11 +79,11 @@
 		});
 		
 		// Form submit confirmation
-		$('#ScancoorDesign-config-form').on('submit', function() {
+		$('#scancoordesign-config-form').on('submit', function() {
 			var hasChanges = true; // Could implement change tracking
 			
 			if (hasChanges) {
-				return confirm('¿Guardar todos los cambios?');
+				return confirm('Save all changes?');
 			}
 			
 			return true;
@@ -92,17 +92,17 @@
 		// Auto-save warning on page leave
 		var formChanged = false;
 		
-		$('#ScancoorDesign-config-form').on('change', 'input', function() {
+		$('#scancoordesign-config-form').on('change', 'input', function() {
 			formChanged = true;
 		});
 		
 		$(window).on('beforeunload', function() {
 			if (formChanged) {
-				return '¿Estás seguro? Hay cambios sin guardar.';
+				return 'Are you sure? There are unsaved changes.';
 			}
 		});
 		
-		$('#ScancoorDesign-config-form').on('submit', function() {
+		$('#scancoordesign-config-form').on('submit', function() {
 			formChanged = false;
 		});
 	});

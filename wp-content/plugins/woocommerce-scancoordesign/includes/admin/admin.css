@@ -1,10 +1,10 @@
 /* ScancoorDesign Admin Styles */
 
-.ScancoorDesign-tabs {
+.scancoordesign-tabs {
 	margin-top: 20px;
 }
 
-.ScancoorDesign-tab-content {
+.scancoordesign-tab-content {
 	display: none;
 	padding: 20px;
 	background: #fff;
@@ -12,25 +12,25 @@
 	border-top: 0;
 }
 
-.ScancoorDesign-tab-content.active {
+.scancoordesign-tab-content.active {
 	display: block;
 }
 
-.ScancoorDesign-tab-content h2 {
+.scancoordesign-tab-content h2 {
 	margin-top: 0;
 }
 
-.ScancoorDesign-tab-content p {
+.scancoordesign-tab-content p {
 	color: #666;
 	font-style: italic;
 }
 
-.ScancoorDesign-tab-content table {
+.scancoordesign-tab-content table {
 	margin-top: 15px;
 }
 
-.ScancoorDesign-tab-content input[type="text"],
-.ScancoorDesign-tab-content input[type="number"] {
+.scancoordesign-tab-content input[type="text"],
+.scancoordesign-tab-content input[type="number"] {
 	width: 100%;
 }
 
@@ -53,19 +53,19 @@
 }
 
 /* Success/Error Messages */
-.ScancoorDesign-notice {
+.scancoordesign-notice {
 	padding: 12px;
 	margin: 15px 0;
 	border-left: 4px solid;
 	background: #fff;
 }
 
-.ScancoorDesign-notice.success {
+.scancoordesign-notice.success {
 	border-color: #46b450;
 	background: #ecf7ed;
 }
 
-.ScancoorDesign-notice.error {
+.scancoordesign-notice.error {
 	border-color: #dc3232;
 	background: #fef7f7;
 }
@@ -84,12 +84,12 @@
 
 /* Responsive */
 @media screen and (max-width: 782px) {
-	.ScancoorDesign-tab-content table {
+	.scancoordesign-tab-content table {
 		font-size: 14px;
 	}
 	
-	.ScancoorDesign-tab-content input[type="text"],
-	.ScancoorDesign-tab-content input[type="number"] {
+	.scancoordesign-tab-content input[type="text"],
+	.scancoordesign-tab-content input[type="number"] {
 		font-size: 14px;
 	}
 }
