@@ -106,7 +106,10 @@ foreach ($fields[0] as $key => $value) {
 									console.error('❌ ERROR: No se encuentra el formulario .cart');
 								} else {
 									console.log('✓ Formulario encontrado, ejecutando cálculo inicial...');
-									calculate_price();
+									// Ejecutar cálculo inicial automáticamente
+									setTimeout(function() {
+										calculate_price();
+									}, 500);
 								}
 							});
 							
@@ -119,7 +122,10 @@ foreach ($fields[0] as $key => $value) {
 								var formData = jQuery(".cart").serialize();
 								console.log('Datos serializados:', formData);
 								
-								var ajaxUrl = "<?=home_url();?>?action=auto_varient";
+								// Use WordPress AJAX endpoint
+								var ajaxUrl = "<?php echo admin_url('admin-ajax.php'); ?>";
+								formData += '&action=auto_varient_calculate';
+								
 								console.log('URL destino:', ajaxUrl);
 
 								jQuery.ajax({
@@ -130,10 +136,13 @@ foreach ($fields[0] as $key => $value) {
 									beforeSend: function() {
 										console.log('⏳ Enviando petición AJAX...');
 									},
-									success:function(r){
-										console.log('✓ Respuesta recibida:', r);
+									success:function(response){
+										console.log('✓ Respuesta recibida:', response);
 										
-										if(r.status){
+										// WordPress AJAX returns response in 'data' property
+										var r = response.data || response;
+										
+										if(r.status === 'true' || r.status === true || response.success){
 											console.log('💰 Precio calculado:', r.price);
 											
 											var priceHTML = r.price + '&nbsp;<span class="woocommerce-Price-currencySymbol"><?=get_woocommerce_currency_symbol();?></span>';
@@ -165,7 +174,8 @@ foreach ($fields[0] as $key => $value) {
 											
 											if(!actualizado) {
 												console.error('❌ NO se pudo actualizar el precio - ningún selector funcionó');
-												console.log('Estructura HTML actual:', jQuery('.summary').html());
+												console.log('Estructura HTML actual de .summary:');
+												console.log(jQuery('.summary').html());
 											}
 											
 											// Ocultar precio tachado
@@ -184,8 +194,8 @@ foreach ($fields[0] as $key => $value) {
 											
 											console.log('✓ Campos actualizados correctamente');
 										} else {
-											console.error('❌ Error: r.status no es true');
-											console.log('Respuesta completa:', r);
+											console.error('❌ Error: Status no es válido');
+											console.log('Respuesta completa:', response);
 										}
 										console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 									},
@@ -204,6 +214,7 @@ foreach ($fields[0] as $key => $value) {
 											console.error('⚠️ Error 404: La URL no existe');
 										} else if(xhr.status === 500) {
 											console.error('⚠️ Error 500: Error del servidor PHP');
+											console.error('Verifica los logs de PHP para más detalles');
 										}
 									}
 								});
