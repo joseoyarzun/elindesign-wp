@@ -1,0 +1,95 @@
+/* ScancoorDesign Admin Styles */
+
+.scancoordesign-tabs {
+	margin-top: 20px;
+}
+
+.scancoordesign-tab-content {
+	display: none;
+	padding: 20px;
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-top: 0;
+}
+
+.scancoordesign-tab-content.active {
+	display: block;
+}
+
+.scancoordesign-tab-content h2 {
+	margin-top: 0;
+}
+
+.scancoordesign-tab-content p {
+	color: #666;
+	font-style: italic;
+}
+
+.scancoordesign-tab-content table {
+	margin-top: 15px;
+}
+
+.scancoordesign-tab-content input[type="text"],
+.scancoordesign-tab-content input[type="number"] {
+	width: 100%;
+}
+
+.delete-option {
+	color: #a00;
+}
+
+.delete-option:hover {
+	color: #dc3232;
+	border-color: #dc3232;
+}
+
+.add-option {
+	margin-top: 10px;
+}
+
+.nav-tab-wrapper {
+	border-bottom: 1px solid #ccd0d4;
+	margin-bottom: 0;
+}
+
+/* Success/Error Messages */
+.scancoordesign-notice {
+	padding: 12px;
+	margin: 15px 0;
+	border-left: 4px solid;
+	background: #fff;
+}
+
+.scancoordesign-notice.success {
+	border-color: #46b450;
+	background: #ecf7ed;
+}
+
+.scancoordesign-notice.error {
+	border-color: #dc3232;
+	background: #fef7f7;
+}
+
+/* Migration  Page */
+.migration-summary {
+	background: #fff;
+	padding: 20px;
+	border: 1px solid #ccd0d4;
+	margin: 20px 0;
+}
+
+.migration-summary table {
+	margin-top: 15px;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+	.scancoordesign-tab-content table {
+		font-size: 14px;
+	}
+	
+	.scancoordesign-tab-content input[type="text"],
+	.scancoordesign-tab-content input[type="number"] {
+		font-size: 14px;
+	}
+}

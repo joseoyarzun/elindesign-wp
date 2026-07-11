@@ -1,0 +1,28 @@
+# Secrets and local env
+wp-config.php
+wp-config-local.php
+.htaccess
+
+# Runtime/generated data
+wp-content/uploads/***
+wp-content/cache/***
+wp-content/wflogs/***
+wp-content/backups-dup-lite/***
+wp-content/upgrade/***
+wp-content/upgrade-temp-backup/***
+wp-content/ai1wm-backups/***
+
+# Logs and dumps
+*.log
+*.sql
+*.sql.gz
+*.zip
+*.tar
+*.tar.gz
+
+# VCS and local files
+.git/***
+.vscode/***
+.idea/***
+node_modules/***
+vendor/***

