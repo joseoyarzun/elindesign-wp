@@ -83,7 +83,12 @@ class UIPage {
 
 	}
 
-	public static function isSettings( array $get = null ) {
+	/**
+	 * @param array|null $get
+	 *
+	 * @return callable|bool
+	 */
+	public static function isSettings( $get = null ) {
 		$isSettings = function ( $get ) {
 			return defined( 'WPML_TM_FOLDER' )
 				? self::isPage( WPML_TM_FOLDER . '/menu/settings', $get )
@@ -98,7 +103,7 @@ class UIPage {
 	 *
 	 * @return bool
 	 */
-	public static function isMainSettingsTab( array $get = null ) {
+	public static function isMainSettingsTab( $get = null ) {
 		return self::isSettingTab( 'mcsetup', $get );
 	}
 
@@ -107,7 +112,7 @@ class UIPage {
 	 *
 	 * @return bool
 	 */
-	public static function isNotificationSettingsTab( array $get = null ) {
+	public static function isNotificationSettingsTab( $get = null ) {
 		return self::isSettingTab( 'notifications', $get );
 	}
 
@@ -116,7 +121,7 @@ class UIPage {
 	 *
 	 * @return bool
 	 */
-	public static function isCustomXMLConfigSettingsTab( array $get = null ) {
+	public static function isCustomXMLConfigSettingsTab( $get = null ) {
 		return self::isSettingTab( 'custom-xml-config', $get );
 	}
 
@@ -127,7 +132,7 @@ class UIPage {
 	 *
 	 * @return bool
 	 */
-	public static function isSettingTab( $tab = null, array $get = null ) {
+	public static function isSettingTab( $tab = null, $get = null ) {
 		$fn = function ( $tab, $get ) {
 			if ( self::isSettings( $get ) ) {
 				return Obj::propOr( 'mcsetup', 'sm', $get ) === $tab;

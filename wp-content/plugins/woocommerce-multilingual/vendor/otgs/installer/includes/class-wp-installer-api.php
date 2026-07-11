@@ -1,5 +1,7 @@
 <?php
 
+use OTGS\Installer\Settings;
+
 class WP_Installer_API{
 
     public static function get_product_installer_link($repository_id, $package_id = false){
@@ -31,9 +33,10 @@ class WP_Installer_API{
      * @return string|false The translation service id or false if none is set
      */
     public static function get_preferred_ts($repository_id = 'wpml'){
+		$ts_info = Settings::load_ts_info();
 
-        if(isset(WP_Installer()->settings['repositories'][$repository_id]['ts_info']['preferred'])){
-            return WP_Installer()->settings['repositories'][$repository_id]['ts_info']['preferred'];
+        if(isset($ts_info['repositories'][$repository_id]['ts_info']['preferred'])){
+            return $ts_info['repositories'][$repository_id]['ts_info']['preferred'];
         }
 
         return false;
@@ -49,12 +52,14 @@ class WP_Installer_API{
      * @param string $repository_id The repository id (e.g. wpml)
      */
     public static function set_preferred_ts( $value, $repository_id = 'wpml' ){
+		$installer = WP_Installer::instance();
+		$settings = $installer->get_settings();
 
-        if( isset( WP_Installer()->settings['repositories'][$repository_id]['ts_info']['preferred'] ) ){
+        if( isset( $settings['repositories'][$repository_id]['ts_info']['preferred'] ) ){
 
-            WP_Installer()->settings['repositories'][$repository_id]['ts_info']['preferred'] = $value;
+            $settings['repositories'][$repository_id]['ts_info']['preferred'] = $value;
 
-            WP_Installer()->save_settings();
+            $installer->save_settings( $settings );
 
         }
 

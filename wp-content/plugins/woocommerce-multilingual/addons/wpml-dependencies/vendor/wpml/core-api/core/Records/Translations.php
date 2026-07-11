@@ -42,7 +42,7 @@ class Translations {
 	 *
 	 * @return callable|Collection
 	 */
-	public static function getForPostType( array $order = null, $postType = null ) {
+	public static function getForPostType( $order = null, $postType = null ) {
 		$get = function ( array $order, $postType ) {
 			global $wpdb;
 
@@ -66,7 +66,7 @@ class Translations {
 	 *
 	 * @return callable|Collection
 	 */
-	public static function getSourceInLanguage( $lang = null, Collection $translations = null ) {
+	public static function getSourceInLanguage( $lang = null, $translations = null ) {
 		$getSource = function ( $defaultLang, Collection $translations ) {
 			return self::getSource( $translations )->filter( Relation::propEq( 'language_code', $defaultLang ) )->values();
 		};
@@ -74,7 +74,12 @@ class Translations {
 		return call_user_func_array( curryN( 2, $getSource ), func_get_args() );
 	}
 
-	public static function getSource( Collection $translations = null) {
+	/**
+	 * @param Collection|null $translations
+	 *
+	 * @return callable|Collection
+	 */
+	public static function getSource( $translations = null) {
 		$getSource = function ( Collection $translations ) {
 			return $translations->filter( Relation::propEq( 'source_language_code', null ) )->values();
 		};

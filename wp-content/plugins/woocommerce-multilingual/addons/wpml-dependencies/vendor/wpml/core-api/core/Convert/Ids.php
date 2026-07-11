@@ -8,6 +8,7 @@ use WPML\FP\Lst;
 use WPML\FP\Obj;
 use WPML\FP\Str;
 use WPML\FP\Type;
+use WPML\Media\Option;
 use function WPML\FP\compose;
 use function WPML\FP\pipe;
 
@@ -44,7 +45,14 @@ class Ids {
 				return $id;
 			}
 
-			$convertedId = $sitepress->get_object_id( $id, $getElementType( (int) $id ), $fallbackToOriginal, $targetLang );
+			$elementTypeFamily = $getElementType( (int) $id );
+
+			if ( 'attachment' === $elementTypeFamily && Option::shouldHandleMediaAuto() ) {
+				// Fallback to original ID if it is an media and the media auto handling is enabled.
+				$fallbackToOriginal = true;
+			}
+
+			$convertedId = $sitepress->get_object_id( $id, $elementTypeFamily, $fallbackToOriginal, $targetLang );
 
 			if ( $convertedId ) {
 				return is_string( $id ) ? (string) $convertedId : $convertedId;

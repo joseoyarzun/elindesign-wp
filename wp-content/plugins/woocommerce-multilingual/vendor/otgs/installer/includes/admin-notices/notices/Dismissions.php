@@ -11,7 +11,7 @@ class Dismissions {
 	 *
 	 * @return array
 	 */
-	public static function dismissAccountNotice( $dismissed, $data ) {
+	public static function dismissAccountNotice( $dismissed, $data ): array {
 		$dismissed['repo'][ $data['repository'] ][ $data['noticeType'] ] = time();
 
 		return $dismissed;
@@ -23,8 +23,8 @@ class Dismissions {
 	 *
 	 * @return array
 	 */
-	public static function dismissRecommendationNotice( $dismissed, $data ) {
-		Storage::delete( $data['noticePluginSlug'], $data['repository'] );
+	public static function dismissRecommendationNotice( $dismissed, $data ): array {
+		Storage::dismissNotice( $data['noticePluginSlug'], $data['repository'] );
 
 		return $dismissed;
 	}

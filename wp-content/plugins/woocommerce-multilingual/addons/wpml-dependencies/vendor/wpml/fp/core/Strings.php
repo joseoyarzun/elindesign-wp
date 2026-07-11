@@ -26,8 +26,8 @@ use WPML\Collect\Support\Traits\Macroable;
  * @method static callable|int len( ...$str ) - Curried :: string → int
  * @method static callable|string replace( ...$find, ...$replace, ...$str ) - Curried :: string → string → string → string
  * @method static callable|string pregReplace( ...$pattern, ...$replace, ...$str ) - Curried :: string → string → string → string
- * @method static callable|string match( ...$pattern, ...$str ) - Curried :: string → string → array
- * @method static callable|string matchAll( ...$pattern, ...$str ) - Curried :: string → string → array
+ * @method static callable|array match( ...$pattern, ...$str ) - Curried :: string → string → array
+ * @method static callable|array matchAll( ...$pattern, ...$str ) - Curried :: string → string → array
  * @method static callable|string wrap( ...$before, ...$after, ...$str ) - Curried :: string → string → string
  * @method static callable|string toUpper( string ...$str ) - Curried :: string → string
  * @method static callable|string toLower( string ...$str ) - Curried :: string → string
@@ -107,7 +107,11 @@ class Str {
 		self::macro( 'match', curryN( 2, function ( $pattern, $subject ) {
 			$matches = [];
 
-			return preg_match( $pattern, $subject, $matches ) ? $matches : [];
+			if ( ! is_string( $pattern ) || ( ! is_string( $subject ) && ! is_numeric( $subject ) ) ) {
+				return false;
+			}
+
+			return preg_match( $pattern, (string) $subject, $matches ) ? $matches : [];
 		} ) );
 
 		self::macro( 'matchAll', curryN( 2, function ( $pattern, $subject ) {
@@ -123,6 +127,30 @@ class Str {
 		self::macro( 'toUpper', curryN( 1, 'strtoupper' ) );
 
 		self::macro( 'toLower', curryN( 1, 'strtolower' ) );
+	}
+
+	/**
+	 * Truncates a string to a maximum number of bytes keeping multibyte chars integrity.
+	 *
+	 * @param string $string
+	 * @param int $max_bytes
+	 * @param int|null $max_characters
+	 * @return string
+	 */
+	public static function truncate_bytes( $string, $max_bytes, $max_characters = null ) {
+		if ( $max_characters !== null ) {
+			$string = mb_substr( $string, 0, $max_characters );
+		} else {
+			$string = mb_substr( $string, 0, $max_bytes );
+			$max_characters = mb_strlen( $string );
+		}
+
+		// If the length of the string ( in bytes ) is still too big, we have to cut at least one more character.
+		if ( strlen( $string ) > $max_bytes ) {
+			return static::truncate_bytes( $string, $max_bytes, $max_characters - 1 );
+		}
+
+		return $string;
 	}
 }
 

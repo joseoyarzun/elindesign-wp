@@ -1,5 +1,7 @@
 <?php
 
+use OTGS\Installer\Settings;
+
 /**
  * Class WP_Installer_Channels
  * @since 1.8
@@ -69,16 +71,18 @@ class WP_Installer_Channels{
 	public function set_channel(){
 		$repository_id  = sanitize_text_field( $_POST['repository_id'] );
 		$channel = sanitize_text_field( $_POST['channel'] );
+		$installer = WP_Installer::instance();
+		$settings = $installer->get_settings();
 
 		$response = array();
 		if ( wp_verify_nonce( $_POST['nonce'], 'installer_set_channel:' . $repository_id ) ) {
-			if( isset( WP_Installer()->settings['repositories'][$repository_id] ) ){
-				WP_Installer()->settings['repositories'][$repository_id]['channel'] = $channel;
-				WP_Installer()->settings['repositories'][$repository_id]['no-prompt'] = $_POST['noprompt'] === 'true';
-				WP_Installer()->save_settings();
+			if( isset( $settings['repositories'][$repository_id] ) ){
+				$settings['repositories'][$repository_id]['channel'] = $channel;
+				$settings['repositories'][$repository_id]['no-prompt'] = $_POST['noprompt'] === 'true';
+				$installer->save_settings( $settings );
 			}
 
-			WP_Installer()->refresh_repositories_data();
+			$installer->refresh_repositories_data();
 
 			$response['status'] = 'OK';
 		}
@@ -94,8 +98,9 @@ class WP_Installer_Channels{
 	 */
 	public function get_channel( $repository_id ){
 		$channel = self::CHANNEL_PRODUCTION;
-		if( isset( WP_Installer()->settings['repositories'][$repository_id]['channel'] ) ){
-			$channel = WP_Installer()->settings['repositories'][$repository_id]['channel'];
+		$settings = Settings::load_channels();
+		if( isset( $settings['repositories'][$repository_id]['channel'] ) ){
+			$channel = $settings['repositories'][$repository_id]['channel'];
 		}
 		return $channel;
 	}

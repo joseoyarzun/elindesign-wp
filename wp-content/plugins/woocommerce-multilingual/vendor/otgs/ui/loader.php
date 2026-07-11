@@ -22,7 +22,7 @@
 /**
  * OTGS UI version - increase after every major update.
  */
-$otg_ui_version = 111;
+$otg_ui_version = 11000;
 
 /**
  * =================
@@ -41,7 +41,7 @@ if ( ! isset( $otg_ui_versions ) ) {
 if ( ! isset( $otg_ui_versions[ $otg_ui_version ] ) ) {
 	// Initialize the path to this version.
 	$otg_ui_versions[ $otg_ui_version ] = array(
-		'path' => wp_normalize_path( dirname( __FILE__ ) ),
+		'path' => wp_normalize_path( __DIR__ ),
 	);
 }
 

@@ -97,10 +97,11 @@ class AutoUpgrade {
 	}
 
 	private function updateInstallerAutoUpdateSetting( $repositoryId, $value ) {
-		if ( ! isset( $this->installer->settings['repositories'][ $repositoryId ]['auto_update'] )
-		     || $this->installer->settings['repositories'][ $repositoryId ]['auto_update'] !== $value ) {
-			$this->installer->settings['repositories'][ $repositoryId ]['auto_update'] = $value;
-			$this->installer->save_settings();
+		$settings = $this->installer->get_settings();
+		if ( ! isset( $settings['repositories'][ $repositoryId ]['auto_update'] )
+		     || $settings['repositories'][ $repositoryId ]['auto_update'] !== $value ) {
+			$settings['repositories'][ $repositoryId ]['auto_update'] = $value;
+			$this->installer->save_settings( $settings );
 		}
 	}
 

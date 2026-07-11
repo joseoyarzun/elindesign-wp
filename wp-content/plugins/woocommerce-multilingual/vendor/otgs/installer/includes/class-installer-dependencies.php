@@ -1,5 +1,7 @@
 <?php
 
+use OTGS\Installer\Settings;
+
 class Installer_Dependencies {
 
 	private $uploading_allowed = null;
@@ -46,17 +48,16 @@ class Installer_Dependencies {
 
 				$upgrade_path_length = strlen( WP_CONTENT_DIR . '/upgrade' );
 
-				$installer_settings = OTGS_Installer()->settings;
-				if ( !empty( $installer_settings['repositories'][ $repository_id ]['data']['downloads']['plugins'] ) ) {
-					$a_plugin       = current( $installer_settings['repositories'][ $repository_id ]['data']['downloads']['plugins'] );
-					$url            = OTGS_Installer()->append_site_key_to_download_url( $a_plugin['url'], 'xxxxxx', $repository_id );
-					$tmpfname       = wp_tempnam( $url );
-					$tmpname_length = strlen( basename( $tmpfname ) ) - 4; // -.tmp
-					wp_delete_file( $tmpfname );
+				// Some possible plugin download url (doesn't matter if valid) it's just for length calculation.
+				$a_plugin = 'https://' . $repository_id . '.org/?download=637370&version=5.5.2';
 
-					if ( $upgrade_path_length + $tmpname_length + $longest_path[ $repository_id ] + $margin > $windows_max_path_length ) {
-						$this->is_win_paths_exception[ $repository_id ] = true;
-					}
+				$url            = OTGS_Installer()->append_site_key_to_download_url( $a_plugin, 'xxxxxx', $repository_id );
+				$tmpfname       = wp_tempnam( $url );
+				$tmpname_length = strlen( basename( $tmpfname ) ) - 4; // -.tmp
+				wp_delete_file( $tmpfname );
+
+				if ( $upgrade_path_length + $tmpname_length + $longest_path[ $repository_id ] + $margin > $windows_max_path_length ) {
+					$this->is_win_paths_exception[ $repository_id ] = true;
 				}
 			}
 		}
@@ -100,6 +101,10 @@ class Installer_Dependencies {
 	}
 
 	public function prevent_plugins_update_on_plugins_page() {
+		if ( strtoupper( substr( constant('PHP_OS'), 0, 3 ) ) !== 'WIN' ) {
+			// Only for Windows.
+			return;
+		}
 
 		$plugins = get_site_transient( 'update_plugins' );
 		if ( isset( $plugins->response ) && is_array( $plugins->response ) ) {
@@ -110,11 +115,13 @@ class Installer_Dependencies {
 
 			$plugins = get_plugins();
 
-			$installer_settings = WP_Installer()->settings;
+			$installer_settings = Settings::load_subscriptions();
 			if ( isset( $installer_settings['repositories'] ) ) {
-				foreach ( $installer_settings['repositories'] as $repository_id => $repository ) {
+				foreach ( $installer_settings['repositories'] as $repository_id => $subscription ) {
 
 					if ( $this->is_win_paths_exception( $repository_id ) ) {
+						$settings = Settings::load();
+						$repository = $settings['repositories'][ $repository_id ];
 
 						$repositories_plugins = array();
 						foreach ( $repository['data']['packages'] as $package ) {

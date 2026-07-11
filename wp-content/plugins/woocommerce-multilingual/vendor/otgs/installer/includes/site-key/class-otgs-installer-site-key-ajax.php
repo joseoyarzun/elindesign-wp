@@ -9,17 +9,21 @@ class OTGS_Installer_Site_Key_Ajax {
 	private $subscription_factory;
 	private $subscriptionManagerFactory;
 
+	/** @var OTGS_Installer_Site_Key_Remove_Service */
+	private $removeService;
+
 	public function __construct(
 		OTGS_Installer_Logger $logger,
 		OTGS_Installer_Repositories $repositories,
 		OTGS_Installer_Subscription_Factory $subscription_factory,
-		SubscriptionManagerFactory $subscriptionManagerFactory
-
+		SubscriptionManagerFactory $subscriptionManagerFactory,
+		OTGS_Installer_Site_Key_Remove_Service  $removeService
 	) {
-		$this->logger               = $logger;
-		$this->repositories         = $repositories;
-		$this->subscription_factory = $subscription_factory;
+		$this->logger                     = $logger;
+		$this->repositories               = $repositories;
+		$this->subscription_factory       = $subscription_factory;
 		$this->subscriptionManagerFactory = $subscriptionManagerFactory;
+		$this->removeService              = $removeService;
 	}
 
 	public function add_hooks() {
@@ -63,6 +67,9 @@ class OTGS_Installer_Site_Key_Ajax {
 				$this->repositories->refresh();
 				$this->clean_plugins_update_cache();
 				do_action( 'otgs_installer_site_key_update', $repository->get_id() );
+
+				// Checks if posthog should start recording for this site
+				do_action('check_posthog_should_record');
 			} else {
 				$error = __( 'Invalid site key for the current site.', 'installer' ) . '<br /><div class="installer-footnote">' . __( 'Please note that the site key is case sensitive.', 'installer' ) . '</div>';
 			}
@@ -85,15 +92,9 @@ class OTGS_Installer_Site_Key_Ajax {
 		$nonce_action = 'remove_site_key_' . $repository;
 
 		if ( wp_verify_nonce( $nonce, $nonce_action ) ) {
-			$repository = $this->repositories->get( $repository );
-			$repository->set_subscription( null );
-			$this->repositories->save_subscription( $repository );
-
-			$this->clean_plugins_update_cache();
-			do_action( 'otgs_installer_site_key_update', $repository->get_id() );
+			$this->removeService->remove( $repository );
 		}
 
-		$this->repositories->refresh();
 		wp_send_json_success();
 	}
 
@@ -120,8 +121,13 @@ class OTGS_Installer_Site_Key_Ajax {
 							'registered_by' => get_current_user_id(),
 						) );
 						$repository->set_subscription( $subscription_data );
+
+						// Checks if posthog should start recording for this site
+						do_action('check_posthog_should_record');
 					} else {
+						do_action( 'otgs_installer_before_site_key_removal', $repository->get_id() );
 						$repository->set_subscription( null );
+						do_action( 'otgs_installer_site_key_update', $repository->get_id() );
 						$error = __( 'Invalid site key for the current site. If the error persists, try to un-register first and then register again with the same site key.', 'installer' );
 					}
 

@@ -25,14 +25,15 @@ class OTGS_Installer_Icons {
 		$repositories = array_keys( $this->installer->get_repositories() );
 		$product = '';
 		$repository = '';
+		$settings = $this->installer->get_settings();
 
 		foreach( $repositories as $repository_id ) {
-			if ( isset( $this->installer->settings['repositories'][ $repository_id ]['data']['products-map'][ $response->plugin ] ) ) {
-				$product = $this->installer->settings['repositories'][ $repository_id ]['data']['products-map'][ $response->plugin ];
+			if ( isset( $settings['repositories'][ $repository_id ]['data']['products-map'][ $response->plugin ] ) ) {
+				$product = $settings['repositories'][ $repository_id ]['data']['products-map'][ $response->plugin ];
 				$repository = $repository_id;
 				break;
-			} elseif ( isset( $this->installer->settings['repositories'][ $repository_id ]['data']['products-map'][ $name ] ) ) {
-				$product = $this->installer->settings['repositories'][ $repository_id ]['data']['products-map'][ $name ];
+			} elseif ( isset( $settings['repositories'][ $repository_id ]['data']['products-map'][ $name ] ) ) {
+				$product = $settings['repositories'][ $repository_id ]['data']['products-map'][ $name ];
 				$repository = $repository_id;
 				break;
 			}

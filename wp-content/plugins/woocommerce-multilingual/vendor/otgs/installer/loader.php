@@ -26,6 +26,46 @@ if ( ! function_exists( 'otgs_is_rest_request' ) ) {
 	}
 }
 
+if ( file_exists( __DIR__ . '/../../otgs/icons/loader.php' ) ) {
+	$vendor_root_url = plugins_url( '/', __FILE__ )  . '../..'; // This variable is required in otgs/icons/loader.php
+	require_once __DIR__ . '/../../otgs/icons/loader.php';
+}
+
+global $otgs_installer_version;
+$otgs_installer_version = '3.1.14';
+
+if ( ! function_exists( 'wpml_installer_force_load' ) ) {
+	/**
+	 * Force-loads OTGS Installer regardless of the request type.
+	 *
+	 * The installer normally only initializes on admin, cron, WP-CLI, and REST
+	 * requests. On other requests (e.g. wp-login.php) the loader exits early
+	 * and OTGS_Installer() is never defined.
+	 *
+	 * This function allows WPML to bootstrap the installer on demand — for example,
+	 * when the reuse_lookup feature needs to register or clear a site key during
+	 * a 426 interception that happens on wp-login.php.
+	 *
+	 * Defined before the early return so it is available on all request types.
+	 *
+	 * @return \WP_Installer
+	 */
+	function wpml_installer_force_load() {
+		if ( function_exists( 'OTGS_Installer' ) ) {
+			return \OTGS_Installer();
+		}
+
+		// $delegate is read by installer.php from the including scope.
+		global $otgs_installer_version;
+		$delegate = [ 'version' => $otgs_installer_version, 'bootfile' => dirname( __FILE__ ) . '/installer.php' ];
+
+		include_once $delegate['bootfile'];
+		include_once dirname( __FILE__ ) . '/includes/functions-core.php';
+
+		return \OTGS_Installer();
+	}
+}
+
 $is_cron_request   = defined( 'DOING_CRON' ) && DOING_CRON;
 $is_wp_cli_request = defined( 'WP_CLI' ) && WP_CLI;
 
@@ -40,7 +80,7 @@ if ( ! $is_cron_request && ! $is_wp_cli_request && ! is_admin() && ! otgs_is_res
 				require_once __DIR__ . '/includes/class-otgs-installer-settings.php';
 				require_once __DIR__ . '/includes/class-otgs-installer-subscription.php';
 
-				$settings = OTGS\Installer\Settings::load();
+				$settings = OTGS\Installer\Settings::load_subscriptions();
 
 				$repository_id = $args['site_key_nags'][0]['repository_id'];
 
@@ -62,10 +102,11 @@ if ( ! $is_cron_request && ! $is_wp_cli_request && ! is_admin() && ! otgs_is_res
 				) {
 
 					$showFrontendBanner = function () use ( $repository_id ) {
-					    $wpmlText = sprintf(
-                            __( 'This site is registered on %s as a development site.', 'installer' ),
-                            '<a href="https://wpml.org">wpml.org</a>'
-                        );
+						$removeFrontendBannerLink = 'https://wpml.org/faq/how-to-remove-the-this-site-is-registered-on-wpml-org-as-a-development-site-notice/?utm_source=plugin&utm_medium=gui&utm_campaign=wpml-core&utm_term=footer-notice';
+						$wpmlText = sprintf(
+							__( 'This site is registered on %s as a development site. Switch to a production site key to %s.', 'installer' ),
+							'<a href="https://wpml.org">wpml.org</a>', '<a href="' . $removeFrontendBannerLink . '">remove this banner</a>'
+						);
 						$message = $repository_id === 'wpml'
 							? $wpmlText
 							: __( 'This site is registered on Toolset.com as a development site.', 'installer' );
@@ -89,7 +130,7 @@ if ( ! $is_cron_request && ! $is_wp_cli_request && ! is_admin() && ! otgs_is_res
                                 line-height: 18px;
                                 text-align: center;
                                 color: white;
-                                background-color: #33879E;
+                                background-color: #0369a1;
                             }
 						</style>
 						<?php
@@ -113,7 +154,7 @@ $wp_installer_instance = dirname( __FILE__ ) . '/installer.php';
 global $wp_installer_instances;
 $wp_installer_instances[ $wp_installer_instance ] = [
 	'bootfile' => $wp_installer_instance,
-	'version'  => '3.1.2'
+	'version'  => $otgs_installer_version,
 ];
 
 /**

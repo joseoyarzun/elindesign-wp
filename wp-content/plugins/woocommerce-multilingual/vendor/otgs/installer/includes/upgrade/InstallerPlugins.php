@@ -10,27 +10,41 @@ class InstallerPlugins {
 	private $installer;
 
 	/**
+	 * @var \OTGS_Installer_Plugin_Finder
+	 */
+	private $installerPluginFinder;
+
+	/**
 	 * @var array
 	 */
-	private $filteredInstallerPlugins;
+	private $_filteredInstallerPlugins;
 
 	public function __construct( \WP_Installer $installer, \OTGS_Installer_Plugin_Finder $installerPluginsFinder ) {
-		$this->installer              = $installer;
-		$this->filteredInstallerPlugins = $this->filterInstallerPlugins($installerPluginsFinder);
+		$this->installer             = $installer;
+		$this->installerPluginFinder = $installerPluginsFinder;
 	}
 
 	/**
 	 * @return array
 	 */
 	public function getFilteredInstallerPlugins() {
-		return $this->filteredInstallerPlugins;
+		return $this->filteredInstallerPlugins();
+	}
+
+	private function filteredInstallerPlugins() {
+		if ( null === $this->_filteredInstallerPlugins ) {
+			$this->_filteredInstallerPlugins = $this->filterInstallerPlugins();
+		}
+		return $this->_filteredInstallerPlugins;
 	}
 
 	/**
 	 * @return array
 	 */
-	private function filterInstallerPlugins(\OTGS_Installer_Plugin_Finder $installerPluginsFinder) {
+	private function filterInstallerPlugins() {
 		$filteredInstallerPlugins = [];
+		$installerPluginsFinder   = $this->installerPluginFinder;
+
 		foreach ( $installerPluginsFinder->get_otgs_installed_plugins_by_repository() as $repositoryId => $installedRepositoryPlugins ) {
 			foreach ( $installedRepositoryPlugins as $installedRepositoryPlugin ) {
 				$pluginObj  = $installerPluginsFinder->get_plugin( $installedRepositoryPlugin['slug'], $repositoryId );
@@ -52,7 +66,7 @@ class InstallerPlugins {
 	 * @return array|null
 	 */
 	public function getPluginData( $repositoryId, $pluginId ) {
-		return current( array_filter( $this->filteredInstallerPlugins[ $repositoryId ], function ( $plugin ) use ( $pluginId ) {
+		return current( array_filter( $this->filteredInstallerPlugins()[ $repositoryId ], function ( $plugin ) use ( $pluginId ) {
 			return $plugin['id'] === $pluginId;
 		} ) );
 	}

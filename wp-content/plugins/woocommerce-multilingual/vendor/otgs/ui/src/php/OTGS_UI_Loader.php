@@ -14,13 +14,16 @@ class OTGS_UI_Loader {
 	/**
 	 * OTGS_UI_Loader constructor.
 	 *
-	 * @param \OTGS_Assets_Store $locator
-	 * @param \OTGS_UI_Assets    $assets
+	 * @param \OTGS_Assets_Store|null $locator
+	 * @param \OTGS_UI_Assets|null    $assets
 	 *
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct( OTGS_Assets_Store $locator = null, OTGS_UI_Assets $assets = null ) {
-		if ( ! $locator || ! $assets ) {
+	public function __construct( $locator = null, $assets = null ) {
+		if (
+			! ( $locator instanceof OTGS_Assets_Store )
+			|| ! ( $assets instanceof OTGS_UI_Assets )
+		) {
 			throw new InvalidArgumentException( 'Missing assets and assets store' );
 		}
 
@@ -39,7 +42,7 @@ class OTGS_UI_Loader {
 	 * Adds the assets and registers them
 	 */
 	public function register() {
-		$this->store->add_assets_location( dirname( __FILE__ ) . '/../../dist/assets.json' );
+		$this->store->add_assets_location( __DIR__ . '/../../dist/assets.json' );
 		$this->assets->register();
 	}
 }

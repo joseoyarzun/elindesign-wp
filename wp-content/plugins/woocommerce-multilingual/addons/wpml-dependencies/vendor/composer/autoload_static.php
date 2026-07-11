@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit33a61148eed2a41457ea000138831f6d
+class ComposerStaticInit4533f04d3804fd0dd385f42c0b74afd4
 {
     public static $files = array (
         '5f5b8f7c1db2e892006e8805f0ed573c' => __DIR__ . '/..' . '/wpml/collect/src/Illuminate/Support/helpers.php',
@@ -20,10 +20,6 @@ class ComposerStaticInit33a61148eed2a41457ea000138831f6d
             'WPML\\Collect\\' => 13,
             'WPML\\Auryn\\' => 11,
         ),
-        'P' => 
-        array (
-            'Psr\\Log\\' => 8,
-        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -34,10 +30,6 @@ class ComposerStaticInit33a61148eed2a41457ea000138831f6d
         'WPML\\Auryn\\' => 
         array (
             0 => __DIR__ . '/..' . '/otgs/auryn/lib',
-        ),
-        'Psr\\Log\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
         ),
     );
 
@@ -74,6 +66,7 @@ class ComposerStaticInit33a61148eed2a41457ea000138831f6d
         'WPML\\Container\\Config' => __DIR__ . '/../..' . '/lib/classes/container/class-config.php',
         'WPML\\Container\\Container' => __DIR__ . '/../..' . '/lib/classes/container/class-wpml-container.php',
         'WPML\\Convert\\Ids' => __DIR__ . '/..' . '/wpml/core-api/core/Convert/Ids.php',
+        'WPML\\Core\\BackgroundTask\\Command\\DeleteBackgroundTask' => __DIR__ . '/..' . '/wpml/core-api/core/BackgroundTask/Command/DeleteBackgroundTask.php',
         'WPML\\Core\\BackgroundTask\\Command\\PersistBackgroundTask' => __DIR__ . '/..' . '/wpml/core-api/core/BackgroundTask/Command/PersistBackgroundTask.php',
         'WPML\\Core\\BackgroundTask\\Command\\UpdateBackgroundTask' => __DIR__ . '/..' . '/wpml/core-api/core/BackgroundTask/Command/UpdateBackgroundTask.php',
         'WPML\\Core\\BackgroundTask\\Exception\\TaskIsNotRunnableException' => __DIR__ . '/..' . '/wpml/core-api/core/BackgroundTask/Exception/TaskIsNotRunnableException.php',
@@ -509,6 +502,7 @@ class ComposerStaticInit33a61148eed2a41457ea000138831f6d
         'WPML\\FP\\Type' => __DIR__ . '/..' . '/wpml/fp/core/Type.php',
         'WPML\\FP\\Undefined' => __DIR__ . '/..' . '/wpml/fp/core/Undefined.php',
         'WPML\\FP\\Wrapper' => __DIR__ . '/..' . '/wpml/fp/core/Wrapper.php',
+        'WPML\\Jobs\\ExtraData' => __DIR__ . '/..' . '/wpml/core-api/core/Jobs/ExtraData.php',
         'WPML\\LIB\\WP\\App\\Resources' => __DIR__ . '/..' . '/wpml/wp/classes/Resources.php',
         'WPML\\LIB\\WP\\Attachment' => __DIR__ . '/..' . '/wpml/wp/classes/Attachment.php',
         'WPML\\LIB\\WP\\Cache' => __DIR__ . '/..' . '/wpml/wp/classes/Cache.php',
@@ -531,11 +525,11 @@ class ComposerStaticInit33a61148eed2a41457ea000138831f6d
         'WPML\\Settings\\LanguageNegotiation' => __DIR__ . '/..' . '/wpml/core-api/core/settings/LanguageNegotiation.php',
         'WPML\\Settings\\PostType\\Automatic' => __DIR__ . '/..' . '/wpml/core-api/core/settings/Automatic.php',
         'WPML\\Setup\\Option' => __DIR__ . '/..' . '/wpml/core-api/core/setup/Option.php',
+        'WPML\\TM\\Jobs\\FieldId' => __DIR__ . '/..' . '/wpml/core-api/core/Jobs/FieldId.php',
         'WPML\\Timer' => __DIR__ . '/..' . '/wpml/core-api/core/Timer.php',
         'WPML\\UIPage' => __DIR__ . '/..' . '/wpml/core-api/core/UIPage.php',
         'WPML\\Utilities\\ILock' => __DIR__ . '/..' . '/wpml/core-api/core/utility/ILock.php',
         'WPML\\Utilities\\Lock' => __DIR__ . '/..' . '/wpml/core-api/core/utility/Lock.php',
-        'WPML\\Utilities\\Logger' => __DIR__ . '/..' . '/wpml/core-api/core/utility/Logger.php',
         'WPML\\WP\\OptionManager' => __DIR__ . '/..' . '/wpml/core-api/core/OptionManager.php',
         'WPML_AJAX_Action_Validation' => __DIR__ . '/../..' . '/lib/classes/action-filter-loader/class-wpml-ajax-action-validation.php',
         'WPML_AJAX_Base_Factory' => __DIR__ . '/../..' . '/lib/classes/action-filter-loader/class-wpml-ajax-action-base-factory.php',
@@ -567,9 +561,9 @@ class ComposerStaticInit33a61148eed2a41457ea000138831f6d
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit33a61148eed2a41457ea000138831f6d::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit33a61148eed2a41457ea000138831f6d::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit33a61148eed2a41457ea000138831f6d::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit4533f04d3804fd0dd385f42c0b74afd4::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit4533f04d3804fd0dd385f42c0b74afd4::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit4533f04d3804fd0dd385f42c0b74afd4::$classMap;
 
         }, null, ClassLoader::class);
     }

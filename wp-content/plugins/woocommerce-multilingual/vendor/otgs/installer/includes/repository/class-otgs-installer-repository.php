@@ -82,7 +82,14 @@ class OTGS_Installer_Repository {
 		return $this->get_product_by( 'get_product_by_subscription_type_on_upgrades' );
 	}
 
-	public function set_subscription( OTGS_Installer_Subscription $subscription = null ) {
+	/**
+	 * Sets the subscription for the current repository.
+	 *
+	 * @param OTGS_Installer_Subscription|null $subscription
+	 *
+	 * @return void
+	 */
+	public function set_subscription( $subscription = null ) {
 		$this->subscription = $subscription;
 	}
 

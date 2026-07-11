@@ -28,7 +28,7 @@ class OTGS_Assets_Store {
 				if ( array_key_exists( $handle, $this->assets[ $type ] ) ) {
 					$result = $this->assets[ $type ][ $handle ];
 				} else {
-					$result = [];
+					$result = array();
 				}
 			}
 		}

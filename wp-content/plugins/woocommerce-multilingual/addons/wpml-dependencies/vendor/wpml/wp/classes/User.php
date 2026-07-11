@@ -12,6 +12,19 @@ class User {
 	const CAP_ADMINISTRATOR = 'administrator';
 	const CAP_TRANSLATE = 'translate';
 	const CAP_MANAGE_TRANSLATION_MANAGEMENT = 'wpml_manage_translation_management';
+	const CAP_PUBLISH_PAGES = 'publish_pages';
+	const CAP_PUBLISH_POSTS = 'publish_posts';
+	const CAP_EDIT_OTHERS_PAGES = 'edit_others_pages';
+	const CAP_EDIT_OTHERS_POSTS = 'edit_others_posts';
+	const CAP_EDIT_POSTS = 'edit_posts';
+	const CAP_EDIT_PAGES = 'edit_pages';
+	const ROLE_EDITOR_MINIMUM_CAPS = [
+		self::CAP_EDIT_OTHERS_POSTS,
+		self::CAP_PUBLISH_PAGES,
+		self::CAP_PUBLISH_POSTS,
+		self::CAP_EDIT_PAGES,
+		self::CAP_EDIT_POSTS,
+	];
 
 	/** @var array Calling user_can() is a very memory heavy function. */
 	private static $userCanCache = [];
@@ -45,6 +58,37 @@ class User {
 	 */
 	public static function currentUserCan( $capability ) {
 		return self::userCan( self::getCurrentId(), $capability );
+	}
+
+
+	/**
+	 * Returns true if the current user is an admin.
+	 *
+	 * @return bool
+	 */
+	public static function currentUserIsAdmin() {
+		return self::currentUserCan( self::CAP_MANAGE_OPTIONS );
+	}
+
+
+	/**
+	 * Returns true if the current user is a translation manager or higher.
+	 *
+	 * @return bool
+	 */
+	public static function currentUserIsTranslationManagerOrHigher() {
+		return self::currentUserIsAdmin()
+			|| self::currentUserCan( self::CAP_MANAGE_TRANSLATIONS );
+	}
+
+	/**
+	 * Returns true if the current user is a translator or higher.
+	 *
+	 * @return bool
+	 */
+	public static function currentUserIsTranslatorOrHigher() {
+		return self::currentUserIsTranslationManagerOrHigher()
+			|| self::currentUserCan( self::CAP_TRANSLATE );
 	}
 
 	/**
@@ -175,7 +219,7 @@ class User {
 	 * @param string $capability Capability to check for.
 	 * @param ?\WP_User $user User to check. Using current user if not defined.
 	 */
-	public static function hasCap( $capabilitiy, \WP_User $user = null ) {
+	public static function hasCap( $capabilitiy, $user = null ) {
 		$user = $user ?: self::getCurrent();
 		return $user->has_cap( $capabilitiy );
 	}
@@ -186,7 +230,7 @@ class User {
 	 *
 	 * @param ?\WP_User $user User to check. Using current user if not defined.
 	 */
-	public static function canManageTranslations( \WP_User $user = null ) {
+	public static function canManageTranslations( $user = null ) {
 		return self::hasCap( self::CAP_MANAGE_TRANSLATIONS, $user ) || self::isAdministrator( $user );
 	}
 
@@ -196,7 +240,7 @@ class User {
 	 *
 	 * @param ?\WP_User $user User to check. Using current user if not defined.
 	 */
-	public static function canManageOptions( \WP_User $user = null ) {
+	public static function canManageOptions( $user = null ) {
 		return self::hasCap( self::CAP_MANAGE_OPTIONS, $user );
 	}
 
@@ -205,7 +249,30 @@ class User {
 	 *
 	 * @return bool
 	 */
-	public static function isAdministrator( \WP_User $user = null ) {
+	public static function isAdministrator( $user = null ) {
 		return self::hasCap( self::CAP_ADMINISTRATOR, $user );
+	}
+
+	/**
+	 * @param \WP_User|null $user User to check. Using current user if not defined.
+	 *
+	 * @return bool
+	 */
+	public static function isEditor( $user = null ) {
+		foreach ( static::ROLE_EDITOR_MINIMUM_CAPS as $cap ) {
+			if ( ! self::hasCap( $cap, $user ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * @param \WP_User|null $user User to check. Using current user if not defined.
+	 *
+	 * @return bool
+	 */
+	public static function isTranslator( $user = null ) {
+		return self::hasCap( self::CAP_TRANSLATE, $user );
 	}
 }
