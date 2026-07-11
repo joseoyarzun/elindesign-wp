@@ -11,10 +11,17 @@ on:
 
 jobs:
   deploy:
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show branch guard
+        shell: bash
+        run: |
+          echo "Deploy branch: ${{ github.ref_name }}"
+          echo "This workflow is restricted to branch 'main'."
 
       - name: Validate required secrets
         shell: bash
@@ -60,7 +67,7 @@ jobs:
 
           # Keep deployment scoped to code you own.
           sync_if_exists "wp-content/mu-plugins/"
-          sync_if_exists "wp-content/themes/"
+          sync_if_exists "wp-content/themes/oceanwp/"
           sync_if_exists "wp-content/plugins/woocommerce-scancoordesign/"
           sync_if_exists "wp-content/plugins/woocommerce-sixwebsoft/"
           sync_if_exists "wp-content/plugins/product-categories-bottom-description-woo-comerce/"
