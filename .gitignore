@@ -13,8 +13,6 @@ wp-content/upgrade-temp-backup/
 wp-content/wflogs/
 wp-content/ai1wm-backups/
 wp-content/debug.log
-wp-content/themes/twentytwentyfour/
-wp-content/plugins/_OLD_elementor-pro_OLD/
 
 # --- Logs ---
 *.log
@@ -28,7 +26,6 @@ wp-content/plugins/_OLD_elementor-pro_OLD/
 
 # --- Dependency/build folders ---
 node_modules/
-vendor/
 
 # --- Archives and dumps ---
 *.zip

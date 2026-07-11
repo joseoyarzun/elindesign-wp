@@ -1,51 +1,59 @@
-WordPress GitHub workflow (local -> GitHub -> production)
+WordPress full mirror workflow (local <-> GitHub <-> production)
 
 Goal
-- Keep production stable.
-- Develop and test locally.
-- Deploy only controlled code from GitHub.
+- Keep main as the production mirror.
+- Test locally with a realistic full copy of production code.
+- Deploy the full mirror from GitHub manually.
 
-What this repository should control
-- wp-content/themes/
-- wp-content/mu-plugins/
-- custom plugins (for this project):
-  - wp-content/plugins/woocommerce-scancoordesign/
-  - wp-content/plugins/woocommerce-sixwebsoft/
-  - wp-content/plugins/product-categories-bottom-description-woo-comerce/
+Repository model
+- Track full WordPress code in Git (core, plugins, themes).
+- Keep secrets/runtime out of deploy using .github/deploy-excludes.txt.
+- Keep wp-config.php out of Git.
 
-What should stay out of Git
-- wp-config.php and secrets.
-- uploads, cache, backups, logs.
-- database dumps.
-
-1) First sync from server (true code snapshot)
-- Run from your local machine:
+1) Sync full mirror from server to local
+- Run from local machine:
   bash scripts/sync_from_server.sh deploy@your-host:/absolute/path/to/wordpress /c/wamp64/www/elindesign
 
-- Then create a branch and commit:
-  git checkout -b prod-sync-YYYYMMDD
+- Notes:
+  - This sync includes uploads for realistic local testing.
+  - If rsync is unavailable, script uses ssh+tar fallback (no delete). In that case, remove stale local leftovers manually when needed.
+
+2) Make local testable
+- Import production DB to local DB.
+- Set wp_options home/siteurl to local URL.
+- Activate plugins in dependency-safe order if needed.
+
+3) Update main as production mirror
+- Ensure you are on main:
+  git checkout main
+- Commit mirror snapshot:
   git add -A
-  git commit -m "chore: sync production code snapshot"
-  git push -u origin prod-sync-YYYYMMDD
+  git commit -m "chore: mirror production snapshot"
+  git push origin main
 
-2) Test locally
-- Import production database to local DB.
-- Update local site URLs if needed.
-- Validate key flows (home, checkout, product configurator, forms).
-
-3) Configure GitHub Secrets for deploy
+4) Configure GitHub Secrets
 - DEPLOY_HOST: server hostname or IP
 - DEPLOY_PORT: ssh port (optional, defaults to 22)
 - DEPLOY_USER: ssh user
 - DEPLOY_PATH: absolute path to WP root on server
 - DEPLOY_SSH_KEY: private key for DEPLOY_USER
 
-4) Deploy from GitHub Actions
+5) Deploy full mirror from GitHub Actions
 - Open Actions -> Deploy WP Code (Manual)
-- First run with dry_run=true and review output.
-- Then run with dry_run=false.
+- Run with:
+  - ref=main
+  - dry_run=true (preview)
+- If output is correct, run again with:
+  - ref=main
+  - dry_run=false
 
-Notes
-- This workflow deploys only selected code paths, not the entire WordPress install.
-- Database changes are not deployed by this workflow.
-- If you add a new custom plugin, include its path in .github/workflows/deploy-manual.yml.
+Rollback
+- Create a tag before risky changes:
+  git tag pre-upgrade-YYYYMMDD
+  git push origin pre-upgrade-YYYYMMDD
+- To rollback, run workflow with ref=pre-upgrade-YYYYMMDD.
+
+Important
+- Workflow is restricted to branch main.
+- Deploy excludes are managed in .github/deploy-excludes.txt.
+- DB changes are not handled by this workflow.

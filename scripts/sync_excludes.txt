@@ -4,7 +4,6 @@ wp-config-local.php
 .htaccess
 
 # Runtime/generated data
-wp-content/uploads/***
 wp-content/cache/***
 wp-content/wflogs/***
 wp-content/backups-dup-lite/***
@@ -25,4 +24,3 @@ wp-content/ai1wm-backups/***
 .vscode/***
 .idea/***
 node_modules/***
-vendor/***

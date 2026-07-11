@@ -1,0 +1,33 @@
+# Never deploy repository internals
+.git/
+.github/
+
+# Never deploy local/editor files
+.vscode/
+.idea/
+node_modules/
+
+# Never deploy environment secrets
+wp-config.php
+wp-config-local.php
+.htaccess
+
+# Never deploy runtime/generated content
+wp-content/cache/
+wp-content/backups-dup-lite/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+wp-content/wflogs/
+wp-content/ai1wm-backups/
+wp-content/debug.log
+
+# Optional: keep media outside Git deploys
+wp-content/uploads/
+
+# Never deploy archives and dumps
+*.sql
+*.sql.gz
+*.zip
+*.tar
+*.tar.gz
+*.log

@@ -3,6 +3,11 @@ name: Deploy WP Code (Manual)
 on:
   workflow_dispatch:
     inputs:
+      ref:
+        description: "Branch, tag, or commit to deploy (default: main)"
+        required: true
+        default: "main"
+        type: string
       dry_run:
         description: "Run rsync in dry-run mode"
         required: true
@@ -16,11 +21,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Show branch guard
         shell: bash
         run: |
           echo "Deploy branch: ${{ github.ref_name }}"
+          echo "Deploy ref: ${{ inputs.ref }}"
           echo "This workflow is restricted to branch 'main'."
 
       - name: Validate required secrets
@@ -39,7 +47,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p "${{ secrets.DEPLOY_PORT || '22' }}" "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Sync tracked code to server
+      - name: Sync full WordPress mirror to server
         shell: bash
         run: |
           set -euo pipefail
@@ -57,20 +65,10 @@ jobs:
           RSYNC_SSH="ssh -p ${PORT}"
           RSYNC_FLAGS="-az --delete --omit-dir-times --no-perms --no-owner --no-group"
 
-          sync_if_exists() {
-            local src="$1"
-            if [[ -d "$src" ]]; then
-              echo "Syncing $src"
-              rsync ${RSYNC_FLAGS} ${DRY} -e "${RSYNC_SSH}" "$src" "${USER}@${HOST}:${REMOTE_PATH}/${src}"
-            fi
-          }
-
-          # Keep deployment scoped to code you own.
-          sync_if_exists "wp-content/mu-plugins/"
-          sync_if_exists "wp-content/themes/oceanwp/"
-          sync_if_exists "wp-content/plugins/woocommerce-scancoordesign/"
-          sync_if_exists "wp-content/plugins/woocommerce-sixwebsoft/"
-          sync_if_exists "wp-content/plugins/product-categories-bottom-description-woo-comerce/"
+          rsync ${RSYNC_FLAGS} ${DRY} \
+            --exclude-from='.github/deploy-excludes.txt' \
+            -e "${RSYNC_SSH}" \
+            ./ "${USER}@${HOST}:${REMOTE_PATH}/"
 
       - name: Post-deploy cache cleanup (optional)
         if: ${{ inputs.dry_run == false }}
