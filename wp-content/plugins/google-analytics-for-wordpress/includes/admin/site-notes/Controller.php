@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class MonsterInsights_SiteNotes_Controller {
 
@@ -52,7 +55,7 @@ class MonsterInsights_SiteNotes_Controller {
 		}
 
 		add_filter('monsterinsights_report_overview_data', array($this, 'prepare_data_overview_chart'));
-		add_filter('monsterinsights_report_traffic_sessions_chart_data', array($this, 'prepare_traffic_sessions_chart_data'), 10, 3);
+		add_filter('monsterinsights_report_traffic_sessions_chart_data', array($this, 'prepare_traffic_sessions_chart_data'), 10, 4);
 		add_action('save_post', array($this, 'save_custom_fields'));
 		add_filter('monsterinsights_gutenberg_tool_vars', array($this, 'add_categories_to_editor'));
 		add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
@@ -116,7 +119,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$params = !empty($_POST['params']) ? json_decode(html_entity_decode(stripslashes($_POST['params'])), true) : [];
+		$params = !empty($_POST['params']) ? json_decode(html_entity_decode(wp_unslash($_POST['params'])), true) : [];
 
 		$output = $this->prepare_notes($params);
 
@@ -190,7 +193,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$params = !empty($_POST['params']) ? json_decode(html_entity_decode(stripslashes($_POST['params'])), true) : [];
+		$params = !empty($_POST['params']) ? json_decode(html_entity_decode(wp_unslash($_POST['params'])), true) : [];
 
 		$args = wp_parse_args($params, array(
 			'per_page' => -1,
@@ -235,7 +238,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$note = !empty($_POST['note']) ? json_decode(html_entity_decode(stripslashes($_POST['note']))) : [];
+		$note = !empty($_POST['note']) ? json_decode(html_entity_decode(wp_unslash($_POST['note']))) : [];
 
 		$note_details = array(
 			'note' => sanitize_text_field($note->note_title),
@@ -285,7 +288,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$category = !empty($_POST['category']) ? json_decode(html_entity_decode(stripslashes($_POST['category']))) : [];
+		$category = !empty($_POST['category']) ? json_decode(html_entity_decode(wp_unslash($_POST['category']))) : [];
 
 		if (empty($category->name)) {
 			wp_send_json(
@@ -352,7 +355,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$ids = !empty($_POST['ids']) ? json_decode(html_entity_decode(stripslashes($_POST['ids']))) : [];
+		$ids = !empty($_POST['ids']) ? json_decode(html_entity_decode(wp_unslash($_POST['ids']))) : [];
 
 		if (empty($ids)) {
 			wp_send_json(
@@ -390,7 +393,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$ids = !empty($_POST['ids']) ? json_decode(html_entity_decode(stripslashes($_POST['ids']))) : [];
+		$ids = !empty($_POST['ids']) ? json_decode(html_entity_decode(wp_unslash($_POST['ids']))) : [];
 
 		if (empty($ids)) {
 			wp_send_json(
@@ -428,7 +431,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$ids = !empty($_POST['ids']) ? json_decode(html_entity_decode(stripslashes($_POST['ids']))) : [];
+		$ids = !empty($_POST['ids']) ? json_decode(html_entity_decode(wp_unslash($_POST['ids']))) : [];
 
 		if (empty($ids)) {
 			wp_send_json(
@@ -466,7 +469,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$ids = !empty($_POST['ids']) ? json_decode(html_entity_decode(stripslashes($_POST['ids']))) : [];
+		$ids = !empty($_POST['ids']) ? json_decode(html_entity_decode(wp_unslash($_POST['ids']))) : [];
 
 		if (empty($ids)) {
 			wp_send_json(
@@ -550,7 +553,7 @@ class MonsterInsights_SiteNotes_Controller {
 			fputcsv($outstream, $row);
 		}
 
-		fclose($outstream);
+		fclose($outstream); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		exit;
 	}
 	/**
@@ -575,7 +578,7 @@ class MonsterInsights_SiteNotes_Controller {
 
 		check_ajax_referer( 'mi-admin-nonce', 'nonce' );
 
-		$annotations = isset( $_POST['annotations'] ) ? json_decode( stripslashes( $_POST['annotations'] ), true ) : array();
+		$annotations = isset( $_POST['annotations'] ) ? json_decode( wp_unslash( $_POST['annotations'] ), true ) : array();
 		if ( empty( $annotations ) ) {
 			wp_send_json_error(
 				array(
@@ -813,6 +816,7 @@ class MonsterInsights_SiteNotes_Controller {
 			// Skip if note is empty.
 			if ( empty( $note_details['note'] ) ) {
 				$errors[] = sprintf(
+					/* translators: %s: annotation ID */
 					__(
 						'Skipped annotation with empty title (ID: %s)',
 						'google-analytics-for-wordpress'
@@ -827,8 +831,9 @@ class MonsterInsights_SiteNotes_Controller {
 
 			if ( is_wp_error( $note_id ) ) {
 				$errors[] = sprintf(
+					/* translators: %1$s: annotation title, %2$s: error message */
 					__(
-						'Failed to import annotation "%s": %s',
+						'Failed to import annotation "%1$s": %2$s',
 						'google-analytics-for-wordpress'
 					),
 					$note_details['note'],
@@ -845,6 +850,7 @@ class MonsterInsights_SiteNotes_Controller {
 
 		// Prepare response message.
 		$message = sprintf(
+			/* translators: %d: number of annotations successfully imported */
 			__(
 				'Successfully imported %d annotations.',
 				'google-analytics-for-wordpress'
@@ -854,6 +860,7 @@ class MonsterInsights_SiteNotes_Controller {
 
 		if ( $skipped_count > 0 ) {
 			$message .= ' ' . sprintf(
+				/* translators: %d: number of annotations skipped */
 				__( '%d annotations were skipped (already exist).', 'google-analytics-for-wordpress' ),
 				$skipped_count
 			);
@@ -861,6 +868,7 @@ class MonsterInsights_SiteNotes_Controller {
 
 		if ( ! empty( $errors ) ) {
 			$message .= ' ' . sprintf(
+				/* translators: %d: number of annotations that failed to import */
 				__(
 					'%d annotations could not be imported.',
 					'google-analytics-for-wordpress'
@@ -993,7 +1001,7 @@ class MonsterInsights_SiteNotes_Controller {
 	}
 
 	public function save_custom_fields($current_post_id) {
-		if (!isset($_POST['monsterinsights_metabox_nonce']) || !wp_verify_nonce($_POST['monsterinsights_metabox_nonce'], 'monsterinsights_metabox')) {
+		if (!isset($_POST['monsterinsights_metabox_nonce']) || !wp_verify_nonce(wp_unslash($_POST['monsterinsights_metabox_nonce']), 'monsterinsights_metabox')) {
 			return;
 		}
 
@@ -1011,7 +1019,7 @@ class MonsterInsights_SiteNotes_Controller {
 			return;
 		}
 
-		$note = isset($_POST['_monsterinsights_sitenote_note']) ? esc_html($_POST['_monsterinsights_sitenote_note']) : '';
+		$note = isset($_POST['_monsterinsights_sitenote_note']) ? esc_html(wp_unslash($_POST['_monsterinsights_sitenote_note'])) : '';
 		update_post_meta($current_post_id, '_monsterinsights_sitenote_note', $note);
 
 		$category = isset($_POST['_monsterinsights_sitenote_category']) ? intval($_POST['_monsterinsights_sitenote_category']) : 0;
@@ -1128,7 +1136,7 @@ class MonsterInsights_SiteNotes_Controller {
 			<div class="monsterinsights-metabox-input monsterinsights-metabox-input-checkbox">
 				<label class="">
 					<input type="checkbox" name="_monsterinsights_sitenote_active" value="1" <?php checked($sitenote_active); ?>>
-					<span class="monsterinsights-metabox-input-checkbox-label"><?php _e('Add a Site Note', 'google-analytics-for-wordpress'); ?></span>
+					<span class="monsterinsights-metabox-input-checkbox-label"><?php esc_html_e('Add a Site Note', 'google-analytics-for-wordpress'); ?></span>
 				</label>
 			</div>
 
@@ -1139,7 +1147,7 @@ class MonsterInsights_SiteNotes_Controller {
 
 				<div class="monsterinsights-metabox-input monsterinsights-metabox-select">
 					<label>
-						<?php _e('Category', 'google-analytics-for-wordpress'); ?>
+						<?php esc_html_e('Category', 'google-analytics-for-wordpress'); ?>
 						<select name="_monsterinsights_sitenote_category">
 							<?php if (!empty($categories)) {
 								foreach ($categories as $category) {
@@ -1158,11 +1166,34 @@ class MonsterInsights_SiteNotes_Controller {
 	}
 
 	public function load_metabox_assets() {
+		// Don't load classic editor assets on block editor
+		if ( $this->is_gutenberg_editor() ) {
+			return;
+		}
+
 		wp_register_style('monsterinsights-admin-metabox-sitenotes-style', plugins_url('assets/css/admin-metabox-sitenotes.css', MONSTERINSIGHTS_PLUGIN_FILE), array(), monsterinsights_get_asset_version());
 		wp_enqueue_style('monsterinsights-admin-metabox-sitenotes-style');
 
-		wp_register_script('monsterinsights-admin-metabox-sitenotes-script', plugins_url('assets/js/admin-metabox-sitenotes.js', MONSTERINSIGHTS_PLUGIN_FILE), array('jquery'), monsterinsights_get_asset_version());
+		wp_register_script('monsterinsights-admin-metabox-sitenotes-script', plugins_url('assets/js/admin-metabox-sitenotes.js', MONSTERINSIGHTS_PLUGIN_FILE), array('jquery'), monsterinsights_get_asset_version(), true);
 		wp_enqueue_script('monsterinsights-admin-metabox-sitenotes-script');
+	}
+
+	/**
+	 * Check if the current screen is the Gutenberg (block) editor.
+	 *
+	 * @return bool True if on block editor, false otherwise.
+	 */
+	private function is_gutenberg_editor() {
+		if ( function_exists( 'is_gutenberg_page' ) && is_gutenberg_page() ) {
+			return true;
+		}
+
+		$current_screen = get_current_screen();
+		if ( method_exists( $current_screen, 'is_block_editor' ) && $current_screen->is_block_editor() ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -1174,12 +1205,14 @@ class MonsterInsights_SiteNotes_Controller {
 	 *
 	 * @return array
 	 */
-	public function prepare_traffic_sessions_chart_data( $data, $start_date, $end_date ) {
-
-		if ( ! isset( $data['data']['sessions_chart'] ) ) {
+	public function prepare_traffic_sessions_chart_data( $data, $start_date, $end_date, $custom_chart_type = null ) {
+		$chart_type = 'sessions_chart';
+		if ( ! isset( $data['data']['sessions_chart'] ) && null === $custom_chart_type ) {
 			return $data;
 		}
-
+		if (  isset( $data['data'][ $custom_chart_type ] ) ) {
+			$chart_type = $custom_chart_type;
+		}
 		$params = array(
 			'per_page' => - 1,
 			'filter'   => array(
@@ -1208,8 +1241,7 @@ class MonsterInsights_SiteNotes_Controller {
 			);
 		}
 
-		$data['data']['sessions_chart']['notes'] = $prepared_notes;
-
+		$data['data'][ $chart_type ]['notes'] = $prepared_notes;
 		return $data;
 	}
 

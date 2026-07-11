@@ -1,12 +1,11 @@
 <?php
-// phpcs:ignoreFile
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 namespace WooCommerce\Facebook;
@@ -14,8 +13,9 @@ namespace WooCommerce\Facebook;
 use WC_Facebook_Product;
 use WooCommerce\Facebook\Framework\Helper;
 use WooCommerce\Facebook\Framework\Plugin\Exception as PluginException;
+use WooCommerce\Facebook\Handlers\PluginRender;
 
-defined( 'ABSPATH' ) or exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Products handler.
@@ -26,6 +26,9 @@ class Products {
 
 	/** @var string the meta key used to flag whether a product should be synced in Facebook */
 	const SYNC_ENABLED_META_KEY = '_wc_facebook_sync_enabled';
+
+	/** @var string the meta key used to flag whether a product should be synced in Facebook for woo all products opted in users */
+	const OPTEN_IN_SYNC_ENABLED_META_KEY = '_wc_facebook_sync_enabled_v2';
 
 	// TODO probably we'll want to run some upgrade routine or somehow move meta keys to follow the same patter e.g. _wc_facebook_visibility {FN 2020-01-17}
 	/** @var string the meta key used to flag whether a product should be visible in Facebook */
@@ -43,8 +46,17 @@ class Products {
 	/** @var string product image source option to use the parent product image in Facebook */
 	const PRODUCT_IMAGE_SOURCE_CUSTOM = 'custom';
 
-	/** @var string the meta key used to flag if Commerce is enabled for the product */
-	const COMMERCE_ENABLED_META_KEY = '_wc_facebook_commerce_enabled';
+	/** @var string product image source option to use multiple images in Facebook */
+	const PRODUCT_IMAGE_SOURCE_MULTIPLE = 'multiple';
+
+	/** @var string the meta key used to store the source of the product video in Facebook */
+	const PRODUCT_VIDEO_SOURCE_META_KEY = '_wc_facebook_product_video_source';
+
+	/** @var string product video source option to upload/choose video from media library */
+	const PRODUCT_VIDEO_SOURCE_UPLOAD = 'upload';
+
+	/** @var string product video source option to use a custom video URL */
+	const PRODUCT_VIDEO_SOURCE_CUSTOM = 'custom';
 
 	/** @var string the meta key used to store the Google product category ID for the product */
 	const GOOGLE_PRODUCT_CATEGORY_META_KEY = '_wc_facebook_google_product_category';
@@ -77,29 +89,46 @@ class Products {
 	 * @param bool          $enabled whether sync should be enabled for $products
 	 */
 	private static function set_sync_for_products( array $products, $enabled ) {
-		$enabled = wc_bool_to_string( $enabled );
+		$enabled               = wc_bool_to_string( $enabled );
+		$product_sync_meta_key = self::get_product_sync_meta_key();
+
 		foreach ( $products as $product ) {
 			if ( $product instanceof \WC_Product ) {
 				if ( $product->is_type( 'variable' ) ) {
 					foreach ( $product->get_children() as $variation ) {
 						$product_variation = wc_get_product( $variation );
 						if ( $product_variation instanceof \WC_Product ) {
-							$product_variation->update_meta_data( self::SYNC_ENABLED_META_KEY, $enabled );
+							$product_variation->update_meta_data( $product_sync_meta_key, $enabled );
 							$product_variation->save_meta_data();
 						}
 					}
-				} else {
-					$product->update_meta_data( self::SYNC_ENABLED_META_KEY, $enabled );
-					$product->save_meta_data();
 				}
+
+				// Adding sync mode settings to simple product as well as main product for variants.
+				$product->update_meta_data( $product_sync_meta_key, $enabled );
+				$product->save_meta_data();
 
 				// Remove excluded product from FB.
-				if ( "no" === $enabled && self::product_should_be_deleted( $product ) ) {
+				if ( 'no' === $enabled ) {
 					facebook_for_woocommerce()->get_integration()->delete_fb_product( $product );
 				}
-
 			}//end if
 		}//end foreach
+	}
+
+	/**
+	 * Chooses a particular key for product sync
+	 * based on user opt in status for Woo all products
+	 *
+	 * @since 3.5.1
+	 */
+	public static function get_product_sync_meta_key() {
+		$is_rolled_out = facebook_for_woocommerce()->get_integration()->is_woo_all_products_enabled();
+		if ( PluginRender::is_master_sync_on() && $is_rolled_out ) {
+			return self::OPTEN_IN_SYNC_ENABLED_META_KEY;
+		} else {
+			return self::SYNC_ENABLED_META_KEY;
+		}
 	}
 
 	/**
@@ -137,7 +166,7 @@ class Products {
 	 * }
 	 */
 	public static function disable_sync_for_products_with_terms( array $args ) {
-		$args = wp_parse_args(
+		$args     = wp_parse_args(
 			$args,
 			array(
 				'taxonomy' => 'product_cat',
@@ -155,7 +184,7 @@ class Products {
 				)
 			);
 			if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
-				$taxonomy = $args['taxonomy'] === 'product_tag' ? 'tag' : 'category';
+				$taxonomy = 'product_tag' === $args['taxonomy'] ? 'tag' : 'category';
 				$products = wc_get_products(
 					array(
 						$taxonomy => $terms,
@@ -188,7 +217,6 @@ class Products {
 			return false;
 		}
 	}
-
 
 	/**
 	 * Determines whether the given product should be synced assuming the product is published.
@@ -224,7 +252,7 @@ class Products {
 	 * @return bool
 	 */
 	public static function product_should_be_deleted( \WC_Product $product ) {
-		return ( 'yes' === get_option( 'woocommerce_hide_out_of_stock_items' ) && ! $product->is_in_stock() ) || ! facebook_for_woocommerce()->get_product_sync_validator( $product )->passes_product_terms_check();
+		return ! facebook_for_woocommerce()->get_product_sync_validator( $product )->passes_product_terms_check();
 	}
 
 
@@ -275,6 +303,18 @@ class Products {
 		if ( ! is_bool( $visibility ) ) {
 			return false;
 		}
+
+		// Updating visibility for the all variable products
+		if ( $product->is_type( 'variable' ) ) {
+			foreach ( $product->get_children() as $variation ) {
+				$product_variation = wc_get_product( $variation );
+				if ( $product_variation instanceof \WC_Product ) {
+					$product_variation->update_meta_data( self::VISIBILITY_META_KEY, wc_bool_to_string( $visibility ) );
+					$product_variation->save_meta_data();
+				}
+			}
+		}
+
 		$product->update_meta_data( self::VISIBILITY_META_KEY, wc_bool_to_string( $visibility ) );
 		$product->save_meta_data();
 		self::$products_visibility[ $product->get_id() ] = $visibility;
@@ -291,8 +331,14 @@ class Products {
 	 * @return bool
 	 */
 	public static function is_product_visible( \WC_Product $product ) {
+		if ( 'yes' === get_option( 'woocommerce_hide_out_of_stock_items' ) && ! $product->is_in_stock() ) {
+			self::$products_visibility[ $product->get_id() ] = false;
+			return false;
+		}
 		// accounts for a legacy bool value, current should be (string) 'yes' or (string) 'no'
 		if ( ! isset( self::$products_visibility[ $product->get_id() ] ) ) {
+			$meta = $product->get_meta( self::VISIBILITY_META_KEY );
+
 			if ( $product->is_type( 'variable' ) ) {
 				// assume variable products are not visible until a visible child is found
 				$is_visible = false;
@@ -303,7 +349,7 @@ class Products {
 						break;
 					}
 				}
-			} elseif ( $meta = $product->get_meta( self::VISIBILITY_META_KEY ) ) {
+			} elseif ( $meta ) {
 				$is_visible = wc_string_to_bool( $product->get_meta( self::VISIBILITY_META_KEY ) );
 			} else {
 				$is_visible = true;
@@ -322,8 +368,7 @@ class Products {
 	 *
 	 * @since 2.0.0-dev.1
 	 *
-	 * @param int         $price product price in cents
-	 * @param \WC_Product $product product object
+	 * @param \WC_Product $product
 	 * @return int
 	 */
 	public static function get_product_price( \WC_Product $product ) {
@@ -374,36 +419,6 @@ class Products {
 			&& self::get_product_price( $product )
 			&& self::is_commerce_enabled_for_product( $product )
 			&& self::product_should_be_synced( $product );
-	}
-
-
-	/**
-	 * Determines whether Commerce is enabled for the product.
-	 *
-	 * @since 2.1.0
-	 *
-	 * @param \WC_Product $product the product object
-	 * @return bool
-	 */
-	public static function is_commerce_enabled_for_product( \WC_Product $product ) {
-		if ( $product->is_type( 'variation' ) ) {
-			$product = wc_get_product( $product->get_parent_id() );
-		}
-		return $product instanceof \WC_Product && wc_string_to_bool( $product->get_meta( self::COMMERCE_ENABLED_META_KEY ) );
-	}
-
-
-	/**
-	 * Enables or disables Commerce for a product.
-	 *
-	 * @since 2.1.0
-	 *
-	 * @param \WC_Product $product the product object
-	 * @param bool        $is_enabled whether or not Commerce is to be enabled
-	 */
-	public static function update_commerce_enabled_for_product( \WC_Product $product, $is_enabled ) {
-		$product->update_meta_data( self::COMMERCE_ENABLED_META_KEY, wc_bool_to_string( $is_enabled ) );
-		$product->save_meta_data();
 	}
 
 
@@ -464,12 +479,12 @@ class Products {
 		foreach ( $categories as $category ) {
 			$level           = 0;
 			$parent_category = $category;
-			while ( (int) $parent_category->parent !== 0 ) {
+			while ( 0 !== (int) $parent_category->parent ) {
 				$parent_category = get_term( $parent_category->parent, 'product_cat' );
 				if ( ! $parent_category instanceof \WP_Term ) {
 					break;
 				}
-				$level ++;
+				++$level;
 			}
 			if ( empty( $categories_per_level[ $level ] ) ) {
 				$categories_per_level[ $level ] = array();
@@ -492,7 +507,7 @@ class Products {
 		}
 		if ( ! empty( $categories_per_level ) ) {
 			// get highest level categories
-			$categories = current( $categories_per_level );
+			$categories                 = current( $categories_per_level );
 			$google_product_category_id = '';
 			foreach ( $categories as $category ) {
 				$category_google_product_category_id = Product_Categories::get_google_product_category_id( $category->term_id );
@@ -529,12 +544,12 @@ class Products {
 		foreach ( $categories as $category ) {
 			$level           = 0;
 			$parent_category = $category;
-			while ( (int) $parent_category->parent !== 0 ) {
+			while ( 0 !== (int) $parent_category->parent ) {
 				$parent_category = get_term( $parent_category->parent, 'product_cat' );
 				if ( ! $parent_category instanceof \WP_Term ) {
 					break;
 				}
-				$level ++;
+				++$level;
 			}
 			if ( empty( $categories_per_level[ $level ] ) ) {
 				$categories_per_level[ $level ] = array();
@@ -629,7 +644,7 @@ class Products {
 			$gender = $product->get_meta( self::GENDER_META_KEY );
 		}
 
-		if ( ! in_array( $gender, array( 'female', 'male', 'unisex' ) ) ) {
+		if ( ! in_array( $gender, array( 'female', 'male', 'unisex' ), true ) ) {
 			$gender = 'unisex';
 		}
 
@@ -701,7 +716,7 @@ class Products {
 	 *
 	 * @param \WC_Product $product the product object
 	 * @param string      $attribute_name the attribute to be used to store the color
-	 * @throws PluginException
+	 * @throws PluginException If the provided attribute name does not match any of the available attributes for the product.
 	 */
 	public static function update_product_color_attribute( \WC_Product $product, $attribute_name ) {
 
@@ -710,7 +725,7 @@ class Products {
 			throw new PluginException( "The provided attribute name $attribute_name does not match any of the available attributes for the product {$product->get_name()}" );
 		}
 
-		if ( $attribute_name !== self::get_product_color_attribute( $product ) && in_array( $attribute_name, self::get_distinct_product_attributes( $product ) ) ) {
+		if ( self::get_product_color_attribute( $product ) !== $attribute_name && in_array( $attribute_name, self::get_distinct_product_attributes( $product ), true ) ) {
 			throw new PluginException( "The provided attribute $attribute_name is already used for the product {$product->get_name()}" );
 		}
 
@@ -797,7 +812,7 @@ class Products {
 	 *
 	 * @param \WC_Product $product the product object
 	 * @param string      $attribute_name the attribute to be used to store the size
-	 * @throws PluginException
+	 * @throws PluginException If the provided attribute name does not match any of the available attributes for the product.
 	 */
 	public static function update_product_size_attribute( \WC_Product $product, $attribute_name ) {
 
@@ -806,7 +821,7 @@ class Products {
 			throw new PluginException( "The provided attribute name $attribute_name does not match any of the available attributes for the product {$product->get_name()}" );
 		}
 
-		if ( $attribute_name !== self::get_product_size_attribute( $product ) && in_array( $attribute_name, self::get_distinct_product_attributes( $product ) ) ) {
+		if ( self::get_product_size_attribute( $product ) !== $attribute_name && in_array( $attribute_name, self::get_distinct_product_attributes( $product ), true ) ) {
 			throw new PluginException( "The provided attribute $attribute_name is already used for the product {$product->get_name()}" );
 		}
 
@@ -893,14 +908,14 @@ class Products {
 	 *
 	 * @param \WC_Product $product the product object
 	 * @param string      $attribute_name the attribute to be used to store the pattern
-	 * @throws PluginException
+	 * @throws PluginException If the provided attribute name does not match any of the available attributes for the product.
 	 */
 	public static function update_product_pattern_attribute( \WC_Product $product, $attribute_name ) {
 		// check if the name matches an available attribute
 		if ( ! empty( $attribute_name ) && ! self::product_has_attribute( $product, $attribute_name ) ) {
 			throw new PluginException( "The provided attribute name $attribute_name does not match any of the available attributes for the product {$product->get_name()}" );
 		}
-		if ( $attribute_name !== self::get_product_pattern_attribute( $product ) && in_array( $attribute_name, self::get_distinct_product_attributes( $product ) ) ) {
+		if ( self::get_product_pattern_attribute( $product ) !== $attribute_name && in_array( $attribute_name, self::get_distinct_product_attributes( $product ), true ) ) {
 			throw new PluginException( "The provided attribute $attribute_name is already used for the product {$product->get_name()}" );
 		}
 		$product->update_meta_data( self::PATTERN_ATTRIBUTE_META_KEY, $attribute_name );
@@ -985,7 +1000,8 @@ class Products {
 					$attr_val  = $product->get_attribute( $slug );
 				}
 
-				if ( \WC_Facebookcommerce_Utils::sanitize_variant_name( $attr_name, false ) === $key ) {
+				$sanitized_attr_name = \WC_Facebookcommerce_Utils::sanitize_attribute_name( \WC_Facebookcommerce_Utils::sanitize_variant_name( $attr_name, false ) );
+				if ( $sanitized_attr_name === $key ) {
 					$value = $attr_val;
 					break;
 				}
@@ -1032,12 +1048,14 @@ class Products {
 	 * @since 2.1.0
 	 *
 	 * @return array associative array
+	 *
+	 * phpcs:disable WordPress.Security.NonceVerification.Missing
 	 */
 	public static function get_enhanced_catalog_attributes_from_request() {
 		$prefix     = Admin\Enhanced_Catalog_Attribute_Fields::FIELD_ENHANCED_CATALOG_ATTRIBUTE_PREFIX;
 		$attributes = array_filter(
 			$_POST,
-			function( $key ) use ( $prefix ) {
+			function ( $key ) use ( $prefix ) {
 				return substr( $key, 0, strlen( $prefix ) ) === $prefix;
 			},
 			ARRAY_FILTER_USE_KEY
@@ -1045,7 +1063,7 @@ class Products {
 
 		return array_reduce(
 			array_keys( $attributes ),
-			function( $attrs, $attr_key ) use ( $prefix ) {
+			function ( $attrs, $attr_key ) use ( $prefix ) {
 				return array_merge(
 					$attrs,
 					array(
@@ -1119,7 +1137,9 @@ class Products {
 		$products = wc_get_products(
 			array(
 				'limit'      => 1,
+				// phpcs:ignore WordPress.DB.SlowDBQuery
 				'meta_key'   => \WC_Facebookcommerce_Integration::FB_PRODUCT_ITEM_ID,
+				// phpcs:ignore WordPress.DB.SlowDBQuery
 				'meta_value' => $fb_product_id,
 			)
 		);
@@ -1133,7 +1153,9 @@ class Products {
 			$products = wc_get_products(
 				array(
 					'limit'      => 1,
+					// phpcs:ignore WordPress.DB.SlowDBQuery
 					'meta_key'   => \WC_Facebookcommerce_Integration::FB_PRODUCT_GROUP_ID,
+					// phpcs:ignore WordPress.DB.SlowDBQuery
 					'meta_value' => $fb_product_id,
 				)
 			);
@@ -1169,6 +1191,4 @@ class Products {
 
 		return ! empty( $product ) ? $product : null;
 	}
-
-
 }

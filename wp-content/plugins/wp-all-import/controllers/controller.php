@@ -48,10 +48,12 @@ abstract class PMXI_Controller {
 	 */
 	protected function force_ssl() {
 		if (force_ssl_admin() && ! is_ssl()) {
-			if ( 0 === strpos($_SERVER['REQUEST_URI'], 'http') ) {
-				wp_redirect(preg_replace('|^http://|', 'https://', $_SERVER['REQUEST_URI'])); die();
+			if ( 0 === strpos(esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'] ?? '')), 'http') ) {
+				// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect
+				wp_redirect(preg_replace('|^http://|', 'https://', esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'] ?? '')))); die();
 			} else {
-				wp_redirect('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']); die();
+				// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect
+				wp_redirect('https://' . sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'] ?? '')) . esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'] ?? ''))); die();
 			}
 		}
 	}
@@ -69,6 +71,7 @@ abstract class PMXI_Controller {
 		} else {
 			// assume template file name depending on calling function
 			if (is_null($viewPath)) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace
 				$trace = debug_backtrace();
 				$viewPath = str_replace('_', '/', preg_replace('%^' . preg_quote(PMXI_Plugin::PREFIX, '%') . '%', '', strtolower($trace[1]['class']))) . '/' . $trace[1]['function'];
 			}
@@ -81,7 +84,7 @@ abstract class PMXI_Controller {
 				extract($this->data);
 				include $filePath;
 			} else {
-				throw new Exception("Requested template file $filePath is not found.");
+				throw new Exception(esc_html("Requested template file $filePath is not found."));
 			}
 		}
 	}

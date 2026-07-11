@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Full setup checklist functionality here.
  *
@@ -61,6 +66,7 @@ class MonsterInsights_Setup_Checklist {
 			'step_2_google_search_console'   => false,
 			'step_2_form_conversion'         => false,
 			'step_2_visit_overview_report'   => false,
+			'step_2_create_custom_view'      => false,
 			'step_3_create_site_note'        => false,
 			'step_4_install_userfeedback'    => false,
 			'step_4_performance_addon'       => false,

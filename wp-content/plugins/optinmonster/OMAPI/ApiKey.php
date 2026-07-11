@@ -125,8 +125,8 @@ class OMAPI_ApiKey {
 	 *
 	 * @return bool True if the Key can be validated
 	 */
-	public static function verify( $apikey ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
-		$creds = compact( 'apikey' );
+	public static function verify( $apikey ) {
+		$creds = array( 'apikey' => $apikey );
 
 		// Verify this new API Key works by posting to the Legacy route.
 		return OMAPI_Api::build( 'v1', 'verify/', 'POST', $creds )->request();
@@ -161,7 +161,8 @@ class OMAPI_ApiKey {
 		}
 
 		foreach ( $site_ids as $site_id ) {
-			if ( in_array( $site_id, $api_key_sites['siteIds'] ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+			// phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+			if ( in_array( $site_id, $api_key_sites['siteIds'] ) ) {
 				return true;
 			}
 		}

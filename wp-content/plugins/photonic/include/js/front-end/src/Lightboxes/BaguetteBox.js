@@ -65,7 +65,7 @@ export class PhotonicBaguetteBox extends Lightbox {
 			const galleryId = current.getAttribute('id');
 			baguetteBox.run('#' + galleryId, {
 				captions: (a) => {
-					return a.getAttribute('data-title') ? a.getAttribute('data-title') : (a.getAttribute('title') ? a.getAttribute('title') : '');
+					return a.getAttribute('data-title') ? Util.HTMLSanitizer.SanitizeHTML(a.getAttribute('data-title')) : (a.getAttribute('title') ? Util.getText(a.getAttribute('title')) : '');
 				},
 				onChange: (idx, count) => {
 					const links = current.querySelectorAll('.photonic-lb');

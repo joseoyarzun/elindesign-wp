@@ -1,5 +1,3 @@
-'use strict';
-
 import { getOptions, getCampaign } from '../Utils/campaigns';
 
 const removed = [];
@@ -7,7 +5,6 @@ OMAPI._usedSlugs = OMAPI._usedSlugs || {};
 
 class CampaignSelector extends elementorModules.frontend.handlers.Base {
 	static $editorSelect = null;
-	static instances = [];
 
 	getDefaultSettings() {
 		return {
@@ -30,7 +27,7 @@ class CampaignSelector extends elementorModules.frontend.handlers.Base {
 	}
 
 	bindEvents() {
-		CampaignSelector.instances.push(this);
+		window.OMAPI_Elementor.instances.push(this);
 
 		this.oldSlug = this.campaignSlug();
 		this.campaignLoaded = false;
@@ -70,9 +67,9 @@ class CampaignSelector extends elementorModules.frontend.handlers.Base {
 	/**
 	 * Handles get-campaigns error.
 	 *
-	 * @2.2.0
+	 * @since 2.2.0
 	 *
-	 * @param  {Object} error Error event object
+	 * @param {object} error Error event object
 	 *
 	 * @returns {void}
 	 */
@@ -161,10 +158,10 @@ class CampaignSelector extends elementorModules.frontend.handlers.Base {
 		}
 
 		const embed = {
-			id: `om-${slug}-js`,
-			type: 'text/javascript',
-			src: OMAPI.apiUrl,
-			async: true,
+			'id': `om-${slug}-js`,
+			'type': 'text/javascript',
+			'src': OMAPI.apiUrl,
+			'async': true,
 			'data-user': OMAPI.omUserId,
 			'data-campaign': slug,
 		};
@@ -216,7 +213,9 @@ class CampaignSelector extends elementorModules.frontend.handlers.Base {
 	 * @returns {string} Campaign slug.
 	 */
 	campaignSlug() {
-		return this.getElementSettings('campaign_id');
+		const slug = this.getElementSettings('campaign_id');
+		// Sanitize to numbers/letters only.
+		return slug.replace(/[^a-zA-Z0-9]/g, '');
 	}
 
 	/**
@@ -224,7 +223,7 @@ class CampaignSelector extends elementorModules.frontend.handlers.Base {
 	 *
 	 * @since  2.2.0
 	 *
-	 * @returns {Object|null} The global campaign object or null.
+	 * @returns {object|null} The global campaign object or null.
 	 */
 	getCampaign() {
 		return getCampaign(this.campaignSlug());
@@ -235,7 +234,7 @@ class CampaignSelector extends elementorModules.frontend.handlers.Base {
 	 *
 	 * @since  2.2.0
 	 *
-	 * @param  {string} changed The thing that changed.
+	 * @param {string} changed The thing that changed.
 	 *
 	 * @returns {void}
 	 */

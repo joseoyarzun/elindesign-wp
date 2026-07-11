@@ -1,32 +1,35 @@
-=== Import any XML or CSV File to WordPress ===
+=== WP All Import – Drag & Drop Import for CSV, XML, Excel & Google Sheets ===
 Contributors: soflyy, wpallimport
-Requires at least: 4.1
-Tested up to: 6.4
-Stable tag: 3.7.3
-Tags: wordpress csv import, wordpress xml import, xml, csv, datafeed, import, migrate, import csv to wordpress, import xml to wordpress, advanced xml import, advanced csv import, bulk csv import, bulk xml import, bulk data import, xml to custom post type, csv to custom post type, woocommerce csv import, woocommerce xml import, csv import, import csv, xml import, import xml, csv importer
+Requires at least: 5.0
+Tested up to: 7.0
+Stable tag: 4.1.0
+Requires PHP: 7.4
+License: GPLv3
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Tags: wordpress csv import, wordpress xml import, xml, csv, datafeed
 
-WP All Import is an extremely powerful importer that makes it easy to import any XML or CSV file to WordPress.
+Easily import any file of any size into any plugin, post type, custom field, or taxonomy. Supports WooCommerce, ACF, images, galleries, users, real estate listings, and more.
 
 == Description ==
 
-= WP All Import - Simple & Powerful XML / CSV Importer Plugin =
+= WP All Import – Simple & Powerful XML, CSV, Google Sheets, and Excel Importer Plugin =
 
 *“It's a wonderful plugin that does so much, so well that it's hard to list all of the features. But I'll tell you this, I was able to import the content of a pair of websites running the ModX CMS into a WordPress install in less than 30 minutes. No joke!”*
 **Alex Vasquez** - DigiSavvy Co-Founder & WordCamp Los Angeles Organizer
 
-WP All Import has a four step import process and an intuitive drag & drop interface that makes complicated import tasks simple and fast.
+WP All Import has a four-step import process and an intuitive drag-and-drop interface that makes complicated import tasks simple and fast.
 
-There are no special requirements that the elements in your file must be laid out in a certain way. WP All Import really can import any XML or CSV file.
+There are no special requirements that the elements in your file must be laid out in a certain way. WP All Import can import any XML, CSV, Excel spreadsheet, or Google Sheets file into WordPress.
 
-WP All Import can be used for everything from migrating content from a legacy CMS to WordPress to building a store with an affiliate datafeed to displaying live stock quotes or sports scores to building a real estate portal.
+WP All Import can be used for everything from migrating content from a legacy CMS to WordPress to building a store with affiliate datafeed to displaying live stock quotes or sports scores to building a real estate portal.
 
 Check out our [documentation and video tutorials](http://www.wpallimport.com/documentation/?utm_source=import-plugin-free&utm_medium=readme&utm_campaign=docs) to make the most of WP All Import.
 
-WP All Import integrates with our companion plugin, [WP All Export](https://wordpress.org/plugins/wp-all-export/). You can export posts, WooCommerce products, orders, users, or anything else with WP All Export. Then you can edit in Excel and re-import to the same site or migrate the data to another site with WP All Import.
+WP All Import integrates with our companion plugin, [WP All Export](https://wordpress.org/plugins/wp-all-export/). You can export posts, WooCommerce products, orders, users, or anything else with WP All Export. Then you can edit the WordPress data with Microsoft Excel, Numbers, or maybe something else, and re-import to the same site or migrate the data to another site with WP All Import.
 
 For technical support from the developers, please consider purchasing WP All Import Pro.
 
-= WP All Import Professional Edition =
+= WP All Import Pro Version =
 [youtube http://www.youtube.com/watch?v=pD6WQANJcJY /]
 
 *WP All Import Pro* is a paid upgrade that includes premium support and adds the following features:
@@ -35,11 +38,11 @@ For technical support from the developers, please consider purchasing WP All Imp
 
 * Import images to the post media gallery - WP All Import can download images from URLs in an XML or CSV file and put them in the media gallery.
 
-* Cron Job/Recurring Imports - WP All Import pro can check periodically check a file for updates, and add, edit, and delete to the imported posts accordingly.
+* Import files from a URL – Download and import CSV, XML, or Excel WordPress data files from external websites, even if they are password-protected with HTTP authentication.
 
-* Import files from a URL - Download and import files from external websites, even if they are password protected with HTTP authentication. URL imports are integrated with the recurring/cron imports feature, so WP All Import can periodically re-download the files and add, edit, and delete posts accordingly.
+* Cron Job/Recurring Imports from external URLs – WP All Import Pro can periodically check a file for updates, and add, edit, and delete the imported posts accordingly.
 
-* Execution of Custom PHP Functions on data, i.e. use something like [my_function({xpath/to/a/field[1]})] in your template, to pass the value of {xpath/to/a/field[1]} to my_function and display whatever it returns.
+* Execution of Custom PHP Functions on data, i.e., use something like [my_function({xpath/to/a/field[1]})] in your template, to pass the value of {xpath/to/a/field[1]} to my_function and display whatever it returns.
 
 * Guaranteed technical support via e-mail.
 
@@ -49,19 +52,25 @@ Need to [import XML and CSV to WooCommerce?](http://www.wpallimport.com/woocomme
 
 = WordPress CSV Imports =
 
-Read on to learn more about the CSV importer functionality of WP All Import. Importing CSVs with WP All Import is exactly the same as importing XML files, because internally, WP All Import actually converts your CSV file to an XML file on the fly. You can use the same XPath filtering options and all the same features you have when importing XML files.
+Read on to learn more about the CSV importer functionality of WP All Import. Importing CSVs with WP All Import is exactly the same as importing XML files because internally, WP All Import actually converts your CSV file to an XML file on the fly. You can use the same XPath filtering options and all the same features you have when importing XML files.
 
-CSV imports don't require your CSV file to have a specific structure. Your CSV file can use any column names/headings. You can map the columns in your CSV file to the appropriate places in WordPress during the import process.
+CSV imports, including those exported from Excel and Google Sheets, don't require your file to have a specific structure. Your CSV file can use any column names/headings. You can map the columns in your CSV file to the appropriate places in WordPress during the import process.
 
 When importing CSV files, your CSV should have UTF-8 encoding if you are having trouble importing special characters.
 
 In step 2 of a CSV import, you can specify an alternative delimiter if you aren't using a comma. WP All Import can import CSVs that are pipe-delimited, # delimited, or delimited/separated by any other character.
 
-For CSV import tutorials and example files, visit our [documentation](http://www.wpallimport.com/documentation/?utm_source=import-plugin-free&utm_medium=readme&utm_campaign=docs). Please keep in mind CSV imports with WP All Import are just like XML imports - you have all the same functionality, and the process is exactly the same. Any of our tutorial videos that apply to XML files also apply to importing CSV files, so if you see a tutorial with us importing an XML file, know that you can follow the exact same steps for a CSV import.
+For CSV import tutorials and example files, visit our [documentation](http://www.wpallimport.com/documentation/?utm_source=import-plugin-free&utm_medium=readme&utm_campaign=docs). Please keep in mind CSV imports with WP All Import are just like XML imports – you have all the same functionality, and the process is exactly the same. Any of our tutorial videos that apply to XML files also apply to importing CSV files, so if you see a tutorial with us importing an XML file, know that you can follow the exact same steps for a CSV import.
+
+= WordPress Excel Import / Google Sheets Import =
+
+Don't want to convert your Excel or Google Sheets data to CSV? WP All Import also works as a Google Sheets and Excel importer for WordPress. Simply upload your Excel file as you would for CSV and WP All Import will automatically detect the columns in your file.
+
+For Google Sheets, use the 'Download a file' option and paste your sheet's public URL to import data to WordPress.
 
 = Add-Ons =
 
-A number of premium add-ons are available to add functionality to the importer and make XML & CSV import tasks to complex plugins simple.
+A number of premium add-ons are available to add functionality to the importer and make XML, CSV, Google Sheets, and Excel import tasks to complex plugins simple.
 
  - Advanced Custom Fields Add-On - [ACF](http://www.advancedcustomfields.com/) XML & CSV importer
  - WooCommerce Add-On - XML & CSV importer for all [WooCommerce](http://wordpress.org/plugins/woocommerce) product types
@@ -81,15 +90,14 @@ A [developer API](http://www.wpallimport.com/documentation/developers/action-ref
 [Export WordPress Users to CSV/XML](https://wordpress.org/plugins/export-wp-users-xml-csv/)
 
 == Premium Support ==
-Support for the free version of WP All Import is handled through the WordPress.org community forums.
 
-Support is not guaranteed and is based on ability. For premium support over email, [purchase WP All Import.](https://www.wpallimport.com/checkout/?edd_action=add_to_cart&download_id=2707176&edd_options%5Bprice_id%5D=1&utm_source=import-plugin-free&utm_medium=readme&utm_campaign=premium-support)
+You can submit the [support form on our website](https://www.wpallimport.com/support/) or email us at [support@wpallimport.com](mailto:support@wpallimport.com). While we try to assist users of our free version, please note that support is not guaranteed and will depend on our capacity. For premium support, purchase [WP All Import Pro](https://www.wpallimport.com/checkout/?edd_action=add_to_cart&download_id=5839966&edd_options%5Bprice_id%5D=1&discount=welcome-upgrade-99&utm_source=import-plugin-free&utm_medium=readme&utm_campaign=premium-support).
 
 == Import To WooCommerce ==
 
-Need to [import XML and CSV to WooCommerce?](http://wordpress.org/plugins/woocommerce-xml-csv-product-import/) Check out our WooCommerce add-on.
+Need to [import Excel, XML and CSV to WooCommerce?](http://wordpress.org/plugins/woocommerce-xml-csv-product-import/) Check out our WooCommerce add-on.
 
-[WooCommerce XML & CSV Import Pro Version](http://www.wpallimport.com/woocommerce-product-import/?utm_source=import-plugin-free&utm_medium=readme&utm_campaign=import-wooco-products)
+[WooCommerce Excel, XML & CSV Import Pro Version](http://www.wpallimport.com/woocommerce-product-import/?utm_source=import-plugin-free&utm_medium=readme&utm_campaign=import-wooco-products)
 
 == Frequently Asked Questions ==
 
@@ -111,15 +119,23 @@ The default WordPress import tool uses a brute-force approach that often imports
 
 = Does my data have to be specially organized for WordPress imports? =
 
-Not when you use our plugins. Our Drag & Drop interface lets you map incoming data elements to any WordPress fields. You can even modify the incoming data as part of the import process, so we can handle a wide variety of import layouts.
+Not when you use our plugins. Our Drag & Drop interface lets you map incoming data elements to any WordPress field. You can even modify the incoming data as part of the import process, so we can handle a wide variety of import layouts.
 
 = How do I import a CSV file into WordPress? =
 
-To import a CSV file into WordPress, just specify the CSV file as your import source. WP All Import will automatically recognize the file type and adjust accordingly. You don't need to do anything special to handle the CSV format.
+To import a CSV file into WordPress, just specify the CSV file as your import source. WP All Import will automatically recognize the file type and adjust the interface accordingly. You don’t need to do anything special to handle the CSV format.
 
 = How do I import XML data into WordPress? =
 
-To import XML data into WordPress, just specify the XML file as your import source. WP All Import will automatically recognize the file type and adjust accordingly. You don't need to do anything special to handle an XML file.
+To import XML data into WordPress, just specify the XML file as your import source. WP All Import will automatically recognize the file type and adjust the interface accordingly. You don’t need to do anything special to handle an XML file.
+
+= How do I import Excel data into WordPress? =
+
+To import Excel data into WordPress, just specify the Excel file as your import source. WP All Import will automatically recognize the file type and adjust the interface accordingly. You don’t need to do anything special to import WordPress Excel files.
+
+= Can I import Google Sheets to WordPress? =
+
+Yes. WP All Import includes an option to download a file from an external URL. You can add your WordPress data to a Google Sheet, copy its URL, and then paste the sheet's URL into WP All Import.
 
 = How do I import large files into WordPress? =
 
@@ -127,7 +143,7 @@ To import large files into WordPress, you can use our advanced settings to split
 
 = How do I import data into a WordPress custom plugin? =
 
-Our plugin automatically recognizes many WordPress custom plugins and themes, so just select the custom post type and away you go. If a custom plugin stores its data in an unconventional manner, just contact our support staff for further guidance.
+Our plugin automatically recognizes many WordPress custom plugins and themes, so just select the custom post type, and away you go. If a custom plugin stores its data in an unconventional manner, just contact our support staff for further guidance.
 
 = Can I use WP All Import on all of my WordPress sites? =
 
@@ -181,6 +197,71 @@ If you are using the free version of the plugin, you can obtain support through 
 4. Manage imports.
 
 == Changelog ==
+
+= 4.1.0 =
+* security improvement: hardening of database queries
+* improvement: ported new add-on API
+* API: pmxi_fire_hooks, pmxi_disabled_delete_missing_options, pmxi_hidden_delete_missing_options, pmxi_status_of_removed_options, pmxi_hidden_data_to_update_options
+
+= 4.0.1 =
+* security improvement: fixes CVE-2026-2830
+* maintenance: update packages
+
+= 4.0.0 =
+* NOTE: inline PHP execution is disabled when both DISALLOW_FILE_EDIT and DISALLOW_FILE_MODS are set in wp-config.php
+* security improvement: fixes CVE-2025-12733
+* maintenance: update PhpSpreadsheet
+
+= 3.9.6 =
+* fix: hierarchical taxonomy terms are not imported correctly
+* fix: JS error in some cases with certain field names
+
+= 3.9.5 =
+* improvement: upgrade svg-sanitize library
+
+= 3.9.4 =
+* security improvement: fixes CVE-2025-10001 
+* improvement: upgrade PhpSpreadsheet version
+
+= 3.9.3 =
+* improvement: streamlined UI for new/existing items import types
+* improvement: enhanced session data handling
+* improvement: enhanced Excel file processing with better error handling and automatic fallback methods
+* improvement: added term slug truncation to prevent database issues with long slugs
+* improvement: UI updates
+
+= 3.9.2 =
+* improvement: add partner discounts
+
+= 3.9.1 =
+* bug fix: remove defaults for TEXT db fields
+
+= 3.9.0 =
+* security improvement: migrated from PHPExcel to PHPSpreadsheet
+
+= 3.8.0 =
+* security improvement, fixes: CVE-2024-8722, CVE-2024-9664, CVE-2024-9661
+
+= 3.7.9 =
+* bug fix: compatibility with free ACF Import Add-On
+
+= 3.7.8 =
+* bug fix: fatal error when log file isn't writable
+
+= 3.7.7 =
+* improvement: UI updates
+
+= 3.7.6 =
+* improvement: require 'setup_network' meta capability for access
+* API: integrate Rapid Add-On class
+
+= 3.7.5 =
+* improvement: update upgrade links
+* bug fix: fatal error with PHP 8.3
+
+= 3.7.4 =
+* security improvement
+* API: added ‘wp_all_import_is_post_to_change_missing’ filter
 
 = 3.7.3 =
 * security improvement

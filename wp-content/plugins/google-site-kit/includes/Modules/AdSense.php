@@ -6,7 +6,11 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
+
+// phpcs:disable Generic.Metrics.CyclomaticComplexity.MaxExceeded
 
 namespace Google\Site_Kit\Modules;
 
@@ -33,8 +37,6 @@ use Google\Site_Kit\Core\REST_API\Data_Request;
 use Google\Site_Kit\Core\Tags\Guards\Tag_Environment_Type_Guard;
 use Google\Site_Kit\Core\Tags\Guards\Tag_Verify_Guard;
 use Google\Site_Kit\Core\Util\Date;
-use Google\Site_Kit\Core\Util\Debug_Data;
-use Google\Site_Kit\Core\Util\Feature_Flags;
 use Google\Site_Kit\Core\Util\Method_Proxy_Trait;
 use Google\Site_Kit\Core\Util\Sort;
 use Google\Site_Kit\Core\Util\URL;
@@ -46,18 +48,29 @@ use Google\Site_Kit\Modules\AdSense\Auto_Ad_Guard;
 use Google\Site_Kit\Modules\AdSense\Web_Tag;
 use Google\Site_Kit_Dependencies\Google\Model as Google_Model;
 use Google\Site_Kit_Dependencies\Google\Service\Adsense as Google_Service_Adsense;
+use Google\Site_Kit_Dependencies\Google\Service\Adsense\Account;
 use Google\Site_Kit_Dependencies\Google\Service\Adsense\Alert as Google_Service_Adsense_Alert;
 use Google\Site_Kit_Dependencies\Psr\Http\Message\RequestInterface;
 use Exception;
 use Google\Site_Kit\Context;
 use Google\Site_Kit\Core\Assets\Assets;
 use Google\Site_Kit\Core\Authentication\Authentication;
+use Google\Site_Kit\Core\Modules\AdSense\Tag_Matchers;
+use Google\Site_Kit\Core\Modules\Module_With_Tag;
+use Google\Site_Kit\Core\Modules\Module_With_Tag_Trait;
+use Google\Site_Kit\Core\Modules\Tags\Module_Tag_Matchers;
+use Google\Site_Kit\Core\Prompts\Dismissed_Prompts;
+use Google\Site_Kit\Core\Site_Health\Debug_Data;
 use Google\Site_Kit\Core\Storage\Encrypted_Options;
 use Google\Site_Kit\Core\Storage\Options;
 use Google\Site_Kit\Core\Storage\User_Options;
 use Google\Site_Kit\Core\Tags\Guards\WP_Query_404_Guard;
+use Google\Site_Kit\Core\Tracking\Feature_Metrics_Trait;
+use Google\Site_Kit\Core\Tracking\Provides_Feature_Metrics;
 use Google\Site_Kit\Modules\AdSense\Ad_Blocking_Recovery_Tag_Guard;
 use Google\Site_Kit\Modules\AdSense\Ad_Blocking_Recovery_Web_Tag;
+use Google\Site_Kit\Modules\Analytics_4\Settings as Analytics_Settings;
+use Google\Site_Kit\Modules\Analytics_4\Synchronize_AdSenseLinked;
 use WP_Error;
 use WP_REST_Response;
 
@@ -68,13 +81,14 @@ use WP_REST_Response;
  * @access private
  * @ignore
  */
-final class AdSense extends Module
-	implements Module_With_Scopes, Module_With_Settings, Module_With_Assets, Module_With_Debug_Fields, Module_With_Owner, Module_With_Service_Entity, Module_With_Deactivation {
+final class AdSense extends Module implements Module_With_Scopes, Module_With_Settings, Module_With_Assets, Module_With_Debug_Fields, Module_With_Owner, Module_With_Service_Entity, Module_With_Deactivation, Module_With_Tag, Provides_Feature_Metrics {
 	use Method_Proxy_Trait;
 	use Module_With_Assets_Trait;
 	use Module_With_Owner_Trait;
 	use Module_With_Scopes_Trait;
 	use Module_With_Settings_Trait;
+	use Module_With_Tag_Trait;
+	use Feature_Metrics_Trait;
 
 	/**
 	 * Module slug name.
@@ -102,10 +116,10 @@ final class AdSense extends Module
 	 */
 	public function __construct(
 		Context $context,
-		Options $options = null,
-		User_Options $user_options = null,
-		Authentication $authentication = null,
-		Assets $assets = null
+		?Options $options = null,
+		?User_Options $user_options = null,
+		?Authentication $authentication = null,
+		?Assets $assets = null
 	) {
 		parent::__construct( $context, $options, $user_options, $authentication, $assets );
 		$this->ad_blocking_recovery_tag = new Ad_Blocking_Recovery_Tag( new Encrypted_Options( $this->options ) );
@@ -118,6 +132,7 @@ final class AdSense extends Module
 	 */
 	public function register() {
 		$this->register_scopes_hook();
+		$this->register_feature_metrics();
 
 		$this->ad_blocking_recovery_tag->register();
 
@@ -142,7 +157,22 @@ final class AdSense extends Module
 		}
 
 		// AdSense tag placement logic.
-		add_action( 'template_redirect', $this->get_method_proxy( 'register_tag' ) );
+		add_action( 'template_redirect', array( $this, 'register_tag' ) );
+
+		// Reset AdSense link settings in Analytics when accountID changes.
+		$this->get_settings()->on_change(
+			function ( $old_value, $new_value ) {
+				if ( $old_value['accountID'] !== $new_value['accountID'] ) {
+					$this->reset_analytics_adsense_linked_settings();
+				}
+				if ( ! empty( $new_value['accountSetupComplete'] ) && ! empty( $new_value['siteSetupComplete'] ) ) {
+					do_action( Synchronize_AdSenseLinked::CRON_SYNCHRONIZE_ADSENSE_LINKED );
+				}
+			}
+		);
+
+		// Set up the site reset hook to reset the ad blocking recovery notification.
+		add_action( 'googlesitekit_reset', array( $this, 'reset_ad_blocking_recovery_notification' ) );
 	}
 
 	/**
@@ -188,6 +218,12 @@ final class AdSense extends Module
 		$this->get_settings()->delete();
 
 		$this->ad_blocking_recovery_tag->delete();
+
+		// Reset AdSense link settings in Analytics.
+		$this->reset_analytics_adsense_linked_settings();
+
+		// Reset the ad blocking recovery notification.
+		$this->reset_ad_blocking_recovery_notification();
 	}
 
 	/**
@@ -202,35 +238,35 @@ final class AdSense extends Module
 
 		return array(
 			'adsense_account_id'                       => array(
-				'label' => __( 'AdSense account ID', 'google-site-kit' ),
+				'label' => __( 'AdSense: Account ID', 'google-site-kit' ),
 				'value' => $settings['accountID'],
 				'debug' => Debug_Data::redact_debug_value( $settings['accountID'], 7 ),
 			),
 			'adsense_client_id'                        => array(
-				'label' => __( 'AdSense client ID', 'google-site-kit' ),
+				'label' => __( 'AdSense: Client ID', 'google-site-kit' ),
 				'value' => $settings['clientID'],
 				'debug' => Debug_Data::redact_debug_value( $settings['clientID'], 10 ),
 			),
 			'adsense_account_status'                   => array(
-				'label' => __( 'AdSense account status', 'google-site-kit' ),
+				'label' => __( 'AdSense: Account status', 'google-site-kit' ),
 				'value' => $settings['accountStatus'],
 			),
 			'adsense_site_status'                      => array(
-				'label' => __( 'AdSense site status', 'google-site-kit' ),
+				'label' => __( 'AdSense: Site status', 'google-site-kit' ),
 				'value' => $settings['siteStatus'],
 			),
 			'adsense_use_snippet'                      => array(
-				'label' => __( 'AdSense snippet placed', 'google-site-kit' ),
+				'label' => __( 'AdSense: Snippet placed', 'google-site-kit' ),
 				'value' => $settings['useSnippet'] ? __( 'Yes', 'google-site-kit' ) : __( 'No', 'google-site-kit' ),
 				'debug' => $settings['useSnippet'] ? 'yes' : 'no',
 			),
 			'adsense_web_stories_adunit_id'            => array(
-				'label' => __( 'Web Stories Ad Unit ID', 'google-site-kit' ),
+				'label' => __( 'AdSense: Web Stories Ad Unit ID', 'google-site-kit' ),
 				'value' => $settings['webStoriesAdUnit'],
 				'debug' => $settings['webStoriesAdUnit'],
 			),
 			'adsense_setup_completed_timestamp'        => array(
-				'label' => __( 'AdSense setup completed at', 'google-site-kit' ),
+				'label' => __( 'AdSense: Setup completed at', 'google-site-kit' ),
 				'value' => $settings['setupCompletedTimestamp'] ? date_i18n(
 					get_option( 'date_format' ),
 					$settings['setupCompletedTimestamp']
@@ -239,7 +275,7 @@ final class AdSense extends Module
 			),
 			'adsense_abr_use_snippet'                  => array(
 				'label' => __(
-					'Ad Blocking Recovery snippet placed',
+					'AdSense: Ad Blocking Recovery snippet placed',
 					'google-site-kit'
 				),
 				'value' => $settings['useAdBlockingRecoverySnippet'] ? __( 'Yes', 'google-site-kit' ) : __( 'No', 'google-site-kit' ),
@@ -247,7 +283,7 @@ final class AdSense extends Module
 			),
 			'adsense_abr_use_error_protection_snippet' => array(
 				'label' => __(
-					'Ad Blocking Recovery error protection snippet placed',
+					'AdSense: Ad Blocking Recovery error protection snippet placed',
 					'google-site-kit'
 				),
 				'value' => $settings['useAdBlockingRecoveryErrorSnippet'] ? __( 'Yes', 'google-site-kit' ) : __( 'No', 'google-site-kit' ),
@@ -255,7 +291,7 @@ final class AdSense extends Module
 			),
 			'adsense_abr_setup_status'                 => array(
 				'label' => __(
-					'Ad Blocking Recovery setup status',
+					'AdSense: Ad Blocking Recovery setup status',
 					'google-site-kit'
 				),
 				'value' => $this->get_ad_blocking_recovery_setup_status_label(
@@ -264,7 +300,6 @@ final class AdSense extends Module
 				'debug' => $settings['adBlockingRecoverySetupStatus'],
 			),
 		);
-
 	}
 
 	/**
@@ -287,7 +322,6 @@ final class AdSense extends Module
 			),
 			'GET:sites'                           => array( 'service' => 'adsense' ),
 			'POST:sync-ad-blocking-recovery-tags' => array( 'service' => 'adsense' ),
-			'GET:urlchannels'                     => array( 'service' => 'adsense' ),
 		);
 	}
 
@@ -341,7 +375,7 @@ final class AdSense extends Module
 				$service = $this->get_service( 'adsense' );
 				return $service->accounts_adclients->listAccountsAdclients( self::normalize_account_id( $data['accountID'] ) );
 			case 'GET:notifications':
-				return function() {
+				return function () {
 					$settings = $this->get_settings()->get();
 
 					if ( empty( $settings['accountID'] ) ) {
@@ -355,7 +389,7 @@ final class AdSense extends Module
 					}
 					$alerts = array_filter(
 						$alerts,
-						function( Google_Service_Adsense_Alert $alert ) {
+						function ( Google_Service_Adsense_Alert $alert ) {
 							return 'SEVERE' === $alert->getSeverity();
 						}
 					);
@@ -459,25 +493,6 @@ final class AdSense extends Module
 				}
 				$service = $this->get_service( 'adsense' );
 				return $service->accounts->getAdBlockingRecoveryTag( self::normalize_account_id( $settings['accountID'] ) );
-			case 'GET:urlchannels':
-				if ( ! isset( $data['accountID'] ) ) {
-					return new WP_Error(
-						'missing_required_param',
-						/* translators: %s: Missing parameter name */
-						sprintf( __( 'Request parameter is empty: %s.', 'google-site-kit' ), 'accountID' ),
-						array( 'status' => 400 )
-					);
-				}
-				if ( ! isset( $data['clientID'] ) ) {
-					return new WP_Error(
-						'missing_required_param',
-						/* translators: %s: Missing parameter name */
-						sprintf( __( 'Request parameter is empty: %s.', 'google-site-kit' ), 'clientID' ),
-						array( 'status' => 400 )
-					);
-				}
-				$service = $this->get_service( 'adsense' );
-				return $service->accounts_adclients_urlchannels->listAccountsAdclientsUrlchannels( self::normalize_client_id( $data['accountID'], $data['clientID'] ) );
 		}
 
 		return parent::create_data_request( $data );
@@ -524,8 +539,6 @@ final class AdSense extends Module
 						'success' => true,
 					)
 				);
-			case 'GET:urlchannels':
-				return $response->getUrlChannels();
 		}
 
 		return parent::parse_data_response( $data, $response );
@@ -536,7 +549,7 @@ final class AdSense extends Module
 	 *
 	 * @since 1.73.0
 	 *
-	 * @param Google_Model $account Account model.
+	 * @param Account $account Account model.
 	 * @return bool Whether the account is not closed.
 	 */
 	public static function is_account_not_closed( $account ) {
@@ -744,7 +757,6 @@ final class AdSense extends Module
 			'slug'        => self::MODULE_SLUG,
 			'name'        => _x( 'AdSense', 'Service name', 'google-site-kit' ),
 			'description' => __( 'Earn money by placing ads on your website. It’s free and easy.', 'google-site-kit' ),
-			'order'       => 2,
 			'homepage'    => add_query_arg( $idenfifier_args, 'https://adsense.google.com/start' ),
 		);
 	}
@@ -799,6 +811,7 @@ final class AdSense extends Module
 						'googlesitekit-api',
 						'googlesitekit-data',
 						'googlesitekit-modules',
+						'googlesitekit-notifications',
 						'googlesitekit-datastore-site',
 						'googlesitekit-datastore-user',
 						'googlesitekit-components',
@@ -812,8 +825,9 @@ final class AdSense extends Module
 	 * Registers the AdSense tag.
 	 *
 	 * @since 1.24.0
+	 * @since 1.119.0 Method made public.
 	 */
-	private function register_tag() {
+	public function register_tag() {
 		// TODO: 'amp_story' support can be phased out in the long term.
 		if ( is_singular( array( 'amp_story' ) ) ) {
 			return;
@@ -855,6 +869,17 @@ final class AdSense extends Module
 				$ad_blocking_recovery_web_tag->register();
 			}
 		}
+	}
+
+	/**
+	 * Returns the Module_Tag_Matchers instance.
+	 *
+	 * @since 1.119.0
+	 *
+	 * @return Module_Tag_Matchers Module_Tag_Matchers instance.
+	 */
+	public function get_tag_matchers() {
+		return new Tag_Matchers();
 	}
 
 	/**
@@ -951,11 +976,11 @@ final class AdSense extends Module
 	 * @since 1.43.0
 	 */
 	private function render_platform_meta_tags() {
-		printf( "\n<!-- %s -->\n", esc_html__( 'Google AdSense snippet added by Site Kit', 'google-site-kit' ) );
+		printf( "\n<!-- %s -->\n", esc_html__( 'Google AdSense meta tags added by Site Kit', 'google-site-kit' ) );
 		echo '<meta name="google-adsense-platform-account" content="ca-host-pub-2644536267352236">';
 		echo "\n";
 		echo '<meta name="google-adsense-platform-domain" content="sitekit.withgoogle.com">';
-		printf( "\n<!-- %s -->\n", esc_html__( 'End Google AdSense snippet added by Site Kit', 'google-site-kit' ) );
+		printf( "\n<!-- %s -->\n", esc_html__( 'End Google AdSense meta tags added by Site Kit', 'google-site-kit' ) );
 	}
 
 	/**
@@ -1096,5 +1121,53 @@ final class AdSense extends Module
 			default:
 				return __( 'Not set up', 'google-site-kit' );
 		}
+	}
+
+	/**
+	 * Resets the AdSense linked settings in the Analytics module.
+	 *
+	 * @since 1.120.0
+	 */
+	protected function reset_analytics_adsense_linked_settings() {
+		$analytics_settings = new Analytics_Settings( $this->options );
+
+		if ( ! $analytics_settings->has() ) {
+			return;
+		}
+
+		$analytics_settings->merge(
+			array(
+				'adSenseLinked'             => false,
+				'adSenseLinkedLastSyncedAt' => 0,
+			)
+		);
+	}
+
+	/**
+	 * Resets the Ad Blocking Recovery notification.
+	 *
+	 * @since 1.121.0
+	 */
+	public function reset_ad_blocking_recovery_notification() {
+		$dismissed_prompts = ( new Dismissed_Prompts( $this->user_options ) );
+
+		$current_dismissals = $dismissed_prompts->get();
+
+		if ( isset( $current_dismissals['ad-blocking-recovery-notification'] ) && $current_dismissals['ad-blocking-recovery-notification']['count'] < 3 ) {
+			$dismissed_prompts->remove( 'ad-blocking-recovery-notification' );
+		}
+	}
+
+	/**
+	 * Gets an array of internal feature metrics.
+	 *
+	 * @since 1.163.0
+	 *
+	 * @return array
+	 */
+	public function get_feature_metrics() {
+		return array(
+			'adsense_abr_status' => $this->is_connected() ? $this->get_settings()->get()['adBlockingRecoverySetupStatus'] : '',
+		);
 	}
 }

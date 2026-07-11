@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Survey class.
  *
@@ -150,7 +154,7 @@ class UserFeedback_Survey extends UserFeedback_DB {
 	 * @inheritdoc
 	 */
 	public function get_columns() {
-		return array( 'id', 'title', 'status', 'questions', 'settings', 'notifications', 'impressions', 'publish_at', 'created_at' );
+		return array( 'id', 'title', 'status', 'type', 'questions', 'settings', 'notifications', 'impressions', 'publish_at', 'created_at' );
 	}
 
 	/**
@@ -158,10 +162,6 @@ class UserFeedback_Survey extends UserFeedback_DB {
 	 */
 	public function create_table() {
 		global $wpdb;
-
-		if ( self::table_exists() ) {
-			return;
-		}
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -172,6 +172,7 @@ class UserFeedback_Survey extends UserFeedback_DB {
             id bigint(20) NOT NULL AUTO_INCREMENT,
             title varchar(128),
             status enum('publish', 'draft', 'trash') DEFAULT 'draft',
+            type varchar(100),
             questions longtext,
             impressions bigint(20) default 0 NOT NULL,
             settings text,

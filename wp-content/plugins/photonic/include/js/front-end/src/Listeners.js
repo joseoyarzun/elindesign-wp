@@ -4,6 +4,7 @@ import * as Requests from "./Requests";
 import {JustifiedGrid} from "./Layouts/Justified";
 import {Mosaic} from "./Layouts/Mosaic";
 import {Tooltip} from "./Components/Tooltip";
+import {MasonryHorizontal} from "./Layouts/MasonryHorizontal";
 
 // .photonic-level-2-thumb:not(".gallery-page")
 export const addLevel2ClickListener = () => {
@@ -20,24 +21,27 @@ export const addLevel2ClickListener = () => {
 		e.preventDefault();
 		const container = clicked.closest('.photonic-level-2-container');
 
-		const provider = clicked.getAttribute('data-photonic-platform'),
-			singular = clicked.getAttribute('data-photonic-singular'),
+		const galleryData = JSON.parse(container.getAttribute('data-photonic'));
+		const provider = galleryData['platform'],
+			singular = galleryData['singular'],
 			query = container.getAttribute('data-photonic-query');
 
 		const args = {
 			"panel_id": clicked.getAttribute('id'),
-			"popup": clicked.getAttribute('data-photonic-popup'),
-			"photo_count": clicked.getAttribute('data-photonic-photo-count'),
-			"photo_more": clicked.getAttribute('data-photonic-photo-more'),
+			"popup": galleryData['popup'],
+			"photo_count": galleryData['photo-count'],
+			"photo_more": galleryData['photo-more'] || '',
 			"query": query
 		};
 
-		if (provider === 'google' || provider === 'zenfolio') args.thumb_size = clicked.getAttribute('data-photonic-thumb-size');
+		if (provider === 'google' || provider === 'zenfolio') args.thumb_size = galleryData['thumb-size'];
 		if (provider === 'flickr' || provider === 'smug' || provider === 'google' || provider === 'zenfolio') {
-			args.overlay_size = clicked.getAttribute('data-photonic-overlay-size');
-			args.overlay_video_size = clicked.getAttribute('data-photonic-overlay-video-size');
+			args.overlay_size = galleryData['overlay-size'];
+			args.overlay_video_size = galleryData['overlay-video-size'];
 		}
-		if (provider === 'google') { args.overlay_crop = clicked.getAttribute('data-photonic-overlay-crop'); }
+		if (provider === 'google') {
+			args.overlay_crop = galleryData['overlay-crop'];
+		}
 		Requests.displayLevel2(provider, singular, args);
 	}, false);
 };
@@ -54,10 +58,12 @@ export const addPasswordSubmitListener = () => {
 		const modal = clicked.closest('.photonic-password-prompter'),
 			container = clicked.closest('.photonic-level-2-container');
 
+		const galleryData = JSON.parse(container.getAttribute('data-photonic'));
+
 		let album_id = modal.getAttribute('id');
 		const components = album_id.split('-');
-		const provider = components[1],
-			singular_type = components[2],
+		const provider = galleryData['platform'],
+			singular_type = galleryData['singular'],
 			album_key = components.slice(4).join('-'),
 			thumb_id = `photonic-${provider}-${singular_type}-thumb-${album_key}`,
 			thumb = document.getElementById(`${thumb_id}`),
@@ -74,21 +80,21 @@ export const addPasswordSubmitListener = () => {
 		Core.showSpinner();
 		const args = {
 			'panel_id': thumb_id,
-			"popup": thumb.getAttribute('data-photonic-popup'),
-			"photo_count": thumb.getAttribute('data-photonic-photo-count'),
-			"photo_more": thumb.getAttribute('data-photonic-photo-more'),
+			"popup": galleryData['popup'],
+			"photo_count": galleryData['photo-count'],
+			"photo_more": galleryData['photo-more'] || '',
 			"query": query
 		};
 		if (provider === 'smug') {
 			args.password = password;
-			args.overlay_size = thumb.getAttribute('data-photonic-overlay-size');
+			args.overlay_size = galleryData['overlay-size'];
 		}
 		else if (provider === 'zenfolio') {
 			args.password = password;
 			args.realm_id = thumb.getAttribute('data-photonic-realm');
-			args.thumb_size = thumb.getAttribute('data-photonic-thumb-size');
-			args.overlay_size = thumb.getAttribute('data-photonic-overlay-size');
-			args.overlay_video_size = clicked.getAttribute('data-photonic-overlay-video-size');
+			args.thumb_size = galleryData['thumb-size'];
+			args.overlay_size = galleryData['overlay-size'];
+			args.overlay_video_size = galleryData['overlay-video-size'];
 		}
 		Requests.processRequest(provider, singular_type, album_key, args);
 
@@ -141,7 +147,8 @@ export const addMoreButtonListener = () => {
 		const query = container.getAttribute('data-photonic-query'),
 			provider = container.getAttribute('data-photonic-platform'),
 			level = container.classList.contains('photonic-level-1-container') ? 'level-1' : 'level-2',
-			containerId = container.getAttribute('id');
+			containerId = container.getAttribute('id'),
+			existing = container.querySelectorAll('figure');
 
 		Core.showSpinner();
 		Util.post(Photonic_JS.ajaxurl, { 'action': 'photonic_load_more', 'provider': provider, 'query': query }, data => {
@@ -253,7 +260,7 @@ export const addMoreButtonListener = () => {
 				lightbox.initialize();
 			}
 
-			Core.waitForImages(images).then(() => {
+			function doImageLayout(images) {
 				const new_query = ret.querySelector('.photonic-random-layout,.photonic-standard-layout,.photonic-masonry-layout,.photonic-mosaic-layout,.modal-gallery');
 				if (new_query != null) {
 					container.setAttribute('data-photonic-query', new_query.getAttribute('data-photonic-query'));
@@ -267,7 +274,7 @@ export const addMoreButtonListener = () => {
 				if (Util.hasClass(container, 'photonic-mosaic-layout')) {
 					Mosaic(false, false, '#' + containerId);
 				}
-				else if (Util.hasClass(container,'photonic-random-layout')) {
+				else if (Util.hasClass(container, 'photonic-random-layout')) {
 					JustifiedGrid(false, false, '#' + containerId, lightbox);
 				}
 				else if (Util.hasClass(container, 'photonic-masonry-layout')) {
@@ -276,6 +283,17 @@ export const addMoreButtonListener = () => {
 						Util.fadeIn(img);
 						img.style.display = 'block';
 					});
+					Core.hideLoading();
+				}
+				else if (Util.hasClass(container, 'photonic-masonry-horizontal-layout')) {
+					const existingCount = existing.length;
+					images.forEach((image, idx) => {
+						image.setAttribute('data-photonic-idx', existingCount + idx);
+						// const img = image.querySelector('img');
+						// Util.fadeIn(img);
+						// img.style.display = 'block';
+					});
+					MasonryHorizontal(false, false, '#' + containerId);
 					Core.hideLoading();
 				}
 				else {
@@ -287,7 +305,17 @@ export const addMoreButtonListener = () => {
 				}
 
 				Tooltip('[data-photonic-tooltip]', '.photonic-tooltip-container');
-			});
+			}
+
+			if (container.classList.contains('sizes-present')) {
+				Core.watchForImages(images);
+				doImageLayout(images);
+			}
+			else {
+				Core.waitForImages(images).then(() => {
+					doImageLayout(images);
+				});
+			}
 		});
 	});
 };

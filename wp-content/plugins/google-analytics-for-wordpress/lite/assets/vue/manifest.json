@@ -1,59 +1,33 @@
 {
-  "SlideDownUp.css": {
-    "file": "css/SlideDownUp.css",
-    "src": "SlideDownUp.css"
+  "LaunchWizardButton.css": {
+    "file": "css/LaunchWizardButton.css",
+    "src": "LaunchWizardButton.css"
   },
   "WelcomeOverlay.css": {
     "file": "css/WelcomeOverlay.css",
     "src": "WelcomeOverlay.css"
   },
-  "_LaunchWizardButton-ab6cfb06.min.js": {
-    "file": "js/chunks/LaunchWizardButton-ab6cfb06.min.js",
-    "imports": [
-      "_vendor-c144a7d7.min.js"
-    ]
-  },
-  "_SettingsInfoTooltip-dfb3c0f5.min.js": {
-    "file": "js/chunks/SettingsInfoTooltip-dfb3c0f5.min.js",
-    "imports": [
-      "_vendor-c144a7d7.min.js"
-    ]
-  },
-  "_SlideDownUp-607f9d66.min.js": {
+  "_LaunchWizardButton-b2046dc6.min.js": {
     "css": [
-      "css/SlideDownUp.css"
+      "css/LaunchWizardButton.css"
     ],
-    "file": "js/chunks/SlideDownUp-607f9d66.min.js",
+    "file": "js/chunks/LaunchWizardButton-b2046dc6.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js"
+      "_vendor-1d873285.min.js"
     ]
   },
-  "_WelcomeOverlay-78a27efd.min.js": {
+  "_WelcomeOverlay-871e315c.min.js": {
     "css": [
       "css/WelcomeOverlay.css"
     ],
-    "file": "js/chunks/WelcomeOverlay-78a27efd.min.js",
+    "file": "js/chunks/WelcomeOverlay-871e315c.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_monsterinsights-helper-plugin-d729472b.min.js",
-      "_SettingsInfoTooltip-dfb3c0f5.min.js",
-      "_SlideDownUp-607f9d66.min.js"
+      "_vendor-1d873285.min.js",
+      "_monsterinsights-helper-plugin-d5dab654.min.js",
+      "_LaunchWizardButton-b2046dc6.min.js"
     ]
   },
-  "_WidgetReportError-080c8916.min.js": {
-    "file": "js/chunks/WidgetReportError-080c8916.min.js",
-    "imports": [
-      "_vendor-c144a7d7.min.js"
-    ]
-  },
-  "_date-intervals-8f33e6dd.min.js": {
-    "file": "js/chunks/date-intervals-8f33e6dd.min.js",
-    "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_monsterinsights-helper-plugin-d729472b.min.js"
-    ]
-  },
-  "_index-6ef6921d.min.js": {
+  "_index-63fc8c6c.min.js": {
     "assets": [
       "img/logo-MonsterInsights.png",
       "img/logo-MonsterInsights@2x.png",
@@ -61,7 +35,6 @@
       "img/logo-monsterinsights-pro.svg",
       "img/logo-monsterinsights-plus.svg",
       "img/icon-info.svg",
-      "img/mascot.png",
       "fonts/Roboto-Regular.woff2",
       "fonts/Roboto-Bold.woff2",
       "fonts/lato-regular-webfont.woff",
@@ -83,34 +56,34 @@
     "css": [
       "css/index.css"
     ],
-    "file": "js/chunks/index-6ef6921d.min.js",
+    "file": "js/chunks/index-63fc8c6c.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_monsterinsights-helper-plugin-d729472b.min.js",
-      "_SlideDownUp-607f9d66.min.js"
+      "_vendor-1d873285.min.js",
+      "_monsterinsights-helper-plugin-d5dab654.min.js",
+      "_LaunchWizardButton-b2046dc6.min.js"
     ]
   },
-  "_monsterinsights-helper-plugin-d729472b.min.js": {
-    "file": "js/chunks/monsterinsights-helper-plugin-d729472b.min.js",
+  "_monsterinsights-helper-plugin-d5dab654.min.js": {
+    "file": "js/chunks/monsterinsights-helper-plugin-d5dab654.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js"
+      "_vendor-1d873285.min.js"
     ]
   },
-  "_report-table-helper-b3cc5e25.min.js": {
-    "file": "js/chunks/report-table-helper-b3cc5e25.min.js",
+  "_report-table-helper-bff2a505.min.js": {
+    "file": "js/chunks/report-table-helper-bff2a505.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_SettingsInfoTooltip-dfb3c0f5.min.js"
+      "_vendor-1d873285.min.js",
+      "_monsterinsights-helper-plugin-d5dab654.min.js"
     ]
   },
-  "_vendor-c144a7d7.min.js": {
+  "_vendor-1d873285.min.js": {
     "assets": [
       "img/sucker.png"
     ],
     "css": [
       "css/vendor.css"
     ],
-    "file": "js/chunks/vendor-c144a7d7.min.js"
+    "file": "js/chunks/vendor-1d873285.min.js"
   },
   "index.css": {
     "file": "css/index.css",
@@ -280,18 +253,6 @@
     "file": "img/badge-light.svg",
     "src": "src/assets/img/badge-light.svg"
   },
-  "src/assets/img/charlie-ai.svg": {
-    "file": "img/charlie-ai.svg",
-    "src": "src/assets/img/charlie-ai.svg"
-  },
-  "src/assets/img/charlie-front.svg": {
-    "file": "img/charlie-front.svg",
-    "src": "src/assets/img/charlie-front.svg"
-  },
-  "src/assets/img/charlie-with-heart.svg": {
-    "file": "img/charlie-with-heart.svg",
-    "src": "src/assets/img/charlie-with-heart.svg"
-  },
   "src/assets/img/check.svg": {
     "file": "img/check.svg",
     "src": "src/assets/img/check.svg"
@@ -304,10 +265,6 @@
     "file": "img/edd-xsell-banner.svg",
     "src": "src/assets/img/edd-xsell-banner.svg"
   },
-  "src/assets/img/em-ai-insights.svg": {
-    "file": "img/em-ai-insights.svg",
-    "src": "src/assets/img/em-ai-insights.svg"
-  },
   "src/assets/img/flags.png": {
     "file": "img/flags.png",
     "src": "src/assets/img/flags.png"
@@ -315,10 +272,6 @@
   "src/assets/img/give-wp.png": {
     "file": "img/give-wp.png",
     "src": "src/assets/img/give-wp.png"
-  },
-  "src/assets/img/google-ads-welcome.png": {
-    "file": "img/google-ads-welcome.png",
-    "src": "src/assets/img/google-ads-welcome.png"
   },
   "src/assets/img/icon-addon-ads.png": {
     "file": "img/icon-addon-ads.png",
@@ -480,6 +433,10 @@
     "file": "img/membermouse-logo.png",
     "src": "src/assets/img/plugins/membermouse-logo.png"
   },
+  "src/assets/img/plugins/rewardswp-rewards-widget-promo.png": {
+    "file": "img/rewardswp-rewards-widget-promo.png",
+    "src": "src/assets/img/plugins/rewardswp-rewards-widget-promo.png"
+  },
   "src/assets/img/plugins/wishlistmember-logo.svg": {
     "file": "img/wishlistmember-logo.svg",
     "src": "src/assets/img/plugins/wishlistmember-logo.svg"
@@ -592,17 +549,9 @@
     "file": "img/reports-upsell-bg.png",
     "src": "src/assets/img/reports-upsell-bg.png"
   },
-  "src/assets/img/reports/lite-modals/bg-ai-insights.png": {
-    "file": "img/bg-ai-insights.png",
-    "src": "src/assets/img/reports/lite-modals/bg-ai-insights.png"
-  },
   "src/assets/img/reports/lite-modals/bg-cart-abandonment@2x.png": {
     "file": "img/bg-cart-abandonment@2x.png",
     "src": "src/assets/img/reports/lite-modals/bg-cart-abandonment@2x.png"
-  },
-  "src/assets/img/reports/lite-modals/bg-conversations-ai.png": {
-    "file": "img/bg-conversations-ai.png",
-    "src": "src/assets/img/reports/lite-modals/bg-conversations-ai.png"
   },
   "src/assets/img/reports/lite-modals/bg-countries.png": {
     "file": "img/bg-countries.png",
@@ -619,6 +568,26 @@
   "src/assets/img/reports/lite-modals/bg-ecommerce-product-sales@2x.png": {
     "file": "img/bg-ecommerce-product-sales@2x.png",
     "src": "src/assets/img/reports/lite-modals/bg-ecommerce-product-sales@2x.png"
+  },
+  "src/assets/img/reports/lite-modals/bg-ecommerce-purchases-by-location.png": {
+    "file": "img/bg-ecommerce-purchases-by-location.png",
+    "src": "src/assets/img/reports/lite-modals/bg-ecommerce-purchases-by-location.png"
+  },
+  "src/assets/img/reports/lite-modals/bg-ecommerce-refunds-by-geo.png": {
+    "file": "img/bg-ecommerce-refunds-by-geo.png",
+    "src": "src/assets/img/reports/lite-modals/bg-ecommerce-refunds-by-geo.png"
+  },
+  "src/assets/img/reports/lite-modals/bg-ecommerce-refunds.png": {
+    "file": "img/bg-ecommerce-refunds.png",
+    "src": "src/assets/img/reports/lite-modals/bg-ecommerce-refunds.png"
+  },
+  "src/assets/img/reports/lite-modals/bg-ecommerce-spend-by-day.png": {
+    "file": "img/bg-ecommerce-spend-by-day.png",
+    "src": "src/assets/img/reports/lite-modals/bg-ecommerce-spend-by-day.png"
+  },
+  "src/assets/img/reports/lite-modals/bg-ecommerce-spend-by-hour.png": {
+    "file": "img/bg-ecommerce-spend-by-hour.png",
+    "src": "src/assets/img/reports/lite-modals/bg-ecommerce-spend-by-hour.png"
   },
   "src/assets/img/reports/lite-modals/bg-ecommerce@2x.png": {
     "file": "img/bg-ecommerce@2x.png",
@@ -936,48 +905,6 @@
     "isEntry": true,
     "src": "src/modules/admin/admin.js"
   },
-  "src/modules/feature-feedback/icons/nps/rate-1.svg": {
-    "file": "img/rate-1.svg",
-    "src": "src/modules/feature-feedback/icons/nps/rate-1.svg"
-  },
-  "src/modules/feature-feedback/icons/nps/rate-2.svg": {
-    "file": "img/rate-2.svg",
-    "src": "src/modules/feature-feedback/icons/nps/rate-2.svg"
-  },
-  "src/modules/feature-feedback/icons/nps/rate-3.svg": {
-    "file": "img/rate-3.svg",
-    "src": "src/modules/feature-feedback/icons/nps/rate-3.svg"
-  },
-  "src/modules/feature-feedback/icons/nps/rate-4.svg": {
-    "file": "img/rate-4.svg",
-    "src": "src/modules/feature-feedback/icons/nps/rate-4.svg"
-  },
-  "src/modules/feature-feedback/icons/nps/rate-5.svg": {
-    "file": "img/rate-5.svg",
-    "src": "src/modules/feature-feedback/icons/nps/rate-5.svg"
-  },
-  "src/modules/frontend/frontend.css": {
-    "file": "css/frontend.css",
-    "src": "src/modules/frontend/frontend.css"
-  },
-  "src/modules/frontend/frontend.js": {
-    "assets": [
-      "img/mascot.png"
-    ],
-    "css": [
-      "css/frontend.css"
-    ],
-    "file": "js/frontend.min.js",
-    "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_date-intervals-8f33e6dd.min.js",
-      "_WidgetReportError-080c8916.min.js",
-      "_LaunchWizardButton-ab6cfb06.min.js",
-      "_monsterinsights-helper-plugin-d729472b.min.js"
-    ],
-    "isEntry": true,
-    "src": "src/modules/frontend/frontend.js"
-  },
   "src/modules/reports/reports.css": {
     "file": "css/reports.css",
     "src": "src/modules/reports/reports.css"
@@ -986,14 +913,6 @@
     "assets": [
       "img/hero-image.jpg",
       "img/monsterinsights-logo.svg",
-      "img/rate-1.svg",
-      "img/rate-2.svg",
-      "img/rate-3.svg",
-      "img/rate-4.svg",
-      "img/rate-5.svg",
-      "img/charlie-with-heart.svg",
-      "img/charlie-front.svg",
-      "img/charlie-ai.svg",
       "img/flags.png",
       "img/thankyou-bg.png",
       "img/dashboard-preview.png",
@@ -1040,28 +959,28 @@
       "img/custom-events-report-screen.png",
       "img/social-media-report@2x.png",
       "img/exceptions-report.png",
-      "img/bg-ai-insights.png",
-      "img/bg-conversations-ai.png",
       "img/report-arrow-down-red.png",
       "img/report-arrow-down-green.png",
       "img/report-arrow-up-green.png",
       "img/report-arrow-up-red.png",
       "img/reports-upsell-bg.png",
-      "img/bg-traffic-ai.jpeg"
+      "img/bg-traffic-ai.jpeg",
+      "img/bg-ecommerce-refunds.png",
+      "img/bg-ecommerce-refunds-by-geo.png",
+      "img/bg-ecommerce-purchases-by-location.png",
+      "img/bg-ecommerce-spend-by-day.png",
+      "img/bg-ecommerce-spend-by-hour.png"
     ],
     "css": [
       "css/reports.css"
     ],
     "file": "js/reports.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_date-intervals-8f33e6dd.min.js",
-      "_SettingsInfoTooltip-dfb3c0f5.min.js",
-      "_report-table-helper-b3cc5e25.min.js",
-      "_index-6ef6921d.min.js",
-      "_monsterinsights-helper-plugin-d729472b.min.js",
-      "_LaunchWizardButton-ab6cfb06.min.js",
-      "_SlideDownUp-607f9d66.min.js"
+      "_vendor-1d873285.min.js",
+      "_report-table-helper-bff2a505.min.js",
+      "_monsterinsights-helper-plugin-d5dab654.min.js",
+      "_index-63fc8c6c.min.js",
+      "_LaunchWizardButton-b2046dc6.min.js"
     ],
     "isEntry": true,
     "src": "src/modules/reports/reports.js"
@@ -1072,11 +991,11 @@
   },
   "src/modules/settings/settings.js": {
     "assets": [
+      "img/rewardswp-rewards-widget-promo.png",
       "img/woo-insights-save-60-badge.svg",
       "img/woo-insights-ecommerce-report-image.png",
       "img/woo-insights-sessions-revenue.png",
       "img/wpconsent-page-feature-image.png",
-      "img/google-ads-welcome.png",
       "img/edd-xsell-banner.svg",
       "img/monsterinsights-addons-upsell-logo.svg",
       "img/prettylinks-ad-bg.png",
@@ -1087,6 +1006,7 @@
       "img/tools-prettylinks-icons.png",
       "img/badge-light.svg",
       "img/badge-dark.svg",
+      "img/icon-plus.svg",
       "img/about-icon-check.svg",
       "img/about-icon-connect.png",
       "img/about-icon-guide.png",
@@ -1158,7 +1078,6 @@
       "img/star-empty.svg",
       "img/icon-media.svg",
       "img/arrow-down.svg",
-      "img/icon-plus.svg",
       "img/bullet.svg",
       "img/icon-lock.svg",
       "img/bg-publisher@2x.png",
@@ -1183,8 +1102,6 @@
       "img/custom-events-report-screen.png",
       "img/social-media-report@2x.png",
       "img/exceptions-report.png",
-      "img/bg-ai-insights.png",
-      "img/bg-conversations-ai.png",
       "img/icon-warning.png",
       "img/monsterinsights-setup-checklist-site-note.png",
       "img/icon-site-notes-settings.svg",
@@ -1218,13 +1135,11 @@
     ],
     "file": "js/settings.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_monsterinsights-helper-plugin-d729472b.min.js",
-      "_SlideDownUp-607f9d66.min.js",
-      "_WelcomeOverlay-78a27efd.min.js",
-      "_LaunchWizardButton-ab6cfb06.min.js",
-      "_SettingsInfoTooltip-dfb3c0f5.min.js",
-      "_index-6ef6921d.min.js"
+      "_vendor-1d873285.min.js",
+      "_monsterinsights-helper-plugin-d5dab654.min.js",
+      "_LaunchWizardButton-b2046dc6.min.js",
+      "_WelcomeOverlay-871e315c.min.js",
+      "_index-63fc8c6c.min.js"
     ],
     "isEntry": true,
     "src": "src/modules/settings/settings.js"
@@ -1285,14 +1200,17 @@
       "img/custom-events-report-screen.png",
       "img/social-media-report@2x.png",
       "img/exceptions-report.png",
-      "img/bg-ai-insights.png",
-      "img/bg-conversations-ai.png",
       "img/report-arrow-down-red.png",
       "img/report-arrow-down-green.png",
       "img/report-arrow-up-green.png",
       "img/report-arrow-up-red.png",
       "img/reports-upsell-bg.png",
       "img/bg-traffic-ai.jpeg",
+      "img/bg-ecommerce-refunds.png",
+      "img/bg-ecommerce-refunds-by-geo.png",
+      "img/bg-ecommerce-purchases-by-location.png",
+      "img/bg-ecommerce-spend-by-day.png",
+      "img/bg-ecommerce-spend-by-hour.png",
       "img/mascot.png"
     ],
     "css": [
@@ -1300,12 +1218,9 @@
     ],
     "file": "js/widget.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_date-intervals-8f33e6dd.min.js",
-      "_report-table-helper-b3cc5e25.min.js",
-      "_SettingsInfoTooltip-dfb3c0f5.min.js",
-      "_WidgetReportError-080c8916.min.js",
-      "_monsterinsights-helper-plugin-d729472b.min.js"
+      "_vendor-1d873285.min.js",
+      "_report-table-helper-bff2a505.min.js",
+      "_monsterinsights-helper-plugin-d5dab654.min.js"
     ],
     "isEntry": true,
     "src": "src/modules/widget/widget.js"
@@ -1355,12 +1270,10 @@
     ],
     "file": "js/wizard.min.js",
     "imports": [
-      "_vendor-c144a7d7.min.js",
-      "_WelcomeOverlay-78a27efd.min.js",
-      "_SettingsInfoTooltip-dfb3c0f5.min.js",
-      "_monsterinsights-helper-plugin-d729472b.min.js",
-      "_LaunchWizardButton-ab6cfb06.min.js",
-      "_SlideDownUp-607f9d66.min.js"
+      "_vendor-1d873285.min.js",
+      "_WelcomeOverlay-871e315c.min.js",
+      "_monsterinsights-helper-plugin-d5dab654.min.js",
+      "_LaunchWizardButton-b2046dc6.min.js"
     ],
     "isEntry": true,
     "src": "src/modules/wizard-onboarding/wizard.js"

@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * MonsterInsights Onboarding Class
  *
@@ -113,7 +117,20 @@ class MonsterInsights_Onboarding {
 		if ( empty( $provided_key ) || false === $stored_key || ! hash_equals( $stored_key, $provided_key ) ) {
 			return new WP_Error(
 				'monsterinsights_invalid_key',
-				'Invalid onboarding key',
+				esc_html__( 'Invalid onboarding key', 'google-analytics-for-wordpress' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		// Ensure the user who generated the key has plugin installation capability.
+		// Only enforce when the user ID transient is present; if it has been evicted
+		// from the object cache independently of the key transient, skip this check
+		// rather than blocking a legitimate upgrade flow.
+		$onboarding_user_id = monsterinsights_get_onboarding_user_id();
+		if ( $onboarding_user_id && ! monsterinsights_can_install_plugins( $onboarding_user_id ) ) {
+			return new WP_Error(
+				'monsterinsights_insufficient_permissions',
+				esc_html__( 'Insufficient permissions', 'google-analytics-for-wordpress' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -222,12 +239,33 @@ class MonsterInsights_Onboarding {
 	 * @return WP_REST_Response Response indicating success.
 	 */
 	public function store_settings( $request ) {
+		if ( ! function_exists( 'monsterinsights_get_addons_data' ) ) {
+			require_once MONSTERINSIGHTS_PLUGIN_DIR . 'includes/admin/pages/addons.php';
+		}
+
 		$is_network = boolval( $request->get_param( 'is_network' ) );
 		// Process settings
 		$settings = $request->get_param( 'settings' );
+		$onboarding_user_id = monsterinsights_get_onboarding_user_id();
 
 		if ( ! empty( $settings ) ) {
+			$allowed_settings = apply_filters( 'monsterinsights_onboarding_allowed_settings', array(
+				'site_type',
+				'extensions_of_files',
+				'affiliate_links',
+				'view_reports',
+				'automatic_updates',
+				'anonymous_data',
+				'verified_automatic',
+			) );
 			foreach ( $settings as $key => $value ) {
+				if ( ! in_array( $key, $allowed_settings, true ) ) {
+					continue;
+				}
+				// Skip admin-only settings for non-admin users.
+				if ( monsterinsights_is_admin_only_setting( $key ) && ! user_can( $onboarding_user_id, 'manage_options' ) ) {
+					continue;
+				}
 				monsterinsights_update_option( $key, $value );
 			}
 		}
@@ -269,8 +307,7 @@ class MonsterInsights_Onboarding {
 			);
 			$is_network ? MonsterInsights()->auth->set_network_analytics_profile( $profile ) : MonsterInsights()->auth->set_analytics_profile( $profile );
 		}
-		$triggered_by_user = $request->get_param( 'triggered_by' );
-		$can_install       = monsterinsights_can_install_plugins( $triggered_by_user );
+		$can_install = monsterinsights_can_install_plugins( $onboarding_user_id ?: null );
 		if ( $can_install && ! empty( $settings['addons_to_install'] ) ) {
 			$plugins = $settings['addons_to_install'];
 			
@@ -502,6 +539,7 @@ class MonsterInsights_Onboarding {
 	 */
 	public function delete_onboarding_key( $request ) {
 		delete_transient( 'monsterinsights_onboarding_key' );
+		delete_transient( 'monsterinsights_onboarding_user_id' );
 		return new WP_REST_Response(
 			array(
 				'success' => true,

@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 if ( ! function_exists( 'wp_all_import_get_import_id' ) ) {
     function wp_all_import_get_import_id() {
@@ -26,9 +28,13 @@ if ( ! function_exists( 'wp_all_import_get_import_id' ) ) {
         }
 
         if ( $import_id == 'new' ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended
             if ( isset( $_GET['import_id'] ) ) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended
                 $import_id = intval($_GET['import_id']);
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended
             } elseif ( isset( $_GET['id'] ) ) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended
                 $import_id = intval($_GET['id']);
             }
         }

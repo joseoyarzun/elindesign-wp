@@ -1,4 +1,13 @@
 <?php
+/**
+ * @package ACF
+ * @author  WP Engine
+ *
+ * © 2026 Advanced Custom Fields (ACF®). All rights reserved.
+ * "ACF" is a trademark of WP Engine.
+ * Licensed under the GNU General Public License v2 or later.
+ * https://www.gnu.org/licenses/gpl-2.0.html
+ */
 
 /**
  * This function will return true for a non empty array
@@ -396,7 +405,7 @@ function acf_merge_atts( $atts, $extra = array() ) {
  * @param string $nonce The nonce parameter string.
  */
 function acf_nonce_input( $nonce = '' ) {
-	echo '<input type="hidden" name="_acf_nonce" value="' . wp_create_nonce( $nonce ) . '" />';
+	echo '<input type="hidden" name="_acf_nonce" value="' . esc_attr( wp_create_nonce( $nonce ) ) . '" />';
 }
 
 /**
@@ -682,27 +691,53 @@ function acf_verify_nonce( $value ) {
 }
 
 /**
- * acf_verify_ajax
- *
- * This function will return true if the current AJAX request is valid
+ * Returns true if the current AJAX request is valid.
  * It's action will also allow WPML to set the lang and avoid AJAX get_posts issues
  *
  * @since   5.2.3
  *
- * @param   n/a
- * @return  (boolean)
+ * @param string  $nonce               The nonce to check.
+ * @param string  $action              The action of the nonce.
+ * @param boolean $action_is_field     If the action is a field, modify the action to match validate the field type.
+ * @param string  $expected_field_type Optional field type the resolved field must be when $action_is_field is true. Prevents a nonce minted for one field type from being accepted by an AJAX handler that expects a different one. Defaults to empty (no type validation).
+ * @return boolean
  */
-function acf_verify_ajax() {
-
-	// bail early if not acf nonce
-	if ( empty( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( $_REQUEST['nonce'] ), 'acf_nonce' ) ) {
+function acf_verify_ajax( $nonce = '', $action = '', $action_is_field = false, $expected_field_type = '' ) {
+	// Bail early if we don't have a nonce to check.
+	if ( empty( $nonce ) && empty( $_REQUEST['nonce'] ) ) {
 		return false;
 	}
 
-	// action for 3rd party customization
+	// Build the action if we're trying to validate a specific field nonce.
+	if ( $action_is_field ) {
+		if ( ! acf_is_field_key( $action ) ) {
+			return false;
+		}
+
+		$field = acf_get_field( $action );
+
+		if ( empty( $field['type'] ) ) {
+			return false;
+		}
+
+		if ( ! empty( $expected_field_type ) && $field['type'] !== $expected_field_type ) {
+			return false;
+		}
+
+		$action = 'acf_field_' . $field['type'] . '_' . $action;
+	}
+
+	$nonce_to_check = ! empty( $nonce ) ? $nonce : $_REQUEST['nonce']; // phpcs:ignore WordPress.Security -- We're verifying a nonce here.
+	$nonce_action   = ! empty( $action ) ? $action : 'acf_nonce';
+
+	// Bail if nonce can't be verified.
+	if ( ! wp_verify_nonce( sanitize_text_field( $nonce_to_check ), $nonce_action ) ) {
+		return false;
+	}
+
+	// Action for 3rd party customization (WPML).
 	do_action( 'acf/verify_ajax' );
 
-	// return
 	return true;
 }
 
@@ -1153,7 +1188,7 @@ function acf_get_posts( $args = array() ) {
 		$args['post_status'] = acf_get_post_stati();
 	}
 
-	// Check if specifc post ID's have been provided.
+	// Check if specific post IDs have been provided.
 	if ( $args['post__in'] ) {
 
 		// Clean value into an array of IDs.
@@ -1266,8 +1301,19 @@ function acf_get_grouped_posts( $args ) {
 
 	// find array of post_type
 	$post_types          = acf_get_array( $args['post_type'] );
-	$post_types_labels   = acf_get_pretty_post_types( $post_types );
-	$is_single_post_type = ( count( $post_types ) == 1 );
+	$is_single_post_type = ( count( $post_types ) === 1 );
+
+	// WordPress 6.8+ sorts post_type arrays for cache key generation
+	// We need to use the same sorted order when processing results
+	if (
+		! $is_single_post_type &&
+		$args['posts_per_page'] !== -1 &&
+		version_compare( get_bloginfo( 'version' ), '6.8', '>=' )
+	) {
+		sort( $post_types );
+	}
+
+	$post_types_labels = acf_get_pretty_post_types( $post_types );
 
 	// attachment doesn't work if it is the only item in an array
 	if ( $is_single_post_type ) {
@@ -1361,22 +1407,26 @@ function acf_get_grouped_posts( $args ) {
 	return $data;
 }
 
-function _acf_orderby_post_type( $ordeby, $wp_query ) {
-
-	// global
+/**
+ * The internal ACF function to add order by post types for use in `acf_get_grouped_posts`
+ *
+ * @param string $orderby  The current orderby value for a query.
+ * @param object $wp_query The WP_Query.
+ * @return string The potentially modified orderby string.
+ */
+function _acf_orderby_post_type( $orderby, $wp_query ) {
 	global $wpdb;
 
-	// get post types
 	$post_types = $wp_query->get( 'post_type' );
 
-	// prepend SQL
+	// Prepend the SQL.
 	if ( is_array( $post_types ) ) {
+		$post_types = array_map( 'esc_sql', $post_types );
 		$post_types = implode( "','", $post_types );
-		$ordeby     = "FIELD({$wpdb->posts}.post_type,'$post_types')," . $ordeby;
+		$orderby    = "FIELD({$wpdb->posts}.post_type,'$post_types')," . $orderby;
 	}
 
-	// return
-	return $ordeby;
+	return $orderby;
 }
 
 function acf_get_post_title( $post = 0, $is_search = false ) {
@@ -1411,7 +1461,6 @@ function acf_get_post_title( $post = 0, $is_search = false ) {
 		// get ancestors
 		$ancestors = get_ancestors( $post->ID, $post->post_type );
 		$prepend  .= str_repeat( '- ', count( $ancestors ) );
-
 	}
 
 	// merge
@@ -1672,62 +1721,42 @@ function acf_str_exists( $needle, $haystack ) {
 }
 
 /**
- * acf_debug
+ * A legacy function designed for developer debugging.
  *
- * description
+ * @deprecated 6.2.6 Removed for security, but keeping the definition in case third party devs have it in their code.
+ * @since 5.0.0
  *
- * @since   5.0.0
- *
- * @param   $post_id (int)
- * @return  $post_id (int)
+ * @return false
  */
 function acf_debug() {
-
-	// vars
-	$args = func_get_args();
-	$s    = array_shift( $args );
-	$o    = '';
-	$nl   = "\r\n";
-
-	// start script
-	$o .= '<script type="text/javascript">' . $nl;
-
-	$o .= 'console.log("' . $s . '"';
-
-	if ( ! empty( $args ) ) {
-		foreach ( $args as $arg ) {
-			if ( is_object( $arg ) || is_array( $arg ) ) {
-				$arg = json_encode( $arg );
-			} elseif ( is_bool( $arg ) ) {
-				$arg = $arg ? 'true' : 'false';
-			} elseif ( is_string( $arg ) ) {
-				$arg = '"' . $arg . '"';
-			}
-
-			$o .= ', ' . $arg;
-		}
-	}
-
-	$o .= ');' . $nl;
-
-	// end script
-	$o .= '</script>' . $nl;
-
-	// echo
-	echo $o;
+	_deprecated_function( __FUNCTION__, '6.2.7' );
+	return false;
 }
 
+/**
+ * A legacy function designed for developer debugging.
+ *
+ * @deprecated 6.2.6 Removed for security, but keeping the definition in case third party devs have it in their code.
+ * @since 5.0.0
+ *
+ * @return false
+ */
 function acf_debug_start() {
-
-	acf_update_setting( 'debug_start', memory_get_usage() );
+	_deprecated_function( __FUNCTION__, '6.2.7' );
+	return false;
 }
 
+/**
+ * A legacy function designed for developer debugging.
+ *
+ * @deprecated 6.2.6 Removed for security, but keeping the definition in case third party devs have it in their code.
+ * @since 5.0.0
+ *
+ * @return false
+ */
 function acf_debug_end() {
-
-	$start = acf_get_setting( 'debug_start' );
-	$end   = memory_get_usage();
-
-	return $end - $start;
+	_deprecated_function( __FUNCTION__, '6.2.7' );
+	return false;
 }
 
 /**
@@ -2329,6 +2358,10 @@ function acf_isset_termmeta( $taxonomy = '' ) {
  */
 function acf_upload_files( $ancestors = array() ) {
 
+	if ( empty( $_FILES['acf'] ) ) {
+		return;
+	}
+
 	$file = acf_sanitize_files_array( $_FILES['acf'] ); // phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified upstream.
 
 	// walk through ancestors.
@@ -2721,6 +2754,86 @@ function acf_current_user_can_admin() {
 
 	// return
 	return false;
+}
+
+/**
+ * Wrapper function for current_user_can( 'edit_post', $post_id ).
+ *
+ * @since 6.3.4
+ *
+ * @param integer $post_id The post ID to check.
+ * @return boolean
+ */
+function acf_current_user_can_edit_post( int $post_id ): bool {
+	/**
+	 * The `edit_post` capability is a meta capability, which
+	 * gets converted to the correct post type object `edit_post`
+	 * equivalent.
+	 *
+	 * If the post type does not have `map_meta_cap` enabled and the user is
+	 * not manually mapping the `edit_post` capability, this will fail
+	 * unless the role has the `edit_post` capability added to a user/role.
+	 *
+	 * However, more (core) stuff will likely break in this scenario.
+	 */
+	$user_can_edit = current_user_can( 'edit_post', $post_id );
+
+	return (bool) apply_filters( 'acf/current_user_can_edit_post', $user_can_edit, $post_id );
+}
+
+/**
+ * Checks if the current user can edit a given ACF context.
+ *
+ * Handles post, user, term, comment, woo_order, block, and option contexts returned by acf_decode_post_id().
+ *
+ * @since 6.7.2
+ *
+ * @param array  $post_id_info      The result of acf_decode_post_id(), containing 'type' and 'id'.
+ * @param string $options_page_slug Optional. The options page menu slug, used to look up the page's capability.
+ * @return boolean
+ */
+function acf_current_user_can_edit_in_context( array $post_id_info, string $options_page_slug = '' ): bool {
+	$type = $post_id_info['type'] ?? '';
+	$id   = $post_id_info['id'] ?? 0;
+
+	switch ( $type ) {
+		case 'post':
+			return acf_current_user_can_edit_post( (int) $id );
+
+		case 'user':
+			return current_user_can( 'edit_user', (int) $id );
+
+		case 'term':
+			return current_user_can( 'edit_term', (int) $id );
+
+		case 'comment':
+			return current_user_can( 'edit_comment', (int) $id );
+
+		case 'woo_order':
+			return current_user_can( 'edit_shop_orders' ); // phpcs:ignore
+
+		case 'block':
+			return current_user_can( 'edit_posts' );
+
+		case 'option':
+			if ( ! empty( $options_page_slug ) && function_exists( 'acf_get_options_page' ) ) {
+				$page = acf_get_options_page( $options_page_slug );
+
+				if ( ! empty( $page['capability'] ) && ! empty( $page['post_id'] ) ) {
+					// Ensure the page's post_id matches the requested post_id.
+					if ( acf_get_valid_post_id( $page['post_id'] ) !== $id ) {
+						return false;
+					}
+
+					return current_user_can( $page['capability'] );
+				}
+			}
+
+			return current_user_can( 'manage_options' );
+
+		default:
+			return (bool) apply_filters( 'acf/current_user_can_edit_in_context', false, $post_id_info );
+	}
 }
 
 /**
@@ -3126,28 +3239,19 @@ function acf_is_row_collapsed( $field_key = '', $row_index = 0 ) {
 }
 
 /**
- * acf_get_attachment_image
+ * Return an image tag for the provided attachment ID
  *
- * description
+ * @since 5.5.0
+ * @deprecated 6.3.2
  *
- * @since   5.5.0
- *
- * @param   $post_id (int)
- * @return  $post_id (int)
+ * @param integer $attachment_id The attachment ID
+ * @param string  $size          The image size to use in the image tag.
+ * @return false
  */
 function acf_get_attachment_image( $attachment_id = 0, $size = 'thumbnail' ) {
-
-	// vars
-	$url = wp_get_attachment_image_src( $attachment_id, 'thumbnail' );
-	$alt = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
-
-	// bail early if no url
-	if ( ! $url ) {
-		return '';
-	}
-
-	// return
-	$value = '<img src="' . $url . '" alt="' . $alt . '" />';
+	// report function as deprecated
+	_deprecated_function( __FUNCTION__, '6.3.2' );
+	return false;
 }
 
 /**
@@ -3305,17 +3409,14 @@ function acf_format_date( $value, $format ) {
 }
 
 /**
- * acf_clear_log
+ * Previously, deletes the debug.log file.
  *
- * Deletes the debug.log file.
- *
- * @since   5.7.10
- *
- * @param   type $var Description. Default.
- * @return  type Description.
+ * @since      5.7.10
+ * @deprecated 6.2.7
  */
 function acf_clear_log() {
-	unlink( WP_CONTENT_DIR . '/debug.log' );
+	_deprecated_function( __FUNCTION__, '6.2.7' );
+	return false;
 }
 
 /**
@@ -3714,28 +3815,32 @@ function acf_encrypt( $data = '' ) {
 }
 
 /**
- * acf_decrypt
- *
- * This function will decrypt an encrypted string using PHP
+ * Decrypts an encrypted string using PHP.
  * https://bhoover.com/using-php-openssl_encrypt-openssl_decrypt-encrypt-decrypt-data/
  *
  * @since   5.5.8
  *
- * @param   $data (string)
- * @return  (string)
+ * @param string $data The string to decrypt.
+ * @return string|false Decrypted string, or false if the payload is malformed or decryption fails.
  */
 function acf_decrypt( $data = '' ) {
-
 	// bail early if no decrypt function
 	if ( ! function_exists( 'openssl_decrypt' ) ) {
-		return base64_decode( $data );
+		return base64_decode( (string) $data );
+	}
+
+	// Treat malformed input as a decrypt failure: list() destructuring below would
+	// otherwise warn on PHP 8 when the payload isn't the "base64(data::iv)" shape.
+	$raw = base64_decode( (string) $data, true );
+	if ( false === $raw || strpos( $raw, '::' ) === false ) {
+		return false;
 	}
 
 	// generate a key
 	$key = wp_hash( 'acf_encrypt' );
 
 	// To decrypt, split the encrypted data from our IV - our unique separator used was "::"
-	list($encrypted_data, $iv) = explode( '::', base64_decode( $data ), 2 );
+	list( $encrypted_data, $iv ) = explode( '::', $raw, 2 );
 
 	// decrypt
 	return openssl_decrypt( $encrypted_data, 'aes-256-cbc', $key, 0, $iv );
@@ -3939,7 +4044,7 @@ function acf_is_block_editor() {
  * @return array The WordPress reserved terms list.
  */
 function acf_get_wp_reserved_terms() {
-	return array( 'action', 'attachment', 'attachment_id', 'author', 'author_name', 'calendar', 'cat', 'category', 'category__and', 'category__in', 'category__not_in', 'category_name', 'comments_per_page', 'comments_popup', 'custom', 'customize_messenger_channel', 'customized', 'cpage', 'day', 'debug', 'embed', 'error', 'exact', 'feed', 'fields', 'hour', 'link_category', 'm', 'minute', 'monthnum', 'more', 'name', 'nav_menu', 'nonce', 'nopaging', 'offset', 'order', 'orderby', 'p', 'page', 'page_id', 'paged', 'pagename', 'pb', 'perm', 'post', 'post__in', 'post__not_in', 'post_format', 'post_mime_type', 'post_status', 'post_tag', 'post_type', 'posts', 'posts_per_archive_page', 'posts_per_page', 'preview', 'robots', 's', 'search', 'second', 'sentence', 'showposts', 'static', 'status', 'subpost', 'subpost_id', 'tag', 'tag__and', 'tag__in', 'tag__not_in', 'tag_id', 'tag_slug__and', 'tag_slug__in', 'taxonomy', 'tb', 'term', 'terms', 'theme', 'title', 'type', 'types', 'w', 'withcomments', 'withoutcomments', 'year' );
+	return array( 'action', 'attachment', 'attachment_id', 'author', 'author_name', 'calendar', 'cat', 'category', 'category__and', 'category__in', 'category__not_in', 'category_name', 'comments_per_page', 'comments_popup', 'custom', 'customize_messenger_channel', 'customized', 'cpage', 'day', 'debug', 'embed', 'error', 'exact', 'feed', 'fields', 'hour', 'link', 'link_category', 'm', 'minute', 'monthnum', 'more', 'name', 'nav_menu', 'nonce', 'nopaging', 'offset', 'order', 'orderby', 'p', 'page', 'page_id', 'paged', 'pagename', 'pb', 'perm', 'post', 'post__in', 'post__not_in', 'post_format', 'post_mime_type', 'post_status', 'post_tag', 'post_type', 'posts', 'posts_per_archive_page', 'posts_per_page', 'preview', 'robots', 's', 'search', 'second', 'sentence', 'showposts', 'static', 'status', 'subpost', 'subpost_id', 'tag', 'tag__and', 'tag__in', 'tag__not_in', 'tag_id', 'tag_slug__and', 'tag_slug__in', 'taxonomy', 'tb', 'term', 'terms', 'theme', 'themes', 'title', 'type', 'types', 'w', 'withcomments', 'withoutcomments', 'year' );
 }
 
 /**
@@ -3969,3 +4074,20 @@ function acf_is_multisite_main_site() {
 	}
 	return false;
 }
+
+/**
+ * Allow filterable permissions metabox callbacks.
+ *
+ * @since   6.3.10
+ *
+ * @param   boolean $enable_meta_box_cb_edit Can the current user edit metabox callbacks.
+ * @return  boolean
+ */
+function acf_settings_enable_meta_box_cb_edit( $enable_meta_box_cb_edit ): bool {
+	if ( ! is_super_admin() ) {
+		return false;
+	}
+
+	return (bool) $enable_meta_box_cb_edit;
+}
+add_filter( 'acf/settings/enable_meta_box_cb_edit', 'acf_settings_enable_meta_box_cb_edit', 1 );

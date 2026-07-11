@@ -22,7 +22,6 @@ class WCML_Admin_Cookie {
 		if ( null === $expiration ) {
 			$expiration = time() + DAY_IN_SECONDS;
 		}
-		$this->handle_cache_plugins();
 		wc_setcookie( $this->name, $value, $expiration );
 	}
 
@@ -35,10 +34,5 @@ class WCML_Admin_Cookie {
 			$value = $_COOKIE[ $this->name ];
 		}
 		return $value;
-	}
-
-	private function handle_cache_plugins() {
-		// @todo uncomment or delete when #wpmlcore-5796 is resolved
-		// do_action( 'wpsc_add_cookie', $this->name );
 	}
 }

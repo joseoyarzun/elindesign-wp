@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * License class.
  *
@@ -220,11 +224,11 @@ final class UserFeedback_License {
 	public function get_site_license_error() {
 		if ( $this->site_license_expired() ) {
 			// Translators: Adds a link to renew the license.
-			return sprintf( esc_html__( 'Your license key for UserFeedback has expired. %1$sPlease click here to renew your license key.%2$s', 'userfeedback' ), '<a href="' . userfeedback_get_url( 'license-error', 'expired-license', 'https://www.userfeedback.com/login/' ) . '" target="_blank" rel="noopener noreferrer" referrer="no-referrer">', '</a>' );
+			return sprintf( esc_html__( 'Your license key for UserFeedback has expired. %1$sPlease click here to renew your license key.%2$s', 'userfeedback-lite' ), '<a href="' . userfeedback_get_url( 'license-error', 'expired-license', 'https://www.userfeedback.com/login/' ) . '" target="_blank" rel="noopener noreferrer" referrer="no-referrer">', '</a>' );
 		} elseif ( $this->site_license_disabled() ) {
-			return esc_html__( 'Your license key for UserFeedback has been disabled. Please use a different key.', 'userfeedback' );
+			return esc_html__( 'Your license key for UserFeedback has been disabled. Please use a different key.', 'userfeedback-lite' );
 		} elseif ( $this->site_license_invalid() ) {
-			return esc_html__( 'Your license key for UserFeedback is invalid. The key no longer exists or the user associated with the key has been deleted. Please use a different key.', 'userfeedback' );
+			return esc_html__( 'Your license key for UserFeedback is invalid. The key no longer exists or the user associated with the key has been deleted. Please use a different key.', 'userfeedback-lite' );
 		}
 		return '';
 	}
@@ -288,11 +292,11 @@ final class UserFeedback_License {
 	public function get_network_license_error() {
 		if ( $this->site_license_expired() ) {
 			// Translators: Adds a link to the license renewal.
-			return sprintf( esc_html__( 'Your license key for UserFeedback has expired. %1$sPlease click here to renew your license key.%2$s', 'userfeedback' ), '<a href="' . userfeedback_get_url( 'license-error', 'expired-license', 'https://www.userfeedback.com/login/' ) . '" target="_blank" rel="noopener noreferrer" referrer="no-referrer">', '</a>' );
+			return sprintf( esc_html__( 'Your license key for UserFeedback has expired. %1$sPlease click here to renew your license key.%2$s', 'userfeedback-lite' ), '<a href="' . userfeedback_get_url( 'license-error', 'expired-license', 'https://www.userfeedback.com/login/' ) . '" target="_blank" rel="noopener noreferrer" referrer="no-referrer">', '</a>' );
 		} elseif ( $this->site_license_disabled() ) {
-			return esc_html__( 'Your license key for UserFeedback has been disabled. Please use a different key.', 'userfeedback' );
+			return esc_html__( 'Your license key for UserFeedback has been disabled. Please use a different key.', 'userfeedback-lite' );
 		} elseif ( $this->site_license_invalid() ) {
-			return esc_html__( 'Your license key for UserFeedback is invalid. The key no longer exists or the user associated with the key has been deleted. Please use a different key.', 'userfeedback' );
+			return esc_html__( 'Your license key for UserFeedback is invalid. The key no longer exists or the user associated with the key has been deleted. Please use a different key.', 'userfeedback-lite' );
 		}
 		return '';
 	}

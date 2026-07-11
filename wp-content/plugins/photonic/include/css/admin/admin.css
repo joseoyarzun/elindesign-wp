@@ -38,7 +38,7 @@ h2.photonic-section { background: #ccc; padding: 1em 0.5em; width: 100%; }
 form#paypal-submit { padding: 0; float: right;}
 div.donate ul { float: right; margin: 0; }
 div.donate ul li { float: left; margin: 0.5em 0 0.5em 2.5em; padding: 0.5em; }
-div.donate ul li .icon { vertical-align: middle; background: transparent url("../../images/Admin.svg") no-repeat; width: 32px; height: 32px; display: inline-block; margin-left: -32px; background-size: 100%; }
+div.donate ul li .icon { vertical-align: middle; background: transparent url("../../images/Admin.svg?ver=3.20") no-repeat; width: 32px; height: 32px; display: inline-block; margin-left: -32px; background-size: 100%; }
 div.donate ul li a { color: #333; text-decoration: none; margin-left: 0.3em; }
 div.donate ul li input[type="submit"] { color: #333; background: transparent; text-decoration: none; border: none; padding: 0; cursor: pointer; }
 div.donate ul li a:hover, div.donate ul li input[type="submit"]:hover { color: #333; }
@@ -48,7 +48,7 @@ div.donate ul li.announcements .icon { background-position: 0 -640px; }
 div.donate ul li.coffee .icon { background-position: 0 -672px; }
 
 .nav-tab { position: relative; padding-left: 32px;}
-.nav-tab-wrapper .icon { background: transparent url("../../images/Admin.svg") no-repeat; width: 20px; height: 20px; display: inline-block; position: absolute; top: 8px; margin-left: -24px; background-size: 100%;}
+.nav-tab-wrapper .icon { background: transparent url("../../images/Admin.svg?ver=3.20") no-repeat; width: 20px; height: 20px; display: inline-block; position: absolute; top: 8px; margin-left: -24px; background-size: 100%;}
 #photonic-options-generic .icon { background-position: 0 -360px; }
 #photonic-options-flickr .icon { background-position: 0 -20px; }
 #photonic-options-picasa .icon { background-position: 0 -120px; }
@@ -57,6 +57,7 @@ div.donate ul li.coffee .icon { background-position: 0 -672px; }
 #photonic-options-instagram .icon { background-position: 0 -40px; }
 #photonic-options-zenfolio .icon { background-position: 0 -80px; }
 #photonic-options-google .icon { background-position: 0 -140px; }
+#photonic-options-deviantart .icon { background-position: 0 -520px; }
 #photonic-options-lightbox .icon { background-position: 0 -160px; }
 
 .photonic-section-tabs { display: inline-block; width: 100%; font-size: 1.1em; }
@@ -69,6 +70,7 @@ div.donate ul li.coffee .icon { background-position: 0 -672px; }
 
 .photonic-options-panel textarea { width: 90%; min-width: 400px; min-height: 150px; }
 .photonic-options-panel input[type='text'] { width: 40%; min-width: 400px;}
+.photonic-options-panel .notice { padding: 1em; }
 .photonic-border-options input[type='text'] { width: 40%; min-width: 150px;}
 
 .opt-sub-table-5 { border-collapse: collapse; width: 98%; }

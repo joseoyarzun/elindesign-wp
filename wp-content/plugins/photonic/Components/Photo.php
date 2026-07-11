@@ -20,5 +20,9 @@ class Photo {
 	public $tile_size;
 	public $main_size;
 
+	public $taken_on;
+	public $uploaded_on;
+
 	public $main_page;
+	public $buy_link;
 }

@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Survey Response class.
  *
@@ -141,9 +145,8 @@ class UserFeedback_Response extends UserFeedback_DB {
 			}
 		}
 
-		return $wpdb->query(
-			$wpdb->prepare( $sql, $ids )
-		);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL is assembled from column names only; values are prepared via $wpdb->prepare() with $ids.
+		return $wpdb->query( $wpdb->prepare( $sql, $ids ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 
@@ -151,10 +154,12 @@ class UserFeedback_Response extends UserFeedback_DB {
 		global $wpdb;
 		$table_name = self::get_table();
 		// check if column exists
-		$row = $wpdb->get_results( "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '{$table_name}' AND column_name = 'status'" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Schema introspection query; $table_name is a safe prefixed table name.
+		$row = $wpdb->get_results( "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '{$table_name}' AND column_name = 'status'" ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter
 		// create status column
-		if(empty($row)){
-			$wpdb->query("ALTER TABLE $table_name ADD status enum('publish', 'draft', 'trash') DEFAULT 'publish' AFTER user_device");
+		if ( empty( $row ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- ALTER TABLE required for migration; adding status column.
+			$wpdb->query( "ALTER TABLE {$table_name} ADD status enum('publish', 'draft', 'trash') DEFAULT 'publish' AFTER user_device" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		}
 		
 	}

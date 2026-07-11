@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Add MonsterInsights tests to the WP Site Health area.
  */
@@ -152,7 +157,7 @@ class MonsterInsights_WP_Site_Health_Lite {
 	private function is_coming_soon_active() {
 		if ( defined( 'SEED_CSP4_SHORTNAME' ) ) {
 			// SeedProd
-			// http://www.seedprod.com
+			// https://www.seedprod.com
 
 			$settings = get_option( 'seed_csp4_settings_content' );
 
@@ -181,19 +186,19 @@ class MonsterInsights_WP_Site_Health_Lite {
 			return '1' === get_option( 'wp_maintenance_active' );
 		} elseif ( defined( 'ACX_CSMA_CURRENT_VERSION' ) ) {
 			// Under Construction / Maintenance Mode From Acurax
-			// http://www.acurax.com/products/under-construction-maintenance-mode-wordpress-plugin
+			// https://www.acurax.com/products/under-construction-maintenance-mode-wordpress-plugin
 
 			return '1' === get_option( 'acx_csma_activation_status' );
 		} elseif ( defined( 'SAHU_SO_PLUGIN_URL' ) ) {
 			// Site Offline
-			// http://www.freehtmldesigns.com
+			// https://www.freehtmldesigns.com
 
 			$settings = maybe_unserialize( get_option( 'sahu_so_dashboard' ) );
 
 			return isset( $settings['sahu_so_status'] ) && '1' === $settings['sahu_so_status'];
 		} elseif ( defined( 'CSCS_GENEROPTION_PREFIX' ) ) {
 			// IgniteUp
-			// http://getigniteup.com
+			// https://getigniteup.com
 
 			return '1' === get_option( CSCS_GENEROPTION_PREFIX . 'enable', '' );
 		} elseif ( method_exists( 'UCP', 'is_construction_mode_enabled' ) ) {
@@ -203,7 +208,7 @@ class MonsterInsights_WP_Site_Health_Lite {
 			return UCP::is_construction_mode_enabled( true );
 		} elseif ( function_exists( 'mtnc_get_plugin_options' ) ) {
 			// Maintenance by WP Maintenance
-			// http://wordpress.org/plugins/maintenance/
+			// https://wordpress.org/plugins/maintenance/
 
 			$settings = mtnc_get_plugin_options( true );
 

@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 if( !function_exists('wpai_util_map') ){
 
 	function wpai_util_map( $orig, $change, $source ){

@@ -43,6 +43,7 @@ class WCML_Setup_Attributes_UI extends WCML_Setup_Step {
 				'heading'       => __( 'Which product attributes should be translatable?', 'woocommerce-multilingual' ),
 				// @todo: Check UTM tags for wizard.
 				'description_1' => sprintf(
+					/* translators: %1$s and %2$s are opening and closing HTML link tags */
 					esc_html__( 'WPML allows you to %1$stranslate your product attributes%2$s. Some attributes, like the ones based on numbers and codes, can be universal and might not need to be translated.', 'woocommerce-multilingual' ),
 					'<a target="blank" class="wpml-external-link" rel="noopener" href="' . WCML_Tracking_Link::getWcmlMainDoc( '#taxonomies', [ 'utm_term' => WCML_Tracking_Link::UTM_TERM_WIZARD ] ) . '">',
 					'</a>'

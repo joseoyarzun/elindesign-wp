@@ -51,7 +51,8 @@ class MulticurrencyHooks implements \IWPML_Action {
 	private static function getPipOrderCurrency( $currency = false ) {
 		$pip_order_id = Helper::getPipOrderId();
 
-		if ( $pip_order_id && isset( WC()->order_factory ) ) {
+		/** @phpstan-ignore-next-line instanceof.alwaysTrue */
+		if ( $pip_order_id && WC()->order_factory instanceof \WC_Order_Factory ) {
 
 			$the_order = WC()->order_factory->get_order( $pip_order_id );
 

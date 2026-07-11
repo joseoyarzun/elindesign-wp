@@ -3,12 +3,12 @@
 	Plugin Name: Maintenance
 	Plugin URI: https://wpmaintenancemode.com/
 	Description: Put your site in maintenance mode, away from the public view. Use maintenance plugin if your website is in development or you need to change a few things, run an upgrade. Make it only accessible to logged in users.
-	Version: 4.08
+	Version: 4.21
 	Author: WebFactory Ltd
 	Author URI: https://www.webfactoryltd.com/
 	License: GPL2
 
-	Copyright 2013-2023  WebFactory Ltd  (email : support@webfactoryltd.com)
+	Copyright 2013-2026  WebFactory Ltd  (email : support@webfactoryltd.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -50,6 +50,8 @@ class MTNC
     add_filter('admin_footer_text', array(&$this, 'admin_footer_text'), 10, 1);
 
     add_action('admin_action_mtnc_install_wpfssl', array(&$this, 'install_wpfssl'));
+    add_action('admin_action_mtnc_install_wpcaptcha', array(&$this, 'install_wpcaptcha'));
+    add_action('admin_action_mtnc_install_weglot', array(&$this, 'install_weglot'));
 
     add_filter(
       'plugin_action_links_' . plugin_basename(__FILE__),
@@ -159,8 +161,7 @@ class MTNC
     $out .= '</tr>';
 
     $out .= '<tr>';
-    $out .= '<td><a class="button button-buy" data-href-org="https://wpmaintenancemode.com/buy/?product=personal-launch&ref=pricing-table" href="https://wpmaintenancemode.com/buy/?product=personal-launch&ref=pricing-table" target="_blank">Lifetime License<br>$59 -&gt; BUY NOW</a>
-    <br>or <a class="button-buy" data-href-org="https://wpmaintenancemode.com/buy/?product=personal-monthly&ref=pricing-table" href="https://wpmaintenancemode.com/buy/?product=personal-monthly&ref=pricing-table" target="_blank">only $7.99 <small>/month</small></a></td>';
+    $out .= '<td><a class="button button-buy" data-href-org="https://wpmaintenancemode.com/buy/?product=personal-launch&ref=pricing-table" href="https://wpmaintenancemode.com/buy/?product=personal-launch&ref=pricing-table" target="_blank">Lifetime License<br>$59 -&gt; BUY NOW</a></td>';
     $out .= '<td><a class="button button-buy" data-href-org="https://wpmaintenancemode.com/buy/?product=team-launch&ref=pricing-table" href="https://wpmaintenancemode.com/buy/?product=team-launch&ref=pricing-table" target="_blank">Lifetime License<br>$69 -&gt; BUY NOW</a></td>';
     $out .= '<td><a class="button button-buy" data-href-org="https://wpmaintenancemode.com/buy/?product=agency-launch&ref=pricing-table" href="https://wpmaintenancemode.com/buy/?product=agency-launch&ref=pricing-table" target="_blank">Lifetime License<br>$119 -&gt; BUY NOW</a></td>';
     $out .= '</tr>';
@@ -168,6 +169,23 @@ class MTNC
     $out .= '</table>';
 
     $out .= '<div class="center footer"><b>100% No-Risk Money Back Guarantee!</b> If you don\'t like the plugin over the next 7 days, we will happily refund 100% of your money. No questions asked! Payments are processed by our merchant of records - <a href="https://paddle.com/" target="_blank">Paddle</a>.</div></div>';
+
+
+    // weglot install dialog
+    $out .=  '<div id="weglot-upsell-dialog" style="display: none;" title="Weglot"><span class="ui-helper-hidden-accessible"><input type="text"/></span>';
+    $out .=  '<div style="padding: 20px; font-size: 15px;">';
+    $out .=  '<ul class="mtnc-list">';
+    $out .=  '<li>Best-rated WordPress multilingual plugin</li>';
+    $out .=  '<li>Simple 5-minute set-up. No coding required</li>';
+    $out .=  '<li>Accelerated translation management: Machine & human translations with access to professional translators</li>';
+    $out .=  '<li>Compatible with any WordPress theme or plugin</li>';
+    $out .=  '<li>Optimized for multilingual SEO</li>';
+    $out .=  '<li>10-day Free trial and free plan available</li>';
+    $out .=  '</ul>';
+    $out .=  '<p class="upsell-footer"><a class="button button-primary" id="install-weglot">Install &amp; activate Weglot to make your website multilingual</a></p>';
+    $out .=  '</div>';
+    $out .=  '</div>';
+    // weglot install dialog
 
     return $out;
   } // pro_dialog
@@ -331,7 +349,7 @@ class MTNC
 		</style>';
 
     echo '<div style="margin: 20px; color:#444;">';
-    echo 'If things are not done in a minute <a target="_parent" href="' . admin_url('plugin-install.php?s=force%20ssl%20webfactory&tab=search&type=term') . '">install the plugin manually via Plugins page</a><br><br>';
+    echo 'If things are not done in a minute <a target="_parent" href="' . esc_url(admin_url('plugin-install.php?s=force%20ssl%20webfactory&tab=search&type=term')) . '">install the plugin manually via Plugins page</a><br><br>';
     echo 'Starting ...<br><br>';
 
     wp_cache_flush();
@@ -358,11 +376,131 @@ class MTNC
         echo '<br>If you are not redirected in a few seconds - <a href="admin.php?page=maintenance" target="_parent">click here</a>.';
       }
     } else {
-      echo 'Could not install WP Force SSL. You\'ll have to <a target="_parent" href="' . admin_url('plugin-install.php?s=force%20ssl%20webfactory&tab=search&type=term') . '">download and install manually</a>.';
+      echo 'Could not install WP Force SSL. You\'ll have to <a target="_parent" href="' . esc_url(admin_url('plugin-install.php?s=force%20ssl%20webfactory&tab=search&type=term')) . '">download and install manually</a>.';
     }
 
     echo '</div>';
   } // install_wpfssl
+
+  // auto download / install / activate Advanced Google reCAPTCHA plugin
+  function install_wpcaptcha()
+  {
+    check_ajax_referer('install_wpcaptcha');
+
+    if (false === current_user_can('administrator')) {
+      wp_die('Sorry, you have to be an admin to run this action.');
+    }
+
+    $plugin_slug = 'advanced-google-recaptcha/advanced-google-recaptcha.php';
+    $plugin_zip = 'https://downloads.wordpress.org/plugin/advanced-google-recaptcha.latest-stable.zip';
+
+    @include_once ABSPATH . 'wp-admin/includes/plugin.php';
+    @include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+    @include_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+    @include_once ABSPATH . 'wp-admin/includes/file.php';
+    @include_once ABSPATH . 'wp-admin/includes/misc.php';
+    echo '<style>
+		body{
+			font-family: sans-serif;
+			font-size: 14px;
+			line-height: 1.5;
+			color: #444;
+		}
+		</style>';
+
+    echo '<div style="margin: 20px; color:#444;">';
+    echo 'If things are not done in a minute <a target="_parent" href="' . esc_url(admin_url('plugin-install.php?s=advanced%20recaptcha%20webfactory&tab=search&type=term')) . '">install the plugin manually via Plugins page</a><br><br>';
+    echo 'Starting ...<br><br>';
+
+    wp_cache_flush();
+    $upgrader = new Plugin_Upgrader();
+    echo 'Check if Advanced Google reCAPTCHA is already installed ... <br />';
+    if ($this->is_plugin_installed($plugin_slug)) {
+      echo 'Advanced Google reCAPTCHA is already installed! <br /><br />Making sure it\'s the latest version.<br />';
+      $upgrader->upgrade($plugin_slug);
+      $installed = true;
+    } else {
+      echo 'Installing Advanced Google reCAPTCHA.<br />';
+      $installed = $upgrader->install($plugin_zip);
+    }
+    wp_cache_flush();
+
+    if (!is_wp_error($installed) && $installed) {
+      echo 'Activating Advanced Google reCAPTCHA.<br />';
+      $activate = activate_plugin($plugin_slug);
+
+      if (is_null($activate)) {
+        echo 'Advanced Google reCAPTCHA Activated.<br />';
+
+        echo '<script>setTimeout(function() { top.location = "admin.php?page=maintenance"; }, 1000);</script>';
+        echo '<br>If you are not redirected in a few seconds - <a href="admin.php?page=maintenance" target="_parent">click here</a>.';
+      }
+    } else {
+      echo 'Could not install Advanced Google reCAPTCHA. You\'ll have to <a target="_parent" href="' . esc_url(admin_url('plugin-install.php?s=advanced%20recaptcha%20webfactory&tab=search&type=term')) . '">download and install manually</a>.';
+    }
+
+    echo '</div>';
+  } // install_wpcaptcha
+
+  // auto download / install / activate Weglot plugin
+  function install_weglot()
+  {
+      check_ajax_referer('install_weglot');
+
+      if (false === current_user_can('administrator')) {
+          wp_die('Sorry, you have to be an admin to run this action.');
+      }
+
+      $plugin_slug = 'weglot/weglot.php';
+      $plugin_zip = 'https://downloads.wordpress.org/plugin/weglot.latest-stable.zip';
+
+      @include_once ABSPATH . 'wp-admin/includes/plugin.php';
+      @include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+      @include_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+      @include_once ABSPATH . 'wp-admin/includes/file.php';
+      @include_once ABSPATH . 'wp-admin/includes/misc.php';
+      echo '<style>
+      body{
+          font-family: sans-serif;
+          font-size: 14px;
+          line-height: 1.5;
+          color: #444;
+      }
+      </style>';
+
+      echo '<div style="margin: 20px; color:#444;">';
+      echo 'If things are not done in a minute <a target="_parent" href="' . esc_url(admin_url('plugin-install.php?s=weglot&tab=search&type=term')) . '">install the plugin manually via Plugins page</a><br><br>';
+      echo 'Starting ...<br><br>';
+
+      wp_cache_flush();
+      $upgrader = new Plugin_Upgrader();
+      echo 'Check if Weglot is already installed ... <br />';
+      if ($this->is_plugin_installed($plugin_slug)) {
+          echo 'Weglot is already installed! <br /><br />Making sure it\'s the latest version.<br />';
+          $upgrader->upgrade($plugin_slug);
+          $installed = true;
+      } else {
+          echo 'Installing Weglot.<br />';
+          $installed = $upgrader->install($plugin_zip);
+      }
+      wp_cache_flush();
+
+      if (!is_wp_error($installed) && $installed) {
+          echo 'Activating Weglot.<br />';
+          $activate = activate_plugin($plugin_slug);
+
+          if (is_null($activate)) {
+              echo 'Weglot Activated.<br />';
+
+              echo '<script>setTimeout(function() { top.location = "admin.php?page=maintenance"; }, 1000);</script>';
+              echo '<br>If you are not redirected in a few seconds - <a href="admin.php?page=maintenance" target="_parent">click here</a>.';
+          }
+      } else {
+          echo 'Could not install Weglot. You\'ll have to <a target="_parent" href="' . esc_url(admin_url('plugin-install.php?s=weglot&tab=search&type=term')) . '">download and install manually</a>.';
+      }
+
+      echo '</div>';
+  } // install_weglot
 
 } // class MTNC
 

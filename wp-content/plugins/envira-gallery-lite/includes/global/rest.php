@@ -74,14 +74,14 @@ class Envira_Rest {
 	/**
 	 * Rest API callback to get gallery data.
 	 *
-	 * @param [type] $object Post Object.
+	 * @param [type] $object_data Post Object.
 	 * @param [type] $field_name Rest Field Name.
 	 * @param [type] $request Rest Request.
 	 * @return array
 	 */
-	public function get_gallery_data( $object, $field_name, $request ) {
+	public function get_gallery_data( $object_data, $field_name, $request ) {
 
-		$data = get_post_meta( $object['id'], '_eg_gallery_data', true );
+		$data = get_post_meta( $object_data['id'], '_eg_gallery_data', true );
 
 		if ( ! is_array( $data ) ) {
 			$data = [];
@@ -141,10 +141,10 @@ class Envira_Rest {
 			$data['config'] = [];
 		}
 
-		$data['config']['title'] = wp_strip_all_tags( get_the_title( $object['id'] ) );
+		$data['config']['title'] = wp_strip_all_tags( get_the_title( $object_data['id'] ) );
 
 		// Allow the data to be filtered before it is stored and used to create the gallery output.
-		$data = apply_filters( 'envira_gallery_pre_data', $data, $object['id'] );
+		$data = apply_filters( 'envira_gallery_pre_data', $data, $object_data['id'] );
 
 		return $data;
 	}
@@ -155,23 +155,32 @@ class Envira_Rest {
 	 * @since 1.8.5
 	 *
 	 * @param array  $value Value to update.
-	 * @param object $object Post Object.
+	 * @param object $post_object Post Object.
 	 * @param string $field_name Meta field name.
+	 *
 	 * @return array
 	 */
-	public function update_gallery_data( $value, $object, $field_name ) {
+	public function update_gallery_data( $value, $post_object, $field_name ) {
 
-		$gallery_data = get_post_meta( $object->ID, '_eg_gallery_data', true );
+		// Enforce capability check — register_rest_field() has no permission_callback,
+		// so authorization must be checked here to prevent any authenticated user from writing gallery data.
+		if ( ! current_user_can( 'edit_post', $post_object->ID ) ) { // High06: deny if caller lacks edit_post capability — the ! negation is required and must not be removed.
+			return new WP_Error( 'rest_forbidden', __( 'Permission denied.', 'envira-gallery-lite' ), [ 'status' => 403 ] );
+		}
+
+		$gallery_data = get_post_meta( $post_object->ID, '_eg_gallery_data', true );
 
 		// If Gallery Data is emptyy prepare it.
 		if ( ! is_array( $gallery_data ) ) {
 			$gallery_data = [];
 		}
 
-		if ( ! is_array( $gallery_data['config'] ) ) {
+		if ( empty( $gallery_data['config'] ) ) {
+			$gallery_data['config'] = [];
+
 			$common = new Envira_Gallery_Common();
 			// Loop through the defaults and prepare them to be stored.
-			$defaults = $common->get_config_defaults( $object->ID );
+			$defaults = $common->get_config_defaults( $post_object->ID );
 
 			foreach ( $defaults as $key => $default ) {
 
@@ -181,15 +190,17 @@ class Envira_Rest {
 		}
 
 		// Update Fields.
-		$gallery_data['id']              = $object->ID;
-		$gallery_data['config']['title'] = $object->title;
+		$gallery_data['id']              = $post_object->ID;
+		$gallery_data['config']['title'] = $post_object->title;
 
 		if ( isset( $value['config'] ) ) {
+			// Sanitize config values before saving to prevent XSS
+			$value['config']        = $this->sanitize_config_values( $value['config'] );
 			$gallery_data['config'] = wp_parse_args( $value['config'], $gallery_data['config'] );
 		}
 
 		if ( isset( $value['remove_image'] ) ) {
-			$in_gallery  = get_post_meta( $object->ID, '_eg_in_gallery', true );
+			$in_gallery  = get_post_meta( $post_object->ID, '_eg_in_gallery', true );
 			$has_gallery = get_post_meta( $value['attach_id'], '_eg_has_gallery', true );
 
 			// Unset the image from the gallery, in_gallery and has_gallery checkers.
@@ -201,7 +212,7 @@ class Envira_Rest {
 				unset( $in_gallery[ $key ] );
 			}
 
-			$has_key = array_search( $object->ID, (array) $has_gallery, true );
+			$has_key = array_search( $post_object->ID, (array) $has_gallery, true );
 
 			if ( false !== $has_key ) {
 				unset( $has_gallery[ $has_key ] );
@@ -229,9 +240,9 @@ class Envira_Rest {
 		}
 
 		// Flush gallery cache.
-		$this->common->flush_gallery_caches( $object->ID );
+		$this->common->flush_gallery_caches( $post_object->ID );
 
-		return update_post_meta( $object->ID, '_eg_gallery_data', $gallery_data );
+		return update_post_meta( $post_object->ID, '_eg_gallery_data', $gallery_data );
 	}
 	/**
 	 * Helper method to retrieve the proper image src attribute based on gallery settings.
@@ -413,6 +424,70 @@ class Envira_Rest {
 	public function get_config( $key, $data ) {
 
 		return isset( $data['config'][ $key ] ) ? $data['config'][ $key ] : $this->common->get_config_default( $key );
+	}
+
+	/**
+	 * Sanitizes config values to prevent XSS attacks.
+	 *
+	 * @since 1.12.4
+	 *
+	 * @param array $config The config array to sanitize.
+	 * @return array Sanitized config array.
+	 */
+	public function sanitize_config_values( $config ) {
+		// Sanitize description to prevent stored XSS via the REST API.
+		if ( isset( $config['description'] ) ) {
+			$description = $config['description'];
+
+			if ( ! is_scalar( $description ) ) {
+				$description = '';
+			}
+
+			$config['description'] = wp_kses_post( (string) $description );
+		}
+
+		// Sanitize justified_gallery_theme - ensure it's a valid theme
+		if ( isset( $config['justified_gallery_theme'] ) ) {
+			$config['justified_gallery_theme'] = $this->common->sanitize_justified_gallery_theme(
+				$config['justified_gallery_theme']
+			);
+		}
+
+		// Sanitize justified_row_height - ensure it's a positive integer
+		if ( isset( $config['justified_row_height'] ) ) {
+			$row_height = absint( $config['justified_row_height'] );
+			if ( $row_height <= 0 ) {
+				$row_height = $this->common->get_config_default( 'justified_row_height' );
+			}
+			$config['justified_row_height'] = $row_height;
+		}
+
+		// Normalize boolean config values to actual PHP booleans at ingestion.
+		// Shortcode output always casts via (bool) before wp_json_encode(), so storing
+		// the string 'false' would evaluate as true (non-empty string). Storing real
+		// booleans ensures (bool) casts downstream behave correctly.
+		foreach ( [ 'aspect', 'loop', 'mousewheel' ] as $key ) {
+			if ( isset( $config[ $key ] ) ) {
+				$config[ $key ] = filter_var( $config[ $key ], FILTER_VALIDATE_BOOLEAN );
+			}
+		}
+
+		// Sanitize arrows - accept boolean-like values supported by FILTER_VALIDATE_BOOLEAN and normalize to 1/0.
+		if ( isset( $config['arrows'] ) ) {
+			$config['arrows'] = filter_var( $config['arrows'], FILTER_VALIDATE_BOOLEAN ) ? 1 : 0;
+		}
+
+		// Sanitize numeric JS values at ingestion — these are emitted bare into a JS numeric
+		// context. esc_attr() encodes HTML entities but not commas/parentheses, allowing JS injection.
+		// absint() guarantees a non-negative integer, which is safe in an unquoted numeric context.
+		foreach ( [ 'thumbnails_width', 'thumbnails_height' ] as $key ) {
+			if ( isset( $config[ $key ] ) ) {
+				$v              = absint( $config[ $key ] ); // Enforce integer; eliminates injection risk in bare JS numeric context.
+				$config[ $key ] = $v > 0 ? $v : $this->common->get_config_default( $key );
+			}
+		}
+
+		return $config;
 	}
 
 	/**

@@ -5,6 +5,10 @@
  * @package   Envira_Gallery_Lite
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 /**
  * Class Envira_Lite_Support
  */
@@ -69,14 +73,23 @@ class Envira_Lite_Support {
 			return;
 		}
 
-		$valid_request = isset( $_POST['action'], $_POST['envira_nonce'] );
-		$valid_nonce   = wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['envira_nonce'] ) ), $this->nonce_action );
-
-		if ( ! $valid_request || ! $valid_nonce ) {
+		// Explicit capability check as defense-in-depth. Use the same filtered capability
+		// as the submenu registration so customized access remains consistent here too.
+		$capability = apply_filters( 'envira_gallery_menu_cap_support', 'manage_options' );
+		if ( ! current_user_can( $capability ) ) {
 			return;
 		}
-		$gallery_id = isset( $_POST['gallery_id'] ) ? intval( $_POST['gallery_id'] ) : null;
-		$action     = sanitize_text_field( wp_unslash( $_POST['action'] ) );
+
+		if ( ! isset( $_POST['envira_nonce'] ) ) {
+			return;
+		}
+
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['envira_nonce'] ) ), $this->nonce_action ) ) {
+			return;
+		}
+
+		$action     = isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '';
+		$gallery_id = isset( $_POST['gallery_id'] ) ? intval( wp_unslash( $_POST['gallery_id'] ) ) : null;
 
 		switch ( $action ) {
 			case 'toggle-debug': // General Tab.

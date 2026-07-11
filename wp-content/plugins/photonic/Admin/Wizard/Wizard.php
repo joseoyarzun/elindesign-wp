@@ -73,7 +73,7 @@ class Wizard {
 
 		$this->shortcode_attributes = [
 			'common'    => [
-				'columns', 'count', 'more', 'photo_count', 'photo_more', 'photo_layout', 'title_position', 'caption', 'media', 'main_size', 'thumb_size', 'tile_size', 'video_size', 'popup', 'thumbnail_effect', 'show_gallery', 'load_mode', 'layout_engine', // All lightbox
+				'columns', 'count', 'more', 'photo_count', 'photo_more', 'photo_layout', 'title_position', 'caption', 'media', 'main_size', 'thumb_size', 'tile_size', 'video_size', 'popup', 'thumbnail_effect', 'show_gallery', 'load_mode', 'layout_engine', 'headers', // All lightbox
 				'speed', 'timeout', 'fx', 'pause', 'strip-style', 'controls', // Slideshow
 			],
 			'flickr'    => ['user_id', 'group_id', 'collections_display', 'tags', 'tag_mode', 'text', 'sort', 'privacy_filter'],
@@ -101,13 +101,13 @@ class Wizard {
 		$ret = '';
 
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
-			$screen = sanitize_text_field($_POST['screen'] ?? 0);
-			$provider = sanitize_text_field($_POST['provider'] ?? '');
-			$display_type = sanitize_text_field($_POST['display_type'] ?? '');
+			$screen = sanitize_text_field(wp_unslash($_POST['screen'] ?? 0));
+			$provider = sanitize_text_field(wp_unslash($_POST['provider'] ?? ''));
+			$display_type = sanitize_text_field(wp_unslash($_POST['display_type'] ?? ''));
 
 			$raw_shortcode = !empty($_POST['photonic-editor-shortcode-raw']) ? sanitize_text_field($_POST['photonic-editor-shortcode-raw']) : '';
 			if (!empty($raw_shortcode)) {
-				$input = base64_decode($raw_shortcode); // The in-flight shortcode is passed from screen to screen using the JS function `btoa`, in flow.js, which encodes it
+				$input = base64_decode($raw_shortcode); // The in-flight shortcode is passed from screen to screen using the JS function `btoa`, in wizard.js, which encodes it
 				$input = json_decode($input);
 				if (!empty($input->shortcode) && !empty($input->shortcode->attrs) && !empty($input->shortcode->attrs->named)) {
 					$input = $input->shortcode->attrs->named;
@@ -142,6 +142,7 @@ class Wizard {
 				$fields = $screen_fields['display'];// $screen_fields[$provider]['display'];
 				$ret .= $this->render_all_fields($fields, $deconstructed);
 				$ret = (empty($screen_fields['header']) ? '' : "<h1>" . wp_kses_post($screen_fields['header']) . "</h1>\n") .
+					(empty($screen_fields['notice']) ? '' : "<section class='photonic-flow-notice'>" . wp_kses_post($screen_fields['notice']) . "</section>\n") .
 					(empty($screen_fields['desc']) ? '' : "<p>" . wp_kses_post($screen_fields['desc']) . "</p>\n") .
 					$ret;
 			}
@@ -154,6 +155,7 @@ class Wizard {
 				$ret .= $this->render_all_fields($fields, $deconstructed);
 
 				$ret = (empty($screen_fields[$display_type]['header']) ? '' : "<h1>" . wp_kses_post($screen_fields[$display_type]['header']) . "</h1>\n") .
+					(empty($screen_fields[$display_type]['notice']) ? '' : "<section class='photonic-flow-notice'>" . wp_kses_post($screen_fields[$display_type]['notice']) . "</section>\n") .
 					(empty($screen_fields[$display_type]['desc']) ? '' : "<p>" . wp_kses_post($screen_fields[$display_type]['desc']) . "</p>\n") .
 					str_replace('{{placeholder_value}}', $output['success'], $ret);
 			}
@@ -200,9 +202,6 @@ class Wizard {
 							return ['error' => sprintf($this->error_missing_api, 'Flickr API key', '<em>Photonic &rarr; Settings &rarr; Flickr &rarr; Flickr Settings</em>')];
 						}
 						break;
-
-					case 'picasa':
-						return ['error' => esc_html__('Google has deprecated the Picasa API with effect from January 2019. Please consider using the Google Photos module.', 'photonic')];
 
 					case 'google':
 						global $photonic_google_client_id, $photonic_google_client_secret, $photonic_google_refresh_token;
@@ -428,21 +427,23 @@ class Wizard {
 
 			switch ($field['type']) {
 				case 'text':
-					$ret = "<label class='photonic-flow-option-name'>" . wp_kses_post($field['desc']) . $req . "<input type='text' name='$id' value='" . $default . "' $hint_in/>" . wp_kses_post($hint) . "</label>";
+					$ret = "<label class='photonic-wizard-option-name'>" . wp_kses_post($field['desc']) . $req . "<input type='text' name='$id' value='" . $default . "' $hint_in/>" . wp_kses_post($hint) . "</label>";
 					break;
 
 				case 'radio':
-					$ret = !empty($field['desc']) ? '<div class="photonic-flow-option-name">' . wp_kses_post($field['desc']) . $req . '</div>' : '';
+					$ret = !empty($field['desc']) ? '<div class="photonic-wizard-option-name">' . wp_kses_post($field['desc']) . $req . '</div>' : '';
+					$ret .= "<div class='photonic-flow-field-radio-group'>\n";
 					foreach ($field['options'] as $option_value => $option_description) {
 						$option_condition = (empty($field['option-conditions']) || empty($field['option-conditions'][$option_value])) ? '' :
 							"data-photonic-option-condition='" . wp_json_encode($field['option-conditions'][$option_value]) . "'";
 						$checked = checked($default, $option_value, false);
-						$ret .= "\t<div class='photonic-flow-field-radio'><label><input type='radio' name='$id' value='" . esc_attr($option_value) . "' $checked $option_condition/>" . wp_kses_post($option_description) . "</label></div>\n";
+						$ret .= "\t<div class='photonic-flow-field-radio'><label><input type='radio' name='$id' value='" . esc_attr($option_value) . "' $checked $option_condition />" . wp_kses_post($option_description) . "</label></div>\n";
 					}
+					$ret .= "</div>\n";
 					break;
 
 				case 'select':
-					$ret = "<label class='photonic-flow-option-name'>" . wp_kses_post($field['desc']) . $req . "\n\t<select name='$id' $hint_in>\n";
+					$ret = "<label class='photonic-wizard-option-name'>" . wp_kses_post($field['desc']) . $req . "\n\t<select name='$id' $hint_in>\n";
 					foreach ($field['options'] as $option_value => $option_description) {
 						$option_condition = (empty($field['option-conditions']) || empty($field['option-conditions'][$option_value])) ? '' :
 							"data-photonic-option-condition='" . wp_json_encode($field['option-conditions'][$option_value]) . "'";
@@ -461,7 +462,7 @@ class Wizard {
 					}
 
 					$ret = "<div class='photonic-flow-selector-container photonic-flow-$id' data-photonic-flow-selector-mode='single-no-plus' data-photonic-flow-selector-for=\"$id\">\n<input type=\"hidden\" id=\"$id\" name=\"$id\" value='$selection'/>\n";
-					$ret .= '<div class="photonic-flow-option-name">' . wp_kses_post($field['desc']) . '</div>';
+					$ret .= '<div class="photonic-wizard-option-name">' . wp_kses_post($field['desc']) . '</div>';
 					foreach ($field['options'] as $option_name => $desc) {
 						$option_name = esc_attr($option_name);
 						$esc_desc = esc_attr($desc);
@@ -473,7 +474,7 @@ class Wizard {
 
 				case 'multi-select':
 					$ret = "<div class='photonic-flow-multi-select-container'>\n";
-					$ret .= '<div class="photonic-flow-option-name">' . wp_kses_post($field['desc']) . '</div>';
+					$ret .= '<div class="photonic-wizard-option-name">' . wp_kses_post($field['desc']) . '</div>';
 					$selection = explode(',', $default);
 					foreach ($field['options'] as $option_value => $desc) {
 						$checked = in_array($option_value, $selection, true) ? 'checked' : '';
@@ -484,7 +485,7 @@ class Wizard {
 
 				case 'date-filter':
 					$ret = '';
-					$ret .= '<div class="photonic-flow-option-name">' . wp_kses_post($field['desc']) . '</div>';
+					$ret .= '<div class="photonic-wizard-option-name">' . wp_kses_post($field['desc']) . '</div>';
 					$dates = !empty($default) ? explode(',', $default) : [];
 					$count = isset($field['count']) && is_numeric($field['count']) ? intval($field['count']) : 1;
 					$ret .= "<ol data-photonic-date-filter='$id' data-photonic-filter-count='$count'>\n";
@@ -518,7 +519,7 @@ class Wizard {
 
 				case 'date-range-filter':
 					$ret = '';
-					$ret .= '<div class="photonic-flow-option-name">' . wp_kses_post($field['desc']) . '</div>';
+					$ret .= '<div class="photonic-wizard-option-name">' . wp_kses_post($field['desc']) . '</div>';
 					$date_ranges = !empty($default) ? explode(',', $default) : [];
 					$count = esc_attr(isset($field['count']) && is_numeric($field['count']) ? intval($field['count']) : 1);
 					$ret .= "<ol data-photonic-date-range-filter='$id' data-photonic-filter-count='$count'>\n";
@@ -726,10 +727,10 @@ class Wizard {
 			$extract = array_merge($screen_fields[$layout], $extract);
 		}
 
-		if ('wp' === $provider) {
+/*		if ('wp' === $provider) {
 			unset($extract['count']);
 			unset($extract['more']);
-		}
+		}*/
 
 		$output .= $this->render_all_fields($extract, $existing);
 		return $output;
@@ -747,7 +748,7 @@ class Wizard {
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
 			global $photonic_alternative_shortcode;
 
-			$provider = sanitize_text_field($_POST['provider']);
+			$provider = sanitize_text_field(wp_unslash($_POST['provider']));
 			$display_type = sanitize_text_field($_POST['display_type']);
 
 			$short_code = [];
@@ -804,7 +805,7 @@ class Wizard {
 
 			$raw_shortcode = !empty($_POST['photonic-editor-shortcode-raw']) ? sanitize_text_field($_POST['photonic-editor-shortcode-raw']) : '';
 			if (!empty($raw_shortcode)) {
-				$input = base64_decode($raw_shortcode); // The in-flight shortcode is passed from screen to screen using the JS function `btoa`, in flow.js, which encodes it
+				$input = base64_decode($raw_shortcode); // The in-flight shortcode is passed from screen to screen using the JS function `btoa`, in wizard.js, which encodes it
 				$input = json_decode($input);
 				if (!empty($input->shortcode) && !empty($input->shortcode->attrs) && !empty($input->shortcode->attrs->named)) {
 					$input = $input->shortcode->attrs->named;
@@ -917,8 +918,12 @@ class Wizard {
 	private function deconstruct_shortcode($input): array {
 		$deconstructed = [];
 		if (!empty($input)) {
-			if ((!empty($input->type) && in_array($input->type, ['wp', 'default', 'flickr', 'smugmug', 'picasa', 'google', 'zenfolio', 'instagram'], true)) ||
-				((empty($input->type) && !empty($input->style)) && in_array($input->style, ['square', 'circle', 'random', 'masonry', 'mosaic', 'strip-above', 'strip-below', 'strip-right', 'no-strip'], true))
+			global $photonic_alternative_shortcode;
+			$shortcode_tag = $photonic_alternative_shortcode ?: 'gallery';
+
+			if ((!empty($input->type) && in_array($input->type, ['wp', 'default', 'flickr', 'smugmug', 'zenfolio'], true)) ||
+				((empty($input->type) && !empty($input->style)) && in_array($input->style, ['square', 'circle', 'random', 'masonry', 'masonry-horizontal', 'mosaic', 'strip-above', 'strip-below', 'strip-right', 'no-strip'], true)) ||
+				(empty($input->type) && empty($input->style) && 'gallery' !== $shortcode_tag)
 			) {
 				$deconstructed['provider'] = !empty($input->type) ? $input->type : 'wp';
 
@@ -950,7 +955,7 @@ class Wizard {
 
 				$layout = empty($input->layout) ? (empty($input->style) ? '' : $input->style) : $input->layout;
 				if (!empty($layout)) {
-					if (in_array($layout, ['square', 'circle', 'random', 'masonry', 'mosaic'], true)) {
+					if (in_array($layout, ['square', 'circle', 'random', 'masonry', 'masonry-horizontal', 'mosaic'], true)) {
 						$deconstructed['layout'] = $layout;
 					}
 					elseif (in_array($layout, ['strip-above', 'strip-below', 'strip-right', 'no-strip'], true)) {
@@ -1035,7 +1040,7 @@ class Wizard {
 	 */
 	public function process_response($response, $provider, $display_type = null, $form_parameters = [], $existing = [], $url = null, $more = false): array {
 		if (!is_wp_error($response)) {
-			if (isset($response['response']) && isset($response['response']['code'])) {
+			if (isset($response['response']['code'])) {
 				if (200 === $response['response']['code']) {
 					$pagination = [];
 					$source = $this->flow_fields->get_source($provider);
@@ -1089,9 +1094,9 @@ class Wizard {
 	public static function base_apis(): array {
 		return [
 			'flickr' => 'api.flickr.com',
-			'google' => 'photoslibrary.googleapis.com',
+			// 'google' => 'photoslibrary.googleapis.com',
 			'smugmug' => 'api.smugmug.com',
-			'instagram' => 'graph.instagram.com',
+			// 'instagram' => 'graph.instagram.com',
 			'zenfolio' => 'api.zenfolio.com',
 		];
 	}

@@ -47,7 +47,7 @@ if ( ! class_exists('PMXI_Render')){
 				$path .= "[$ind]";
 			}		
 			
-			echo '<div class="xml-element csv_element lvl-' . esc_attr($lvl) . ' lvl-mod4-' . ($lvl % 4) . '" title="' . esc_attr($path) . '">';
+			echo '<div class="xml-element csv_element lvl-' . esc_attr($lvl) . ' lvl-mod4-' . esc_attr($lvl % 4) . '" title="' . esc_attr($path) . '">';
 			if ($el->hasChildNodes()) {
 				$is_render_collapsed = $ind > 1;			
 				if ($lvl) echo '<div class="csv-tag opening"><span class="csv-tag-name">' . esc_html($el->nodeName) . '</span>'; echo '</div>';
@@ -71,7 +71,7 @@ if ( ! class_exists('PMXI_Render')){
 						} elseif ($child instanceof DOMComment) {
 							if (preg_match('%\[pmxi_more:(\d+)\]%', $child->nodeValue, $mtch)) {
 								$no = intval($mtch[1]);
-								echo '<div class="xml-more">[ &dArr; ' . sprintf(__('<strong>%s</strong> %s more', 'wp_all_import_plugin'), $no, _n('element', 'elements', $no, 'wp_all_import_plugin')) . ' &dArr; ]</div>';
+								echo '<div class="xml-more">[ &dArr; ' . wp_kses( /* translators: 1: count, 2: element/elements label */ sprintf(__('<strong>%1$s</strong> %2$s more', 'wp-all-import'), intval($no), esc_html(_n('element', 'elements', $no, 'wp-all-import'))), array('strong' => array()) ) . ' &dArr; ]</div>';
 							}
 						}
 					}
@@ -91,16 +91,16 @@ if ( ! class_exists('PMXI_Render')){
 			}
 			if (preg_match('%\[more:(\d+)\]%', $text, $mtch)) {
 				$no = intval($mtch[1]);
-				echo '<div class="xml-more">[ &dArr; ' . sprintf(__('<strong>%s</strong> %s more', 'wp_all_import_plugin'), $no, _n('element', 'elements', $no, 'wp_all_import_plugin')) . ' &dArr; ]</div>';
+				echo '<div class="xml-more">[ &dArr; ' . wp_kses( /* translators: 1: count, 2: element/elements label */ sprintf(__('<strong>%1$s</strong> %2$s more', 'wp-all-import'), intval($no), esc_html(_n('element', 'elements', $no, 'wp-all-import'))), array('strong' => array()) ) . ' &dArr; ]</div>';
 				return;
 			}
 			$more = '';
 			if ($shorten and preg_match('%^(.*?\s+){20}(?=\S)%', $text, $mtch)) {
 				$text = $mtch[0];
-				$more = '<span class="xml-more">[' . __('more', 'wp_all_import_plugin') . ']</span>';
+				$more = '<span class="xml-more">[' . esc_html__('more', 'wp-all-import') . ']</span>';
 			}
 			$is_short = strlen($text) <= 40;
-			$newtext = htmlspecialchars($text); 
+			$newtext = htmlspecialchars($text);
 			//$newtext = preg_replace('%(?<!\s)\b(?!\s|\W[\w\s])|\w{20}%', '$0&#8203;', $newtext); // put explicit breaks for xml content to wrap
 			echo '<div class="xml-content textonly' . ($is_short ? ' short' : '') . ($is_render_collapsed ? ' collapsed' : '') . ' '. (is_numeric($text) ? 'is_numeric' : '') .'">' . wp_kses_post($newtext . $more) . '</div>';
 		}
@@ -135,6 +135,7 @@ if ( ! class_exists('PMXI_Render')){
 
 		public static function render_xml_element(DOMElement $el, $shorten = false, $path = '/', $ind = 1, $lvl = 0)
 		{
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			$render_whole_tree = apply_filters('wp_all_import_is_render_whole_xml_tree', true);
 
 			$path .= $el->nodeName;	
@@ -185,7 +186,7 @@ if ( ! class_exists('PMXI_Render')){
 						} elseif ($child instanceof DOMComment) {
 							if (preg_match('%\[pmxi_more:(\d+)\]%', $child->nodeValue, $mtch)) {
 								$no = intval($mtch[1]);
-								echo '<div class="xml-more">[ &dArr; ' . sprintf(__('<strong>%s</strong> %s more', 'wp_all_import_plugin'), $no, _n('element', 'elements', $no, 'wp_all_import_plugin')) . ' &dArr; ]</div>';
+								echo '<div class="xml-more">[ &dArr; ' . wp_kses( /* translators: 1: count, 2: element/elements label */ sprintf(__('<strong>%1$s</strong> %2$s more', 'wp-all-import'), intval($no), esc_html(_n('element', 'elements', $no, 'wp-all-import'))), array('strong' => array()) ) . ' &dArr; ]</div>';
 							}
 						}
 					}
@@ -205,14 +206,14 @@ if ( ! class_exists('PMXI_Render')){
 			}
 			if (preg_match('%\[more:(\d+)\]%', $text, $mtch)) {
 				$no = intval($mtch[1]);
-				echo '<div class="xml-more">[ &dArr; ' . sprintf(__('<strong>%s</strong> %s more', 'wp_all_import_plugin'), $no, _n('element', 'elements', $no, 'wp_all_import_plugin')) . ' &dArr; ]</div>';
+				echo '<div class="xml-more">[ &dArr; ' . wp_kses( /* translators: 1: count, 2: element/elements label */ sprintf(__('<strong>%1$s</strong> %2$s more', 'wp-all-import'), intval($no), esc_html(_n('element', 'elements', $no, 'wp-all-import'))), array('strong' => array()) ) . ' &dArr; ]</div>';
 				return;
 			}
 			$more = '';
 			if ($shorten and preg_match('%^(.*?\s+){20}(?=\S)%', $text, $mtch)) {
 				$text = $mtch[0];
-				$more = '<span class="xml-more">[' . __('more', 'wp_all_import_plugin') . ']</span>';
-			}			
+				$more = '<span class="xml-more">[' . esc_html__('more', 'wp-all-import') . ']</span>';
+			}
 			$is_short = strlen($text) <= 40;			
 			$text = htmlspecialchars($text);
 			if ($is_cdata){
@@ -244,7 +245,7 @@ if ( ! class_exists('PMXI_Render')){
 
 		protected static function render_element_xpaths(DOMElement $el, $path = '/', $ind = 1, $lvl = 0){						
 			?>
-			<ul id="menu-<?php echo str_replace('/', '-', esc_attr($path)); ?>" class="ui-helper-hidden">
+			<ul id="menu-<?php echo esc_attr(str_replace('/', '-', $path)); ?>" class="ui-helper-hidden">
 				<?php foreach ($el->attributes as $attr) : if ( empty($attr->value) ) continue; ?>
 			    <li data-command="action1" title="<?php echo esc_attr($path . '[@'. $attr->nodeName .' = "' . $attr->value . '"]'); ?>">
 			    	<a href="#"><?php echo wp_kses_post($path . '[@'. $attr->nodeName .' = "' . $attr->value) . '"]'; ?></a>

@@ -3,9 +3,7 @@
 namespace Photonic_Plugin\Options;
 
 class Lightbox extends Option_Tab {
-	private static $instance;
-
-	private function __construct() {
+	protected function __construct() {
 		$this->options = [
 			[
 				'name'     => 'Common',
@@ -69,7 +67,7 @@ class Lightbox extends Option_Tab {
 
 			[
 				'name'     => 'Colorbox Theme',
-				'desc'     => "Colorbox lets you pick one of the following themes. See examples <a href='http://www.jacklmoore.com/colorbox/' target='_blank'>here</a>:",
+				'desc'     => "Colorbox lets you pick one of the following themes. See examples <a href='https://jacklmoore.com/colorbox/' target='_blank'>here</a>:",
 				'id'       => 'cbox_theme',
 				'grouping' => 'lb-cb-settings',
 				'type'     => 'select',
@@ -221,7 +219,7 @@ class Lightbox extends Option_Tab {
 
 			[
 				'name'     => 'Transition effect',
-				'desc'     => 'Specify the transition effect to be used when Lightcase is displaying a picture. See demos <a href="http://cornel.bopp-art.com/lightcase/" target="_blank">here</a>.',
+				'desc'     => 'Specify the transition effect to be used when Lightcase is displaying a picture. See demos <a href="https://cornel.bopp-art.com/lightcase/" target="_blank">here</a>.',
 				'id'       => 'lc_transition_effect',
 				'grouping' => 'lb-lc-settings',
 				'type'     => 'select',
@@ -274,7 +272,7 @@ class Lightbox extends Option_Tab {
 
 			[
 				'name'     => 'Add Additional Transitions',
-				'desc'     => 'LightGallery supports the "fade" and "slide" transition effects by default. Additional transitions from the dropdown below can be enabled by addition of a script (+39KB). See demos <a href="http://sachinchoolur.github.io/lightGallery/demos/transitions.html" target="_blank">here</a>.',
+				'desc'     => 'LightGallery supports the "fade" and "slide" transition effects by default. Additional transitions from the dropdown below can be enabled by addition of a script (+39KB). See demos <a href="https://www.lightgalleryjs.com/demos/transitions/" target="_blank">here</a>.',
 				'id'       => 'enable_lg_transitions',
 				'grouping' => 'lb-lg-settings',
 				'type'     => 'checkbox'
@@ -282,7 +280,7 @@ class Lightbox extends Option_Tab {
 
 			[
 				'name'     => 'Transition effect',
-				'desc'     => 'If the above is checked, specify the transition effect to be used when LightGallery is displaying a picture. See demos <a href="http://sachinchoolur.github.io/lightGallery/demos/transitions.html" target="_blank">here</a>.',
+				'desc'     => 'If the above is checked, specify the transition effect to be used when LightGallery is displaying a picture. See demos <a href="https://www.lightgalleryjs.com/demos/transitions/" target="_blank">here</a>.',
 				'id'       => 'lg_transition_effect',
 				'grouping' => 'lb-lg-settings',
 				'type'     => 'select',
@@ -377,6 +375,31 @@ class Lightbox extends Option_Tab {
 				'type'     => 'text',
 				'hint'     => 'Integer, in milliseconds'
 			],
+
+			[
+				'name'     => 'Mobile: Show Controls',
+				'desc'     => '<strong>On mobile devices:</strong> Show lightbox controls',
+				'id'       => 'lg_mobile_show_controls',
+				'grouping' => 'lb-lg-settings',
+				'type'     => 'checkbox',
+			],
+
+			[
+				'name'     => 'Mobile: Show Close',
+				'desc'     => '<strong>On mobile devices:</strong> Show Close icon',
+				'id'       => 'lg_mobile_show_close',
+				'grouping' => 'lb-lg-settings',
+				'type'     => 'checkbox',
+			],
+
+			[
+				'name'     => 'Mobile: Show Download',
+				'desc'     => '<strong>On mobile devices:</strong> Show Download button',
+				'id'       => 'lg_mobile_show_download',
+				'grouping' => 'lb-lg-settings',
+				'type'     => 'checkbox',
+			],
+
 
 			[
 				'name'     => 'PrettyPhoto',
@@ -511,12 +534,5 @@ class Lightbox extends Option_Tab {
 			],
 
 		];
-	}
-
-	public static function get_instance() {
-		if (null === self::$instance) {
-			self::$instance = new Lightbox();
-		}
-		return self::$instance;
 	}
 }

@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  *
  * @see UserFeedback_Notification_Event
@@ -16,12 +20,12 @@ class UserFeedback_Notification_Upgrade_After_14_Days extends UserFeedback_Notif
 	public $interval      = 14;
 
 	public function prepare() {
-		$this->title   = __( 'Upgrade to Unlock Additional Features', 'userfeedback' );
+		$this->title   = __( 'Upgrade to Unlock Additional Features', 'userfeedback-lite' );
 		$this->content =
-			__( 'Upgrade to UserFeedback Pro to target your UserFeedback surveys by device type, pages, and engagement.', 'userfeedback' );
+			__( 'Upgrade to UserFeedback Pro to target your UserFeedback surveys by device type, pages, and engagement.', 'userfeedback-lite' );
 
 		$this->buttons[] = array(
-			'text'        => __( 'Upgrade to Pro', 'userfeedback' ),
+			'text'        => __( 'Upgrade to Pro', 'userfeedback-lite' ),
 			'url'         => userfeedback_get_upgrade_link(),
 			'is_external' => true,
 		);

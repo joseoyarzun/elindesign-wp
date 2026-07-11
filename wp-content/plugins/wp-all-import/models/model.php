@@ -62,7 +62,7 @@ abstract class PMXI_Model extends ArrayObject {
 			array_unshift($args, $mtch[1]);
 			return call_user_func_array(array($this, 'getBy'), $args);
 		} else {
-			throw new Exception("Requested method " . get_class($this) . "::$method doesn't exist.");
+			throw new Exception(esc_html("Requested method " . get_class($this) . "::$method doesn't exist."));
 		}
 	}
 	
@@ -73,10 +73,11 @@ abstract class PMXI_Model extends ArrayObject {
 	 */
 	public function setTable($tableName) {
 		if ( ! is_null($this->table)) {
-			throw new Exception('Table name cannot be changed once being set.');
+			throw new Exception(esc_html('Table name cannot be changed once being set.'));
 		}
 		$this->table = $tableName;
 		if ( ! isset(self::$meta_cache[$this->table])) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$tableMeta = $this->wpdb->get_results("SHOW COLUMNS FROM $this->table", ARRAY_A);
 			$primary = array();
 			$auto_increment = false;
@@ -134,14 +135,16 @@ abstract class PMXI_Model extends ArrayObject {
 				$where[] = '(' . call_user_func_array(array($this, 'buildWhere'), $val) . ')';
 			} else {
 				if ( ! preg_match('%^(.+?) *(=|<>|!=|<|>|<=|>=| (NOT +)?(IN|(LIKE|REGEXP|RLIKE)( BINARY)?))?$%i', trim($key), $mtch)) {
-					throw new Exception('Wrong field name format.');
+					throw new Exception(esc_html('Wrong field name format.'));
 				}				
 				$key = $mtch[1];
 				if (is_array($val) and (empty($mtch[2]) or 'IN' == strtoupper($mtch[4]))) {
 					$op = empty($mtch[2]) ? 'IN' : strtoupper(trim($mtch[2]));
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 					if (count($val)) $where[] = $this->wpdb->prepare("$key $op (" . implode(', ', array_fill(0, count($val), "%s")) . ")", $val);
 				} else {
 					$op = empty($mtch[2]) ? '=' : strtoupper(trim($mtch[2]));
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 					$where[] = $this->wpdb->prepare("$key $op %s", $val);
 				}
 			}
@@ -188,10 +191,11 @@ abstract class PMXI_Model extends ArrayObject {
 	 * @return PMXI_Model
 	 */
 	public function truncateTable() {
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		if (FALSE !== $this->wpdb->query("TRUNCATE $this->table")) {
 			return $this;
 		} else {
-			throw new Exception($this->wpdb->last_error);
+			throw new Exception(esc_html($this->wpdb->last_error));
 		}
 	}
 }

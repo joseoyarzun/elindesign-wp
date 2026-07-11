@@ -136,8 +136,8 @@ class MonsterInsights_Dashboard_Widget {
 		?>
 		<div class="mi-dw-not-authed">
 			<?php
-			// Translators: Wizrd Link tag starts with url and Wizard link tag ends.
 			$message = sprintf(
+				/* translators: %1$s: Opening wizard link tag, %2$s: Closing wizard link tag. */
 				esc_html__( 'Your website analytics dashboard is not currently configured. Please use our %1$ssetup wizard%2$s to get started.', 'google-analytics-for-wordpress' ),
 				'<a class="monsterinsights-setup-wizard-link">',
 				'</a>'
@@ -176,6 +176,8 @@ class MonsterInsights_Dashboard_Widget {
 			$wpforms_installed      = false;
 			$userfeedback_url       = false;
 			$userfeedback_installed = false;
+			$formidableforms_installed = false;
+
 			if ( monsterinsights_can_install_plugins() ) {
 				$wpforms_key = 'wpforms-lite/wpforms.php';
 				if ( array_key_exists( $wpforms_key, $plugins ) ) {
@@ -194,6 +196,10 @@ class MonsterInsights_Dashboard_Widget {
 					$userfeedback_installed = true;
 				} else {
 					$userfeedback_url = wp_nonce_url( self_admin_url( 'update.php?action=install-plugin&plugin=userfeedback-lite' ), 'install-plugin_userfeedback-lite' );
+				}
+
+				if ( array_key_exists( 'formidable/formidable.php', $plugins ) ) {
+					$formidableforms_installed = true;
 				}
 			}
 
@@ -226,12 +232,13 @@ class MonsterInsights_Dashboard_Widget {
 					'reports_url'            => add_query_arg( 'page', 'monsterinsights_reports', admin_url( 'admin.php' ) ),
 					'getting_started_url'    => is_multisite() ? network_admin_url( 'admin.php?page=monsterinsights_network#/about/getting-started' ) : admin_url( 'admin.php?page=monsterinsights_settings#/about/getting-started' ),
 					'wizard_url'             => admin_url( 'index.php?page=monsterinsights-onboarding' ),
+					'formidableforms_installed' => $formidableforms_installed,
 				)
 			);
 
 			$this->remove_conflicting_asset_files();
 
-			$text_domain = monsterinsights_is_pro_version() ? 'google-analytics-premium' : 'google-analytics-for-wordpress';
+			$text_domain = monsterinsights_get_plugin_textdomain();
 
 			wp_scripts()->add_inline_script(
 				'monsterinsights-vue-widget',

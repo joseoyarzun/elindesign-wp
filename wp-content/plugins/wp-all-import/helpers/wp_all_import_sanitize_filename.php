@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 function wp_all_import_sanitize_filename($filename) {
 	$filename = preg_replace('/\?.*/', '', $filename);

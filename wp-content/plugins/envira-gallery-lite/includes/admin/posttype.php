@@ -120,7 +120,7 @@ class Envira_Gallery_Posttype_Admin {
 			3  => __( 'Envira gallery custom field deleted.', 'envira-gallery-lite' ),
 			4  => __( 'Envira gallery updated.', 'envira-gallery-lite' ),
 			/* translators: %s: revision version */
-			5  => isset( $_GET['revision'] ) ? sprintf( __( 'Envira gallery restored to revision from %s.', 'envira-gallery-lite' ), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false, // @codingStandardsIgnoreLine
+			5  => isset( $_GET['revision'] ) ? sprintf( __( 'Envira gallery restored to revision from %s.', 'envira-gallery-lite' ), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display param on post_updated_messages filter; revision already saved by WP core before this runs. Value is cast to (int) before use.
 			6  => __( 'Envira gallery published.', 'envira-gallery-lite' ),
 			7  => __( 'Envira gallery saved.', 'envira-gallery-lite' ),
 			8  => __( 'Envira gallery submitted.', 'envira-gallery-lite' ),

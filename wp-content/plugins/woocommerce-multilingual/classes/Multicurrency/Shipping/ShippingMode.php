@@ -15,11 +15,9 @@ interface ShippingMode {
 	 *
 	 * This value is visible on shipping method configuration screen, on the left.
 	 *
-	 * @param string $currencyCode
-	 *
-	 * @return string|null
+	 * @param string|mixed $currencyCode
 	 */
-	public function getFieldTitle( $currencyCode );
+	public function getFieldTitle( $currencyCode ): ?string;
 
 	/**
 	 * Returns field description.
@@ -28,10 +26,8 @@ interface ShippingMode {
 	 * the question mark icon, next to field title.
 	 *
 	 * @param string $currencyCode
-	 *
-	 * @return string|null
 	 */
-	public function getFieldDescription( $currencyCode );
+	public function getFieldDescription( $currencyCode ): ?string;
 
 	/**
 	 * Return the key which will be used in shipping method configuration form.

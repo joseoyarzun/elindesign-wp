@@ -10,6 +10,9 @@ class WCML_WC_Strings {
 	const DOMAIN_WORDPRESS              = 'WordPress';
 	/** @see \WPML_ST_Taxonomy_Strings::LEGACY_NAME_PREFIX_SINGULAR */
 	const TAXONOMY_SINGULAR_NAME_PREFIX = 'taxonomy singular name: ';
+	/** @see \WPML_ST_Taxonomy_Strings::LEGACY_NAME_PREFIX_GENERAL */
+	const TAXONOMY_GENERAL_NAME_PREFIX  = 'taxonomy general name: ';
+	const TAXONOMY_GENERAL_VALUE_PREFIX = 'Product ';
 
 	private $translations_from_mo_file = [];
 	private $mo_files                  = [];
@@ -78,7 +81,6 @@ class WCML_WC_Strings {
 			}
 			if ( 'options-permalink.php' === $pagenow ) {
 				add_filter( 'gettext_with_context', [ $this, 'category_base_in_strings_language' ], 99, 3 );
-				add_action( 'admin_footer', [ $this, 'show_custom_url_base_translation_links' ] );
 				add_action( 'admin_footer', [ $this, 'show_custom_url_base_language_requirement' ] );
 			}
 		}
@@ -104,13 +106,30 @@ class WCML_WC_Strings {
 			$lang = $this->sitepress->get_user_admin_language( get_current_user_id(), true );
 		}
 
-		if ( $product && is_object( $product ) ) {
-			$product_id = $product->get_id();
-		} elseif ( is_numeric( $product_obj ) ) {
+		if ( is_numeric( $product_obj ) ) {
 			$product_id = $product_obj;
-		} elseif ( $product_obj ) {
+		} elseif ( $product_obj && is_object( $product_obj ) ) {
 			$product_id = $product_obj->get_id();
+		} elseif ( $product && is_object( $product ) ) {
+			$product_id = $product->get_id();
 		}
+
+		/**
+		 * Adjusts the product being considered when translating variable product attribute labels.
+		 *
+		 * Sometimes, WooCommerce or its addons prints an attribute label without referencing the relevant product;
+		 * in those cases, WCML might fail to translate local attribute labels if the current product is not the relevant one
+		 * (for example, on bundled or composited products containing such variable products).
+		 * This filter helps setting the right product to translate local attribute labels.
+		 *
+		 * @param int|false $product_id
+		 * @param string    $label
+		 * @param string    $name
+		 * @param mixed     $product_obj
+		 *
+		 * @return int|false
+		 */
+		$product_id = apply_filters( 'wcml_translated_attribute_label_product_id', $product_id, $label, $name, $product_obj );
 
 		$name = $this->woocommerce_wpml->attributes->filter_attribute_name(
 			$name,
@@ -163,7 +182,7 @@ class WCML_WC_Strings {
 		// backward compatibility for WCML < 3.6.1.
 		$trnsl_labels = get_option( 'wcml_custom_attr_translations' );
 
-		if ( isset( $trnsl_labels[ $lang ][ $name ] ) && ! empty( $trnsl_labels[ $lang ][ $name ] ) ) {
+		if ( ! empty( $trnsl_labels[ $lang ][ $name ] ) ) {
 			return $trnsl_labels[ $lang ][ $name ];
 		}
 
@@ -180,9 +199,9 @@ class WCML_WC_Strings {
 
 		if ( $values ) {
 
-			$product_id = $values['variation_id'] ? $values['variation_id'] : $values['product_id'];
+			$product_id = $values['variation_id'] ?: $values['product_id'];
 
-			$translated_product_id = apply_filters( 'translate_object_id', $product_id, 'product', true );
+			$translated_product_id = apply_filters( 'wpml_object_id', $product_id, 'product', true );
 			$translated_product = wc_get_product( $translated_product_id );
 			$translated_title   = $translated_product ? $translated_product->get_name() : '';
 
@@ -199,7 +218,7 @@ class WCML_WC_Strings {
 	public function translated_checkout_product_title( $title, $product ) {
 
 		if ( $product ) {
-			$tr_product_id = apply_filters( 'translate_object_id', $product->get_id(), 'product', true, $this->current_language );
+			$tr_product_id = apply_filters( 'wpml_object_id', $product->get_id(), 'product', true, $this->current_language );
 			$title         = get_the_title( $tr_product_id );
 		}
 
@@ -242,10 +261,7 @@ class WCML_WC_Strings {
 		$category_notice = __( 'You are using the same value as for the regular category base. This is known to create conflicts resulting in urls not working properly.', 'woocommerce-multilingual' );
 		?>
 		<script>
-			if (jQuery('#woocommerce_permalink_structure').length) {
-				jQuery('#woocommerce_permalink_structure').parent().append(jQuery('#wpml_wcml_custom_base_req').html());
-			}
-			if (jQuery('input[name="woocommerce_product_category_slug"]').length && jQuery('input[name="woocommerce_product_category_slug"]').val() == '<?php echo $category_base; ?>') {
+			if (jQuery('input[name="woocommerce_product_category_slug"]').length && jQuery('input[name="woocommerce_product_category_slug"]').val() == '<?php echo esc_js( $category_base ); ?>') {
 				jQuery('input[name="woocommerce_product_category_slug"]').parent().append('<br><i class="icon-warning-sign"><?php echo esc_js( $category_notice ); ?></i>');
 			}
 		</script>
@@ -253,88 +269,11 @@ class WCML_WC_Strings {
 
 	}
 
-	public function show_custom_url_base_translation_links() {
-
-		$permalink_options = get_option( 'woocommerce_permalinks' );
-
-		$lang_selector = new WPML_Simple_Language_Selector( $this->sitepress );
-
-		$bases = [
-			'tag_base'       => 'product_tag',
-			'category_base'  => 'product_cat',
-			'attribute_base' => 'attribute',
-			'product_base'   => 'product',
-		];
-
-		foreach ( $bases as $key => $base ) {
-
-			switch ( $base ) {
-				case 'product_tag':
-					$input_name = 'woocommerce_product_tag_slug';
-					$value      = ! empty( $permalink_options['tag_base'] ) ? $permalink_options['tag_base'] : $this->woocommerce_wpml->url_translation->default_product_tag_base;
-					break;
-				case 'product_cat':
-					$input_name = 'woocommerce_product_category_slug';
-					$value      = ! empty( $permalink_options['category_base'] ) ? $permalink_options['category_base'] : $this->woocommerce_wpml->url_translation->default_product_category_base;
-					break;
-				case 'attribute':
-					$input_name = 'woocommerce_product_attribute_slug';
-					$value      = ! empty( $permalink_options['attribute_base'] ) ? $permalink_options['attribute_base'] : '';
-					break;
-				case 'product':
-					$input_name = 'product_permalink_structure';
-					if ( empty( $permalink_options['product_base'] ) ) {
-						$value = _x( 'product', 'default-slug', 'woocommerce' );
-					} else {
-						$value = trim( $permalink_options['product_base'], '/' );
-					}
-					break;
-				default:
-					$input_name = '';
-					$value      = '';
-			}
-
-			$language = $this->get_string_language( trim( $value, '/' ), $this->woocommerce_wpml->url_translation->url_strings_context(), $this->woocommerce_wpml->url_translation->url_string_name( $base ) );
-
-			if ( is_null( $language ) ) {
-				$language = $this->sitepress->get_default_language();
-			}
-
-			echo $lang_selector->render(
-				[
-					'id'                 => $key . '_language_selector',
-					'name'               => $key . '_language',
-					'selected'           => $language,
-					'show_please_select' => false,
-				]
-			);
-			?>
-
-			<script>
-				var input = jQuery('input[name="<?php echo $input_name; ?>"]');
-
-				if (input.length) {
-
-					if ('<?php echo $input_name; ?>'==='product_permalink_structure' && jQuery('input[name="product_permalink"]:checked').val() == '') {
-						input = jQuery('input[name="product_permalink"]:checked').closest('.form-table').find('code').eq(0);
-					}
-
-					input.parent().append('<div class="translation_controls"></div>');
-
-					if ('<?php echo $input_name; ?>'==='woocommerce_product_attribute_slug' && input.val() == '') {
-
-						input.parent().find('.translation_controls').append('&nbsp;');
-
-					} else {
-						input.parent().find('.translation_controls').append('<a href="<?php echo admin_url( 'admin.php?page=wpml-wcml&tab=slugs' ); ?>"><?php _e( 'translations', 'woocommerce-multilingual' ); ?></a>');
-					}
-
-					jQuery('#<?php echo $key; ?>_language_selector').prependTo(input.parent().find('.translation_controls'));
-				}
-			</script>
-			<?php
-		}
-
+	/**
+	 * @return \WCML_Url_Translation
+	 */
+	public function getUrlTranslation() {
+		return $this->woocommerce_wpml->url_translation;
 	}
 
 	public function category_base_in_strings_language( $text, $original_value, $context ) {
@@ -374,7 +313,7 @@ class WCML_WC_Strings {
 
 		} else {
 
-			$string_id = icl_get_string_id( $value, $context, $name );
+			$string_id = icl_get_string_id( $value, $context );
 
 			if ( ! $string_id ) {
 				return 'en';
@@ -397,10 +336,8 @@ class WCML_WC_Strings {
 
 		$string_id = icl_get_string_id( $value, $context, $name );
 
-		$string_object   = new WPML_ST_String( $string_id, $this->wpdb );
-		$string_language = $string_object->set_language( $language );
-
-		return $string_language;
+		$string_object = new WPML_ST_String( $string_id, $this->wpdb );
+		$string_object->set_language( $language );
 	}
 
 
@@ -476,10 +413,20 @@ class WCML_WC_Strings {
 	public function notice_after_woocommerce_product_options_attributes() {
 
 		if ( isset( $_GET['post'] ) && $this->sitepress->get_default_language() != $this->sitepress->get_current_language() ) {
-			$original_product_id = apply_filters( 'translate_object_id', $_GET['post'], 'product', true, $this->sitepress->get_default_language() );
-
-			/* translators: %s is a URL */
-			printf( '<p>' . __( 'In order to edit custom attributes you need to use the <a href="%s">custom product translation editor</a>', 'woocommerce-multilingual' ) . '</p>', admin_url( 'admin.php?page=wpml-wcml&tab=products&prid=' . $original_product_id ) );
+			//The message used to include a link to translate THIS product, not sure if this will be doable when linking to the TM dashboard
+			$pointerFactory = new WCML\PointerUi\Factory();
+			$pointerFactory
+				->create( [
+					'content'    => sprintf(
+						/* translators: %1$s and %2$s are opening and closing HTML link tags */
+						esc_html__( 'To translate attributes, go to the %1$sTranslation Dashboard%2$s and send the associated product for translation.', 'woocommerce-multilingual' ),
+						'<a href="' . esc_url( \WCML\Utilities\AdminUrl::getWPMLTMDashboardProducts() ) . '">',
+						'</a>'
+					),
+					'selectorId' => 'product_attributes',
+					'method'     => 'append',
+				] )
+				->show();
 		}
 	}
 
@@ -551,8 +498,8 @@ class WCML_WC_Strings {
 			$args['labels']['singular_name'] = $singular_label;
 		}
 
-		$label = sprintf( 'Product %s', $attribute_label );
-		$label = $this->get_translated_string_by_name_and_context( self::DOMAIN_WORDPRESS, 'taxonomy general name: ' . $label, null, $label );
+		$label = self::TAXONOMY_GENERAL_VALUE_PREFIX . $attribute_label;
+		$label = $this->get_translated_string_by_name_and_context( self::DOMAIN_WORDPRESS, self::TAXONOMY_GENERAL_NAME_PREFIX . $label, null, $label );
 		if ( $label ) {
 			$args['labels']['name'] = $label;
 		}

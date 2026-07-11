@@ -90,6 +90,11 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 				],
 			]
 		);
+
+		// Preload our assets.
+		// See Automattic\WooCommerce\Internal\Admin\WCAdminAssets::output_header_preload_tags.
+		$source = WCML_PLUGIN_URL . '/dist/js/multicurrencyAnalytics/app.js?ver=' . WCML_VERSION;
+		echo '<link rel="preload" href="' . esc_url( $source ) . '" as="script" />', "\n";
 	}
 
 	/**
@@ -199,7 +204,10 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 			return $this->requestedCurrencyForReport;
 		}
 
-		$rawCurrency = WpAdminPages::isDashboard()
+		$mustUseDashboardCookie = WpAdminPages::isDashboard()
+									|| \WCML_Admin_Currency_Selector::isDashboardWidgetRequest();
+
+		$rawCurrency = $mustUseDashboardCookie
 			? Obj::prop( '_wcml_dashboard_currency', $_COOKIE )
 			: Obj::prop( 'currency', $_GET );
 

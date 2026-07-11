@@ -58,9 +58,9 @@ class MulticurrencyHooks implements \IWPML_Action {
 	}
 
 	/**
-	 * @param array $rules
+	 * @param array|mixed $rules
 	 *
-	 * @return array
+	 * @return array|mixed
 	 */
 	public function dynamic_pricing_product_rules( $rules ) {
 		if ( is_array( $rules ) ) {

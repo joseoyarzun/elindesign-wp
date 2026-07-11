@@ -3,15 +3,17 @@
  * Plugin Name:         Ocean Extra
  * Plugin URI:          https://oceanwp.org/extension/ocean-extra/
  * Description:         Add extra features and flexibility to your OceanWP theme for a turbocharged premium experience and full control over every aspect of your website.
- * Version:             2.2.3
+ * Version:             2.5.6
  * Author:              OceanWP
  * Author URI:          https://oceanwp.org/
  * Requires at least:   5.6
- * Tested up to:        6.4.1
+ * Tested up to:        7.0
+ * OceanWP requires at least: 4.0.9
  * Text Domain: ocean-extra
  * Domain Path: /languages
  *
  * @package Ocean_Extra
+ * @copyright Copyright (C) 2016-2026, Ocean Extra by OceanWP LLC - https://oceanwp.org
  * @category Core
  * @author OceanWP
  */
@@ -87,6 +89,14 @@ final class Ocean_Extra {
 	 */
 	public $plugin_path;
 
+	/**
+	 * The plugin data.
+	 *
+	 * @var     array
+	 * @access  public
+	 */
+	public $plugin_data;
+
 	// Admin - Start
 	/**
 	 * The admin object.
@@ -108,7 +118,8 @@ final class Ocean_Extra {
 		$this->token       = 'ocean-extra';
 		$this->plugin_url  = plugin_dir_url( __FILE__ );
 		$this->plugin_path = plugin_dir_path( __FILE__ );
-		$this->version     = '2.2.3';
+		$this->plugin_data = get_file_data( __FILE__, array( 'Version' => 'Version' ), false );
+		$this->version     = $this->plugin_data['Version'];
 
 		define( 'OE_URL', $this->plugin_url );
 		define( 'OE_PATH', $this->plugin_path );
@@ -129,6 +140,9 @@ final class Ocean_Extra {
 		// Setup all the things
 		add_action( 'init', array( $this, 'setup' ) );
 
+		// Log version when plugin loaded.
+		add_action( 'plugins_loaded',array( $this, 'oe_log_options' ) );
+
 		add_filter('register_post_type_args', array( $this, 'oe_custom_field_support_metabox' ), 10, 2 );
 
 		// Menu icons
@@ -146,8 +160,11 @@ final class Ocean_Extra {
 			}
 			$required_theme_version = '3.3.3';
 
+			include_once $this->plugin_path . '/includes/update-message.php';
 
-			require_once OE_PATH . '/includes/panel/theme-panel.php';
+			if ( file_exists( OE_PATH . '/includes/panel/theme-panel.php' ) ) {
+				require_once OE_PATH . '/includes/panel/theme-panel.php';
+			}
 
 			$oe_library_active_status = get_option( 'oe_library_active_status', 'yes' );
 			if( $oe_library_active_status == 'yes' ) {
@@ -155,10 +172,9 @@ final class Ocean_Extra {
 			}
 			require_once OE_PATH . '/includes/panel/library-shortcode.php';
 			require_once OE_PATH . '/includes/menu-icons/menu-icons.php';
-			// require_once OE_PATH . '/includes/wizard/wizard.php';
+			require_once OE_PATH . '/includes/onboarding/start.php';
 
 			require_once OE_PATH . '/includes/themepanel/theme-panel.php';
-
 
 			if ( ! empty( $current_theme_version ) && ! empty( $required_theme_version ) && version_compare( $current_theme_version, $required_theme_version , '>' ) ) {
 				require_once OE_PATH . '/includes/compatibility/ocean.php';
@@ -249,6 +265,18 @@ final class Ocean_Extra {
 	 */
 	public function install() {
 		$this->_log_version_number();
+		$this->_log_installed_version_number();
+	}
+
+	/**
+	 * Log Installed version.
+	 *
+	 * @access  public
+	 * @since   2.4.7
+	 * @return  void
+	 */
+	public function oe_log_options() {
+		$this->_log_installed_version_number();
 	}
 
 	/**
@@ -261,6 +289,22 @@ final class Ocean_Extra {
 	private function _log_version_number() {
 		// Log the version number.
 		update_option( $this->token . '-version', $this->version );
+	}
+
+	/**
+	 * Log the plugin version number.
+	 *
+	 * @access  private
+	 * @since   2.4.7
+	 * @return  void
+	 */
+	private function _log_installed_version_number() {
+
+		$option_name = $this->token . '-installed-version';
+
+		if (! get_option( $option_name ) ) {
+			update_option( $option_name, $this->version );
+		}
 	}
 
 	/**
@@ -295,6 +339,50 @@ final class Ocean_Extra {
 			return;
 
 		}
+	}
+
+	/**
+	 * Return post id
+	 *
+	 * @since 2.2.8
+	 * @return string Post id.
+	 */
+	public static function oe_post_id() {
+
+		if ( function_exists( 'oceanwp_post_id' ) ) {
+			return oceanwp_post_id();
+		} else {
+			// Default value.
+			$id = '';
+
+			// If singular get_the_ID.
+			if ( is_singular() ) {
+				$id = get_the_ID();
+			}
+
+			// Get ID of WooCommerce product archive.
+			elseif ( OCEANWP_WOOCOMMERCE_ACTIVE && is_shop() ) {
+				$shop_id = wc_get_page_id( 'shop' );
+				if ( isset( $shop_id ) ) {
+					$id = $shop_id;
+				}
+			}
+
+			// Posts page.
+			elseif ( is_home() && $page_for_posts = get_option( 'page_for_posts' ) ) {
+				$id = $page_for_posts;
+			}
+
+			// Apply filters.
+			$id = apply_filters( 'ocean_post_id', $id );
+
+			// Sanitize.
+			$id = $id ? $id : '';
+
+			// Return ID.
+			return $id;
+		}
+
 	}
 
 	/**
@@ -401,6 +489,7 @@ final class Ocean_Extra {
 		$theme = wp_get_theme();
 
 		if ( 'OceanWP' == $theme->name || 'oceanwp' == $theme->template ) {
+			require_once OE_PATH . '/includes/utils.php';
 			require_once OE_PATH . '/includes/metabox/butterbean/butterbean.php';
 			require_once OE_PATH . '/includes/metabox/metabox.php';
 			require_once OE_PATH . '/includes/post-settings/post-settings.php';
@@ -412,8 +501,10 @@ final class Ocean_Extra {
 			require_once OE_PATH . '/includes/panel/notice.php';
 			require_once OE_PATH . '/includes/walker.php';
 			require_once OE_PATH . '/includes/ocean-extra-strings.php';
+			require_once OE_PATH . '/includes/mautic.php';
 			require_once OE_PATH . '/includes/dashboard.php';
-			require_once OE_PATH . '/includes/panel/demos.php';
+			// require_once OE_PATH . '/includes/panel/demos.php';
+			require_once OE_PATH . '/includes/plugins-tab.php';
 			$oe_notification_active_status = get_option( 'oe_notification_active_status', 'no' );
 			if( $oe_notification_active_status == 'no' ) {
 				require_once OE_PATH . '/includes/admin-bar/admin-bar.php';
@@ -421,6 +512,7 @@ final class Ocean_Extra {
 			}
 			require_once OE_PATH . '/includes/adobe-font.php';
 			require_once OE_PATH . '/includes/preloader/customizer.php';
+			require_once OE_PATH . '/includes/customizer/customizer.php';
 
 			add_action( 'wp_enqueue_scripts', array( $this, 'scripts' ), 999 );
 		}
@@ -567,7 +659,7 @@ final class Ocean_Extra {
 			$output .= self::opengraph_tag( 'property', 'og:description', trim( $description ) );
 		}
 
-		if ( has_post_thumbnail( oceanwp_post_id() ) && true == $has_img ) {
+		if ( has_post_thumbnail( self::oe_post_id() ) && true == $has_img ) {
 			$output .= self::opengraph_tag( 'property', 'og:image', trim( $image ) );
 			$output .= self::opengraph_tag( 'property', 'og:image:width', absint( $get_image[1] ) );
 			$output .= self::opengraph_tag( 'property', 'og:image:height', absint( $get_image[2] ) );
@@ -759,6 +851,27 @@ function theme_version() {
 	// Return theme version.
 	return $theme->get( 'Version' );
 
+}
+
+function oe_get_theme_version() {
+
+	$theme = wp_get_theme();
+
+	$current_theme_version = '';
+
+	if ( 'OceanWP' == $theme->name || 'oceanwp' == $theme->template ) {
+
+		if ( get_template_directory() == get_stylesheet_directory() ) {
+			$current_theme_version  = $theme->get( 'Version' );
+		} else {
+			$parent = $theme->parent();
+			if ( ! empty( $parent) ) {
+				$current_theme_version = $parent->Version;
+			}
+		}
+	}
+
+	return $current_theme_version;
 }
 
 /**

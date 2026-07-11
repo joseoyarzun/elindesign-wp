@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if ( ! class_exists( 'UserFeedback_Compatibility_Check' ) ) {
 	class UserFeedback_Compatibility_Check {
 
@@ -36,9 +40,9 @@ if ( ! class_exists( 'UserFeedback_Compatibility_Check' ) ) {
 		 * }
 		 */
 		private $compatible_php_version = array(
-			'required'    => '5.5',
-			'warning'     => '7.0',
-			'recommended' => '7.2',
+			'required'    => '7.4',
+			'warning'     => '7.4',
+			'recommended' => '8.2',
 		);
 
 		/**
@@ -52,9 +56,9 @@ if ( ! class_exists( 'UserFeedback_Compatibility_Check' ) ) {
 		 * }
 		 */
 		private $compatible_wp_version = array(
-			'required'    => '4.8',
-			'warning'     => '4.9',
-			'recommended' => false,
+			'required'    => '5.9',
+			'warning'     => '6.0',
+			'recommended' => '6.7',
 		);
 
 		/**
@@ -249,7 +253,8 @@ if ( ! class_exists( 'UserFeedback_Compatibility_Check' ) ) {
 				deactivate_plugins( $plugin );
 				wp_die(
 					sprintf(
-						esc_html__( 'Sorry, but your version of PHP does not meet UserFeedback\'s required version of %1$s%2$s%3$s to run properly. The plugin has not been activated. %4$sClick here to return to the Dashboard%5$s.', 'userfeedback' ),
+						// translators: %1$s and %3$s are strong HTML tags, %2$s is the required PHP version, %4$s is a link tag, %5$s is a closing link tag.
+						esc_html__( 'Sorry, but your version of PHP does not meet UserFeedback\'s required version of %1$s%2$s%3$s to run properly. The plugin has not been activated. %4$sClick here to return to the Dashboard%5$s.', 'userfeedback-lite' ),
 						'<strong>',
 						esc_html($compatible_php_version['required']),
 						'</strong>',
@@ -263,7 +268,8 @@ if ( ! class_exists( 'UserFeedback_Compatibility_Check' ) ) {
 				deactivate_plugins( plugin_basename( __FILE__ ) );
 				wp_die(
 					sprintf(
-						esc_html__( 'Sorry, but your version of WordPress does not meet UserFeedback\'s required version of %1$s%2$s%3$s to run properly. The plugin has not been activated. %4$sClick here to return to the Dashboard%5$s.', 'userfeedback' ),
+						// translators: %1$s and %3$s are strong HTML tags, %2$s is the required WordPress version, %4$s is a link tag, %5$s is a closing link tag.
+						esc_html__( 'Sorry, but your version of WordPress does not meet UserFeedback\'s required version of %1$s%2$s%3$s to run properly. The plugin has not been activated. %4$sClick here to return to the Dashboard%5$s.', 'userfeedback-lite' ),
 						'<strong>',
 						esc_html($compatible_wp_version['required']),
 						'</strong>',

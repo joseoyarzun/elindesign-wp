@@ -1,3 +1,4 @@
+<?php if ( ! defined( 'ABSPATH' ) ) exit; // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals ?>
 <h2 class="wpallimport-wp-notices"></h2>
 
 <div class="inner-content wpallimport-step-6 wpallimport-wrapper">
@@ -5,9 +6,9 @@
 	<div class="wpallimport-header">
 		<div class="wpallimport-logo"></div>
 		<div class="wpallimport-title">
-			<h2><?php _e('Confirm & Run', 'wp_all_import_plugin'); ?></h2>
+			<h2><?php esc_html_e('Confirm & Run', 'wp-all-import'); ?></h2>
 		</div>
-		<?php echo apply_filters('wpallimport_links_block', '');?>
+		<?php echo wp_kses_post( apply_filters('wpallimport_links_block', '') );?>
 
 		<div class="clear"></div>	
 		<?php
@@ -18,31 +19,31 @@
 					<div class="clear"></div>
 
 					<div class="step_description">
-						<h2><?php _e('Import <span id="status">in Progress</span>', 'wp_all_import_plugin') ?></h2>
-						<h3 id="process_notice"><?php _e('Importing may take some time. Please do not close your browser or refresh the page until the process is complete.', 'wp_all_import_plugin'); ?></h3>
+						<h2><?php echo wp_kses( __('Import <span id="status">in Progress</span>', 'wp-all-import'), array('span' => array('id' => array())) ) ?></h2>
+						<h3 id="process_notice"><?php esc_html_e('Importing may take some time. Please do not close your browser or refresh the page until the process is complete.', 'wp-all-import'); ?></h3>
 					</div>		
 					<div id="processbar" class="rad30">
 						<div class="rad30"></div>
 						<span id="center_progress"><span id="percents_count">0</span>%</span>
 					</div>			
 					<div id="import_progress">
-						<span id="left_progress"><?php _e('Time Elapsed', 'wp_all_import_plugin');?> <span id="then">00:00:00</span></span>
+						<span id="left_progress"><?php esc_html_e('Time Elapsed', 'wp-all-import');?> <span id="then">00:00:00</span></span>
 						<span id="right_progress">
 							<div class="progress_processed">
-								<span><?php _e('Processed', 'wp_all_import_plugin');?> <span class="processed_count"><?php echo ($update_previous->created + $update_previous->updated + $update_previous->skipped); ?></span> <?php _e('of', 'wp_all_import_plugin');?> <span id="of"><?php echo esc_html($update_previous->count); ?></span> <?php _e('records', 'wp_all_import_plugin');?></span>
+								<span><?php esc_html_e('Processed', 'wp-all-import');?> <span class="processed_count"><?php echo esc_html($update_previous->created + $update_previous->updated + $update_previous->skipped); ?></span> <?php esc_html_e('of', 'wp-all-import');?> <span id="of"><?php echo esc_html($update_previous->count); ?></span> <?php esc_html_e('records', 'wp-all-import');?></span>
 							</div>
 							<div class="progress_details">
 								<span class="progress_details_item created_count" <?php if (empty($update_previous->created)): ?>style="display:none;"<?php endif; ?>>
-									<?php _e('Created','wp_all_import_plugin');?> <span class="created_records_count"><?php echo esc_html($update_previous->created); ?></span>
+									<?php esc_html_e('Created','wp-all-import');?> <span class="created_records_count"><?php echo esc_html($update_previous->created); ?></span>
 								</span>
 								<span class="progress_details_item deleted_count" <?php if (empty($update_previous->created)): ?>style="display:none;"<?php endif; ?>>
-									<?php _e('Deleted','wp_all_import_plugin');?> <span class="deleted_records_count"><?php echo esc_html($update_previous->deleted); ?></span>
+									<?php esc_html_e('Deleted','wp-all-import');?> <span class="deleted_records_count"><?php echo esc_html($update_previous->deleted); ?></span>
 								</span>
 								<span class="progress_details_item updated_count" <?php if (empty($update_previous->created)): ?>style="display:none;"<?php endif; ?>>
-									<?php _e('Updated','wp_all_import_plugin');?> <span class="updated_records_count"><?php echo esc_html($update_previous->updated); ?></span>
+									<?php esc_html_e('Updated','wp-all-import');?> <span class="updated_records_count"><?php echo esc_html($update_previous->updated); ?></span>
 								</span>
 								<span class="progress_details_item skipped_count" <?php if (empty($update_previous->skipped)): ?>style="display:none;"<?php endif; ?>>
-									<?php _e('Skipped','wp_all_import_plugin');?> <span class="skipped_records_count"><?php echo esc_html($update_previous->skipped); ?></span>
+									<?php esc_html_e('Skipped','wp-all-import');?> <span class="skipped_records_count"><?php echo esc_html($update_previous->skipped); ?></span>
 								</span>
 							</div>
 						</span>
@@ -69,58 +70,67 @@
 		<?php $custom_type = get_post_type_object( PMXI_Plugin::$session->options['custom_type'] ); ?>		
 
 		<div id="import_finished">			
-			<h1><?php _e('Import Complete!', 'wp_all_import_plugin'); ?></h1>
+			<h1><?php esc_html_e('Import Complete!', 'wp-all-import'); ?></h1>
             <div class="wpallimport-content-section wpallimport-complete-statistics">
-                <p><?php printf(__('All <b>%s</b> records from <b>%s</b> were successfully processed.', 'wp_all_import_plugin'), '<span class="processed_count"></span>', esc_attr((PMXI_Plugin::$session->source['type'] != 'url') ? basename(PMXI_Plugin::$session->source['path']) : PMXI_Plugin::$session->source['path'])); ?></p>
+                <?php /* translators: see placeholders in the string below */ ?>
+                <p><?php echo wp_kses( sprintf(__('All <b>%1$s</b> records from <b>%2$s</b> were successfully processed.', 'wp-all-import'), '<span class="processed_count"></span>', esc_html((PMXI_Plugin::$session->source['type'] != 'url') ? basename(PMXI_Plugin::$session->source['path']) : PMXI_Plugin::$session->source['path'])), array('b' => array(), 'span' => array('class' => array())) ); ?></p>
                 <p class="wpallimport-complete-details">
-                    <?php _e('WP All Import', 'wp_all_import_plugin'); ?>
-                    <span class="created_count complete-details-item" style="display: none;"><?php printf(__('created <b>%s</b> new records','wp_all_import_plugin'), '<span class="created_records_count"></span>');?></span><span class="updated_count complete-details-item" style="display: none;"><?php printf(__('updated <b>%s</b> records','wp_all_import_plugin'), '<span class="updated_records_count"></span>');?></span><span class="deleted_count complete-details-item" style="display: none;"><?php printf(__('deleted <b>%s</b> records','wp_all_import_plugin'), '<span class="deleted_records_count"></span>');?></span><span class="skipped_count complete-details-item" style="display: none;"><?php printf(__('skipped <b>%s</b> records','wp_all_import_plugin'), '<span class="skipped_records_count"></span>');?></span>
+                    <?php esc_html_e('WP All Import', 'wp-all-import'); ?>
+                    <?php /* translators: see placeholders in the string below */ ?>
+                    <span class="created_count complete-details-item" style="display: none;"><?php echo wp_kses( sprintf(__('created <b>%s</b> new records','wp-all-import'), '<span class="created_records_count"></span>'), array('b' => array(), 'span' => array('class' => array())) );?></span><span class="updated_count complete-details-item" style="display: none;"><?php echo wp_kses( sprintf(__('updated <b>%s</b> records','wp-all-import'), '<span class="updated_records_count"></span>'), array('b' => array(), 'span' => array('class' => array())) );?></span><span class="deleted_count complete-details-item" style="display: none;"><?php echo wp_kses( sprintf(__('deleted <b>%s</b> records','wp-all-import'), '<span class="deleted_records_count"></span>'), array('b' => array(), 'span' => array('class' => array())) );?></span><span class="skipped_count complete-details-item" style="display: none;"><?php echo wp_kses( sprintf(__('skipped <b>%s</b> records','wp-all-import'), '<span class="skipped_records_count"></span>'), array('b' => array(), 'span' => array('class' => array())) );?></span>
                 </p>
                 <?php if (!empty($update_previous->options['is_selective_hashing'])): ?>
                 <p class="wpallimport-skipped-notice">
-                    <b><span class="skipped_by_hash_records_count"></span></b> <?php printf(__('records were skipped because their data in <b>%s</b> hasn\'t changed.', 'wp_all_import_plugin'), esc_url((PMXI_Plugin::$session->source['type'] != 'url') ? basename(PMXI_Plugin::$session->source['path']) : PMXI_Plugin::$session->source['path'])); ?><br/><a href="<?php echo esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-manage', 'action' => 'disable_skip_posts'), $this->baseUrl)); ?>"><?php _e('Run this import again without skipping records ›', 'wp_all_import_plugin'); ?></a>
+                    <?php /* translators: see placeholders in the string below */ ?>
+                    <b><span class="skipped_by_hash_records_count"></span></b> <?php echo wp_kses( sprintf(__('records were skipped because their data in <b>%s</b> hasn\'t changed.', 'wp-all-import'), esc_html((PMXI_Plugin::$session->source['type'] != 'url') ? basename(PMXI_Plugin::$session->source['path']) : PMXI_Plugin::$session->source['path'])), array('b' => array()) ); ?><br/><a href="<?php echo esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-manage', 'action' => 'disable_skip_posts'), $this->baseUrl)); ?>"><?php esc_html_e('Run this import again without skipping records ›', 'wp-all-import'); ?></a>
                 </p>
                 <?php endif; ?>
             </div>
 			<div class="wpallimport-content-section wpallimport-console wpallimport-complete-warning">
-				<h3><?php _e('Duplicate records detected during import', 'wp_all_import_plugin'); ?><a href="#help" class="wpallimport-help" title="<?php _e('The unique identifier is how WP All Import tells two items in your import file apart. If it is the same for two items, then the first item will be overwritten when the second is imported.', 'wp_all_import_plugin') ?>">?</a></h3>
+				<h3><?php esc_html_e('Duplicate records detected during import', 'wp-all-import'); ?><a href="#help" class="wpallimport-help" title="<?php esc_attr_e('The unique identifier is how WP All Import tells two items in your import file apart. If it is the same for two items, then the first item will be overwritten when the second is imported.', 'wp-all-import') ?>">?</a></h3>
 				<h4>
-					<?php printf(__('The file you are importing has %s records, but WP All Import only created <span class="inserted_count"></span> %s. It detected the other records in your file as duplicates. This could be because they actually are duplicates or it could be because your Unique Identifier is not unique for each record.<br><br>If your import file has no duplicates and you want to import all %s records, you should delete everything that was just imported and then edit your Unique Identifier so it\'s unique for each item.', 'wp_all_import_plugin'), esc_attr($update_previous->count), esc_attr($custom_type->labels->name), esc_attr($update_previous->count)); ?>
+					<?php /* translators: see placeholders in the string below */ ?>
+					<?php echo wp_kses( sprintf(__('The file you are importing has %1$s records, but WP All Import only created <span class="inserted_count"></span> %2$s. It detected the other records in your file as duplicates. This could be because they actually are duplicates or it could be because your Unique Identifier is not unique for each record.<br><br>If your import file has no duplicates and you want to import all %3$s records, you should delete everything that was just imported and then edit your Unique Identifier so it\'s unique for each item.', 'wp-all-import'), esc_html($update_previous->count), esc_html($custom_type->labels->name), esc_html($update_previous->count)), array('span' => array('class' => array()), 'br' => array()) ); ?>
 				</h4>				
-				<input type="button" class="button button-primary button-hero wpallimport-large-button wpallimport-delete-and-edit" rel="<?php echo esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-manage', 'action' => 'delete_and_edit'), $this->baseUrl)); ?>" value="<?php _e('Delete & Edit', 'wp_all_import_plugin'); ?>"/>
+				<input type="button" class="button wpallimport-large-button wpallimport-delete-and-edit" rel="<?php echo esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-manage', 'action' => 'delete_and_edit', '_wpnonce_delete-and-edit' => wp_create_nonce('delete-and-edit')), $this->baseUrl)); ?>" value="<?php esc_attr_e('Delete & Edit', 'wp-all-import'); ?>"/>
 			</div>
 			<div class="wpallimport-content-section wpallimport-console wpallimport-orders-complete-warning">
-				<h3><?php printf(__('<span class="skipped_records_count">%s</span> orders were skipped during this import', 'wp_all_import_plugin'), esc_attr($update_previous->skipped)); ?></h3>
+				<?php /* translators: see placeholders in the string below */ ?>
+				<h3><?php echo wp_kses( sprintf(__('<span class="skipped_records_count">%s</span> orders were skipped during this import', 'wp-all-import'), esc_html($update_previous->skipped)), array('span' => array('class' => array())) ); ?></h3>
 				<h4>
-					<?php printf(__('WP All Import is unable to import an order when it cannot match the products or customer specified. <a href="%s" style="margin: 0;">See the import log</a> for a list of which orders were skipped and why.', 'wp_all_import_plugin'), esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-history', 'action' => 'log', 'history_id' => PMXI_Plugin::$session->history_id, '_wpnonce' => wp_create_nonce( '_wpnonce-download_log' )), $this->baseUrl))); ?>
-				</h4>				
-				<input type="button" class="button button-primary button-hero wpallimport-large-button wpallimport-delete-and-edit" rel="<?php echo esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-manage', 'action' => 'delete_and_edit'), $this->baseUrl)); ?>" value="<?php _e('Delete & Edit', 'wp_all_import_plugin'); ?>"/>
+					<?php /* translators: see placeholders in the string below */ ?>
+					<?php echo wp_kses( sprintf(__('WP All Import is unable to import an order when it cannot match the products or customer specified. <a href="%s" style="margin: 0;">See the import log</a> for a list of which orders were skipped and why.', 'wp-all-import'), esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-history', 'action' => 'log', 'history_id' => PMXI_Plugin::$session->history_id, '_wpnonce' => wp_create_nonce( '_wpnonce-download_log' )), $this->baseUrl))), array('a' => array('href' => array(), 'style' => array())) ); ?>
+				</h4>
+				<input type="button" class="button wpallimport-large-button wpallimport-delete-and-edit" rel="<?php echo esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-manage', 'action' => 'delete_and_edit', '_wpnonce_delete-and-edit' => wp_create_nonce('delete-and-edit')), $this->baseUrl)); ?>" value="<?php esc_attr_e('Delete & Edit', 'wp-all-import'); ?>"/>
 			</div>
-<!--			<h3 class="wpallimport-complete-success">--><?php //printf(__('WP All Import successfully imported your file <span>%s</span> into your WordPress installation!','wp_all_import_plugin'), (PMXI_Plugin::$session->source['type'] != 'url') ? basename(PMXI_Plugin::$session->source['path']) : PMXI_Plugin::$session->source['path'])?><!--</h3>						-->
+<?php /* translators: see placeholders in the string below */ ?>
+<!--			<h3 class="wpallimport-complete-success">--><?php //printf(__('WP All Import successfully imported your file <span>%s</span> into your WordPress installation!','wp-all-import'), (PMXI_Plugin::$session->source['type'] != 'url') ? basename(PMXI_Plugin::$session->source['path']) : PMXI_Plugin::$session->source['path'])?><!--</h3>						-->
 			<?php if ($ajax_processing): ?>
-			<p class="wpallimport-log-details"><?php printf(__('There were <span class="wpallimport-errors-count">%s</span> errors and <span class="wpallimport-warnings-count">%s</span> warnings in this import. You can see these in the import log.', 'wp_all_import_plugin'), 0, 0); ?></p>
+			<?php /* translators: see placeholders in the string below */ ?>
+			<p class="wpallimport-log-details"><?php echo wp_kses( sprintf(__('There were <span class="wpallimport-errors-count">%1$s</span> errors and <span class="wpallimport-warnings-count">%2$s</span> warnings in this import. You can see these in the import log.', 'wp-all-import'), 0, 0), array('span' => array('class' => array())) ); ?></p>
 			<?php elseif ((int) PMXI_Plugin::$session->errors or (int) PMXI_Plugin::$session->warnings): ?>
-			<p class="wpallimport-log-details" style="display:block;"><?php printf(__('There were <span class="wpallimport-errors-count">%s</span> errors and <span class="wpallimport-warnings-count">%s</span> warnings in this import. You can see these in the import log.', 'wp_all_import_plugin'), esc_attr(PMXI_Plugin::$session->errors), esc_attr(PMXI_Plugin::$session->warnings)); ?></p>
+			<?php /* translators: see placeholders in the string below */ ?>
+			<p class="wpallimport-log-details" style="display:block;"><?php echo wp_kses( sprintf(__('There were <span class="wpallimport-errors-count">%1$s</span> errors and <span class="wpallimport-warnings-count">%2$s</span> warnings in this import. You can see these in the import log.', 'wp-all-import'), esc_html(PMXI_Plugin::$session->errors), esc_html(PMXI_Plugin::$session->warnings)), array('span' => array('class' => array())) ); ?></p>
 			<?php endif; ?>
 			<hr>
-			<a href="<?php echo esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-history'), $this->baseUrl)); ?>" id="download_log"><?php _e('View Logs','wp_all_import_plugin');?></a>
-			<a href="<?php echo esc_url(add_query_arg(array('page' => 'pmxi-admin-manage'), remove_query_arg(array('id','page'), $this->baseUrl))); ?>" id="manage_imports"><?php _e('Manage Imports', 'wp_all_import_plugin') ?></a>
+			<a href="<?php echo esc_url(add_query_arg(array('id' => $update_previous->id, 'page' => 'pmxi-admin-history'), $this->baseUrl)); ?>" id="download_log"><?php esc_html_e('View Logs','wp-all-import');?></a>
+			<a href="<?php echo esc_url(add_query_arg(array('page' => 'pmxi-admin-manage'), remove_query_arg(array('id','page'), $this->baseUrl))); ?>" id="manage_imports"><?php esc_html_e('Manage Imports', 'wp-all-import') ?></a>
 		</div>
 
 	</div>
 
 	<div class="wpallimport-content-section wpallimport-speed-up-notify">
 		<button class="notice-dismiss dismiss-speed-up-notify" type="button">
-			<span class="screen-reader-text"><?php _e('Hide this notice.', 'wp_all_import_plugin'); ?></span>
+			<span class="screen-reader-text"><?php esc_html_e('Hide this notice.', 'wp-all-import'); ?></span>
 		</button>
 		<div class="wpallimport-notify-wrapper">
 			<div class="found_records speedup">
-				<h3><?php _e('Want to speed up your import?', 'wp_all_import_plugin');?></h3>
-				<h4><?php _e("Check out our guide on increasing import speed.", "wp_all_import_plugin"); ?></h4>
+				<h3><?php esc_html_e('Want to speed up your import?', 'wp-all-import');?></h3>
+				<h4><?php esc_html_e("Check out our guide on increasing import speed.", "wp-all-import"); ?></h4>
 			</div>		
 		</div>		
-		<a class="button button-primary button-hero wpallimport-large-button wpallimport-speed-up-notify-read-more" href="http://www.wpallimport.com/documentation/troubleshooting/slow-imports/?utm_source=import-plugin-free&utm_medium=error&utm_campaign=slow-imports" target="_blank"><?php _e('Read More', 'wp_all_import_plugin');?></a>		
-		<span><?php _e('opens in new tab', 'wp_all_import_plugin'); ?></span>		
+		<a class="button wpallimport-large-button wpallimport-speed-up-notify-read-more" href="http://www.wpallimport.com/documentation/troubleshooting/slow-imports/?utm_source=import-plugin-free&utm_medium=error&utm_campaign=slow-imports" target="_blank"><?php esc_html_e('Read More', 'wp-all-import');?></a>
+		<span><?php esc_html_e('opens in new tab', 'wp-all-import'); ?></span>	
 	</div>
 
 	<div class="wpallimport-modal-message rad4">
@@ -128,18 +138,20 @@
 		<div class="wpallimport-content-section" style="display:block; position: relative;">
 			<div class="wpallimport-notify-wrapper">
 				<div class="found_records terminated">
-					<h3><?php _e('Your server terminated the import process', 'wp_all_import_plugin');?></h3>
-					<h4 style="width: 77%; line-height: 25px;"><?php printf(__("<a href='%s' target='_blank'>Read more</a> about how to prevent this from happening again.", "wp_all_import_plugin"), "http://www.wpallimport.com/documentation/troubleshooting/terminated-imports/?utm_source=import-plugin-free&utm_medium=error&utm_campaign=termination"); ?></h4>
+					<h3><?php esc_html_e('Your server terminated the import process', 'wp-all-import');?></h3>
+					<?php /* translators: see placeholders in the string below */ ?>
+					<h4 style="width: 77%; line-height: 25px;"><?php echo wp_kses( sprintf(__("<a href='%s' target='_blank'>Read more</a> about how to prevent this from happening again.", "wp-all-import"), esc_url("http://www.wpallimport.com/documentation/troubleshooting/terminated-imports/?utm_source=import-plugin-free&utm_medium=error&utm_campaign=termination")), array('a' => array('href' => array(), 'target' => array())) ); ?></h4>
 				</div>		
 			</div>		
-			<input type="submit" id="wpallimport-try-again" style="position: absolute; top: 30%; right: 10px; display: block; padding-top: 1px;" value="<?php _e('Continue Import','wp_all_import_plugin');?>" class="button button-primary button-hero wpallimport-large-button">
-			<span class="wp_all_import_restart_import"><?php printf(__("with <span id='wpallimport-new-records-per-iteration'>%s</span> records per iteration", 'wp_all_import_plugin'), ((ceil($update_previous->options['records_per_request']/2)) ? ceil($update_previous->options['records_per_request']/2) : 1)); ?></span>
+			<input type="submit" id="wpallimport-try-again" style="position: absolute; top: 30%; right: 10px; display: block; padding-top: 1px;" value="<?php esc_attr_e('Continue Import','wp-all-import');?>" class="button wpallimport-large-button">
+			<?php /* translators: see placeholders in the string below */ ?>
+			<span class="wp_all_import_restart_import"><?php echo wp_kses( sprintf(__("with <span id='wpallimport-new-records-per-iteration'>%s</span> records per iteration", 'wp-all-import'), esc_html((ceil($update_previous->options['records_per_request']/2)) ? ceil($update_previous->options['records_per_request']/2) : 1)), array('span' => array('id' => array())) ); ?></span>
 		</div>		
 		
 	</div>
 	
 	<fieldset id="logwrapper">
-		<legend><?php _e('Log','wp_all_import_plugin');?></legend>
+		<legend><?php esc_html_e('Log','wp-all-import');?></legend>
 		<div id="loglist"></div>		
 	</fieldset>	
 
@@ -149,16 +161,16 @@
 		<div class="wpallimport-content-section" style="display:block; position: relative;">
 			<div class="wpallimport-notify-wrapper">
 				<div class="found_records terminated" style="background-position: 0px 50% !important;">
-					<h3><?php _e('Your server terminated the import process', 'wp_all_import_plugin');?></h3>
-					<h4 style="width: 78%; line-height: 25px;"><?php _e("Ask your host to check your server's error log. They will be able to determine why your server is terminating the import process.", "wp_all_import_plugin"); ?></h4>
+					<h3><?php esc_html_e('Your server terminated the import process', 'wp-all-import');?></h3>
+					<h4 style="width: 78%; line-height: 25px;"><?php esc_html_e("Ask your host to check your server's error log. They will be able to determine why your server is terminating the import process.", "wp-all-import"); ?></h4>
 				</div>
 			</div>		
-			<a style="position: absolute; top: 35%; right: 10px; display: block; padding-top: 1px;" class="button button-primary button-hero wpallimport-large-button" href="http://www.wpallimport.com/documentation/troubleshooting/terminated-imports/?utm_source=import-plugin-free&utm_medium=error&utm_campaign=docs" target="_blank"><?php _e('Read More', 'wp_all_import_plugin');?></a>		
+			<a style="position: absolute; top: 35%; right: 10px; display: block; padding-top: 1px;" class="button wpallimport-large-button" href="http://www.wpallimport.com/documentation/troubleshooting/terminated-imports/?utm_source=import-plugin-free&utm_medium=error&utm_campaign=docs" target="_blank"><?php esc_html_e('Read More', 'wp-all-import');?></a>		
 		</div>
 	</span>
 
     <div class="wpallimport-display-columns wpallimport-margin-top-forty">
-		<?php echo apply_filters('wpallimport_footer', ''); ?>
+		<?php echo wp_kses_post( apply_filters('wpallimport_footer', '') ); ?>
     </div>
 	
 </div>
@@ -198,13 +210,15 @@
 
 	$('.dismiss-speed-up-notify').click(function(e){
 		e.preventDefault();
-		$.post('admin.php?page=pmxi-admin-settings&action=dismiss_speed_up', {dismiss: true}, function (data) {}, 'html');
+		$.post('admin.php?page=pmxi-admin-settings&action=dismiss_speed_up', {dismiss: true,
+            security: wp_all_import_security }, function (data) {}, 'html');
 		$('.wpallimport-speed-up-notify').addClass('dont_show_again').slideUp();
 	});
 
 	$('.wpallimport-speed-up-notify-read-more').click(function(e){
 		e.preventDefault();
-		$.post('admin.php?page=pmxi-admin-settings&action=dismiss_speed_up', {dismiss: true}, function (data) {}, 'html');
+		$.post('admin.php?page=pmxi-admin-settings&action=dismiss_speed_up', {dismiss: true,
+            security: wp_all_import_security }, function (data) {}, 'html');
 		$('.wpallimport-speed-up-notify').addClass('dont_show_again').slideUp();
 		window.open($(this).attr('href'), '_blank');
 	});

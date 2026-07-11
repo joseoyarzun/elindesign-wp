@@ -71,6 +71,28 @@ class OMAPI_Partners {
 	}
 
 	/**
+	 * Get the AffiliateWP ID.
+	 *
+	 * @since 2.16.21
+	 *
+	 * @return string The referral id.
+	 */
+	public static function get_affwp_id() {
+		$ref_id = '';
+
+		if ( defined( 'OPTINMONSTER_AFFWP_ID' ) ) {
+			$ref_id = OPTINMONSTER_AFFWP_ID;
+		}
+
+		// If we still don't have a ref id by this point check the DB for an option.
+		if ( empty( $ref_id ) ) {
+			$ref_id = get_option( 'optinmonster_affwp_id', $ref_id );
+		}
+
+		return apply_filters( 'optinmonster_affwp_id', $ref_id );
+	}
+
+	/**
 	 * Get the trial Partner ID.
 	 *
 	 * 3 ways to specify an ID, ordered by highest to lowest priority:
@@ -131,16 +153,22 @@ class OMAPI_Partners {
 	protected static function get_partner_url() {
 		$id   = self::get_trial_id();
 		$type = 'trial';
+
+		if ( empty( $id ) ) {
+			$id   = self::get_affwp_id();
+			$type = 'affwp';
+		}
+
 		if ( empty( $id ) ) {
 			$id   = self::get_sas_id();
 			$type = 'sas';
 		}
 
 		// Return the regular WP landing page by default.
-		$url = self::LANDING_URL;
+		$url = 'affwp' === $type ? add_query_arg( 'ref', $id, self::LANDING_URL ) : self::LANDING_URL;
 
 		// Return the trial link if we have a trial ID.
-		if ( ! empty( $id ) ) {
+		if ( 'affwp' !== $type && ! empty( $id ) ) {
 			$url = self::get_affiliate_url( $id );
 		}
 
@@ -166,7 +194,7 @@ class OMAPI_Partners {
 	public static function has_partner_url() {
 		$url = self::get_partner_url();
 
-		return false === strpos( $url, 'optinmonster.com/wp' )
+		return false === strpos( $url, 'optinmonster.com/wp' ) && false !== strpos( $url, 'ref=' )
 			? $url
 			: false;
 	}
@@ -181,6 +209,11 @@ class OMAPI_Partners {
 	 */
 	public static function get_id() {
 		$id = self::get_trial_id();
+
+		if ( empty( $id ) ) {
+			$id = self::get_affwp_id();
+		}
+
 		if ( empty( $id ) ) {
 			$id = self::get_sas_id();
 		}
@@ -190,7 +223,7 @@ class OMAPI_Partners {
 			// Try to get the ID from the partner url.
 			$url = self::has_partner_url();
 			if ( $url ) {
-				$parsed = parse_url( $url );
+				$parsed = wp_parse_url( $url );
 				if (
 					! empty( $parsed['host'] )
 					// Only get the ID if it's a shareasale url.
@@ -218,5 +251,4 @@ class OMAPI_Partners {
 	public static function referred_by() {
 		return sanitize_text_field( get_option( 'optinmonster_referred_by', '' ) );
 	}
-
 }

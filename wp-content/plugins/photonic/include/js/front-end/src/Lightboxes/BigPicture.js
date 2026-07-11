@@ -12,7 +12,7 @@ export class PhotonicBigPicture extends Lightbox {
 			solo.addEventListener('click', e => {
 				e.preventDefault();
 				const img = solo.querySelector('img');
-				let title = solo.getAttribute('data-title') || solo.getAttribute('title') || img.getAttribute('alt');
+				let title = solo.getAttribute('data-title') || solo.getAttribute('title') || Util.getText(img.getAttribute('alt'));
 				if (title != null) {
 					img.setAttribute('data-caption', title);
 				}
@@ -51,7 +51,7 @@ export class PhotonicBigPicture extends Lightbox {
 		}
 		if (Object.keys(options).length > 2) {
 			if (a.getAttribute('title') != null) {
-				a.setAttribute('data-caption', a.getAttribute('title'));
+				a.setAttribute('data-caption', Util.getText(a.getAttribute('title')));
 			}
 			a.addEventListener('click', e => {
 				e.preventDefault();

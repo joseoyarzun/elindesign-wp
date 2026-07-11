@@ -8,8 +8,8 @@ class WCML_Install {
 	const CHUNK_SIZE = 1000;
 
 	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
+	 * @param woocommerce_wpml      $woocommerce_wpml
+	 * @param \WPML\Core\ISitePress $sitepress
 	 */
 	public static function initialize( $woocommerce_wpml, $sitepress ) {
 		if ( is_admin() ) {
@@ -26,7 +26,7 @@ class WCML_Install {
 	 * @param woocommerce_wpml $woocommerce_wpml
 	 * @param SitePress        $sitepress
 	 */
-	private static function initialize_full( $woocommerce_wpml, $sitepress ) {
+	private static function initialize_full( $woocommerce_wpml, SitePress $sitepress ) {
 		// Install routine.
 		if ( empty( $woocommerce_wpml->settings['set_up'] ) ) { // from 3.2.
 
@@ -106,7 +106,7 @@ class WCML_Install {
 			]
 		);
 
-		$WCML_Setup_UI = new WCML_Setup_UI( $woocommerce_wpml );
+		$WCML_Setup_UI = new WCML_Setup_UI();
 		$WCML_Setup_UI->add_hooks();
 		$WCML_Setup = new WCML_Setup( $WCML_Setup_UI, new WCML_Setup_Handlers( $woocommerce_wpml ), $woocommerce_wpml, $sitepress );
 		$WCML_Setup->setup_redirect();
@@ -286,8 +286,14 @@ class WCML_Install {
 		<div id="message" class="updated error">
 			<p>
 				<?php
-				/* translators: %1$s and %2$s are opening and closing HTML italic tags and %3$s and %4$s are opening and closing HTML link tags */
-				printf( esc_html__( 'We detected that the %1$sproduct_type%2$s field was set incorrectly for some product translations. This happened because the product_type taxonomy was translated. You can fix this in the WooCommerce Multilingual & Multicurrency %3$stroubleshooting page%4$s.', 'woocommerce-multilingual' ), '<i>', '</i>', '<a href="' . esc_url( admin_url( 'admin.php?page=wpml-wcml&tab=troubleshooting' ) ) . '">', '</a>' );
+				printf(
+					/* translators: %1$s and %2$s are opening and closing HTML italic tags and %3$s and %4$s are opening and closing HTML link tags */
+					esc_html__( 'We detected that the %1$sproduct_type%2$s field was set incorrectly for some product translations. This happened because the product_type taxonomy was translated. You can fix this in the WPML Multilingual & Multicurrency for WooCommerce %3$stroubleshooting page%4$s.', 'woocommerce-multilingual' ),
+					'<i>',
+					'</i>',
+					'<a href="' . esc_url( \WCML\Utilities\AdminUrl::getTroubleshootingTab() ) . '">',
+					'</a>'
+				);
 				?>
 			</p>
 		</div>
@@ -306,7 +312,7 @@ class WCML_Install {
 		$settings = $woocommerce_wpml->get_settings();
 
 		$default_language   = $sitepress->get_default_language();
-		$default_categories = isset( $settings['default_categories'] ) ? $settings['default_categories'] : [];
+		$default_categories = $settings['default_categories'] ?? [];
 
 		foreach ( $sitepress->get_active_languages() as $language ) {
 			if ( isset( $default_categories[ $language['code'] ] ) ) {
@@ -316,15 +322,17 @@ class WCML_Install {
 			$sitepress->switch_locale( $language['code'] );
 			$translated_cat_name = __( 'Uncategorized', 'sitepress' );
 			$translated_cat_name = 'Uncategorized' === $translated_cat_name && 'en' !== $language['code'] ? 'Uncategorized @' . $language['code'] : $translated_cat_name;
+			/** @var array|false $translated_term */
 			$translated_term     = get_term_by( 'name', $translated_cat_name, 'product_cat', ARRAY_A );
 			$sitepress->switch_locale();
 
 			// check if the term already exists.
 			if ( ! $translated_term ) {
+				/** @var array|false|WP_Error $translated_term */
 				$translated_term = wp_insert_term( $translated_cat_name, 'product_cat' );
 			}
 
-			if ( $translated_term && ! is_wp_error( $translated_term ) ) {
+			if ( ! is_wp_error( $translated_term ) && is_array( $translated_term ) ) {
 				// add it to settings.
 				$settings['default_categories'][ $language['code'] ] = $translated_term['term_taxonomy_id'];
 

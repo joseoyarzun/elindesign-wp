@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 if ( ! function_exists('reverse_taxonomies_html') ) {
 
@@ -20,7 +22,7 @@ if ( ! function_exists('reverse_taxonomies_html') ) {
 	            		<?php do_action('pmxi_category_view', $cat, $i, $ctx_name, $entry); ?>
 	            	</div>
 	            	<a href="javascript:void(0);" class="icon-item remove-ico"></a>
-	            	<?php echo reverse_taxonomies_html($post_taxonomies, $child_cat->item_id, $i, $ctx_name, $entry); ?>
+	            	<?php echo wp_kses_post( reverse_taxonomies_html($post_taxonomies, $child_cat->item_id, $i, $ctx_name, $entry) ); ?>
 	            </li>
 				<?php
 			}

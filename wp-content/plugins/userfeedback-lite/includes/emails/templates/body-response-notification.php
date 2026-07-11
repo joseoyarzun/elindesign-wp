@@ -1,3 +1,7 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variables are injected by the caller via extract() or direct scope.
+?>
 <!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 
@@ -152,7 +156,7 @@
 							<tr>
 							  <td style="width:180px;">
 								<a href="<?php echo esc_url( get_site_url() ); ?>" target="_blank">
-								  <img alt="<?php echo esc_attr__( 'UserFeedback Summary', 'userfeedback' ); ?>" height="auto" src="<?php echo esc_url( $header_image['url'] ); ?>" srcset="<?php echo esc_url( $header_image['2x'] ) . ' 2x'; ?>" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="180">
+								  <img alt="<?php echo esc_attr__( 'UserFeedback Summary', 'userfeedback-lite' ); ?>" height="auto" src="<?php echo esc_url( $header_image['url'] ); ?>" srcset="<?php echo esc_url( $header_image['2x'] ) . ' 2x'; ?>" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="180">
 								</a>
 							  </td>
 							</tr>
@@ -170,7 +174,7 @@
 							<tr>
 							  <td style="width:180px;">
 								<a href="<?php echo esc_url( get_site_url() ); ?>" target="_blank">
-								  <img alt="<?php echo esc_attr__( 'UserFeedback Summary', 'userfeedback' ); ?>" height="auto" src="<?php echo esc_url( $header_image['url'] ); ?>" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="180">
+								  <img alt="<?php echo esc_attr__( 'UserFeedback Summary', 'userfeedback-lite' ); ?>" height="auto" src="<?php echo esc_url( $header_image['url'] ); ?>" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="180">
 								</a>
 							  </td>
 							</tr>
@@ -280,7 +284,7 @@
 						  <tbody>
 							<tr>
 							  <td align="center" style="font-size:0px;padding:0;padding-right:0;padding-bottom:0;padding-left:0;word-break:break-word;">
-								<div style="font-family: Helvetica,Arial,sans-serif; font-size: 13px; line-height: 1; text-align: center; color: #989898;"><?php echo esc_html__( 'Sent from ', 'userfeedback' ); ?> <a style="color: #989898" target="_blank" href="<?php echo esc_url( get_site_url() ); ?>"><?php echo esc_url( get_site_url() ); ?></a></div>
+								<div style="font-family: Helvetica,Arial,sans-serif; font-size: 13px; line-height: 1; text-align: center; color: #989898;"><?php echo esc_html__( 'Sent from ', 'userfeedback-lite' ); ?> <a style="color: #989898" target="_blank" href="<?php echo esc_url( get_site_url() ); ?>"><?php echo esc_url( get_site_url() ); ?></a></div>
 							  </td>
 							</tr>
 						  </tbody>

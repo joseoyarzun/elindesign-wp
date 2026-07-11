@@ -25,7 +25,7 @@ if ( ! class_exists( 'OceanWP_Custom_Code_Customizer' ) ) :
 		public function __construct() {
 
 			add_action( 'customize_register', array( $this, 'customizer_options' ) );
-			add_action( 'ocean_footer_js', array( $this, 'output_custom_js' ), 9999 );
+			add_action( 'wp_enqueue_scripts', array( $this, 'output_custom_js' ), 9999 );
 
 		}
 
@@ -43,7 +43,7 @@ if ( ! class_exists( 'OceanWP_Custom_Code_Customizer' ) ) :
 				$section,
 				array(
 					'title'    => esc_html__( 'Custom CSS/JS', 'ocean-extra' ),
-					'priority' => 210,
+					'priority' => 18,
 				)
 			);
 
@@ -59,13 +59,16 @@ if ( ! class_exists( 'OceanWP_Custom_Code_Customizer' ) ) :
 			);
 
 			$wp_customize->add_control(
-				new WP_Customize_Control(
+				new WP_Customize_Code_Editor_Control(
 					$wp_customize,
 					'ocean_custom_js',
 					array(
 						'label'       => esc_html__( 'Custom JS', 'ocean-extra' ),
 						'description' => esc_html__( 'You need to reload to see the changes. No need to add the <script> tags.', 'ocean-extra' ),
-						'type'        => 'textarea',
+						'code_type'   => 'text/javascript',
+						'input_attrs' => array(
+							'aria-describedby' => 'editor-keyboard-trap-help-1 editor-keyboard-trap-help-2 editor-keyboard-trap-help-3 editor-keyboard-trap-help-4',
+						),
 						'section'     => $section,
 						'settings'    => 'ocean_custom_js',
 						'priority'    => 10,
@@ -82,13 +85,14 @@ if ( ! class_exists( 'OceanWP_Custom_Code_Customizer' ) ) :
 		 *
 		 * @param string $output Custom JS output.
 		 */
-		public function output_custom_js( $output ) {
+		public function output_custom_js() {
 
 			$js = get_theme_mod( 'ocean_custom_js', false );
 			if ( $js ) {
-				$output .= $js;
+				// $output .= $js;
+				wp_add_inline_script( 'oceanwp-main', $js );
 			}
-			return $output;
+			// return $output;
 
 		}
 

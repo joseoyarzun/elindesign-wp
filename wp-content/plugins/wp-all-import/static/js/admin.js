@@ -5,62 +5,451 @@
 
 	if ( ! $('body.wpallimport-plugin').length) return; // do not execute any code if we are not on plugin page
 
+	// Handle wizard type switching for import options (only on relevant pages)
+	function handleWizardTypeChange() {
+		// Only run on pages that have wizard_type inputs (Step 4 and import edit settings)
+		var $wizardTypeInputs = $('input[name="wizard_type"]');
+		if ($wizardTypeInputs.length === 0) {
+			return; // Not on a page with wizard type options
+		}
+
+		$wizardTypeInputs.on('change', function() {
+			var wizardType = $(this).val();
+			var duplicateMatchingInput = $('input[name="duplicate_matching"][type="hidden"]');
+
+			if (wizardType === 'new') {
+				// For new items, set duplicate_matching to auto
+				duplicateMatchingInput.val('auto');
+			} else if (wizardType === 'matching') {
+				// For existing items, set duplicate_matching to manual
+				duplicateMatchingInput.val('manual');
+			}
+
+			// Update delete missing behavior after duplicate_matching is set
+			updateDeleteMissingBehavior(true);
+		});
+
+		// Handle duplicate matching radio buttons for existing items
+		$('input[name="duplicate_indicator"]').on('change', function() {
+			if ($('input[name="wizard_type"]:checked').val() === 'matching') {
+				// The duplicate_matching stays as 'manual' for existing items
+				// The specific matching method is handled by duplicate_indicator
+			}
+		});
+
+		// Initialize the correct duplicate_matching value on page load
+		var $duplicateMatchingInput = $('input[name="duplicate_matching"][type="hidden"]');
+
+		if ($duplicateMatchingInput.length > 0) {
+			var initialWizardType = $wizardTypeInputs.filter(':checked').val();
+
+			if (initialWizardType === 'new') {
+				$duplicateMatchingInput.val('auto');
+			} else if (initialWizardType === 'matching') {
+				$duplicateMatchingInput.val('manual');
+			} else {
+				// Check if 'new' is the default (first radio button)
+				var $firstRadio = $wizardTypeInputs.first();
+				if ($firstRadio.val() === 'new') {
+					$firstRadio.prop('checked', true);
+					$duplicateMatchingInput.val('auto');
+				}
+			}
+		}
+	}
+
+	// Initialize wizard type handling after a short delay to ensure all elements are loaded
+	setTimeout(function() {
+		handleWizardTypeChange();
+	}, 100);
+
+	// Find all Select2 elements and make sure change events propagate
+	$(document).ready(function() {
+		// For all existing select2 instances
+		$('.select2-hidden-accessible').each(function() {
+			$(this).on('select2:select', function(e) {
+				// Trigger the native change event
+				$(this).trigger('change');
+			});
+		});
+
+		// For any future select2 instances - use event delegation
+		$(document).on('select2:select', '.select2-hidden-accessible', function(e) {
+			// Trigger the native change event if it hasn't been triggered already
+			if (!e.originalEvent) {
+				$(this).trigger('change');
+			}
+		});
+	});
+
+	var fix_tag_position = function(){
+		if ($('.wpallimport-layout').length && $('.tag').length && $('.wpallimport-content-section').length){
+			let offset_top = $('.wpallimport-content-section').eq(0).offset().top;
+			if ($('.xpath_filtering').length) {
+				offset_top = $('.wpallimport-content-section').eq(2).offset().top;
+			}
+			let wordpress_adminbar_height = $('#wpadminbar').height();
+			let position_top = $(document).scrollTop() + wordpress_adminbar_height + 20;
+
+			$('.tag').css('margin-top', '0');
+
+			if (position_top > offset_top){
+				$('.tag').css({'top': position_top - offset_top});
+				$('.wpallimport-xml').css({'max-height': ($(window).height() - 220) + 'px' });
+			} else {
+				$('.tag').css({'top': '0' });
+				$('.wpallimport-xml').css({'max-height': ($(window).height() - 220) + 'px' });
+			}
+		}
+	}
+    
+	// Global declaration of $wpAllImportDrag and $wpAllImportOriginalColor so we can use them on dynamic elements.
+	var $wpAllImportDrag = null;
+	var $wpAllImportOriginalColor = '';
+
+	function wpaiMakeDroppable(){
+		// Click-to-insert lives on wpaiBindGlobalClickHandler. The per-input
+		// flag prevents stacked droppables: $.fn.xml('dragable') runs on every
+		// tag-tree render.
+		$('input, textarea').each(function () {
+			var $input = $(this);
+			if ($input.data('wpai-droppable-applied')) return;
+			$input.data('wpai-droppable-applied', true);
+			$input.droppable({
+				drop: function (event, ui) {
+					var oldValue = $(this).val();
+					var newValue = ui.draggable.data('xpath') || '';
+					$(this).val(oldValue + newValue);
+				},
+				greedy: true,
+				tolerance: 'pointer',
+				disabled: false
+			});
+		});
+
+	}
+
+	function wpaiMakeDroppableTinyMce() {
+
+		// Ensure tinymce is defined before use.
+		if (typeof tinymce === 'undefined') {
+			return;
+		}
+
+		// Get tinymce instance
+		var ed = tinymce.get('content');
+
+		// Function to get current iframe bounds.
+		function getIframeBounds() {
+			var tinymceIframe = $('#content_ifr');
+			if (tinymceIframe.length === 0) {
+				return null;
+			}
+			var iframeOffset = tinymceIframe.offset();
+			return {
+				top: iframeOffset.top - $(window).scrollTop(),
+				left: iframeOffset.left - $(window).scrollLeft(),
+				bottom: iframeOffset.top + tinymceIframe.height() - $(window).scrollTop(),
+				right: iframeOffset.left + tinymceIframe.width() - $(window).scrollLeft()
+			};
+		}
+
+		// Initial drop area coordinates.
+		var dropArea = getIframeBounds();
+		if (!dropArea) {
+			return;
+		}
+
+		var proxy;
+
+		// Replaces the config from the original .ui-draggable bind site on every
+		// MutationObserver fire, so it must mirror zIndex/appendTo/iframeFix.
+		$(".ui-draggable").draggable({
+			helper: function () {
+				return $('<div>').text($(this).data('xpath'));
+			},
+			zIndex: 2147483646,
+			appendTo: 'body',
+			iframeFix: true,
+			start: function (event, ui) {
+				proxy = ui.helper.clone().appendTo('body').css('z-index', 2147483646);
+			},
+			drag: function (event, ui) {
+				// Recalculate drop area for iframe.
+				dropArea = getIframeBounds();
+
+				// Check if draggable is over the tinymce, update proxy to follow cursor and hide the helper
+				if (
+					event.clientX >= dropArea.left &&
+					event.clientX <= dropArea.right &&
+					event.clientY >= dropArea.top &&
+					event.clientY <= dropArea.bottom
+				) {
+					proxy.css({ top: event.pageY, left: event.pageX });
+					ui.helper.hide();
+				} else {
+					proxy.css({ top: 'auto', left: 'auto' });
+					ui.helper.show();
+				}
+			},
+			stop: function (event, ui) {
+				// Recalculate drop area for iframe.
+				dropArea = getIframeBounds();
+
+				// Append to tinymce content if it was dropped on tinymce
+				if (
+					event.clientX >= dropArea.left &&
+					event.clientX <= dropArea.right &&
+					event.clientY >= dropArea.top &&
+					event.clientY <= dropArea.bottom
+				) {
+					ed.setContent(
+						ed.getContent() + $(this).data('xpath')
+					);
+				}
+				// Clean up proxy and show the helper again
+				proxy.remove();
+				ui.helper.show();
+			},
+		});
+
+		ed.on('click', function (e) {
+			if (!$wpAllImportDrag) return;
+
+			let oldValue = ed.getContent();
+			let newValue = $wpAllImportDrag.data('xpath') || '';
+
+			ed.setContent(oldValue + newValue);
+
+			$wpAllImportDrag.css('color', $wpAllImportOriginalColor).css('font-weight', 'bold');
+			$wpAllImportDrag = null;
+		});
+	}
+
+	function wpaiMakeDroppableSingle($parent) {
+
+		if($parent.hasClass('dragging')){
+			return;
+		}
+
+		// Per-input flag prevents stacked droppables — the MutationObserver
+		// fires for every DOM addition inside .wpallimport-layout.
+		$parent.find('input, textarea').each(function() {
+			let $input = $(this);
+			if ($input.data('wpai-droppable-applied')) return;
+			$input.data('wpai-droppable-applied', true);
+
+			$input.droppable({
+				drop: function (event, ui) {
+					let oldValue = $(this).val();
+					let newValue = ui.draggable.data('xpath') || '';
+					$(this).val(oldValue + newValue);
+				},
+				greedy: true,
+				tolerance: 'pointer'
+			});
+		});
+
+	}
+
+	function wpaiBindGlobalClickHandler() {
+		// Scoped to import form + wp-pointer popups — a wider scope would
+		// consume $wpAllImportDrag on unrelated admin inputs.
+		var $doc = $(document);
+		if ($doc.data('wpai-click-bound')) return;
+		$doc.data('wpai-click-bound', true);
+		$doc.on('click', 'input, textarea', function (e) {
+			if (!$wpAllImportDrag) return;
+			if (!$(this).closest('.wpallimport-layout, .wp-pointer').length) return;
+
+			let oldValue = $(this).val();
+			let newValue = $wpAllImportDrag.data('xpath') || '';
+			$(this).val(oldValue + newValue);
+
+			$wpAllImportDrag.css('color', $wpAllImportOriginalColor).css('font-weight', 'bold');
+			$wpAllImportDrag = null;
+		});
+	}
+
+	function wpaiBindPopupInputs($popup) {
+		// wp-pointer innerHTML-copies its content, dropping jQuery UI droppable
+		// state — re-apply on the fresh DOM nodes.
+		$popup.find('input, textarea').each(function () {
+			var $input = $(this);
+			if ($input.data('wpai-droppable-applied')) return;
+			$input.data('wpai-droppable-applied', true);
+
+			$input.droppable({
+				drop: function (event, ui) {
+					var oldValue = $(this).val();
+					var newValue = ui.draggable.data('xpath') || '';
+					$(this).val(oldValue + newValue);
+				},
+				greedy: true,
+				tolerance: 'pointer'
+			});
+		});
+	}
+
+	function wpaiObserveFieldAddition()
+	{
+
+		// Make drag and drop work for dynamically added elements.
+		// Select the node that will be observed for child addition
+		let wpaiXmlTargetNode = document.querySelector('.wpallimport-layout');
+
+		if(!wpaiXmlTargetNode){
+			return;
+		}
+
+		wpaiBindGlobalClickHandler();
+
+		// Options for the observer (which mutations to observe)
+		let wpaiXmlConfig = {childList: true, subtree: true};
+
+		// Callback function to execute when mutations are observed
+		let wpaiXmlCallback = function (mutationsList) {
+			for (let mutation of mutationsList) {
+				if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+					mutation.addedNodes.forEach((node) => {
+						if (node.nodeType === Node.ELEMENT_NODE) {
+
+								wpaiMakeDroppableSingle($(node));
+								wpaiMakeDroppableTinyMce();
+
+						}
+					});
+				}
+			}
+		};
+
+		// Create an observer instance linked to the callback function
+		let wpaiXmlObserver = new MutationObserver(wpaiXmlCallback);
+
+		// Start observing the target node for configured mutations
+		wpaiXmlObserver.observe(wpaiXmlTargetNode, wpaiXmlConfig);
+	}
+
+	wpaiObserveFieldAddition();
+
     function wpai_set_custom_select_image() {
+        // Only process if custom_type_selector exists
+        if (!jQuery('#custom_type_selector').length) {
+            return;
+        }
+
         // The class name to add to the element.
-        var class_name = jQuery('[class^="dd-selected-text dashicon"]').text().toLowerCase();
-        class_name = class_name.replace( /\s+/g, '' );
+        var $selectedItem = jQuery('#custom_type_selector').next('.select2-container').find('.select2-selection__rendered .dashicon');
+        if ($selectedItem.length) {
+            var class_name = $selectedItem.closest('.select2-selection__rendered').text().toLowerCase();
+            class_name = class_name.replace(/\s+/g, '');
 
-        // This gets the image URL out of the class.
-        var class_check = jQuery('[class^="dd-selected-text dashicon"]').attr( 'class' );
-        class_check = class_check.replace( "dd-selected-text dashicon ", "" );
+            // This gets the image URL out of the class.
+            var class_check = $selectedItem.attr('class');
+            if (class_check) {
+                class_check = class_check.replace("dashicon ", "");
 
-        // String of allowed images.
-        var imgs = ['jpg','jpeg','jpe','gif','png','bmp'], length = imgs.length;
-        while( length-- ) {
-            if ( class_check.indexOf( imgs[ length ] ) != -1 ) {
-
-                // They have defined an image URL, which means it's a custom image and we need to add the class.
-                jQuery('[class^="dd-selected-text dashicon"]').addClass("wpaiimgfor" + class_name);
-                jQuery('[class^="dd-selected-text dashicon"]').removeClass( class_check );
-
+                // String of allowed images.
+                var imgs = ['jpg','jpeg','jpe','gif','png','bmp'], length = imgs.length;
+                while(length--) {
+                    if (class_check.indexOf(imgs[length]) != -1) {
+                        // They have defined an image URL, which means it's a custom image and we need to add the class.
+                        $selectedItem.addClass("wpaiimgfor" + class_name);
+                        $selectedItem.removeClass(class_check);
+                    }
+                }
             }
         }
+
+        // The new CSS handles icons automatically for custom_type_selector
+        // No need for complex JavaScript manipulation
     }
 
     // Rapid Add-On API Images
     $(document).ready(function($){
+
+
         var class_check;
         var original_class;
         var new_class_name;
         var allstyles = "<style type='text/css'>";
 
-        $.each($('[class^="dd-option-text"]'), function(key, value) {
-            class_check = $(this).attr('class');
-            if ( class_check.includes( 'dashicon' ) ) {
+        // Process custom images in the dropdown options
+        $('#custom_type_selector option').each(function() {
+            var imagesrc = $(this).attr('data-imagesrc');
+            if (imagesrc && imagesrc.includes('dashicon')) {
+                // Extract the custom image class if present
+                var dashiconClass = imagesrc.replace('dashicon ', '');
 
-                // Grab the URL to the image by removing the other classes out of the string.
-                class_check = class_check.replace( "dd-option-text dashicon ", "" );
-
-                // Build the class name that we need to append to head.
+                // Build the class name based on the option text
                 new_class_name = $(this).text().toLowerCase();
-                new_class_name = new_class_name.replace( /\s+/g, '' );
+                new_class_name = new_class_name.replace(/\s+/g, '');
 
                 var imgs = ['jpg','jpeg','jpe','gif','png','bmp'],
                 length = imgs.length;
-                while( length-- ) {
-                    if ( class_check.indexOf( imgs[ length ] ) != -1 ) {
-                        // They've defined a custom image URL, so we need to append the class to the head and add it to the list item.
-                        allstyles = allstyles + ".wpaiimgfor" + new_class_name + ":before { font-family: 'dashicons'; font-size: 24px; float: left; margin: 2px 5px 2px 2px;background-image: url(" + class_check + "); background-repeat: no-repeat; background-position: center center; content:'';height: 25px;width:24px; }";
-                        allstyles = allstyles + "label.dd-option-text.dashicon.wpaiimgfor" + new_class_name + " { top: 2px !important; }";
-                        $(this).addClass("wpaiimgfor" + new_class_name);
-                        $(this).removeClass( class_check );
+                while(length--) {
+                    if (dashiconClass.indexOf(imgs[length]) != -1) {
+                        // They've defined a custom image URL, so we need to append the class to the head
+                        // More specific selectors to ensure styles are applied ONLY to custom_type_selector
+                        allstyles = allstyles + ".wpallimport-plugin #custom_type_selector + .select2-container .wpaiimgfor" + new_class_name + ":before { font-family: 'dashicons'; font-size: 24px; float: left; margin: 2px 5px 2px 2px; background-image: url(" + dashiconClass + "); background-repeat: no-repeat; background-position: center center; content:''; height: 25px; width:24px; }";
+                        allstyles = allstyles + ".wpallimport-plugin #custom_type_selector + .select2-container .select2-selection__rendered .dashicon.wpaiimgfor" + new_class_name + " { position: relative; top: 2px; }";
+                        allstyles = allstyles + ".wpallimport-plugin #custom_type_selector + .select2-container ~ .select2-dropdown .select2-results__option .dashicon.wpaiimgfor" + new_class_name + " { position: relative; top: 2px; }";
+                        allstyles = allstyles + ".wpallimport-plugin #custom_type_selector ~ .wpallimport-select2-dropdown .select2-results__option .dashicon.wpaiimgfor" + new_class_name + " { position: relative; top: 2px; }";
+
+                        // Add more specific rules for Select2 dropdown - ONLY for custom_type_selector
+                        allstyles = allstyles + ".wpallimport-plugin #custom_type_selector + .select2-container ~ .select2-dropdown .select2-results__option .dashicon.wpaiimgfor" + new_class_name + ":before { background-image: url(" + dashiconClass + "); }";
+                        allstyles = allstyles + ".wpallimport-plugin #custom_type_selector ~ .wpallimport-select2-dropdown .select2-results__option .dashicon.wpaiimgfor" + new_class_name + ":before { background-image: url(" + dashiconClass + "); }";
+                        allstyles = allstyles + ".wpallimport-plugin #custom_type_selector + .select2-container .select2-selection__rendered .dashicon.wpaiimgfor" + new_class_name + ":before { background-image: url(" + dashiconClass + "); }";
+
+                        // Store the custom class in a data attribute for use by templateResult and templateSelection
+                        $(this).attr('data-custom-image-class', "wpaiimgfor" + new_class_name);
                     }
                 }
             }
         });
-        // Append all of the classes to head.
-        allstyles = allstyles + "</style>";
-        $( allstyles ).appendTo("head");
+
+        // Only append styles if we actually have custom images for custom_type_selector
+        if (allstyles.length > 25) { // More than just the opening style tag
+            allstyles = allstyles + "</style>";
+            $(allstyles).appendTo("head");
+        }
+
+        // Initialize Select2 after processing custom images
+        setTimeout(function() {
+            // Trigger a change on the custom_type_selector to ensure proper initialization
+            if ($('#custom_type_selector').length) {
+                wpai_set_custom_select_image();
+
+                // Handle custom_type_selector dropdown opening
+                $('#custom_type_selector').on('select2:open', function() {
+                    setTimeout(function() {
+                        var $dropdown = $('.select2-dropdown');
+                        $dropdown.addClass('custom-type-dropdown');
+
+                        // Add dashicon classes to dropdown options based on data-imagesrc for Select2 v4
+                        $('#custom_type_selector option').each(function(index) {
+                            var $option = $(this);
+                            var imagesrc = $option.attr('data-imagesrc');
+                            if (imagesrc) {
+                                var $dropdownOption = $('.select2-dropdown .select2-results__option:eq(' + index + ')');
+                                if ($dropdownOption.length && !$dropdownOption.find('.dashicon').length) {
+                                    // Clear any existing dashicon classes
+                                    $dropdownOption.find('.dashicon').remove();
+                                    // Add the dashicon span with the appropriate class
+                                    var iconClass = imagesrc.replace('dashicon ', '');
+                                    $dropdownOption.prepend('<span class="dashicon ' + iconClass + '"></span>');
+                                }
+                            }
+                        });
+                    }, 50); // Small delay to ensure dropdown is rendered
+                });
+
+                // Handle custom_type_selector dropdown closing for Select2 v4
+                $('#custom_type_selector').on('select2:close', function() {
+                    $('.select2-dropdown').removeClass('custom-type-dropdown');
+                });
+            }
+        }, 100);
     });
 
 	// fix wpallimport-layout position
@@ -91,6 +480,28 @@
 		$(this).removeAttr('title');
 	});
 
+    // help icons
+    $('.scheduling-disabled').parent().tipsy({
+        gravity: function() {
+            var ver = 'n';
+            if ($(document).scrollTop() < $(this).offset().top - $('.tipsy').height() - 2) {
+                ver = 's';
+            }
+            var hor = '';
+            if ($(this).offset().left + $('.tipsy').width() < $(window).width() + $(document).scrollLeft()) {
+                hor = 'w';
+            } else if ($(this).offset().left - $('.tipsy').width() > $(document).scrollLeft()) {
+                hor = 'e';
+            }
+            return ver + hor;
+        },
+        live: '.scheduling-disabled',
+        html: true,
+        delayOut: 2000,
+        opacity: 1,
+		trigger: "click"
+    });
+
 	// swither show/hide logic
 	$('input.switcher').on("change", function (e) {
 		if ($(this).is(':radio:checked')) {
@@ -107,15 +518,47 @@
 
 	// swither show/hide logic
 	$('input.switcher-horizontal').on('change', function (e) {
-		if ($(this).is(':checked')) {
-			$(this).parents('form').find('input.switcher-horizontal[name="' + $(this).attr('name') + '"]').not(this).trigger('change');
+		// Prevent recursive animation triggering
+		if ($(this).data('animating-horizontal')) {
+			return;
 		}
-		let $targets = $('.switcher-target-' + $(this).attr('id'));
-		let is_show = $(this).is(':checked'); if ($(this).is('.switcher-reversed')) is_show = ! is_show;
-		if (is_show) {
-			$targets.animate({width:'205px'}, 350);
+
+		if ($(this).is(':checked')) {
+			// For horizontal switchers, handle all related targets in one go to prevent animation conflicts
+			let radioName = $(this).attr('name');
+			let $allRadios = $(this).parents('form').find('input.switcher-horizontal[name="' + radioName + '"]');
+
+			// Mark all radios as animating to prevent recursive calls
+			$allRadios.data('animating-horizontal', true);
+
+			// Hide all targets for this radio group first
+			$allRadios.not(this).each(function() {
+				let $targets = $('.switcher-target-' + $(this).attr('id'));
+				if ($targets.width() > 0) {
+					$targets.animate({width:'0px'}, 1000).find('.clear-on-switch').add($targets.filter('.clear-on-switch')).val('');
+				}
+			});
+
+			// Then show the target for the selected radio
+			let $targets = $('.switcher-target-' + $(this).attr('id'));
+			let is_show = $(this).is(':checked'); if ($(this).is('.switcher-reversed')) is_show = ! is_show;
+			if (is_show) {
+				$targets.animate({width:'205px'}, 350);
+			}
+
+			// Clear the animating flag after a delay
+			setTimeout(function() {
+				$allRadios.removeData('animating-horizontal');
+			}, 1200); // Longer delay for horizontal animations
 		} else {
-			$targets.animate({width:'0px'}, 1000).find('.clear-on-switch').add($targets.filter('.clear-on-switch')).val('');
+			// Handle non-radio horizontal switchers normally
+			let $targets = $('.switcher-target-' + $(this).attr('id'));
+			let is_show = $(this).is(':checked'); if ($(this).is('.switcher-reversed')) is_show = ! is_show;
+			if (is_show) {
+				$targets.animate({width:'205px'}, 350);
+			} else {
+				$targets.animate({width:'0px'}, 1000).find('.clear-on-switch').add($targets.filter('.clear-on-switch')).val('');
+			}
 		}
 	}).trigger('change');
 
@@ -201,87 +644,201 @@
 		});
 	});
 
-	var toggle_dynamic_notice = function(){
-
-		$('.wpallimport-dynamic-notice').hide();
-
-		var $import_to_custom_type = $('input[name=custom_type]').val();
-
-		var $is_show_cf_notice = false;
-		var $is_show_images_notice = false;
-
-		$('input[name^=custom_name]').each(function(){
-			if ( $(this).val() != "")
-			{
-				$is_show_cf_notice = true;
-				return false;
-			}
+	// Initialize file selector for main import page (not in .change_file context)
+	if ($('#file_selector').length && !$('#file_selector').hasClass('select2-hidden-accessible')) {
+		$('#file_selector').select2({
+			width: '600px',
+			minimumResultsForSearch: 10,
+			theme: 'default',
+			disabled: true  // Completely disable the dropdown in free version
 		});
 
-		if ( $import_to_custom_type != 'product' &&
-				( $('textarea[name=download_featured_image]').length && $('textarea[name=download_featured_image]').val() != "" ||
-					$('textarea[name=gallery_featured_image]').length && $('textarea[name=gallery_featured_image]').val() != "" ||
-						$('textarea[name=featured_image]').length && $('textarea[name=featured_image]').val() != "" ))
-		{
-			$is_show_images_notice = true;
-		}
-
-		if ( $is_show_cf_notice && $is_show_images_notice ){
-			$('.wpallimport-dynamic-notice').find('a').html($('.wpallimport-dynamic-notice-cf-image-text').val());
-			$('.wpallimport-dynamic-notice').show();
-		}
-		else if ( $is_show_cf_notice ){
-			$('.wpallimport-dynamic-notice').find('a').html($('.wpallimport-dynamic-notice-cf-text').val());
-			$('.wpallimport-dynamic-notice').show();
-		}
-		else if ( $is_show_images_notice ) {
-			$('.wpallimport-dynamic-notice').find('a').html($('.wpallimport-dynamic-notice-images-text').val());
-			$('.wpallimport-dynamic-notice').show();
-		}
-
+		// Add click handler to show upgrade notice when trying to interact with disabled dropdown
+		$('#file_selector').next('.select2-container').on('click', function(e) {
+			e.preventDefault();
+			$('.wpallimport-upload-type-container[rel=file_type] .wpallimport-free-edition-notice').show();
+			return false;
+		});
 	}
 
 	$('.change_file').each(function(){
-
 		let $wrap = $('.wrap').has('.wpallimport-layout');
+		let formHeight = ($('.wpallimport-layout').height() < 730) ? 730 : $('.wpallimport-layout').height();
+			$('#file_selector').select2({
+				width: '600px',
+				minimumResultsForSearch: 10,
+				theme: 'default',
+				disabled: true  // Completely disable the dropdown in free version
+			});
 
-		var formHeight = $wrap.height();
+			// Add click handler to show upgrade notice when trying to interact with disabled dropdown
+			$('#file_selector').next('.select2-container').on('click', function(e) {
+				e.preventDefault();
+				$('.wpallimport-upload-type-container[rel=file_type] .wpallimport-free-edition-notice').show();
+				return false;
+			});
 
-		var fixWrapHeight = false;
+		let fixWrapHeight = false;
 
-		$('#custom_type_selector').ddslick({
-			width: 590,
-			onSlideDownOptions: function(o){
-				formHeight = ($('.wpallimport-layout').height() < 730) ? 730 : $('.wpallimport-layout').height();
-				$wrap.css({'height': formHeight + $('#custom_type_selector').find('.dd-options').height() + 'px'});
-			},
-			onSlideUpOptions: function(o){
-				$wrap.css({'height': 'auto'});
-			},
-			onSelected: function(selectedData){
-				if (fixWrapHeight) {
-					$wrap.css({'height': 'auto'});
-				} else {
-					fixWrapHeight = true;
-				}
+  $('#custom_type_selector').select2({
+  	width: '590px',
+  	minimumResultsForSearch: 10,
+  	theme: 'default',
+    templateResult: function(data) {
+      if (!data.id) return data.text;
+      var $option = $(data.element);
+      var $result = $('<div class="select2-option-wrapper"></div>');
+      var imagesrc = $option.attr('data-imagesrc');
+      var customImageClass = $option.attr('data-custom-image-class');
 
-				$('.wpallimport-upgrade-notice').hide();
+      if (imagesrc) {
+        var spanClass = imagesrc;
+        if (customImageClass) {
+          // If there's a custom image class, add it to the span
+          spanClass = imagesrc.replace(/dashicon\s+[^\s]+/, 'dashicon ' + customImageClass);
+        }
+        // Create the icon with more explicit styling to ensure visibility
+        var $icon = $('<span class="' + spanClass + '" style="display:inline-block !important; vertical-align:middle !important; margin-right:5px !important; visibility:visible !important; opacity:1 !important; width:24px !important; height:24px !important; position:relative !important; z-index:100 !important;"></span>');
+        $result.append($icon);
+      }
+      $result.append(data.text);
+      return $result;
+    },
+    templateSelection: function(data) {
+      if (!data.id) return data.text;
+      var $option = $(data.element);
+      var $result = $('<div class="select2-selection-wrapper"></div>');
+      var imagesrc = $option.attr('data-imagesrc');
+      var customImageClass = $option.attr('data-custom-image-class');
 
-		        $('input[name=custom_type]').val(selectedData.selectedData.value);
-		        $('#custom_type_selector').find('.dd-selected').css({'color':'#555'});
+      if (imagesrc) {
+        var spanClass = imagesrc;
+        if (customImageClass) {
+          // If there's a custom image class, add it to the span
+          spanClass = imagesrc.replace(/dashicon\s+[^\s]+/, 'dashicon ' + customImageClass);
+        }
+        var $icon = $('<span class="' + spanClass + '" style="display:inline-block !important; vertical-align:middle !important; margin-right:5px !important; visibility:visible !important; opacity:1 !important;"></span>');
+        $result.append($icon);
+      }
+      $result.append(data.text);
 
-				var is_import_denied = $('.wpallimport-upgrade-notice[rel='+ selectedData.selectedData.value +']').length;
+      // After rendering, trigger the custom image handler
+      setTimeout(function() {
+        wpai_set_custom_select_image();
+      }, 10);
 
-				if (is_import_denied){
-					$('.wpallimport-upgrade-notice[rel='+ selectedData.selectedData.value +']').slideDown();
-					$('.wpallimport-submit-buttons').hide();
-				} else {
-					$('.wpallimport-submit-buttons').slideDown();
-                }
-                // Rapid Add-On API Images
-                wpai_set_custom_select_image();
-		    }
-		});
+      return $result;
+    }
+  }).on('select2:opening', function(e){
+  	formHeight = ($('.wpallimport-layout').height() < 730) ? 730 : $('.wpallimport-layout').height();
+  	// Store the original height to restore later
+  	$(this).data('originalHeight', $wrap.height());
+  }).on('select2:open', function(e){
+  	// Set timeout to allow the dropdown to render before measuring
+  	setTimeout(function() {
+  		$wrap.css({'height': formHeight + $('.select2-dropdown').height() + 'px'});
+  	}, 50);
+  }).on('select2:closing', function(e){
+  	$wrap.css({'height': 'auto'});
+  }).on('select2:select', function(e){
+  	let selectedData = e.params.data;
+
+  	if (fixWrapHeight) {
+  		$wrap.css({'height': 'auto'});
+  	} else {
+  		fixWrapHeight = true;
+  	}
+
+  	$('.wpallimport-upgrade-notice').hide();
+
+  	$('input[name=custom_type]').val(selectedData.id);
+  	$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#555'});
+
+  	var is_import_denied = $('.wpallimport-upgrade-notice[rel="'+ selectedData.id +'"]').length;
+  	// Free version - also deny taxonomies
+  	var is_taxonomy_import = (selectedData.id === 'taxonomies');
+
+  	if (is_import_denied){
+  		$('.wpallimport-upgrade-notice[rel="'+ selectedData.id +'"]').slideDown();
+  		$('.wpallimport-submit-buttons').hide();
+  	} else if (is_taxonomy_import) {
+  		// Free version - hide submit buttons for taxonomy imports
+  		$('.wpallimport-submit-buttons').hide();
+  	} else {
+  		// Check if any upgrade notice is visible before showing buttons
+  		if ($('.wpallimport-upgrade-notice:visible').length === 0) {
+  			$('.wpallimport-submit-buttons').slideDown();
+  		} else {
+  			$('.wpallimport-submit-buttons').hide();
+  		}
+  	}
+
+  	// Handle taxonomy_to_import_wrapper and gravity_form_to_import_wrapper visibility
+  	switch (selectedData.id) {
+  		case 'taxonomies':
+  			$('.taxonomy_to_import_wrapper').slideDown();
+  			$('.gravity_form_to_import_wrapper').slideUp();
+  			break;
+  		case 'gf_entries':
+  			$('.taxonomy_to_import_wrapper').slideUp();
+  			$('.gravity_form_to_import_wrapper').slideDown();
+  			break;
+  		default:
+  			$('.taxonomy_to_import_wrapper').slideUp();
+  			$('.gravity_form_to_import_wrapper').slideUp();
+  			break;
+  	}
+
+  	// Rapid Add-On API Images
+  	wpai_set_custom_select_image();
+
+  	// Add icon to selected state
+  	var selectedOption = $(this).find('option:selected');
+  	var imagesrc = selectedOption.attr('data-imagesrc');
+  	if (imagesrc) {
+  		var $selectedDisplay = $(this).next('.select2-container').find('.select2-selection__rendered');
+  		// Clear any existing dashicon
+  		$selectedDisplay.find('.dashicon').remove();
+  		// Add the dashicon span with the appropriate class
+  		var iconClass = imagesrc.replace('dashicon ', '');
+  		$selectedDisplay.prepend('<span class="dashicon ' + iconClass + '"></span>');
+  	}
+
+  	// Trigger native change event to ensure all listeners are notified
+  	$(this).trigger('change');
+  }).on('change', function() {
+  	// This handler will be triggered by the native change event
+  	// Only proceed if we're not already in the select2:select handler
+  	if (!$(this).data('select2-processing')) {
+  		// Set a flag to prevent infinite loop
+  		$(this).data('select2-processing', true);
+
+  		var selectedValue = $(this).val();
+
+  		// Handle taxonomy_to_import_wrapper and gravity_form_to_import_wrapper visibility
+  		switch (selectedValue) {
+  			case 'taxonomies':
+  				$('.taxonomy_to_import_wrapper').slideDown();
+  				$('.gravity_form_to_import_wrapper').slideUp();
+  				break;
+  			case 'gf_entries':
+  				$('.taxonomy_to_import_wrapper').slideUp();
+  				$('.gravity_form_to_import_wrapper').slideDown();
+  				break;
+  			default:
+  				$('.taxonomy_to_import_wrapper').slideUp();
+  				$('.gravity_form_to_import_wrapper').slideUp();
+  				break;
+  		}
+
+  		// Remove the processing flag
+  		$(this).data('select2-processing', false);
+  	}
+  });
+
+
+
+
 
 		$('.wpallimport-import-from').on('click', function(){
 
@@ -301,9 +858,8 @@
 					$('.wpallimport-download-from-checked').trigger('click');
 					break;
 				case 'file_type':
-					if ($('input[name=file]').val() != '') {
-						showImportType = true;
-					}
+					// Free version - show interface but don't allow progression
+					showImportType = false; // This prevents the submit buttons from showing
 					$('.wpallimport-download-resource').hide();
 					break;
 			}
@@ -319,9 +875,7 @@
 			$('.change_file').find('input[name=new_type]').val( $(this).attr('rel').replace('_type', '') );
 			//$('.first-step-errors').hide();
 
-			if ($(this).attr('rel') == 'upload_type'){
-				$('input[type=file]').trigger('click');
-			}
+
 		});
 		$('.wpallimport-import-from.selected').trigger('click');
 
@@ -329,9 +883,13 @@
 			if ($(this).attr('rel') === 'url') {
 				$('.wpallimport-download-resource-step-two-url').show();
 				$('.wpallimport-download-resource-step-two-ftp').hide();
+				// Show upgrade notice for URL download in Free version
+				$('.wpallimport-download-resource-step-two-url .wpallimport-free-edition-notice').show();
 			} else {
 				$('.wpallimport-download-resource-step-two-url').hide();
 				$('.wpallimport-download-resource-step-two-ftp').show();
+				// Show upgrade notice for FTP download in Free version
+				$('.wpallimport-download-resource-step-two-ftp .wpallimport-free-edition-notice').show();
 			}
 			$('.wpallimport-download-from').removeClass('wpallimport-download-from-checked');
 			$(this).addClass('wpallimport-download-from-checked');
@@ -339,6 +897,80 @@
 		});
 		$('.wpallimport-download-from.wpallimport-download-from-checked').trigger('click');
 
+	});
+
+	// Drag and drop file upload
+	$(document).ready(function () {
+		window.dragCounter = 0;
+		var $overlay = $('#wpallimport-fullscreen-drag-overlay');
+		var $dragArea = $('#wpallimport-drag-drop-area');
+		window.isDragDropUpload = false;
+
+		// Global drag events for fullscreen drop zone
+		$(document).on('dragenter', function (e) {
+			// Only handle file drags
+			if (e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.types.indexOf('Files') !== -1) {
+				window.dragCounter++;
+
+				// Show overlay and extend drag area on first drag enter
+				if (window.dragCounter === 1) {
+					$dragArea.addClass('fullscreen-active');
+					$overlay.show();
+
+					// Properly select the upload type and show its container
+					$('.wpallimport-import-from').removeClass('selected').addClass('bind');
+					$('#file_upload_type').addClass('selected').removeClass('bind');
+					$('.wpallimport-choose-file').find('.wpallimport-upload-type-container').hide();
+					$('.wpallimport-choose-file').find('.wpallimport-upload-type-container[rel=upload_type]').show();
+					$('.wpallimport-choose-file').find('input[name=type]').val('upload');
+				}
+			}
+		});
+
+		$(document).on('dragleave', function (e) {
+			// Only handle file drags
+			if (e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.types.indexOf('Files') !== -1) {
+				window.dragCounter--;
+
+				// Hide overlay when completely leaving the window (only if not uploading)
+				if (window.dragCounter === 0 && !window.isDragDropUpload) {
+					$dragArea.removeClass('fullscreen-active');
+					$overlay.hide();
+					$('#file_upload_type').removeClass('selected');
+				}
+			}
+		});
+
+		// Mark as drag-drop upload when files are dropped, but don't hide overlay yet
+		$(document).on('drop', function (e) {
+			if (e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.types.indexOf('Files') !== -1) {
+				dragCounter = 0;
+				window.isDragDropUpload = true;
+				// Don't hide overlay yet - let plupload events handle the UI transitions
+			}
+		});
+
+		// Original drag and drop area events (keep for backward compatibility)
+		$('#wpallimport-drag-drop-area').on('dragover', function (e) {
+			e.preventDefault();
+			// Add the selected class to the upload a file button.
+			$('#file_upload_type').addClass('selected');
+		});
+
+		// When the file is dragged out of the drag and drop area
+		$('#wpallimport-drag-drop-area').on('dragleave', function () {
+			// Remove the selected class (only if not uploading)
+			if (!window.isDragDropUpload) {
+				$('#file_upload_type').removeClass('selected');
+			}
+		});
+
+		// Handle drop event on drag area to prevent default browser behavior
+		$('#wpallimport-drag-drop-area').on('drop', function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			// The actual file handling is done by plupload
+		});
 	});
 
 	$('input[name=url]').on('change', function(){
@@ -351,27 +983,108 @@
 			$('.wpallimport-url-icon').removeClass('focus');
 			$(this).removeClass('focus');
 		}
-	}).on('focus', function(){
-		if ($(this).val() == 'Enter a web address to download the file from...')
-			$(this).val('');
-	}).on('blur', function(){
-		if($(this).val() == '')
-			$(this).val('Enter a web address to download the file from...');
 	});
 
-	$('#taxonomy_to_import').ddslick({
-		width: 300,
-		onSelected: function(selectedData){
-			if (selectedData.selectedData.value != ""){
-				$('#taxonomy_to_import').find('.dd-selected').css({'color':'#555'});
-				$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').show();
-			} else {
-				$('#taxonomy_to_import').find('.dd-selected').css({'color':'#cfceca'});
-				$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
-			}
-			$('input[name=taxonomy_type]').val(selectedData.selectedData.value);
-		}
-	});
+ $('#taxonomy_to_import').select2({
+ 	width: '300px',
+ 	minimumResultsForSearch: 10,
+ 	theme: 'default'
+ }).on('select2:select', function(e){
+ 	let selectedData = e.params.data;
+ 	if (selectedData.id != ""){
+ 		$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#555'});
+ 		// Free version - show upgrade notice and don't allow progression for taxonomy imports
+ 		$('.wpallimport-upgrade-notice[rel=taxonomies]').show();
+ 		$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+ 		// Reset the selection
+ 		$(this).val('').trigger('change');
+ 	} else {
+ 		$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#cfceca'});
+ 		$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+ 	}
+ 	$('input[name=taxonomy_type]').val(selectedData.id);
+ 	// Trigger native change event to ensure all listeners are notified
+ 	$(this).trigger('change');
+ }).on('change', function() {
+ 	// This handler will be triggered by the native change event
+ 	// Only proceed if we're not already in the select2:select handler
+ 	if (!$(this).data('select2-processing')) {
+ 		// Set a flag to prevent infinite loop
+ 		$(this).data('select2-processing', true);
+
+ 		var selectedValue = $(this).val();
+ 		if (selectedValue != "") {
+ 			$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#555'});
+ 			// Free version - don't allow progression for taxonomy imports
+ 			$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+ 		} else {
+ 			$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#cfceca'});
+ 			$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+ 		}
+
+ 		// Remove the processing flag
+ 		$(this).data('select2-processing', false);
+ 	}
+ });
+
+ // Add tooltips to select2 options
+ $('#taxonomy_to_import option').each(function() {
+     var toolTipText = $(this).val();
+     $(this).attr('title', toolTipText);
+ });
+
+ // Initialize gravity_form_to_import with Select2
+ $('#gravity_form_to_import').select2({
+ 	width: '300px',
+ 	minimumResultsForSearch: 10,
+ 	theme: 'default'
+ }).on('select2:select', function(e){
+ 	let selectedData = e.params.data;
+
+ 	if (selectedData.id != ""){
+ 		$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#555'});
+ 		// Only show submit buttons if we're in the gravity forms context and upload step is visible
+ 		if ($('.gravity_form_to_import_wrapper:visible').length && $('.wpallimport-upload-resource-step-two:visible').length) {
+ 			// Check if any upgrade notice is visible before showing buttons
+ 			if ($('.wpallimport-upgrade-notice:visible').length === 0) {
+ 				$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').slideDown();
+ 			}
+ 		}
+ 	} else {
+ 		$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#cfceca'});
+ 		$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+ 	}
+ 	$('input[name=gravity_form_title]').val(selectedData.id);
+ }).on('change', function() {
+ 	// Handle native change events
+ 	if (!$(this).data('select2-processing')) {
+ 		$(this).data('select2-processing', true);
+
+ 		var selectedValue = $(this).val();
+ 		if (selectedValue != ""){
+ 			$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#555'});
+ 			// Only show submit buttons if we're in the gravity forms context and upload step is visible
+ 			if ($('.gravity_form_to_import_wrapper:visible').length && $('.wpallimport-upload-resource-step-two:visible').length) {
+ 				// Check if any upgrade notice is visible before showing buttons
+ 				if ($('.wpallimport-upgrade-notice:visible').length === 0) {
+ 					$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').slideDown();
+ 				}
+ 			}
+ 		} else {
+ 			$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#cfceca'});
+ 			$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+ 		}
+ 		$('input[name=gravity_form_title]').val(selectedValue);
+
+ 		$(this).data('select2-processing', false);
+ 	}
+ });
+
+ // Add tooltips to gravity form select2 options
+ $('#gravity_form_to_import option').each(function() {
+     var toolTipText = $(this).val();
+     $(this).attr('title', toolTipText);
+ });
 
 	// enter-submit form on step 1
 	$('.wpallimport-step-1').each(function(){
@@ -398,15 +1111,13 @@
 					$('.wpallimport-download-from-checked').trigger('click');
 					break;
 				case 'file_type':
-					if ($('input[name=file]').val() != '') {
-						showImportType = true;
-					}
+					// Free version - show interface but don't allow progression
+					showImportType = false; // This prevents the submit buttons from showing
 					$('.wpallimport-download-resource').hide();
 					break;
 			}
 
 			$('.wpallimport-import-from').removeClass('selected').addClass('bind');
-			$('.wpallimport-import-types').find('h2').slideUp();
 			$(this).addClass('selected').removeClass('bind');
 			$('.wpallimport-choose-file').find('.wpallimport-upload-type-container').hide();
 			$('.wpallimport-choose-file').find('.wpallimport-file-upload-result').attr('rel', $(this).attr('rel'));
@@ -423,104 +1134,245 @@
 			if ($(this).attr('rel') == 'upload_type'){
 				$('input[type=file]').trigger('click');
 			}
+			// Check for denied imports and taxonomies
+			var selectedPostType = $('input[name=custom_type]').val();
+			var is_import_denied = $('.wpallimport-upgrade-notice[rel="'+ selectedPostType +'"]').length;
+			var is_taxonomy_import = (selectedPostType === 'taxonomies');
+
 			if ( ! showImportType){
 				$('.wpallimport-choose-file').find('.wpallimport-upload-resource-step-two').slideUp();
 				$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+			} else if (is_import_denied || is_taxonomy_import) {
+				// Show upload step but hide submit buttons for denied/restricted imports
+				$('.wpallimport-choose-file').find('.wpallimport-upload-resource-step-two').slideDown();
+				$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
 			} else {
 				$('.wpallimport-choose-file').find('.wpallimport-upload-resource-step-two').slideDown();
-				$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').show();
+				// Check if any upgrade notice is visible before showing buttons
+				if ($('.wpallimport-upgrade-notice:visible').length === 0) {
+					$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').show();
+				} else {
+					$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+				}
 			}
 		});
 
-		$('.wpallimport-import-from.selected').click();
+		$('.wpallimport-import-from.selected').trigger('click');
 
-		$('.wpallimport-download-from-url').click(function(){
-
-			$(this).parents('.wpallimport-download-resource').find('.wpallimport-free-edition-notice').slideDown();
-			$('.auto-generate-template').hide();
-
+		// Hide the H2 when "Download from URL" or "Use existing file" is clicked
+		$('.wpallimport-url-type').on('click', function () {
+			$('.wpallimport-import-types').find('h2').slideUp();
+		});
+		$('.wpallimport-file-type').on('click', function () {
+			$('.wpallimport-import-types').find('h2').slideUp();
 		});
 
-		$('.wpai-ftp-select-file-button').click(function () {
-			$(this).parents('.wpallimport-download-resource').find('.wpallimport-free-edition-notice').slideDown();
+		$('.wpallimport-download-from-url').on('click', function(){
+
+			// Show upgrade notice for Free version
+			let $type = $('input[name=type]').val();
+			if ($type === 'url') {
+				$('.wpallimport-download-resource-step-two-url .wpallimport-free-edition-notice').show();
+				return false; // Prevent the download from proceeding
+			} else if ($type === 'ftp') {
+				$('.wpallimport-download-resource-step-two-ftp .wpallimport-free-edition-notice').show();
+				return false; // Prevent the download from proceeding
+			}
+			
 		});
 
 		var fixWrapHeight = false;
 
-		$('#custom_type_selector').ddslick({
-			width: 300,
-			onSlideDownOptions: function(o){
-				formHeight = ($('.wpallimport-layout').height() < 730) ? 730 : $('.wpallimport-layout').height();
-				$wrap.css({'height': formHeight + $('#custom_type_selector').find('.dd-options').height() + 'px'});
-			},
-			onSlideUpOptions: function(o){
-				$wrap.css({'height' : 'auto'});
-			},
-			onSelected: function(selectedData){
-				if (fixWrapHeight){
-					$wrap.css({'height': 'auto'});
-				} else {
-					fixWrapHeight = true;
-				}
+  $('#custom_type_selector').select2({
+  	width: '590px',
+  	minimumResultsForSearch: 10,
+  	theme: 'default',
+    templateResult: function(data) {
+      if (!data.id) return data.text;
+      var $option = $(data.element);
+      var $result = $('<div class="select2-option-wrapper"></div>');
+      var imagesrc = $option.attr('data-imagesrc');
+      var customImageClass = $option.attr('data-custom-image-class');
 
-				$('#custom_type_selector').find('.dd-selected').css({'color':'#555'});
+      if (imagesrc) {
+        var spanClass = imagesrc;
+        if (customImageClass) {
+          // If there's a custom image class, add it to the span
+          spanClass = imagesrc.replace(/dashicon\s+[^\s]+/, 'dashicon ' + customImageClass);
+        }
+        var $icon = $('<span class="' + spanClass + '" style="display:inline-block !important; vertical-align:middle !important; margin-right:5px !important; visibility:visible !important; opacity:1 !important;"></span>');
+        $result.append($icon);
+      }
+      $result.append(data.text);
+      return $result;
+    },
+    templateSelection: function(data) {
+      if (!data.id) return data.text;
+      var $option = $(data.element);
+      var $result = $('<div class="select2-selection-wrapper"></div>');
+      var imagesrc = $option.attr('data-imagesrc');
+      var customImageClass = $option.attr('data-custom-image-class');
 
-				$('.wpallimport-upgrade-notice').hide();
+      if (imagesrc) {
+        var spanClass = imagesrc;
+        if (customImageClass) {
+          // If there's a custom image class, add it to the span
+          spanClass = imagesrc.replace(/dashicon\s+[^\s]+/, 'dashicon ' + customImageClass);
+        }
+        var $icon = $('<span class="' + spanClass + '" style="display:inline-block !important; vertical-align:middle !important; margin-right:5px !important; visibility:visible !important; opacity:1 !important;"></span>');
+        $result.append($icon);
+      }
+      $result.append(data.text);
 
-				$('input[name=custom_type]').val(selectedData.selectedData.value);
+      // After rendering, trigger the custom image handler
+      setTimeout(function() {
+        wpai_set_custom_select_image();
+      }, 10);
 
-				var is_import_denied = $('.wpallimport-upgrade-notice[rel='+ selectedData.selectedData.value +']').length;
+      return $result;
+    }
+  }).on('select2:opening', function(e){
+  	formHeight = ($('.wpallimport-layout').height() < 730) ? 730 : $('.wpallimport-layout').height();
+  	// Store the original height to restore later
+  	$(this).data('originalHeight', $wrap.height());
+  }).on('select2:open', function(e){
+  	// Set timeout to allow the dropdown to render before measuring
+  	setTimeout(function() {
+  		$wrap.css({'height': formHeight + $('.select2-dropdown').height() + 'px'});
+  	}, 50);
+  }).on('select2:closing', function(e){
+  	$wrap.css({'height': 'auto'});
+  }).on('select2:select', function(e){
+  	let selectedData = e.params.data;
 
-				if (is_import_denied){
-					$('.wpallimport-upgrade-notice[rel='+ selectedData.selectedData.value +']').slideDown();
-				}
+  	if (fixWrapHeight){
+  		$wrap.css({'height': 'auto'});
+  	} else {
+  		fixWrapHeight = true;
+  	}
 
-				if (is_import_denied)
-				{
-			        $('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
-			        $('.wpallimport-import-orders-notice').show();
-				}
-				else
-				{
-					$('.wpallimport-import-orders-notice').hide();
+  	$('.wpallimport-upgrade-notice').hide();
 
-			        if ($('.wpallimport-upload-resource-step-two:visible').length)
-			        {
-			        	$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').show();
-			        }
-			        else
-			        {
-			        	$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
-			        }
-				}
+  	$('input[name=custom_type]').val(selectedData.id);
 
-                // Rapid Add-On API Images
-                wpai_set_custom_select_image();
-		    }
-		});
+  	var is_import_denied = $('.wpallimport-upgrade-notice[rel="'+ selectedData.id +'"]').length;
+  	// Free version - also deny taxonomies
+  	var is_taxonomy_import = (selectedData.id === 'taxonomies');
 
-		$('.wpallimport-import-to').click(function(){
-			if ($(this).attr('rel') == 'new'){
-				$('.wpallimport-new-records').show();
-				$('.wpallimport-existing-records').hide();
-			} else {
-				$('.wpallimport-new-records').hide();
-				$('.wpallimport-existing-records').show();
-			}
-			$('.wpallimport-import-to').removeClass('wpallimport-import-to-checked');
-			$(this).addClass('wpallimport-import-to-checked');
-			$('input[name=wizard_type]').val($(this).attr('rel'));
-			$('.wpallimport-choose-import-direction').attr({'rel' : $(this).attr('rel')});
-			$('.dd-container').fadeIn();
-		});
+  	if (is_import_denied){
+  		$('.wpallimport-upgrade-notice[rel="'+ selectedData.id +'"]').slideDown();
+  	}
+
+  	if ($('.wpallimport-upload-resource-step-two:visible').length && ! is_import_denied && ! is_taxonomy_import) {
+  		$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#555'});
+  		// Check if any upgrade notice is visible before showing buttons
+  		if ($('.wpallimport-upgrade-notice:visible').length === 0) {
+  			$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').slideDown();
+  		} else {
+  			$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+  		}
+  	} else {
+  		$(this).next('.select2-container').find('.select2-selection__rendered').css({'color':'#555'});
+  		$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+  	}
+
+  	switch (selectedData.id) {
+  		case 'taxonomies':
+  			$('.taxonomy_to_import_wrapper').slideDown();
+  			$('.gravity_form_to_import_wrapper').slideUp();
+  			// Free version - always hide submit buttons for taxonomy imports
+  			$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+  			break;
+  		case 'gf_entries':
+  			$('.taxonomy_to_import_wrapper').slideUp();
+  			$('.gravity_form_to_import_wrapper').slideDown();
+  			var selectedForm = $('input[name=gravity_form_title]').val();
+  			if (selectedForm == ''){
+  				$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+  			} else {
+  				// Only show submit buttons if upload step is visible
+  				if ($('.wpallimport-upload-resource-step-two:visible').length) {
+  					// Check if any upgrade notice is visible before showing buttons
+  					if ($('.wpallimport-upgrade-notice:visible').length === 0) {
+  						$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').slideDown();
+  					}
+  				}
+  			}
+  			break;
+  		default:
+  			$('.taxonomy_to_import_wrapper').slideUp();
+  			$('.gravity_form_to_import_wrapper').slideUp();
+  			break;
+  	}
+
+  	// Rapid Add-On API Images
+  	wpai_set_custom_select_image();
+
+  	// Trigger native change event to ensure all listeners are notified
+  	$(this).trigger('change');
+  }).on('change', function() {
+  	// This handler will be triggered by the native change event
+  	// Only proceed if we're not already in the select2:select handler
+  	if (!$(this).data('select2-processing')) {
+  		// Set a flag to prevent infinite loop
+  		$(this).data('select2-processing', true);
+
+  		var selectedValue = $(this).val();
+
+   	switch (selectedValue) {
+  			case 'taxonomies':
+  				$('.taxonomy_to_import_wrapper').slideDown();
+  				$('.gravity_form_to_import_wrapper').slideUp();
+  				// Free version - always hide submit buttons for taxonomy imports
+  				$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+  				break;
+  			case 'gf_entries':
+  				$('.taxonomy_to_import_wrapper').slideUp();
+  				$('.gravity_form_to_import_wrapper').slideDown();
+  				var selectedForm = $('input[name=gravity_form_title]').val();
+  				if (selectedForm == ''){
+  					$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').hide();
+  				} else {
+  					// Only show submit buttons if upload step is visible
+  					if ($('.wpallimport-upload-resource-step-two:visible').length) {
+  						// Check if any upgrade notice is visible before showing buttons
+  						if ($('.wpallimport-upgrade-notice:visible').length === 0) {
+  							$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').slideDown();
+  						}
+  					}
+  				}
+  				break;
+  			default:
+  				$('.taxonomy_to_import_wrapper').slideUp();
+  				$('.gravity_form_to_import_wrapper').slideUp();
+  				// Show submit buttons for non-taxonomy, non-gravity form post types
+  				if ($('.wpallimport-upload-resource-step-two:visible').length) {
+  					// Check if any upgrade notice is visible before showing buttons
+  					if ($('.wpallimport-upgrade-notice:visible').length === 0) {
+  						$('.wpallimport-choose-file').find('.wpallimport-submit-buttons').slideDown();
+  					}
+  				}
+  				break;
+  		}
+
+  		// Remove the processing flag
+  		$(this).data('select2-processing', false);
+  	}
+  });
+
+
 
 		$('.wpallimport-download-from').on('click', function(){
 			if ($(this).attr('rel') === 'url') {
 				$('.wpallimport-download-resource-step-two-url').show();
 				$('.wpallimport-download-resource-step-two-ftp').hide();
+				// Show upgrade notice for URL download in Free version
+				$('.wpallimport-download-resource-step-two-url .wpallimport-free-edition-notice').show();
 			} else {
 				$('.wpallimport-download-resource-step-two-url').hide();
 				$('.wpallimport-download-resource-step-two-ftp').show();
+				// Show upgrade notice for FTP download in Free version
+				$('.wpallimport-download-resource-step-two-ftp .wpallimport-free-edition-notice').show();
 			}
 			$('.wpallimport-download-from').removeClass('wpallimport-download-from-checked');
 			$(this).addClass('wpallimport-download-from-checked');
@@ -530,12 +1382,21 @@
 
 		$('#custom_type_selector').hide();
 
-		$('.wpallimport-import-to.wpallimport-import-to-checked').trigger('click');
+
 		$('.wpallimport-download-from.wpallimport-download-from-checked').trigger('click');
 
 		$('a.auto-generate-template').on('click', function(){
 			$('input[name^=auto_generate]').val('1');
 			$(this).parents('form:first').submit();
+		});
+
+		$('a.create-filters-step').on('click', function(){
+			$('input[name^=go_to_create_filters]').val('1');
+			$(this).parents('form:first').submit();
+		});
+
+		$('#advanced_upload').on('click', function(){
+			$('input[name^=auto_generate]').val('1');
 		});
 	});
 	//[/End Step 1]
@@ -562,6 +1423,22 @@
 	    });
 	};
 
+	// add expander
+	$(document).on('click', '.xml-expander', function () {
+		var method;
+		if ('-' == $(this).text()) {
+			$(this).text('+');
+			method = 'addClass';
+		} else {
+			$(this).text('-');
+			method = 'removeClass';
+		}
+		// for nested representation based on div
+		$(this).parent().find('> .xml-content')[method]('collapsed');
+		// for nested representation based on tr
+		var $tr = $(this).parent().parent().filter('tr.xml-element').next()[method]('collapsed');
+	});
+
 	// [xml representation dynamic]
 	$.fn.xml = function (opt) {
 		if ( ! this.length) return this;
@@ -578,82 +1455,8 @@
 
 		if (action.init) {
 			this.data('initialized', true);
-			// add expander
-			$(document).on('click', '.xml-expander', function () {
-				var method;
-				if ('-' == $(this).text()) {
-					$(this).text('+');
-					method = 'addClass';
-				} else {
-					$(this).text('-');
-					method = 'removeClass';
-				}
-				// for nested representation based on div
-				$(this).parent().find('> .xml-content')[method]('collapsed');
-				// for nested representation based on tr
-				var $tr = $(this).parent().parent().filter('tr.xml-element').next()[method]('collapsed');
-			});
 		}
-		if (action.dragable) { // drag & drop
-			var _w; var _dbl = 0;
-			var $drag = $('__drag'); $drag.length || ($drag = $('<input type="text" id="__drag" readonly="readonly" />'));
-
-			$drag.css({
-				position: 'absolute',
-				background: 'transparent',
-				top: -50,
-				left: 0,
-				margin: 0,
-				border: 'none',
-				lineHeight: 1,
-				opacity: 0,
-				cursor: 'pointer',
-				borderRadius: 0,
-				zIndex:99
-			}).appendTo(document.body).mousedown(function (e) {
-				if (_dbl) return;
-				var _x = e.pageX - $drag.offset().left;
-				var _y = e.pageY - $drag.offset().top;
-				if (_x < 4 || _y < 4 || $drag.width() - _x < 0 || $drag.height() - _y < 0) {
-					return;
-				}
-				$drag.width($(document.body).width() - $drag.offset().left - 5).css('opacity', 1);
-				$drag.select();
-				_dbl = true; setTimeout(function () {_dbl = false;}, 400);
-			}).mouseup(function () {
-				$drag.css('opacity', 0).css('width', _w);
-				$drag.trigger('blur');
-			}).dblclick(function(){
-				if (dblclickbuf.selected) {
-					$('.xml-element[title*="/'+dblclickbuf.value.replace('{','').replace('}','')+'"]').removeClass('selected');
-
-					if ($(this).val() == dblclickbuf.value) {
-						dblclickbuf.value = '';
-						dblclickbuf.selected = false;
-					} else {
-						dblclickbuf.selected = true;
-						dblclickbuf.value = $(this).val();
-						$('.xml-element[title*="/'+$(this).val().replace('{','').replace('}','')+'"]').addClass('selected');
-					}
-				} else {
-					dblclickbuf.selected = true;
-					dblclickbuf.value = $(this).val();
-					$('.xml-element[title*="/'+$(this).val().replace('{','').replace('}','')+'"]').addClass('selected');
-				}
-			});
-
-			$('input, textarea').not('#__drag').on('focus', insertxpath );
-
-			$(document).mousemove(function () {
-				if (parseInt($drag.css('opacity')) != 0) {
-					setTimeout(function () {
-						$drag.css('opacity', 0);
-					}, 50);
-					setTimeout(function () {
-						$drag.css('width', _w);
-					}, 500);
-				}
-			});
+		if (action.dragable) {
 
 			this.find('.xml-tag.opening > .xml-tag-name, .xml-attr-name, .csv-tag.opening > .csv-tag-name, .ui-menu-item').each(function () {
 				var $this = $(this);
@@ -665,17 +1468,42 @@
 				else
 					xpath = '{' + ($this.parent().parent().attr('title').replace(/^\/[^\/]+\/?/, '') || '.') + '}';
 
-				$this.mouseover(function (e) {
-					$drag.val(xpath).offset({left: $this.offset().left - 2, top: $this.offset().top - 2}).width(_w = $this.width()).height($this.height() + 4);
-				});
-			}).eq(0).mouseover();
+				$this.data('xpath', xpath).on('dblclick', function(e) {
+					$wpAllImportDrag = $(this);
+					$wpAllImportOriginalColor = $wpAllImportDrag.css('color');
+					$wpAllImportDrag.css('color', '#46ba69').css('font-weight','900');
+				}).draggable({
+					helper: function() {
+						return $('<div>').text($(this).data('xpath')).css({
+							'padding': '5px',
+							'border-radius': '5px'
+						});
+					},
+					zIndex: 2147483646,
+					appendTo: 'body',
+					cursor: 'pointer',
+					iframeFix:true
+				}).css('cursor', 'pointer');
+			});
+
+			wpaiMakeDroppable();
 		}
+
 		return this;
 	};
 
 	// template form: preview button
 	$('form.wpallimport-template').each(function () {
 		var $form = $(this);
+
+		// The form should not submit when Enter is pressed.
+		$form.on('keypress', function (event) { 
+			var keycode = (event.keyCode ? event.keyCode : event.which); 
+
+			if (keycode === 13 && event.target.tagName !== 'TEXTAREA') { 
+				event.preventDefault(); 
+			} 
+		});
 
 		var $detected_cf = new Array();
 
@@ -1047,6 +1875,136 @@
 
 		});
 
+		/* Merge Main XML file with sub file by provided fields */
+		$form.find('.parse').on('click', function(){
+
+			var submit = true;
+
+			if ("" == $form.find('input[name=nested_url]').val()){
+				$form.find('input[name=nested_url]').css({'background':'red'});
+				submit = false;
+			}
+
+			if (submit){
+
+				var ths = $(this);
+				var $fileURL = $form.find('input[name=nested_url]').val();
+
+				$(this).attr({'disabled':'disabled'});
+
+				var request = {
+					action:'nested_merge',
+					security: wp_all_import_security,
+					filePath: $fileURL,
+			    };
+
+			    var $indicator = $('<span class="img_preloader" style="top:10px;"/>').insertBefore($(this)).show();
+
+			    $form.find('.nested_msgs').html('');
+
+				$.ajax({
+					type: 'POST',
+					url: ajaxurl + ((typeof import_id != "undefined") ? '?id=' + import_id : ''),
+					data: request,
+					success: function(response) {
+						$indicator.remove();
+
+						if (response.success)
+						{
+							$form.find('.nested_files ul').append('<li rel="' + $form.find('.nested_files ul').find('li').length + '">' + $fileURL + ' <a href="javascript:void(0);" class="unmerge">remove</a></li>');
+							$form.find('input[name=nested_files]').val(window.JSON.stringify(response.nested_files));
+
+							var $tag = $('.tag');
+							var $tagno = parseInt($tag.find('input[name="tagno"]').val());
+							var $tagURL = 'admin.php?page=pmxi-admin-import&action=tag' + ((typeof import_id != "undefined") ? '&id=' + import_id : '');
+
+							$tag.addClass('loading').css('opacity', 0.7);
+							$.post($tagURL, {tagno: $tagno, import_action: import_action}, function (data) {
+								var $indicator = $('<span />').insertBefore($tag);
+								$tag.replaceWith(data.html);
+								fix_tag_position();
+								$indicator.next().tag().prevObject.remove();
+								if ($('#variations_xpath').length){
+									$('#variations_xpath').data('checkedValue', '').trigger('change');
+								}
+							}, 'json');
+							return false;
+						} else {
+							$form.find('.nested_msgs').html(response.msg);
+						}
+						ths.removeAttr('disabled');
+					},
+					error: function(request) {
+						$indicator.remove();
+						ths.removeAttr('disabled');
+					},
+					dataType: "json"
+				});
+			}
+		});
+
+		/* Unmerge nested XMl/CSV files */
+		$form.find('.unmerge').on('click', function(){
+
+			var ths = $(this);
+
+			$(this).attr({'disabled':'disabled'});
+
+			var $indicator = $('<span class="img_preloader" style="top:5px;"/>').insertBefore($(this)).show();
+
+			var request = {
+				action:'unmerge_file',
+				source: ths.parents('li:first').attr('rel'),
+				security: wp_all_import_security
+		    };
+
+		    $form.find('.nested_msgs').html('');
+
+			$.ajax({
+				type: 'POST',
+				url: ajaxurl + ((typeof import_id != "undefined") ? '?id=' + import_id : ''),
+				data: request,
+				success: function(response) {
+					$indicator.remove();
+					if (response.success){
+
+						ths.parents('li:first').remove();
+						$form.find('input[name=nested_files]').val(window.JSON.stringify(response.nested_files));
+
+						var $tag = $('.tag');
+						var $tagno = parseInt($tag.find('input[name="tagno"]').val());
+						var $tagURL = 'admin.php?page=pmxi-admin-import&action=tag' + ((typeof import_id != "undefined") ? '&id=' + import_id : '');
+
+						$tag.addClass('loading').css('opacity', 0.7);
+						$.post($tagURL, {tagno: $tagno, import_action: import_action}, function (data) {
+							var $indicator = $('<span />').insertBefore($tag);
+							$tag.replaceWith(data.html);
+							fix_tag_position();
+							$indicator.next().tag().prevObject.remove();
+							if ($('#variations_xpath').length){
+								$('#variations_xpath').data('checkedValue', '').trigger('change');
+							}
+						}, 'json');
+						return false;
+					}
+					else{
+						$form.find('.msgs').html(response.errors);
+						$form.find('.pmxi_counter').remove();
+					}
+					ths.removeAttr('disabled');
+				},
+				error: function(request) {
+					$indicator.remove();
+					ths.removeAttr('disabled');
+				},
+				dataType: "json"
+			});
+		});
+
+		$form.find('input[name=nested_url]').on('focus', function(){
+			$(this).css({'background':'#fff'});
+		});
+
 		var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
 		var is_safari = navigator.userAgent.indexOf("Safari") > -1;
 		var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
@@ -1070,8 +2028,10 @@
             // download images hosted elsewhere
             if ($(this).val() == 'yes'){
                 $('.search_through_the_media_library_logic').show();
+				$('.download_images').show();
             } else {
                 $('.search_through_the_media_library_logic').hide();
+				$('.download_images').hide();
             }
 		});
 
@@ -1084,14 +2044,17 @@
 			// download images hosted elsewhere
 			if ($(this).val() == 'yes'){
 				$('.search_through_the_media_library_logic').slideDown();
+				$('.download_images').slideDown();
 			} else {
 				$('.search_through_the_media_library_logic').slideUp();
+				$('.download_images').slideUp();
 			}
 		});
 
 		$form.find('.wpallimport-dismiss-cf-welcome').on('click', function(){
 			$('.cf_welcome, .cf_detect_result').slideUp();
 		});
+
 	});
 
 	// options form: highlight options of selected post type
@@ -1262,153 +2225,10 @@
 			}
 		});
 
-		/* Advanced Filtering */
-
-		$('.filtering_rules').pmxi_nestedSortable({
-	        handle: 'div',
-	        items: 'li',
-	        toleranceElement: '> div',
-	        update: function () {
-	        	$('.filtering_rules').find('.condition').show();
-	        	$('.filtering_rules').find('.condition:last').hide();
-		    }
-	    });
-
-	    $('#pmxi_add_rule').on('click', function(){
-
-	    	var $el = $('#pmxi_xml_element');
-	    	var $rule = $('#pmxi_rule');
-	    	var $val = $('#pmxi_value');
-
-	    	if ($el.val() == "" || $rule.val() == "") return;
-
-	    	if ($rule.val() != 'is_empty' && $rule.val() != "is_not_empty" && $val.val() == "") return;
-
-	    	var relunumber = $('.filtering_rules').find('li').length + "_" + $.now();
-
-	    	var html = '<li><div class="drag-element">';
-	    		html += '<input type="hidden" value="'+ $el.val() +'" class="pmxi_xml_element"/>';
-	    		html += '<input type="hidden" value="'+ $rule.val() +'" class="pmxi_rule"/>';
-	    		html += '<input type="hidden" value="'+ $val.val() +'" class="pmxi_value"/>';
-				html += '<span class="rule_element">' + $el.val() + '</span><span class="rule_as_is">' + $rule.find('option:selected').html() + '</span><span class="rule_condition_value">"' + $val.val() +'"</span>';
-	    		html += '<span class="condition"> <label for="rule_and_'+relunumber+'">AND</label><input id="rule_and_'+relunumber+'" type="radio" value="and" name="rule_'+relunumber+'" checked="checked" class="rule_condition"/><label for="rule_or_'+relunumber+'">OR</label><input id="rule_or_'+relunumber+'" type="radio" value="or" name="rule_'+relunumber+'" class="rule_condition"/> </span>';
-	    		html += '</div><a href="javascript:void(0);" class="icon-item remove-ico"></a></li>';
-
-	    	$('#wpallimport-filters, #apply_filters').show();
-	    	$('#filtering_rules').find('p').hide();
-
-	    	$('.filtering_rules').append(html);
-
-	    	$('.filtering_rules').find('.condition').show();
-	        $('.filtering_rules').find('.condition:last').hide();
-
-	    	$el.prop('selectedIndex',0);
-	    	$rule.prop('selectedIndex',0);
-	    	$val.val('');
-	    	$('#pmxi_value').show();
-
-	    });
-
-		$(document).on('click', '.filtering_rules li a.remove-ico', function() {
-			$(this).parents('li:first').remove();
-			$('.filtering_rules').find('li:last div span.condition').hide();
-			if (!$('.filtering_rules').find('li').length){
-				$('#apply_filters').hide();
-	    		$('#filtering_rules').find('p').show();
-			}
-		});
-
-		$('#pmxi_rule').on('change', function(){
-			if ($(this).val() == 'is_empty' || $(this).val() == 'is_not_empty') {
-				$('#pmxi_value').hide();
-			} else {
-				$('#pmxi_value').show();
-			}
-		});
-
-		var filter = '[';
-
-		var xpath_builder = function(rules_box, lvl){
-
-			var rules = rules_box.children('li');
-
-			var root_element = $('#root_element').val();
-
-			if (lvl && rules.length > 1) filter += ' (';
-
-			rules.each(function(){
-
-				var node = $(this).children('.drag-element').find('.pmxi_xml_element').val();
-				var condition = $(this).children('.drag-element').find('.pmxi_rule').val();
-				var value = $(this).children('.drag-element').find('.pmxi_value').val();
-
-				var clause = ($(this).children('.drag-element').find('.condition').is(':visible')) ? $(this).children('.drag-element').find('input.rule_condition:checked').val() : false;
-
-				var is_attr = false;
-
-				if (node.indexOf('@') != -1){
-					is_attr = true;
-					node_name = node.split('@')[0];
-					attr_name = node.split('@')[1];
-				}
-
-				if (is_attr) {
-					filter += (node_name == root_element) ? '' : node_name.replace(/->/g, '/');
-				} else {
-					filter += node.replace(/->/g, '/');
-				}
-
-				if (is_attr) filter += '@' + attr_name;
-
-				switch (condition){
-					case 'equals':
-						filter += ' = "%s"';
-						break;
-					case 'not_equals':
-						filter += ' != "%s"';
-						break;
-					case 'greater':
-						filter += ' > %s';
-						break;
-					case 'equals_or_greater':
-						filter += ' >= %s';
-						break;
-					case 'less':
-						filter += ' < %s';
-						break;
-					case 'equals_or_less':
-						filter += ' <= %s';
-						break;
-					case 'contains':
-						filter += '[contains(.,"%s")]';
-						break;
-					case 'not_contains':
-						filter += '[not(contains(.,"%s"))]';
-						break;
-					case 'is_empty':
-						filter += '[not(string())]';
-						break;
-					case 'is_not_empty':
-						filter += '[string()]';
-						break;
-				}
-
-				filter = filter.replace('%s', value);
-
-				if (clause) filter += ' ' + clause + ' ';
-
-				if ($(this).children('ol').length){
-					$(this).children('ol').each(function(){
-						if ($(this).children('li').length) xpath_builder($(this), 1);
-					});
-				}
-			});
-			if (lvl && rules.length > 1) filter += ') ';
-		}
-
 		$('#apply_filters').on('click', function(){
 
-			var xpath = $('input[name=xpath]').val();
+			var $input = $('input[name="xpath"]');
+			var xpath = $input.val();
 
 			filter = '[';
 			xpath_builder($('.filtering_rules'), 0);
@@ -1418,8 +2238,165 @@
 			$input.data('checkedValue', '');
 			$goto_element.val(1);
 			xpathChanged(true);
+			if ($('.filtering_rules').html().length) {
+				$('.filtering-output').val(window.JSON.stringify($('.filtering_rules').html()));
+			} else {
+				$('.filtering-output').val('');
+			}
 		});
 	});
+
+	/* Advanced Filtering */
+
+	$('.filtering_rules').pmxi_nestedSortable({
+		handle: 'div',
+		items: 'li',
+		toleranceElement: '> div',
+		update: function () {
+			$('.filtering_rules').find('.condition').show();
+			$('.filtering_rules').find('.condition:last').hide();
+		}
+	});
+
+	$('#pmxi_add_rule').on('click', function(){
+
+		var $el = $('#pmxi_xml_element');
+		var $rule = $('#pmxi_rule');
+		var $val = $('#pmxi_value');
+
+		if ($el.val() == "" || $rule.val() == "") return;
+
+		if ($rule.val() != 'is_empty' && $rule.val() != "is_not_empty" && $val.val() == "") return;
+
+		var relunumber = $('.filtering_rules').find('li').length + "_" + $.now();
+
+		var html = '<li><div class="drag-element">';
+		html += '<input type="hidden" value="'+ $el.val() +'" class="pmxi_xml_element"/>';
+		html += '<input type="hidden" value="'+ $rule.val() +'" class="pmxi_rule"/>';
+		html += '<input type="hidden" value="'+ $val.val() +'" class="pmxi_value"/>';
+		html += '<span class="rule_element">' + $el.val() + '</span><span class="rule_as_is">' + $rule.find('option:selected').html() + '</span><span class="rule_condition_value">"' + $val.val() +'"</span>';
+		html += '<span class="condition"> <label for="rule_and_'+relunumber+'">AND</label><input id="rule_and_'+relunumber+'" type="radio" value="and" name="rule_'+relunumber+'" checked="checked" class="rule_condition"/><label for="rule_or_'+relunumber+'">OR</label><input id="rule_or_'+relunumber+'" type="radio" value="or" name="rule_'+relunumber+'" class="rule_condition"/> </span>';
+		html += '</div><a href="javascript:void(0);" class="icon-item remove-ico"></a></li>';
+
+		$('#wpallimport-filters, #apply_filters').show();
+		$('#filtering_rules').find('p').hide();
+
+		$('.filtering_rules').append(html);
+
+		$('.filtering_rules').find('.condition').show();
+		$('.filtering_rules').find('.condition:last').hide();
+
+		$el.prop('selectedIndex',0);
+		$rule.prop('selectedIndex',0);
+		$val.val('');
+		$('#pmxi_value').show();
+		fix_tag_position();
+
+	});
+
+	$(document).on('change', '.rule_condition', function() {
+		$('input[name=' + $(this).attr('name') + ']').removeAttr('checked');
+		$(this).prop('checked', true).attr('checked', 'checked');
+	});
+
+	$(document).on('click', '.filtering_rules li a.remove-ico', function() {
+		$(this).parents('li:first').remove();
+		$('.filtering_rules').find('li:last div span.condition').hide();
+		if (!$('.filtering_rules').find('li').length){
+			$('#apply_filters').hide().trigger('click');
+			$('#filtering_rules').find('p').show();
+		}
+		fix_tag_position();
+	});
+
+	$('#pmxi_rule').on('change', function(){
+		if ($(this).val() == 'is_empty' || $(this).val() == 'is_not_empty') {
+			$('#pmxi_value').hide();
+		} else {
+			$('#pmxi_value').show();
+		}
+	});
+
+	var filter = '[';
+
+	var xpath_builder = function(rules_box, lvl){
+
+		var rules = rules_box.children('li');
+
+		var root_element = $('#root_element').val();
+
+		if (lvl && rules.length > 1) filter += ' (';
+
+		rules.each(function(){
+
+			var node = $(this).children('.drag-element').find('.pmxi_xml_element').val();
+			var condition = $(this).children('.drag-element').find('.pmxi_rule').val();
+			var value = $(this).children('.drag-element').find('.pmxi_value').val();
+
+			var clause = ($(this).children('.drag-element').find('.condition').is(':visible')) ? $(this).children('.drag-element').find('input.rule_condition:checked').val() : false;
+
+			var is_attr = false;
+
+			if (node.indexOf('@') != -1){
+				is_attr = true;
+				node_name = node.split('@')[0];
+				attr_name = node.split('@')[1];
+			}
+
+			if (is_attr) {
+				filter += (node_name == root_element) ? '' : node_name.replace(/->/g, '/');
+			} else {
+				filter += node.replace(/->/g, '/');
+			}
+
+			if (is_attr) filter += '@' + attr_name;
+
+			switch (condition){
+				case 'equals':
+					filter += ' = "%s"';
+					break;
+				case 'not_equals':
+					filter += ' != "%s"';
+					break;
+				case 'greater':
+					filter += ' > %s';
+					break;
+				case 'equals_or_greater':
+					filter += ' >= %s';
+					break;
+				case 'less':
+					filter += ' < %s';
+					break;
+				case 'equals_or_less':
+					filter += ' <= %s';
+					break;
+				case 'contains':
+					filter += '[contains(.,"%s")]';
+					break;
+				case 'not_contains':
+					filter += '[not(contains(.,"%s"))]';
+					break;
+				case 'is_empty':
+					filter += '[not(string())]';
+					break;
+				case 'is_not_empty':
+					filter += '[string()]';
+					break;
+			}
+
+			filter = filter.replace('%s', value);
+
+			if (clause) filter += ' ' + clause + ' ';
+
+			if ($(this).children('ol').length){
+				$(this).children('ol').each(function(){
+					if ($(this).children('li').length) xpath_builder($(this), 1);
+				});
+			}
+		});
+		if (lvl && rules.length > 1) filter += ') ';
+
+	}
 
 	$('form.wpallimport-choose-elements').find('input[type="submit"]').on('click', function(e){
 		e.preventDefault();
@@ -1458,7 +2435,7 @@
 			$tag.find('.navigation a').on('click', function () {
 				tagno += '#prev' == $(this).attr('href') ? -1 : 1;
 				$tag.addClass('loading').css('opacity', 0.7);
-				$.post($tagURL, {tagno: tagno, import_action: import_action, security: wp_all_import_security}, function (data) {
+				$.post($tagURL, {tagno: tagno, import_action: import_action, xpath: $('input[name="xpath"]').val(), security: wp_all_import_security}, function (data) {
 					var $indicator = $('<span />').insertBefore($tag);
 					$tag.replaceWith(data.html);
 					fix_tag_position();
@@ -1470,11 +2447,21 @@
 				}, 'json');
 				return false;
 			});
-			$tag.find('input[name="tagno"]').on('change', function () {
+			$tag.find('input[name="tagno"]').on('change keypress', function (event) {
+
+				// Check if the key pressed is enter, if not exit the function unless a
+				// 'change' event triggered it.
+				if(event.type === "keypress") {
+					var keycode = (event.keyCode ? event.keyCode : event.which);
+					if(keycode != '13'){
+						return;
+					}
+				}
+
 				tagno = (parseInt($(this).val()) > parseInt($tag.find('.pmxi_count').html())) ? $tag.find('.pmxi_count').html() : ( (parseInt($(this).val())) ? $(this).val() : 1 );
 				$(this).val(tagno);
 				$tag.addClass('loading').css('opacity', 0.7);
-				$.post($tagURL, {tagno: tagno, import_action: import_action, security: wp_all_import_security}, function (data) {
+				$.post($tagURL, {tagno: tagno, import_action: import_action, xpath: $('input[name="xpath"]').val(), security: wp_all_import_security}, function (data) {
 					var $indicator = $('<span />').insertBefore($tag);
 					$tag.replaceWith(data.html);
 					fix_tag_position();
@@ -1483,7 +2470,7 @@
 						$('#variations_xpath').data('checkedValue', '').trigger('change');
 					}
 				}, 'json');
-				return false;
+
 			});
 		});
 		return this;
@@ -1589,26 +2576,74 @@
 			$(this).next('label').attr({'for':$(this).next('label').attr('for') + '_' + count});
 			$(this).next('label').next('div').addClass($(this).next('label').next('div').attr('rel') + '_' + count);
 		});
-		$clone.insertBefore($template).css('display', 'none').removeClass('template').fadeIn().find('input.switcher').trigger('change');
+		$clone.insertBefore($template).css('display', 'none').removeClass('template').droppable({
+			drop: function (event, ui) {
+				let input = $(this).find("input.xpath_field:first");
+				let oldValue = input.val();
+				let newValue = ui.draggable.data('xpath') || '';
+				input.val(oldValue + newValue);
+			},
+			greedy:true
+		}).fadeIn().find('input.switcher').trigger('change');
 		let sortable = $(this).parents('.ui-sortable:first');
 		if (sortable.length){
 			$(this).parents('td:first').find('.hierarhy-output').val(window.JSON.stringify(sortable.pmxi_nestedSortable('toArray', {startDepthCount: 0})));
 	    	if ($(this).parents('td:first').find('input:first').val() == '') $(this).parents('td:first').find('.hierarhy-output').val('');
 	    }
-		$('.widefat').on('focus', insertxpath );
+		//$('.widefat').on('focus', insertxpath );
 	});
 
-	$('.add-new-cat').on('click', function(){
+	$(document).on('click', '.add-new-cat', function(){
 		var $template = $(this).parents('td:first').find('ul.tax_hierarchical_logic').children('li.template');
 		var $number = $(this).parents('td:first').find('ul.tax_hierarchical_logic').children('li').length - 1;
 		var $cloneName = $template.find('input.assign_term').attr('name').replace('NUMBER', $number);
 		$clone = $template.clone(true);
 		$clone.find('input[name^=tax_hierarchical_assing]').attr('name', $cloneName);
-		$clone.insertBefore($template).css('display', 'none').removeClass('template').fadeIn().find('input.switcher').trigger('change');
+		$clone.insertBefore($template).css('display', 'none').removeClass('template').droppable({
+			drop: function (event, ui) {
+				let input = $(this).find("input.hierarchical_xpath_field:first");
+				let oldValue = input.val();
+				let newValue = ui.draggable.data('xpath');
+				input.val(oldValue + newValue);
+			}
+		}).fadeIn().find('input.switcher').trigger('change');
 	});
 
 	$('ol.sortable').each(function(){
 		if ( ! $(this).children('li').not('.template').length ) $(this).next('.add-new-ico').trigger('click');
+	});
+
+	$('.tagno').trigger('change');
+
+	$('form.wpallimport-template.edit').each(function() {
+
+		var $input = $('input[name="xpath"]');
+
+		$input.on('change', function(){
+			$('.tagno').trigger('change');
+		}).trigger('change');
+		$input.on('keyup', function (e) {
+			if (13 == e.keyCode) $(this).trigger('change');
+		});
+
+		$('#apply_filters').on('click', function(){
+
+			filter = '';
+			if ($('.filtering_rules').children('li').length) {
+				filter = '[';
+				xpath_builder($('.filtering_rules'), 0);
+				filter += ']';
+			}
+
+			$input.val( $input.val().split('[')[0] + filter);
+			$input.data('checkedValue', '');
+			$input.trigger('change');
+			if ($('.filtering_rules').html().length) {
+				$('.filtering-output').val(window.JSON.stringify($('.filtering_rules').html()));
+			} else {
+				$('.filtering-output').val('');
+			}
+		});
 	});
 
 	$('form.wpallimport-template').find('input[type=submit]').on('click', function(e){
@@ -1676,7 +2711,10 @@
 		});
 	});
 
-	$('.add-new-entry').on('click', function(){
+	$(document).on('click', '.add-new-entry', function(e){
+		// Some "Add Another" links carry both classes; suppress the .add-new-key
+		// twin so the row isn't cloned twice.
+		e.stopImmediatePropagation();
 		var $template = $(this).parents('table').first().children('tbody').children('tr.template');
 		$number = $(this).parents('table').first().children('tbody').children('tr').length - 2;
 		$clone = $template.clone(true);
@@ -1709,6 +2747,12 @@
 		var $form = $(this);
 		var $uniqueKey = $form.find('input[name=unique_key]');
 		var $tmpUniqueKey = $form.find('input[name=tmp_unique_key]');
+
+		// Auto-detect unique key on page load if unique_key is empty and tmp_unique_key has a value
+		if ($uniqueKey.length && $tmpUniqueKey.length && !$uniqueKey.val() && $tmpUniqueKey.val()) {
+			$uniqueKey.val($tmpUniqueKey.val());
+		}
+
 		$form.find('.wpallimport-auto-detect-unique-key').on('click', function(){
 			$uniqueKey.val($tmpUniqueKey.val());
 		});
@@ -1750,16 +2794,28 @@
 
 		wplupload = $('#select-files').wplupload({
 			runtimes : 'gears,browserplus,html5,flash,silverlight,html4',
-			url : 'admin.php?page=pmxi-admin-settings&action=upload&_wpnonce=' + wp_all_import_security,
+			url : 'admin.php?page=pmxi-admin-settings&action=upload&_wpnonce=' + wp_all_import_security + ((typeof import_id != "undefined") ? '&id=' + import_id : ''),
 			container: 'plupload-ui',
 			browse_button : 'select-files',
 			file_data_name : 'async-upload',
 			multipart: true,
 			max_file_size: '1000mb',
 			chunk_size: '1mb',
-			drop_element: 'plupload-ui',
+			drop_element: $('#wpallimport-drag-drop-area').length ? 'wpallimport-drag-drop-area' : 'plupload-ui',
 			multipart_params : {}
 		});
+
+		// Handle alternative Excel processing checkbox state for uploads
+		if (wplupload) {
+			wplupload.bind('BeforeUpload', function(up, file) {
+				// Check current checkbox state and pass it to upload
+				if ($('#use_alternative_excel_processing').is(':checked')) {
+					up.settings.multipart_params.use_alternative_excel = '1';
+				} else {
+					up.settings.multipart_params.use_alternative_excel = '0';
+				}
+			});
+		}
 	}
 
 	/* END plupload scripts */
@@ -1800,12 +2856,56 @@
 		$(this).parents('.input:first').find('.keep_except').slideToggle();
 	});
 
-    $('.pmxi_choosen').each(function(){
-    	$(this).find(".choosen_input").select2({
-    		tags: $(this).find('.choosen_values').html().split(','),
-    		width: '80%',
-    	});
-    });
+	$('.pmxi_choosen').each(function(){
+		const $container = $(this);
+		const $hiddenInput = $container.find(".choosen_input");
+		const tagsString = $container.find('.choosen_values').html() || '';
+		const tags = tagsString.split(',').filter(tag => tag.trim());
+
+		// Create a select element to use with Select2
+		const $select = $('<select multiple class="select2-hidden-accessible"></select>');
+
+		// Add existing values as options
+		if ($hiddenInput.val()) {
+			const selectedValues = $hiddenInput.val().split(',');
+			selectedValues.forEach(value => {
+				if (value.trim()) {
+					$select.append(`<option value="${value.trim()}" selected>${value.trim()}</option>`);
+				}
+			});
+		}
+
+		// Add all possible tags as options if not already added
+		tags.forEach(tag => {
+			if (tag.trim()) {
+				let optionExists = false;
+				$select.find('option').each(function() {
+					if ($(this).val() === tag.trim()) {
+						optionExists = true;
+						return false;
+					}
+				});
+
+				if (!optionExists) {
+					$select.append(`<option value="${tag.trim()}">${tag.trim()}</option>`);
+				}
+			}
+		});
+
+		// Insert the select element after the hidden input
+		$hiddenInput.after($select);
+
+		// Initialize Select2 on the select element
+		$select.select2({
+			tags: true,
+			width: '80%'
+		});
+
+		// Update hidden input when Select2 selection changes
+		$select.on('change', function() {
+			$hiddenInput.val($(this).val().join(','));
+		});
+	});
 
     if (typeof wpPointerL10n != "undefined") wpPointerL10n.dismiss = 'Close';
 
@@ -1856,6 +2956,8 @@
                 //$('.wpallimport-overlay').hide();
             }
         }).pointer('open');
+
+		wpaiBindPopupInputs($(this).pointer('widget'));
 	});
 
 	// Custom Fields Mapping Dialog
@@ -1880,6 +2982,8 @@
 	                //$('.wpallimport-overlay').hide();
 	            }
 	        }).pointer('open');
+
+			wpaiBindPopupInputs($triggerEvent.pointer('widget'));
 		}
 	});
 
@@ -1897,9 +3001,57 @@
 		    editor.setSize("100%", $(this).height());
 		  }
 		});
+		var currentImportFunctions = editor.codemirror.getValue();
+		editor.codemirror.on('change',function(cMirror){
+			if ( currentImportFunctions != cMirror.getValue()){
+				window.onbeforeunload = function () {
+					return 'WARNING:\nFunctions are not saved, leaving the page will reset changes in Function editor.';
+				};
+			} else {
+				window.onbeforeunload = false;
+			}
+		});
 	}
 
-    $('.wp_all_import_ajax_deletion').click(function(e){
+	function wp_all_import_save_functions(){
+		var request = {
+			action: 'save_import_functions',
+			data: editor.codemirror.getValue(),
+			security: wp_all_import_security
+		};
+		$('.wp_all_import_functions_preloader').show();
+		$('.wp_all_import_saving_status').removeClass('error updated').html('');
+		return $.ajax({
+			type: 'POST',
+			url: ajaxurl + ((typeof import_id != "undefined") ? '?id=' + import_id : ''),
+			data: request,
+			success: function(response) {
+				$('.wp_all_import_functions_preloader').hide();
+				if (response.result) {
+					window.onbeforeunload = false;
+					$('.wp_all_import_saving_status').addClass('updated');
+					setTimeout(function() {
+						$('.wp_all_import_saving_status').removeClass('error updated').html('');
+					}, 3000);
+				} else {
+					$('.wp_all_import_saving_status').addClass('error');
+				}
+				$('.wp_all_import_saving_status').html(response.msg).show();
+			},
+			error: function( jqXHR, textStatus ) {
+				$('.wp_all_import_functions_preloader').hide();
+			},
+			dataType: "json"
+		});
+	}
+
+    $('.wp_all_import_save_functions').on('click', function(){
+		$('.cross-sale-notice.codebox').slideUp();
+
+    	wp_all_import_save_functions();
+    });
+
+    $('.wp_all_import_ajax_deletion').on('click', function(e){
     	e.preventDefault();
     	var $ths = $(this);
     	$(this).attr('disabled', 'disabled');
@@ -1950,7 +3102,7 @@
 			});
 		} else {
 			$parent.addClass('closed');
-			$parent.find('.wpallimport-collapsed-content:first').slideUp();
+			$parent.find('.wpallimport-collapsed-content:first').slideUp(400);
 		}
 	});
 
@@ -2035,7 +3187,8 @@
     // [\ Delete Import]
 
 	let get_delete_missing_notice_type = function() {
-		if (!$('input[name="is_delete_missing"]').is(':checked')) {
+		let $is_delete_missing = $('input#is_delete_missing');
+		if (!$is_delete_missing.is(':checked') || $is_delete_missing.data('backups-prompt') === 'disabled') {
 			return 0;
 		}
 		if ($('input[name="delete_missing_logic"]:checked').val() == 'import' && $('input[name="delete_missing_action"]:checked').val() == 'keep' && $('input[name="is_send_removed_to_trash"]').is(':checked')) {
@@ -2136,65 +3289,153 @@
 			});
 		});
 	});
+    
+    // Function to check if delete missing should be restricted based on duplicate_matching
+    function shouldRestrictDeleteMissing() {
+        return $('input[name="duplicate_matching"]').val() === 'manual';
+    }
 
-	var fix_tag_position = function(){
-		if ($('.wpallimport-layout').length && $('.tag').length && $('.wpallimport-content-section').length){
-			var offset_top = $('.wpallimport-content-section').first().offset().top;
-			var position_top = offset_top - $(document).scrollTop();
-			var wordpress_adminbar_height = $('#wpadminbar').height();
+    $('input#is_send_removed_to_trash').change(function(e){
+        // "Send to trash" is always restricted in free edition
+        $('.wpallimport-free-edition-notice.send-removed-to_trash-notice').slideDown();
+        $('input#is_send_removed_to_trash').addClass('wpai-shake-small');
+        setTimeout(function(){
+            $('input#is_send_removed_to_trash').prop('checked', false);
+            $('input#is_send_removed_to_trash').removeClass('wpai-shake-small');
+            return false;
+        },600);
+    });
 
-			$('.tag').css({'top': offset_top});
-			$('.tag').css('margin-top', '0');
 
-	        if ($(document).scrollTop() + wordpress_adminbar_height > offset_top){
-	            $('.tag').css({'top':'50px'});
-	            $('.wpallimport-xml').css({'max-height': ($(window).height() - 147) + 'px' });
-	        } else {
-				$('.tag').css({'top': position_top + 'px' });
-	        	$('.wpallimport-xml').css({'max-height': ($(window).height() - 220) + 'px' });
-	        }
-	    }
-	}
 
-	$('input#is_send_removed_to_trash').change(function(e){
-		$('.wpallimport-free-edition-notice.send-removed-to_trash-notice').slideDown();
-		$('input#is_send_removed_to_trash').addClass('wpai-shake-small');
-		setTimeout(function(){
-			$('input#is_send_removed_to_trash').prop('checked', false);
-			$('input#is_send_removed_to_trash').removeClass('wpai-shake-small');
-			return false;
-		},600);
-	});
 
-	$('input#is_delete_missing').change(function(e){
-		let selector = '.wpallimport-free-edition-notice.delete-missing-existing-items';
-		if ($(selector).length) {
-			$(selector).slideDown();
-			$('input#is_delete_missing').addClass('wpai-shake-small');
-			setTimeout(function(){
-				$('input#is_delete_missing').prop('checked', false);
-				$('input#is_delete_missing').removeClass('wpai-shake-small');
-				return false;
-			},600);
-		}
-	});
 
+    // Function to update delete missing behavior based on wizard type
+    function updateDeleteMissingBehavior(resetSection = false) {
+        let $deleteMissingCheckbox = $('input#is_delete_missing');
+        let $deleteMissingNotice = $('.wpallimport-free-edition-notice.delete-missing-existing-items');
+        let $sendToTrashNotice = $('.wpallimport-free-edition-notice.send-removed-to_trash-notice');
+
+
+
+        // Only reset delete missing section when switching wizard types, not on initial load
+        if (resetSection) {
+            $deleteMissingCheckbox.prop('checked', false);
+            $('.switcher-target-is_delete_missing').hide(); // Close the delete missing section
+        }
+
+        // Show or hide the delete missing notice based on restriction status
+        if (shouldRestrictDeleteMissing()) {
+            $deleteMissingNotice.show();
+        } else {
+            $deleteMissingNotice.hide();
+        }
+
+        // Elements that are disabled only when wizard_type == 'matching'
+        let $wizardRestrictedElements = $(
+            '#delete_missing_logic_import, #delete_missing_logic_all, ' +
+            '#delete_missing_action_keep, #delete_missing_action_remove, ' +
+            '#is_change_post_status_of_removed, #is_update_missing_cf, ' +
+            '#missing_records_stock_status, #is_delete_attachments, #is_delete_imgs, ' +
+            'select[name="status_of_removed"], select[name="status_of_removed_products"]'
+        );
+
+        // Elements that are always restricted in free edition (regardless of wizard type)
+        let $alwaysRestrictedElements = $('#is_send_removed_to_trash');
+
+        if (shouldRestrictDeleteMissing()) {
+            // For "Update existing" - show main notice, disable wizard-restricted elements
+            $deleteMissingNotice.show();
+            $wizardRestrictedElements.prop('disabled', true);
+        } else {
+            // For "Create new" - hide main notice, enable wizard-restricted elements
+            $deleteMissingNotice.hide();
+            $wizardRestrictedElements.prop('disabled', false);
+            $deleteMissingCheckbox.removeClass('wpai-shake-small');
+        }
+
+        // Always keep free edition restricted elements enabled so shake behavior works
+        $alwaysRestrictedElements.prop('disabled', false); // Enable so shake behavior works
+        $sendToTrashNotice.hide(); // Hide notice initially (shown on click)
+        $('input#is_send_removed_to_trash').removeClass('wpai-shake-small');
+
+
+    }
+
+    // Initialize on page load
+    updateDeleteMissingBehavior(false); // Don't reset section on initial load
+
+    $('input#is_delete_missing').change(function(e){
+        if (shouldRestrictDeleteMissing()) {
+            // Show notice if it exists, otherwise just do shake behavior
+            let $notice = $('.wpallimport-free-edition-notice.delete-missing-existing-items');
+            if ($notice.length) {
+                $notice.slideDown();
+            }
+            $('input#is_delete_missing').addClass('wpai-shake-small');
+            setTimeout(function(){
+                $('input#is_delete_missing').prop('checked', false);
+                $('input#is_delete_missing').removeClass('wpai-shake-small');
+                return false;
+            },600);
+        }
+    });
+	
 	fix_tag_position();
 
+    var toggle_dynamic_notice = function(){
+
+        $('.wpallimport-dynamic-notice').hide();
+
+        var $import_to_custom_type = $('input[name=custom_type]').val();
+
+        var $is_show_cf_notice = false;
+        var $is_show_images_notice = false;
+
+        $('input[name^=custom_name]').each(function(){
+            if ( $(this).val() != "")
+            {
+                $is_show_cf_notice = true;
+                return false;
+            }
+        });
+
+        if ( $import_to_custom_type != 'product' &&
+            ( $('textarea[name=download_featured_image]').length && $('textarea[name=download_featured_image]').val() != "" ||
+                $('textarea[name=gallery_featured_image]').length && $('textarea[name=gallery_featured_image]').val() != "" ||
+                $('textarea[name=featured_image]').length && $('textarea[name=featured_image]').val() != "" ))
+        {
+            $is_show_images_notice = true;
+        }
+
+        if ( $is_show_cf_notice && $is_show_images_notice ){
+            $('.wpallimport-dynamic-notice').find('a').html($('.wpallimport-dynamic-notice-cf-image-text').val());
+            $('.wpallimport-dynamic-notice').show();
+        }
+        else if ( $is_show_cf_notice ){
+            $('.wpallimport-dynamic-notice').find('a').html($('.wpallimport-dynamic-notice-cf-text').val());
+            $('.wpallimport-dynamic-notice').show();
+        }
+        else if ( $is_show_images_notice ) {
+            $('.wpallimport-dynamic-notice').find('a').html($('.wpallimport-dynamic-notice-images-text').val());
+            $('.wpallimport-dynamic-notice').show();
+        }
+
+    }
+
 	$(document).on('scroll', function() {
-    	fix_tag_position();
-    	toggle_dynamic_notice();
-	});
+    	fix_tag_position();    	
+        toggle_dynamic_notice();
+    });
 
-	toggle_dynamic_notice();
+    toggle_dynamic_notice();
 
-	$('input[name^=custom_name], input[name^=custom_value], textarea[name=download_featured_image], textarea[name=gallery_featured_image], textarea[name=featured_image]').change(function() {
-		toggle_dynamic_notice();
-	});
+    $('input[name^=custom_name], input[name^=custom_value], textarea[name=download_featured_image], textarea[name=gallery_featured_image], textarea[name=featured_image]').change(function() {
+        toggle_dynamic_notice();
+    });
 
-	$('input[name^=custom_name], input[name^=custom_value], textarea[name=download_featured_image], textarea[name=gallery_featured_image], textarea[name=featured_image]').blur(function() {
-		toggle_dynamic_notice();
-	});
-
+    $('input[name^=custom_name], input[name^=custom_value], textarea[name=download_featured_image], textarea[name=gallery_featured_image], textarea[name=featured_image]').blur(function() {
+        toggle_dynamic_notice();
+    });
 
 });})(jQuery);

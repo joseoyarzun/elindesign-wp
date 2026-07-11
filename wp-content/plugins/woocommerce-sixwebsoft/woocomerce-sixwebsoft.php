@@ -1,105 +1,26 @@
 <?php
 /**
- * Plugin Name: WooCommerce scancoordesign
- * Description: Size, width etc variants calculation. Independent plugin with its own templates.
+ * Plugin Name: WooCommerce sixwebsoft
+ * Description:  size , width etc vaiants calculation,
  * Author: Drake
- * Author URI: https://scancoordesign.com
- * Text Domain: scancoordesign.com
+ * Author URI: https://sixwebsoft.com
+ * Text Domain: sixwebsoft.com
  * Domain Path:
- * Version: 2.1
- * Requires at least: 5.0
- * Requires PHP: 7.2
- * WC requires at least: 3.0
- * WC tested up to: 8.0
+ * Version: 2.0
  *
- * @package WooCommerce-ScancoorDesign
- * 
- * Changelog:
- * 2.1 - Templates now loaded from plugin directory. No longer dependent on theme files.
- * 2.0 - Previous version
+ *
+ *
  */
 
 if (!defined('ABSPATH')) {
 	exit;
 }
 
-// Define plugin constants
-define('SCANCOORDESIGN_VERSION', '2.1');
-define('SCANCOORDESIGN_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('SCANCOORDESIGN_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('SCANCOORDESIGN_TEMPLATES_DIR', SCANCOORDESIGN_PLUGIN_DIR . 'templates/');
-
 /**
  * Check if WooCommerce is active
- * Display admin notice if WooCommerce is not active
  **/
-function scancoordesign_check_woocommerce_active() {
-	if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-		add_action('admin_notices', 'scancoordesign_woocommerce_missing_notice');
-		return false;
-	}
-	return true;
-}
-
-function scancoordesign_woocommerce_missing_notice() {
-	?>
-	<div class="notice notice-error">
-		<p><strong>WooCommerce ScancoorDesign:</strong> Este plugin requiere que WooCommerce esté activo. Por favor, activa WooCommerce primero.</p>
-	</div>
-	<?php
-}
-
-// Only load plugin if WooCommerce is active
-if (scancoordesign_check_woocommerce_active()) {
-	// Plugin code continues here
-	
-// Load plugin classes
-require_once SCANCOORDESIGN_PLUGIN_DIR . 'includes/class-variants-config.php';
-require_once SCANCOORDESIGN_PLUGIN_DIR . 'includes/admin/settings-page.php';
-
-/**
- * Helper function to get variant configuration
- * Replaces get_fields(389) calls
- * 
- * @return array Configuration data
- */
-function scancoordesign_get_config() {
-	return ScancoorDesign_Variants_Config::get_all();
-}
-
-/**
- * Helper function for backward compatibility
- * Mimics ACF's get_fields() but uses our internal system
- * 
- * @param int $post_id Post ID (ignored, kept for compatibility)
- * @return array Configuration data
- */
-function scancoordesign_get_fields($post_id = null) {
-	// Try internal system first
-	$config = ScancoorDesign_Variants_Config::get_all();
-	
-	// If empty and ACF is available, try ACF as fallback
-	if (ScancoorDesign_Variants_Config::is_empty() && function_exists('get_fields')) {
-		$acf_data = get_fields(389);
-		if (!empty($acf_data)) {
-			return $acf_data;
-		}
-	}
-	
-	return $config;
-}
-
-/**
- * Helper function for backward compatibility
- * Mimics ACF's get_field() but uses our internal system
- * 
- * @param string $field_name Field name
- * @param int $post_id Post ID (ignored)
- * @return mixed Field value
- */
-function scancoordesign_get_field($field_name, $post_id = null) {
-	$config = scancoordesign_get_fields($post_id);
-	return isset($config[$field_name]) ? $config[$field_name] : null;
+if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+	// Put your plugin code here
 }
 
 // Our custom post type function
@@ -125,62 +46,13 @@ add_action('init', 'variants_post');
 
 /**
  * Gives custom product type a template
- * Loads from plugin directory, independent of theme
  *
  * @return void
  */
 function se47910821_answer() {
-	$template_path = plugin_dir_path(__FILE__) . 'templates/single-product/add-to-cart/auto_varient.php';
-	
-	// Load template from plugin directory
-	if (file_exists($template_path)) {
-		include $template_path;
-	} else {
-		// Fallback to WooCommerce template system
-		wc_get_template('single-product/add-to-cart/auto_varient.php');
-	}
+	wc_get_template('single-product/add-to-cart/auto_varient.php');
 }
 add_action('woocommerce_auto_varient_add_to_cart', 'se47910821_answer');
-
-/**
- * Add plugin templates directory to WooCommerce template path
- * This ensures templates are loaded from plugin even if theme/WC updates
- *
- * @param string $template Template path
- * @param string $template_name Template name
- * @param string $template_path Template path within theme
- * @return string Modified template path
- */
-function scancoordesign_woocommerce_locate_template($template, $template_name, $template_path) {
-	$plugin_template_path = plugin_dir_path(__FILE__) . 'templates/';
-	
-	// Check if template exists in plugin
-	$plugin_template = $plugin_template_path . $template_name;
-	
-	if (file_exists($plugin_template)) {
-		return $plugin_template;
-	}
-	
-	return $template;
-}
-add_filter('woocommerce_locate_template', 'scancoordesign_woocommerce_locate_template', 10, 3);
-
-/**
- * Display initial price for auto_varient products on single product page
- */
-add_filter('woocommerce_get_price_html', 'scancoordesign_auto_varient_price_html', 10, 2);
-function scancoordesign_auto_varient_price_html($price, $product) {
-	if ($product->get_type() === 'auto_varient') {
-		// If product has a regular price, show it
-		if ($product->get_regular_price() > 0) {
-			return $price;
-		}
-		
-		// Otherwise show a placeholder that will be replaced by JavaScript
-		return '<span class="woocommerce-Price-amount amount"><span class="woocommerce-Price-currencySymbol">' . get_woocommerce_currency_symbol() . '</span> <span class="scancoordesign-calculating">Calculando...</span></span>';
-	}
-	return $price;
-}
 
 function custom_attribute($product) {
 
@@ -399,7 +271,7 @@ add_filter('woocommerce_cart_item_price', 'sv_change_product_price_cart', 10, 3)
 add_action('woocommerce_before_order_itemmeta', 'so_32457241_before_order_itemmeta', 10, 3);
 function so_32457241_before_order_itemmeta($item_id, $item, $_product) {
 
-	$data = scancoordesign_get_field("laborcost", $item->get_product_id());
+	$data = get_field("laborcost", $item->get_product_id());
 	if (!empty($data)) {
 		?>
 	<table cellspacing="0" class="display_meta">
@@ -457,23 +329,13 @@ function register_auto_varient_type() {
 	class WC_Product_Auto_Varient extends WC_Product {
 
 		public function __construct($product) {
+			//$this->product_type = 'auto_varient';
 			parent::__construct($product);
 		}
         
         // Needed since Woocommerce version 3
         public function get_type() {
             return 'auto_varient';
-        }
-        
-        // Override get_price_html to show calculated price
-        public function get_price_html($price = '') {
-            // If product has a regular price set, show it
-            if ($this->get_regular_price()) {
-                return parent::get_price_html($price);
-            }
-            
-            // Otherwise show "from" message
-            return '<span class="woocommerce-Price-amount amount">0&nbsp;<span class="woocommerce-Price-currencySymbol">' . get_woocommerce_currency_symbol() . '</span></span>';
         }
 	}
 }
@@ -505,7 +367,7 @@ add_action('woocommerce_product_data_panels', 'auto_varient_tab_content');
 function auto_varient_tab_content() {
 	global $thepostid, $post, $woocommerce;
 	$thepostid = empty($thepostid) ? $post->ID : $thepostid;
-	$data = scancoordesign_get_config();
+	$data = get_fields(389);
 
 	// echo "<pre>";
 	//get_post_meta($thepostid, 'auto_varient_data', true));
@@ -735,6 +597,7 @@ function pd_custom_product_admin_custom_js() {
         	});
         });
 
+
        function check_auto_varient() {
        		if(jQuery("#product-type").val() == 'auto_varient'){
 	            jQuery('.options_group.pricing').show();
@@ -747,69 +610,18 @@ function pd_custom_product_admin_custom_js() {
 	            jQuery('#inventory_product_data ._sold_individually_field').show();
         	}
        }
+       function select_all() {
+    		alert("dada");
+    	}
     </script>
     <?php
 }
 
-/**
- * Helper function to split variant options
- * Format: "Name|Price|Density"
- */
-function get_options_six($value) {
-	return explode("|", $value);
-}
-
-/**
- * AJAX handler for auto_varient price calculation
- * Called from frontend when user changes variant options
- */
-add_action('wp_ajax_nopriv_auto_varient_calculate', 'scancoordesign_ajax_calculate_price');
-add_action('wp_ajax_auto_varient_calculate', 'scancoordesign_ajax_calculate_price');
-
-function scancoordesign_ajax_calculate_price() {
-	// Verify we have the required data
-	if (empty($_POST['custom_attr'])) {
-		wp_send_json_error(array('message' => 'No custom attributes provided'));
-		return;
-	}
-
-	$POST = $_POST['custom_attr'];
-	$fields = scancoordesign_get_config();
-
-	// Validate required fields
-	if (empty($POST['metal']) || empty($_POST['new_custom_attr']['laborcost'])) {
-		wp_send_json_error(array('message' => 'Missing required fields'));
-		return;
-	}
-
-	$data = array(
-		'goldprice' => get_options_six($POST['metal'])[1],
-		'laborcost' => $_POST['new_custom_attr']['laborcost'],
-		'size' => $POST['size'],
-		'width' => $POST['width'],
-		'thickness' => $POST['thickness'],
-		'metal' => get_options_six($POST['metal'])[0],
-		'engravement' => get_options_six($POST['engravement'])[1],
-		'stone' => get_options_six($POST['stone'])[1],
-		'density' => get_options_six($POST['metal'])[2],
-	);
-	
-	$total_price = calc_price($data);
-	$data['stone'] = get_options_six($POST['stone'])[0];
-	$data['engravement'] = get_options_six($POST['engravement'])[0];
-	$data['surface'] = $POST['surface'];
-	
-	wp_send_json_success(array(
-		'status' => 'true',
-		'price' => $total_price,
-		'data' => $data
-	));
-}
-
-// Legacy support for old AJAX method
 if (!empty($_GET['action']) && $_GET['action'] == 'auto_varient') {
+
+	//print_r($_POST);
 	$POST = $_POST['custom_attr'];
-	$fields = scancoordesign_get_config();
+	$fields = get_fields(389);
 
 	$data = array(
 		'goldprice' => get_options_six($POST['metal'])[1],
@@ -828,6 +640,9 @@ if (!empty($_GET['action']) && $_GET['action'] == 'auto_varient') {
 	$data['surface'] = $POST['surface'];
 	echo json_encode(array("status" => "true", "price" => $total_price, "data" => $data));
 	die();
+
 }
 
-} // End WooCommerce active check
+function get_options_six($value) {
+	return explode("|", $value);
+}

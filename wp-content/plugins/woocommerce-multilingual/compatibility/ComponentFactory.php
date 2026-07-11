@@ -9,7 +9,7 @@ use WPML_Element_Translation_Package;
 abstract class ComponentFactory implements \IWPML_Backend_Action_Loader, \IWPML_Frontend_Action_Loader {
 
 	/**
-	 * @return callable|\IWPML_Action|\IWPML_Action[]|void|null
+	 * @return array|callable|\IWPML_Action
 	 */
 	abstract public function create();
 

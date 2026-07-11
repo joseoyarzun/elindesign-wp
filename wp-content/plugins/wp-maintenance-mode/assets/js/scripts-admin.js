@@ -387,22 +387,17 @@ jQuery( function( $ ) {
 		$( this ).addClass( 'is-busy' );
 		$( this ).trigger( 'blur' );
 
-		handleOptimole().then( function() {
-			$.post( wpmmVars.ajaxURL, {
-				action: 'wpmm_skip_wizard',
-				_wpnonce: wpmmVars.wizardNonce,
-			}, function( response ) {
-				if ( ! response.success ) {
-					addErrorMessage();
-					return;
-				}
+		$.post( wpmmVars.ajaxURL, {
+			action: 'wpmm_skip_wizard',
+			_wpnonce: wpmmVars.wizardNonce,
+		}, function( response ) {
+			if ( ! response.success ) {
+				addErrorMessage();
+				return;
+			}
 
-				skipWizard = true;
-				moveToStep( 'import', 'subscribe' );
-			} );
-		} ).catch( function() {
-			addErrorMessage();
-			$( '.button-skip' ).removeClass( 'is-busy' );
+			skipWizard = true;
+			moveToStep( 'import', 'subscribe' );
 		} );
 	} );
 
@@ -434,11 +429,13 @@ jQuery( function( $ ) {
 
 		emailInput.removeClass( 'invalid' );
 		subscribeButton.addClass( 'is-busy' );
+		const optIn = $('#wizard-opt-in').is( ':checked' );
 
 		$.post( wpmmVars.ajaxURL, {
 			action: 'wpmm_subscribe',
 			email,
 			_wpnonce: wpmmVars.wizardNonce,
+			opt_in: optIn ? 1 : 0,
 		}, function( response ) {
 			if ( ! response.success ) {
 				alert( response.data );
@@ -482,16 +479,26 @@ jQuery( function( $ ) {
         }
     } );
 
+	$( '#wizard-otter-block-checkbox' ).on( 'change', function() {
+		if ( ! $(this).is(':checked') ) {
+			$( '.wpmm-templates-radio' ).addClass( 'disabled' );
+		} else {
+			$( '.wpmm-templates-radio' ).removeClass( 'disabled' );
+		}
+	} );
+
 	/**
 	 * Adds elements and CSS when importing from wizard
 	 *
 	 * @param {string} slug The template that will be imported
 	 */
 	function importInProgress( slug ) {
-		const template = $( 'input[value=' + slug + '] + .wpmm-template' );
-
-		template.addClass( 'loading' );
-		template.append( '<span class="dashicons dashicons-update"></span><p><i>' + wpmmVars.loadingString + '</i></p>' );
+		if ( ! $('.wpmm-templates-radio').hasClass('disabled') ) {
+			const template = $( 'input[value=' + slug + '] + .wpmm-template' );
+	
+			template.addClass( 'loading' );
+			template.append( '<span class="dashicons dashicons-update"></span><p><i>' + wpmmVars.loadingString + '</i></p>' );
+		}
 
 		$( '.button-import' ).attr( 'disabled', 'disabled' );
 		$( '#wpmm-wizard-wrapper .button-skip' ).addClass( 'disabled' );
@@ -518,8 +525,7 @@ jQuery( function( $ ) {
 	 * @param {Function} callback
 	 */
 	function importTemplate( data, callback ) {
-		handleOtter()
-			.then( () => handleOptimole() )
+		handlePlugins()
 			.then( () => addToPage( data, callback ) )
 			.catch( ( error ) => {
 				// eslint-disable-next-line no-console
@@ -561,6 +567,22 @@ jQuery( function( $ ) {
 	 * @param {Function} callback
 	 */
 	function addToPage( data, callback ) {
+		if ($('.wpmm-templates-radio').hasClass('disabled')) {
+			$.post( wpmmVars.ajaxURL, {
+				action: 'wpmm_skip_insert_template',
+				_wpnonce: wpmmVars.wizardNonce,
+			}, function( response ) {
+				if ( ! response.success ) {
+					addErrorMessage();
+					return;
+				}
+
+				skipWizard = true;
+				moveToStep( 'import', 'subscribe' );
+			} );
+			return Promise.resolve();
+		}
+	
 		data.action = 'wpmm_insert_template';
 		$.post( wpmmVars.ajaxURL, data, function( response ) {
 			if ( ! response.success ) {
@@ -575,23 +597,48 @@ jQuery( function( $ ) {
 	}
 
 	/**
-	 * Install and activate Optimole if the checkbox is checked.
+	 * Install and activate recommended plugins if the checkboxes is checked.
 	 */
-	function handleOptimole() {
+	function handlePlugins() {
 		const optimoleCheckbox = $( '#wizard-optimole-checkbox' );
+		const wpscCheckbox = $( '#wizard-wpsc-checkbox' );
+		const otterBlockCheckbox = $( '#wizard-otter-block-checkbox' );
+		let promiseChain = Promise.resolve();
 
 		if ( optimoleCheckbox.length && optimoleCheckbox.is( ':checked' ) ) {
-			if ( ! wpmmVars.isOptimoleInstalled ) {
-				return installPlugin( 'optimole-wp' )
-					.then( () => {
+			promiseChain = promiseChain
+				.then(() => {
+					if ( ! wpmmVars.isOptimoleInstalled ) {
+						return installPlugin( 'optimole-wp' ).then( () => activatePlugin( 'optimole-wp' ) );
+					}
+
+					if ( ! wpmmVars.isOptimoleActive ) {
 						return activatePlugin( 'optimole-wp' );
-					} );
-			} else if ( ! wpmmVars.isOptimoleActive ) {
-				return activatePlugin( 'optimole-wp' );
-			}
+					}
+				});
 		}
 
-		return Promise.resolve();
+		if ( wpscCheckbox.length && wpscCheckbox.is( ':checked' ) ) {
+			promiseChain = promiseChain
+				.then( () => {
+					if ( ! wpmmVars.isWPSCInstalled ) {
+						return installPlugin( 'wp-cloudflare-page-cache' ).then( () => activatePlugin( 'wp-cloudflare-page-cache' ) );
+					}
+
+					if ( ! wpmmVars.isWPSCActive ) {
+						return activatePlugin( wpmmVars.isWPSCProInstalled ? 'wp-super-page-cache-pro' : 'wp-cloudflare-page-cache' );
+					}
+				} );
+		}
+
+		if ( otterBlockCheckbox.length && otterBlockCheckbox.is( ':checked' ) ) {
+			promiseChain = promiseChain
+				.then(() => handleOtter());
+		}
+
+		return promiseChain.catch( ( error ) => {
+			console.error( 'Error in plugin installation or activation:', error );
+		});
 	}
 
 	/**
@@ -604,7 +651,7 @@ jQuery( function( $ ) {
 					updateSDKOptions();
 					return activatePlugin( 'otter-blocks' );
 				} );
-		} else if ( ! wpmmVars.isOtterActivated ) {
+		} else if ( ! wpmmVars.isOtterActive ) {
 			return activatePlugin( 'otter-blocks' );
 		}
 
@@ -656,6 +703,9 @@ jQuery( function( $ ) {
 				return $.get( wpmmVars.otterActivationLink );
 			case 'optimole-wp':
 				return $.get( wpmmVars.optimoleActivationLink );
+			case 'wp-super-page-cache-pro':
+			case 'wp-cloudflare-page-cache':
+				return $.get( wpmmVars.wpscActivationLink );
 			default:
 				break;
 		}

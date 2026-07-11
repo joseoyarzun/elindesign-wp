@@ -92,9 +92,23 @@ class OMAPI_Actions {
 		$option  = $this->base->get_option();
 		$changed = false;
 
+		// Set some onboarding connection related variables.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$onboarding_connect    = empty( $_GET['onboardingConnect'] ) ? 'false' : sanitize_key( wp_unslash( $_GET['onboardingConnect'] ) );
+		$connection_token      = $this->base->get_option( 'connectionToken' );
+		$is_onboarding_connect = ! empty( $connection_token ) && wp_validate_boolean( $onboarding_connect );
+
+		// Determine if we're missing API key credentials.
+		$missing_api_key = ! OMAPI_ApiKey::has_credentials();
+
 		// If we don't have an API Key yet, we can't fetch anything else.
-		if ( empty( $creds['apikey'] ) && empty( $creds['user'] ) && empty( $creds['key'] ) ) {
+		if ( $missing_api_key && ! $is_onboarding_connect ) {
 			return;
+		}
+
+		// Set the onboarding credentials if we don't already have credentials.
+		if ( empty( $creds ) ) {
+			$creds = array( 'onboardingApiKey' => 'omwpoct_' . $connection_token );
 		}
 
 		// Fetch the userId and accountId, if we don't have them.
@@ -112,6 +126,10 @@ class OMAPI_Actions {
 				$changed = true;
 				$option  = $result;
 			}
+		}
+
+		if ( $changed && ! empty( $option['connectionToken'] ) ) {
+			unset( $option['connectionToken'] );
 		}
 
 		// Fetch the SiteIds for this site, if we don't have them.
@@ -262,10 +280,10 @@ class OMAPI_Actions {
 	 * @return bool  Whether upgrade routine was completed successfully.
 	 */
 	public function v290_upgrades() {
-		$creds  = $this->base->get_api_credentials();
-		$siteId = $this->base->get_site_id();
+		$creds   = $this->base->get_api_credentials();
+		$site_id = $this->base->get_site_id();
 
-		if ( empty( $creds['apikey'] ) || empty( $siteId ) ) {
+		if ( empty( $creds['apikey'] ) || empty( $site_id ) ) {
 			return false;
 		}
 
@@ -273,7 +291,7 @@ class OMAPI_Actions {
 			'admin_url' => esc_url_raw( get_admin_url() ),
 		);
 
-		$api     = OMAPI_Api::build( 'v2', 'sites/' . $siteId, 'PUT', $creds );
+		$api     = OMAPI_Api::build( 'v2', 'sites/' . $site_id, 'PUT', $creds );
 		$results = $api->request( $args );
 
 		return ! is_wp_error( $results );

@@ -1,5 +1,6 @@
 <?php
 
+declare (strict_types=1);
 /*
  * This file is part of the Monolog package.
  *
@@ -11,6 +12,7 @@
 namespace Google\Site_Kit_Dependencies\Monolog\Handler;
 
 use Google\Site_Kit_Dependencies\Monolog\Logger;
+use Google\Site_Kit_Dependencies\Psr\Log\LogLevel;
 /**
  * Simple handler wrapper that deduplicates log records across multiple requests
  *
@@ -30,15 +32,19 @@ use Google\Site_Kit_Dependencies\Monolog\Logger;
  * same way.
  *
  * @author Jordi Boggiano <j.boggiano@seld.be>
+ *
+ * @phpstan-import-type Record from \Monolog\Logger
+ * @phpstan-import-type LevelName from \Monolog\Logger
+ * @phpstan-import-type Level from \Monolog\Logger
  */
-class DeduplicationHandler extends \Google\Site_Kit_Dependencies\Monolog\Handler\BufferHandler
+class DeduplicationHandler extends BufferHandler
 {
     /**
      * @var string
      */
     protected $deduplicationStore;
     /**
-     * @var int
+     * @var Level
      */
     protected $deduplicationLevel;
     /**
@@ -52,18 +58,20 @@ class DeduplicationHandler extends \Google\Site_Kit_Dependencies\Monolog\Handler
     /**
      * @param HandlerInterface $handler            Handler.
      * @param string           $deduplicationStore The file/path where the deduplication log should be kept
-     * @param int              $deduplicationLevel The minimum logging level for log records to be looked at for deduplication purposes
+     * @param string|int       $deduplicationLevel The minimum logging level for log records to be looked at for deduplication purposes
      * @param int              $time               The period (in seconds) during which duplicate entries should be suppressed after a given log is sent through
      * @param bool             $bubble             Whether the messages that are handled can bubble up the stack or not
+     *
+     * @phpstan-param Level|LevelName|LogLevel::* $deduplicationLevel
      */
-    public function __construct(\Google\Site_Kit_Dependencies\Monolog\Handler\HandlerInterface $handler, $deduplicationStore = null, $deduplicationLevel = \Google\Site_Kit_Dependencies\Monolog\Logger::ERROR, $time = 60, $bubble = \true)
+    public function __construct(HandlerInterface $handler, ?string $deduplicationStore = null, $deduplicationLevel = Logger::ERROR, int $time = 60, bool $bubble = \true)
     {
-        parent::__construct($handler, 0, \Google\Site_Kit_Dependencies\Monolog\Logger::DEBUG, $bubble, \false);
-        $this->deduplicationStore = $deduplicationStore === null ? \sys_get_temp_dir() . '/monolog-dedup-' . \substr(\md5(__FILE__), 0, 20) . '.log' : $deduplicationStore;
-        $this->deduplicationLevel = \Google\Site_Kit_Dependencies\Monolog\Logger::toMonologLevel($deduplicationLevel);
+        parent::__construct($handler, 0, Logger::DEBUG, $bubble, \false);
+        $this->deduplicationStore = $deduplicationStore === null ? sys_get_temp_dir() . '/monolog-dedup-' . substr(md5(__FILE__), 0, 20) . '.log' : $deduplicationStore;
+        $this->deduplicationLevel = Logger::toMonologLevel($deduplicationLevel);
         $this->time = $time;
     }
-    public function flush()
+    public function flush(): void
     {
         if ($this->bufferSize === 0) {
             return;
@@ -86,20 +94,23 @@ class DeduplicationHandler extends \Google\Site_Kit_Dependencies\Monolog\Handler
             $this->collectLogs();
         }
     }
-    private function isDuplicate(array $record)
+    /**
+     * @phpstan-param Record $record
+     */
+    private function isDuplicate(array $record): bool
     {
-        if (!\file_exists($this->deduplicationStore)) {
+        if (!file_exists($this->deduplicationStore)) {
             return \false;
         }
-        $store = \file($this->deduplicationStore, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES);
-        if (!\is_array($store)) {
+        $store = file($this->deduplicationStore, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES);
+        if (!is_array($store)) {
             return \false;
         }
-        $yesterday = \time() - 86400;
+        $yesterday = time() - 86400;
         $timestampValidity = $record['datetime']->getTimestamp() - $this->time;
-        $expectedMessage = \preg_replace('{[\\r\\n].*}', '', $record['message']);
-        for ($i = \count($store) - 1; $i >= 0; $i--) {
-            list($timestamp, $level, $message) = \explode(':', $store[$i], 3);
+        $expectedMessage = preg_replace('{[\r\n].*}', '', $record['message']);
+        for ($i = count($store) - 1; $i >= 0; $i--) {
+            list($timestamp, $level, $message) = explode(':', $store[$i], 3);
             if ($level === $record['level_name'] && $message === $expectedMessage && $timestamp > $timestampValidity) {
                 return \true;
             }
@@ -109,32 +120,38 @@ class DeduplicationHandler extends \Google\Site_Kit_Dependencies\Monolog\Handler
         }
         return \false;
     }
-    private function collectLogs()
+    private function collectLogs(): void
     {
-        if (!\file_exists($this->deduplicationStore)) {
-            return \false;
+        if (!file_exists($this->deduplicationStore)) {
+            return;
         }
-        $handle = \fopen($this->deduplicationStore, 'rw+');
-        \flock($handle, \LOCK_EX);
-        $validLogs = array();
-        $timestampValidity = \time() - $this->time;
-        while (!\feof($handle)) {
-            $log = \fgets($handle);
-            if (\substr($log, 0, 10) >= $timestampValidity) {
+        $handle = fopen($this->deduplicationStore, 'rw+');
+        if (!$handle) {
+            throw new \RuntimeException('Failed to open file for reading and writing: ' . $this->deduplicationStore);
+        }
+        flock($handle, \LOCK_EX);
+        $validLogs = [];
+        $timestampValidity = time() - $this->time;
+        while (!feof($handle)) {
+            $log = fgets($handle);
+            if ($log && substr($log, 0, 10) >= $timestampValidity) {
                 $validLogs[] = $log;
             }
         }
-        \ftruncate($handle, 0);
-        \rewind($handle);
+        ftruncate($handle, 0);
+        rewind($handle);
         foreach ($validLogs as $log) {
-            \fwrite($handle, $log);
+            fwrite($handle, $log);
         }
-        \flock($handle, \LOCK_UN);
-        \fclose($handle);
+        flock($handle, \LOCK_UN);
+        fclose($handle);
         $this->gc = \false;
     }
-    private function appendRecord(array $record)
+    /**
+     * @phpstan-param Record $record
+     */
+    private function appendRecord(array $record): void
     {
-        \file_put_contents($this->deduplicationStore, $record['datetime']->getTimestamp() . ':' . $record['level_name'] . ':' . \preg_replace('{[\\r\\n].*}', '', $record['message']) . "\n", \FILE_APPEND);
+        file_put_contents($this->deduplicationStore, $record['datetime']->getTimestamp() . ':' . $record['level_name'] . ':' . preg_replace('{[\r\n].*}', '', $record['message']) . "\n", \FILE_APPEND);
     }
 }

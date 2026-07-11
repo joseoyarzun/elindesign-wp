@@ -65,18 +65,30 @@ class MailChimp_WooCommerce_Public extends MailChimp_WooCommerce_Options {
 	 * @since    1.0.0
 	 */
 	public function enqueue_scripts() {
-		wp_register_script($this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/mailchimp-woocommerce-public.min.js', array(), $this->version.'.07');
-		wp_localize_script($this->plugin_name, 'mailchimp_public_data', array(
-			'site_url' => site_url(),
-			'ajax_url' => admin_url('admin-ajax.php'),
-			'disable_carts' => mailchimp_carts_disabled(),
-			'subscribers_only' => mailchimp_carts_subscribers_only(),
-			'language' => substr( get_locale(), 0, 2 ),
+        $public_data = array(
+            'site_url' => site_url(),
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'disable_carts' => mailchimp_carts_disabled(),
+            'subscribers_only' => mailchimp_carts_subscribers_only(),
+            'language' => substr( get_locale(), 0, 2 ),
             'allowed_to_set_cookies' => mailchimp_allowed_to_use_cookie('mailchimp_user_email'),
-		));
+            'sms_allowed_countries' => MailChimp_Sms_Consent::$allowedCountries
+        );
+		wp_register_script($this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/mailchimp-woocommerce-public.min.js', array(), $this->version);
+		wp_localize_script($this->plugin_name, 'mailchimp_public_data', $public_data);
 
         // Enqueued script with localized data.
         wp_enqueue_script($this->plugin_name, '', array(), $this->version, true);
+
+        $sms_consent_allowed = MailChimp_Sms_Consent::isAllowedToUse();
+
+        if ($sms_consent_allowed) {
+            wp_register_script($this->plugin_name . '_sms_consent', plugin_dir_url( __FILE__ ) . 'js/mailchimp-woocommerce-sms-consent.min.js', array(), $this->version.'.02');
+            wp_register_script($this->plugin_name . '_sms_consent_phone_validation', plugin_dir_url( __FILE__ ) . 'js/libphonenumber-max.js', array(), $this->version);
+            wp_localize_script($this->plugin_name . '_sms_consent', 'mailchimp_public_data', $public_data);
+            wp_enqueue_script($this->plugin_name . '_sms_consent', '', array('jquery'), $this->version, true);
+            wp_enqueue_script($this->plugin_name . '_sms_consent_phone_validation', '', array('_sms_consent'), $this->version, true);
+        }
 
         // if we have the "fragment" we can just inject this vs. loading the file
         // otherwise, if we have the connected_site script url saved, we need to inject it and load from the CDN.
@@ -90,7 +102,9 @@ class MailChimp_WooCommerce_Public extends MailChimp_WooCommerce_Options {
      */
     public function add_inline_footer_script()
     {
-        if (apply_filters( 'mailchimp_add_inline_footer_script', true)) {
+        $code_snippet_activated = (bool) \Mailchimp_Woocommerce_DB_Helpers::get_option( 'mailchimp-woocommerce-code-snippet', true);
+
+        if ($code_snippet_activated && apply_filters( 'mailchimp_add_inline_footer_script', true)) {
             if (($fragment = mailchimp_get_connected_site_script_fragment()) && !empty($fragment)) {
                 echo $fragment;
             }
@@ -126,11 +140,17 @@ class MailChimp_WooCommerce_Public extends MailChimp_WooCommerce_Options {
         update_user_meta( $user_id, 'mailchimp_woocommerce_is_subscribed', $subscribed);
         update_user_meta( $user_id, 'mailchimp_woocommerce_gdpr_fields', $gdpr_fields);
 
+		$language = get_user_meta($user_id, 'locale', true);
+		if (strpos($language, '_') !== false) {
+			$languageArray = explode('_', $language);
+			$language = $languageArray[0];
+		}
+
         $job = new MailChimp_WooCommerce_User_Submit(
             $user_id,
             $subscribed,
             null,
-            null,
+			$language,
             !empty($gdpr_fields) ? $gdpr_fields : null
         );
 
@@ -192,7 +212,7 @@ class MailChimp_WooCommerce_Public extends MailChimp_WooCommerce_Options {
             }
             if (empty($cached_gdpr_fields) && !empty($user) && $user->user_email) {
                 try {
-                    $member = mailchimp_get_api()->member(mailchimp_get_list_id(), $user->user_email);
+                    $member = $api->member(mailchimp_get_list_id(), $user->user_email);
                     $current_gdpr_fields = isset($member['marketing_permissions']) ?
                         $member['marketing_permissions'] : array();
                 } catch (Exception $e) {

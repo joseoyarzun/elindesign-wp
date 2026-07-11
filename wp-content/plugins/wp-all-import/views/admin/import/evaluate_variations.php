@@ -1,8 +1,10 @@
+<?php if ( ! defined( 'ABSPATH' ) ) exit; ?>
 <?php if (!empty($variation_list_count)):?>
 <div class="updated">
-	<p><?php printf(__('Current selection matches <span class="matches_count">%s</span> %s.', 'wp_all_import_plugin'), intval($variation_list_count), _n('element', 'elements', $variation_list_count, 'wp_all_import_plugin')) ?></p>
+	<?php /* translators: %1$s: number of matched elements, %2$s: element/elements label */ ?>
+	<p><?php echo wp_kses( sprintf(__('Current selection matches <span class="matches_count">%1$s</span> %2$s.', 'wp-all-import'), intval($variation_list_count), esc_html(_n('element', 'elements', $variation_list_count, 'wp-all-import'))), array('span' => array('class' => array())) ) ?></p>
 	<?php if (PMXI_Plugin::getInstance()->getOption('highlight_limit') and $variation_list_count > PMXI_Plugin::getInstance()->getOption('highlight_limit')): ?>
-		<p><?php _e('<strong>Note</strong>: Highlighting is turned off since can be very slow on large sets of elements.', 'wp_all_import_plugin') ?></p>
+		<p><?php echo wp_kses( __('<strong>Note</strong>: Highlighting is turned off since can be very slow on large sets of elements.', 'wp-all-import'), array('strong' => array()) ) ?></p>
 	<?php endif ?>
 </div>
 <div id="current_xml">
@@ -11,7 +13,8 @@
 		<div class="title">			
 			<div class="navigation">
 				<?php if ($tagno > 0): ?><a href="#variation_prev" class="previous_element">&nbsp;</a><?php else: ?><span class="previous_element">&nbsp;</span><?php endif ?>
-				<?php printf(__('#<strong>%s</strong> out of <strong>%s</strong>', 'wp_all_import_plugin'), $tagno + 1, intval($variation_list_count)); ?>
+				<?php /* translators: %1$s: current element index, %2$s: total element count */ ?>
+				<?php echo wp_kses( sprintf(__('#<strong>%1$s</strong> out of <strong>%2$s</strong>', 'wp-all-import'), intval($tagno) + 1, intval($variation_list_count)), array('strong' => array()) ); ?>
 				<?php if ($tagno < $variation_list_count - 1): ?><a href="#variation_next" class="next_element">&nbsp;</a><?php else: ?><span class="next_element">&nbsp;</span><?php endif ?>
 			</div>
 		</div>

@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * No Live Surveys Notification class.
  *
@@ -19,11 +23,11 @@ class UserFeedback_Notification_No_Live_Surveys extends UserFeedback_Notificatio
 	public $interval      = 5;
 
 	public function prepare() {
-		$this->title   = __( 'Collect User Feedback Now', 'userfeedback' );
-		$this->content = __( 'See what your website visitors are thinking by launching a UserFeedback survey.', 'userfeedback' );
+		$this->title   = __( 'Collect User Feedback Now', 'userfeedback-lite' );
+		$this->content = __( 'See what your website visitors are thinking by launching a UserFeedback survey.', 'userfeedback-lite' );
 
 		$this->buttons[] = array(
-			'text' => __( 'Launch Survey', 'userfeedback' ),
+			'text' => __( 'Launch Survey', 'userfeedback-lite' ),
 			'url'  => userfeedback_get_screen_url( 'userfeedback_surveys' ),
 		);
 

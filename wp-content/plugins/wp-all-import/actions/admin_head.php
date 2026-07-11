@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 function pmxi_admin_head(){
 	?>	
 	<style type="text/css">
@@ -32,9 +33,9 @@ function pmxi_admin_head(){
 
 	?>
 	<script type="text/javascript">
-		var ajaxurl = '<?php echo admin_url( "admin-ajax.php" ); ?>';
+		var ajaxurl = '<?php echo esc_url( admin_url( "admin-ajax.php" ) ); ?>';
 		var import_action = '<?php echo esc_js($get_params["action"]); ?>';
-		var wp_all_import_security = '<?php echo wp_unslash($wp_all_import_ajax_nonce); ?>';
+		var wp_all_import_security = '<?php echo esc_js(wp_unslash($wp_all_import_ajax_nonce)); ?>';
 	</script>
 	<?php
 }

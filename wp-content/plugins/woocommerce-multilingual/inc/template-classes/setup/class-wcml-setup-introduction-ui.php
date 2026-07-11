@@ -21,7 +21,7 @@ class WCML_Setup_Introduction_UI extends WCML_Setup_Step {
 				'continue'    => __( "Let's continue", 'woocommerce-multilingual' ),
 				'later'       => __( "I'll do the setup later", 'woocommerce-multilingual' ),
 			],
-			'later_url'    => admin_url( 'admin.php?page=wpml-wcml&src=setup_later' ),
+			'later_url'    => \WCML\Utilities\AdminUrl::getSetupLater(),
 			'continue_url' => $this->next_step_url,
 		];
 	}

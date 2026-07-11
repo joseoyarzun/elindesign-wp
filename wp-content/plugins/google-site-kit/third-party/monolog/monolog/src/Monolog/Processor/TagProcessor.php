@@ -1,5 +1,6 @@
 <?php
 
+declare (strict_types=1);
 /*
  * This file is part of the Monolog package.
  *
@@ -15,22 +16,37 @@ namespace Google\Site_Kit_Dependencies\Monolog\Processor;
  *
  * @author Martijn Riemers
  */
-class TagProcessor implements \Google\Site_Kit_Dependencies\Monolog\Processor\ProcessorInterface
+class TagProcessor implements ProcessorInterface
 {
+    /** @var string[] */
     private $tags;
-    public function __construct(array $tags = array())
+    /**
+     * @param string[] $tags
+     */
+    public function __construct(array $tags = [])
     {
         $this->setTags($tags);
     }
-    public function addTags(array $tags = array())
+    /**
+     * @param string[] $tags
+     */
+    public function addTags(array $tags = []): self
     {
-        $this->tags = \array_merge($this->tags, $tags);
+        $this->tags = array_merge($this->tags, $tags);
+        return $this;
     }
-    public function setTags(array $tags = array())
+    /**
+     * @param string[] $tags
+     */
+    public function setTags(array $tags = []): self
     {
         $this->tags = $tags;
+        return $this;
     }
-    public function __invoke(array $record)
+    /**
+     * {@inheritDoc}
+     */
+    public function __invoke(array $record): array
     {
         $record['extra']['tags'] = $this->tags;
         return $record;

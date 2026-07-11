@@ -1,4 +1,13 @@
 <?php
+/**
+ * @package ACF
+ * @author  WP Engine
+ *
+ * © 2026 Advanced Custom Fields (ACF®). All rights reserved.
+ * "ACF" is a trademark of WP Engine.
+ * Licensed under the GNU General Public License v2 or later.
+ * https://www.gnu.org/licenses/gpl-2.0.html
+ */
 
 /**
  * Determine the current locale desired for the request.
@@ -52,9 +61,7 @@ if ( ! function_exists( 'determine_locale' ) ) :
 	}
 endif;
 
-/*
- * acf_get_locale
- *
+/**
  * Returns the current locale.
  *
  * @date    16/12/16

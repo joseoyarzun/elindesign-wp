@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
 /**
  * @author Olexandr Zanichkovsky <olexandr.zanichkovsky@zophiatech.com>
  * @package General
@@ -174,10 +175,10 @@ final class XmlImportTemplateScanner
           }
           else{
             if ($ch == "'"){
-              throw new XmlImportException("Unexpected symbol ' - When using shortcodes/PHP functions, use double quotes \", not single quotes '");
+              throw new XmlImportException(esc_html("Unexpected symbol ' - When using shortcodes/PHP functions, use double quotes \", not single quotes '"));
             }
             else{
-              throw new XmlImportException("Unexpected symbol '$ch'");
+              throw new XmlImportException(esc_html("Unexpected symbol '$ch'"));
             }
           }            
 		
@@ -263,7 +264,7 @@ final class XmlImportTemplateScanner
       else
         $accum .= $input->read();
     }
-    throw new XmlImportException('Unexpected end of XPath expression \'' . $accum . '\'');
+    throw new XmlImportException(esc_html('Unexpected end of XPath expression \'' . $accum . '\''));
   }
 
   /**
@@ -281,7 +282,7 @@ final class XmlImportTemplateScanner
     {                         
         $accum .= $input->read();
         if ($input->peek() === false)
-          throw new XmlImportException("Unexpected end of function or keyword name \"$accum\"");
+          throw new XmlImportException(esc_html("Unexpected end of function or keyword name \"$accum\""));
     }      
 
     $ch = $input->peek();
@@ -307,14 +308,14 @@ final class XmlImportTemplateScanner
         if ( function_exists($accum) or in_array($accum, array('array')))
           return array(new XmlImportToken(XmlImportToken::KIND_PRINT), new XmlImportToken(XmlImportToken::KIND_FUNCTION, $accum));        
         else          
-          throw new XmlImportException("Call to undefined function \"$accum\"");
+          throw new XmlImportException(esc_html("Call to undefined function \"$accum\""));
         
       }
       else{
         if ( function_exists($accum) or in_array($accum, array('array')))
           return new XmlImportToken(XmlImportToken::KIND_FUNCTION, $accum);              
         else          
-          throw new XmlImportException("Call to undefined function \"$accum\"");
+          throw new XmlImportException(esc_html("Call to undefined function \"$accum\""));
       }
     }
   }
@@ -349,7 +350,7 @@ final class XmlImportTemplateScanner
       else
         $accum .= $input->read();
     }
-    throw new XmlImportException('Unexpected end of string literal "' . $accum . '"');
+    throw new XmlImportException(esc_html('Unexpected end of string literal "' . $accum . '"'));
   }
 
   /**
@@ -412,7 +413,7 @@ final class XmlImportTemplateScanner
     {
       $accum = $input->read();
       if ($accum == '-' && !preg_match('/\d/', $input->peek()))
-        throw new XmlImportException("Expected digit after a minus");
+        throw new XmlImportException(esc_html("Expected digit after a minus"));
       while (preg_match('/\d/', $input->peek()))
       {
         $accum .= $input->read();
@@ -420,7 +421,7 @@ final class XmlImportTemplateScanner
       return $accum;
     }
     else
-      throw new XmlImportException("digit or '-' expected in a number");
+      throw new XmlImportException(esc_html("digit or '-' expected in a number"));
   }
 
   /**
@@ -437,7 +438,7 @@ final class XmlImportTemplateScanner
       $accum .= $input->read();
     }
     if (strlen($accum) == 0)
-      throw new XmlImportException("Digits are expected after a '.'");
+      throw new XmlImportException(esc_html("Digits are expected after a '.'"));
     return $accum;
   }
 }

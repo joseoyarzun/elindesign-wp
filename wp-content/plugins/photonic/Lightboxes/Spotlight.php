@@ -2,6 +2,8 @@
 
 namespace Photonic_Plugin\Lightboxes;
 
+use Photonic_Plugin\Platforms\Base;
+
 require_once 'Lightbox.php';
 
 class Spotlight extends Lightbox {
@@ -11,12 +13,17 @@ class Spotlight extends Lightbox {
 		$this->class = ['photonic-lb', 'photonic-spotlight'];
 	}
 
-	public function get_container_classes() {
+	public function get_container_classes(): string {
 		return "spotlight-group";
 	}
 
-	public function get_photo_attributes($photo_data, $module) {
+	public function get_photo_attributes(array $photo_data, Base $module): array {
 		$out = parent::get_photo_attributes($photo_data, $module);
-		return $out . (!empty($photo_data['video']) ? ' data-src-mp4="' . $photo_data['video'] . '" data-media="video" data-poster="' . $photo_data['poster'] . '"' : '');
+		if (!empty($photo_data['video'])) {
+			$out['data-src-mp4'] = $photo_data['video'];
+			$out['data-media'] = 'video';
+			$out['data-poster'] = $photo_data['poster'];
+		}
+		return $out;
 	}
 }

@@ -130,11 +130,11 @@ class OMAPI_Notifications {
 
 		$timezone = new DateTimeZone( 'America/New_York' );
 		$now      = new DateTime( 'now', $timezone );
-		$todayAm  = DateTime::createFromFormat( 'H:iA', '10:10am', $timezone );
-		$date     = $todayAm;
+		$today_am = DateTime::createFromFormat( 'H:iA', '10:10am', $timezone );
+		$date     = $today_am;
 
 		// If past 10am already...
-		if ( $now > $todayAm ) {
+		if ( $now > $today_am ) {
 
 			// Try to schedule for 10pm instead.
 			$date = DateTime::createFromFormat( 'H:iA', '10:10pm', $timezone );
@@ -143,7 +143,7 @@ class OMAPI_Notifications {
 			if ( $now > $date ) {
 
 				// Schedule for 10am tomorrow.
-				$date = $todayAm->modify( '+1 day' );
+				$date = $today_am->modify( '+1 day' );
 			}
 		}
 
@@ -313,7 +313,8 @@ class OMAPI_Notifications {
 			return false;
 		}
 
-		if ( ! empty( $dismissed ) && in_array( $notification['id'], $dismissed ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+		// phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+		if ( ! empty( $dismissed ) && in_array( $notification['id'], $dismissed ) ) {
 
 			// Ignore if notification has already been dismissed.
 			return false;
@@ -462,7 +463,7 @@ class OMAPI_Notifications {
 						'btns'       => array(
 							'main' => array(
 								'text' => esc_html__( 'Connect Your Site', 'optin-monster-api' ),
-								'url'  => '?page=optin-monster-onboarding-wizard',
+								'url'  => '?page=optin-monster-settings&action=connect-your-site',
 							),
 						),
 						'canDismiss' => false,

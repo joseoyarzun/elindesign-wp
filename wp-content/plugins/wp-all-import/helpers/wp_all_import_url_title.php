@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! function_exists('wp_all_import_url_title')){
 
 	function wp_all_import_url_title($str, $separator = 'dash', $lowercase = FALSE) {
@@ -21,7 +23,7 @@ if ( ! function_exists('wp_all_import_url_title')){
 			'\.+$'					=> ''
 		);
 
-		$str = strip_tags($str);
+		$str = wp_strip_all_tags($str);
 
 		foreach ($trans as $key => $val) {
 			$str = preg_replace("#".$key."#i", $val, $str);

@@ -8,7 +8,7 @@ if ( ! class_exists( 'WP_Maintenance_Mode' ) ) {
 
 	class WP_Maintenance_Mode {
 
-		const VERSION = '2.6.8';
+		const VERSION = '2.6.22';
 
 		const MAINTENANCE  = 'maintenance';
 		const COMING_SOON  = 'coming-soon';
@@ -98,6 +98,10 @@ if ( ! class_exists( 'WP_Maintenance_Mode' ) ) {
 				add_action( 'otter_form_after_submit', array( $this, 'otter_add_subscriber' ) );
 
 				if ( isset( $this->plugin_settings['design']['page_id'] ) && get_option( 'wpmm_new_look' ) && get_post_status( $this->plugin_settings['design']['page_id'] ) === 'private' ) {
+					add_filter( 'wpo_purge_all_cache_on_update', '__return_true' );
+					if ( function_exists( 'wp_functionality_constants' ) ) {
+						wp_functionality_constants();
+					}
 					wp_publish_post( $this->plugin_settings['design']['page_id'] );
 				}
 
@@ -155,6 +159,9 @@ if ( ! class_exists( 'WP_Maintenance_Mode' ) ) {
 					}
 				);
 			}
+
+			add_action( 'init', array( $this, 'initialize_telemetry' ) );
+
 		}
 
 		/**
@@ -1063,6 +1070,21 @@ if ( ! class_exists( 'WP_Maintenance_Mode' ) ) {
 		 */
 		public function use_maintenance_template( $template ) {
 			global $post;
+
+			// Return the default template for Elementor when:
+			if (
+				class_exists( '\Elementor\Plugin', false ) &&
+				(
+					// Edit Mode is on.
+					( isset( $_GET['action'] ) && 'elementor' === $_GET['action'] ) || // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					// Preview Mode is on.
+					isset( $_GET['elementor-preview'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				)
+			) {
+				return $template;
+			}
+
+			// Return the default template if the current post is empty.
 			if ( empty( $post ) ) {
 				return $template;
 			}
@@ -1366,7 +1388,7 @@ if ( ! class_exists( 'WP_Maintenance_Mode' ) ) {
 		 */
 		public function otter_add_subscriber( $form_data ) {
 			if ( $form_data ) {
-				$input_data = $form_data->get_payload_field( 'formInputsData' );
+				$input_data = $form_data->get_data_from_payload( 'formInputsData' );
 				$input_data = array_map(
 					function( $input_field ) {
 						if ( isset( $input_field['type'] ) && 'email' === $input_field['type'] ) {
@@ -1429,6 +1451,30 @@ if ( ! class_exists( 'WP_Maintenance_Mode' ) ) {
 		 */
 		public function get_current_page_category() {
 			return $this->current_page_category;
+		}
+
+		/**
+		 * Initialize telemetry.
+		 *
+		 * @return void
+		 */
+		public function initialize_telemetry() {
+			if ( 'yes' === get_option( 'wp_maintenance_mode_logger_flag' ) ) {
+				add_filter( 'themeisle_sdk_enable_telemetry', '__return_true' );
+				add_filter(
+					'themeisle_sdk_telemetry_products',
+					function( $products ) {
+						foreach ( $products as &$product ) {
+							if ( isset( $product['slug'] ) && 'wp' === $product['slug'] ) {
+								$product['slug'] = 'wp_maintenance_mode';
+							}
+						}
+
+						return $products;
+					}
+				);
+			}
+
 		}
 	}
 

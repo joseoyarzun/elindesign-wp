@@ -6,7 +6,7 @@
  * ========================================================== */
 window.OMAPI_WooCommerce_Marketing = window.OMAPI_WooCommerce_Marketing || {};
 
-(function (window, document, $, app, undefined) {
+(function (window, document, $, app) {
 	'use strict';
 
 	app.interval;

@@ -1,17 +1,16 @@
 <?php
-// phpcs:ignoreFile
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 namespace WooCommerce\Facebook\Handlers;
 
-defined( 'ABSPATH' ) or exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * The WebHook handler.
@@ -26,11 +25,9 @@ class WebHook {
 	/**
 	 * Constructs a new WebHook.
 	 *
-	 * @param \WC_Facebookcommerce $plugin Plugin instance.
-	 *
 	 * @since 2.3.0
 	 */
-	public function __construct( \WC_Facebookcommerce $plugin ) {
+	public function __construct() {
 		add_action( 'rest_api_init', array( $this, 'init_webhook_endpoint' ) );
 	}
 

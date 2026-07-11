@@ -4,7 +4,7 @@ namespace Photonic_Plugin\Components;
 
 use Photonic_Plugin\Core\Photonic;
 use Photonic_Plugin\Layouts\Core_Layout;
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Platforms\Base;
 
 class Collection implements Printable {
 	/**
@@ -28,7 +28,7 @@ class Collection implements Printable {
 	/**
 	 * {@inheritDoc} - a Collection
 	 */
-	public function html(Core $module, Core_Layout $layout, $print = false) {
+	public function html(Base $module, Core_Layout $layout, $print = false): string {
 		$start = empty($this->strip_top_level) ? $this->indent . "<div class='photonic-tree'>\n" : '';
 		$out = $start;
 

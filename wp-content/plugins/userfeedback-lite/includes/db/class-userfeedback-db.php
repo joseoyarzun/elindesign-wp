@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-query.php';
 
 /**
@@ -148,17 +152,18 @@ abstract class UserFeedback_DB {
 		return $instance->process_item(
 			$wpdb->get_row(
 				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is retrieved from get_table() which returns a prefixed, hardcoded table name.
 					"
                     SELECT *
                     FROM $table
                     WHERE %1s = %s
                     LIMIT %d
-                    ",
+                    ", // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnquotedComplexPlaceholder -- %1s is used intentionally for column name substitution.
 					strval( $column ),
 					strval( $value ),
 					1
 				)
-			)
+			) // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Direct query required; table and column names are safe.
 		);
 	}
 
@@ -266,17 +271,16 @@ abstract class UserFeedback_DB {
 		foreach ( array_keys( $params ) as $index => $key ) {
 			$set_sql .= "{$key}=%s";
 
-			if ( $index < sizeof( $params ) - 1 ) {
+			if ( $index < count( $params ) - 1 ) {
 				$set_sql .= ',';
 			}
 		}
 
-		$set_sql   = $wpdb->prepare( $set_sql, array_values( $params ) );
-		$final_sql = "UPDATE {$table} {$set_sql} {$where_sql}";
+		$set_sql   = $wpdb->prepare( $set_sql, array_values( $params ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL fragments built from column names only; values are prepared above.
+		$final_sql = "UPDATE {$table} {$set_sql} {$where_sql}"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is a safe prefixed table name; $set_sql and $where_sql are pre-prepared.
 
-		return $wpdb->query(
-			$wpdb->prepare( $final_sql )
-		);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $final_sql is assembled from pre-prepared parts.
+		return $wpdb->query( $final_sql );
 	}
 
 	/**
@@ -296,14 +300,13 @@ abstract class UserFeedback_DB {
 		foreach ( $ids as $index => $id ) {
 			$sql .= "{$instance->primary_key} = %s";
 
-			if ( $index < sizeof( $ids ) - 1 ) {
+			if ( $index < count( $ids ) - 1 ) {
 				$sql .= ' OR ';
 			}
 		}
 
-		return $wpdb->query(
-			$wpdb->prepare( $sql, $ids )
-		);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL is assembled from column names only; values are prepared via $wpdb->prepare() with $ids.
+		return $wpdb->query( $wpdb->prepare( $sql, $ids ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	/**
@@ -319,6 +322,7 @@ abstract class UserFeedback_DB {
 		$instance = new static();// self::get_instance();
 		$table    = $instance->get_table();
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table and primary_key are safe internal values; $where_sql is pre-sanitized by the caller.
 		return absint(
 			$wpdb->get_var(
 				"SELECT COUNT({$table}.{$instance->primary_key})
@@ -673,7 +677,7 @@ abstract class UserFeedback_DB {
 
 			$column_data    = explode( '.', $column );
 			$full_column    = $column;
-			$has_table_name = sizeof( $column_data ) > 1;
+			$has_table_name = count( $column_data ) > 1;
 
 			if ( $has_table_name ) {
 				$column = $column_data[1];
@@ -769,9 +773,8 @@ abstract class UserFeedback_DB {
 
 		$sql = "{$this->sql()} LIMIT 1";
 
-		$raw_item = $wpdb->get_row(
-			$wpdb->prepare( $sql )
-		);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $sql is built by the internal query builder using $wpdb->prepare() for all values.
+		$raw_item = $wpdb->get_row( $sql );
 
 		return $raw_item ? $this->process_item( $raw_item ) : null;
 	}
@@ -834,11 +837,11 @@ abstract class UserFeedback_DB {
 
 		$table_name = self::get_table();
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table_name is a safe prefixed table name from get_table().
 		$sql = "DROP TABLE IF EXISTS {$table_name}";
 
-		$wpdb->query(
-			$wpdb->prepare( $sql )
-		);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- DDL statement; $table_name is a safe prefixed table name.
+		$wpdb->query( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	// ---------------------------

@@ -12,7 +12,9 @@ class MailChimp_WooCommerce_Customer {
 
 	protected $id            = null;
 	protected $email_address = null;
-	protected $opt_in_status = null;
+	protected $opt_in_status = false;
+	protected $sms_opt_in_status = false;
+	protected $phone_number = null;
 	protected $company       = null;
 	protected $first_name    = null;
 	protected $last_name     = null;
@@ -23,6 +25,8 @@ class MailChimp_WooCommerce_Customer {
 	protected $requires_double_optin       = false;
 	protected $original_subscriber_status  = null;
 	protected $wordpress_user              = null;
+    protected $subscribed_in_wordpress     = null;
+    protected $status_in_mailchimp         = null;
 
 	/**
 	 * @return array
@@ -31,7 +35,7 @@ class MailChimp_WooCommerce_Customer {
 		return array(
 			'id'            => 'required',
 			'email_address' => 'required|email',
-			'opt_in_status' => 'required|string',
+			'opt_in_status' => 'required',
 			'company'       => 'string',
 			'first_name'    => 'string',
 			'last_name'     => 'string',
@@ -82,6 +86,20 @@ class MailChimp_WooCommerce_Customer {
 	}
 
 	/**
+	 * @return null
+	 */
+	public function getPhoneNumber() {
+		return $this->phone_number;
+	}
+
+    /**
+	 * @return null
+	 */
+	public function getSmsOptInStatus() {
+		return $this->sms_opt_in_status;
+	}
+
+	/**
 	 * @return DateTime|false|mixed|null
 	 */
     public function getOptInStatusTime() {
@@ -120,6 +138,28 @@ class MailChimp_WooCommerce_Customer {
 		return $this;
 	}
 
+
+	/**
+	 * @param bool $sms_opt_in_status
+	 * @return MailChimp_WooCommerce_Customer
+	 */
+	public function setSmsOptInStatus( $sms_opt_in_status ) {
+		if ( is_bool( $sms_opt_in_status ) ) {
+			$this->sms_opt_in_status = $sms_opt_in_status;
+		} else {
+			$this->sms_opt_in_status = $sms_opt_in_status === '1' || $sms_opt_in_status === 1 || $sms_opt_in_status === true;
+		}
+		return $this;
+	}
+
+	/**
+	 * @param string|null $phone_number
+	 * @return MailChimp_WooCommerce_Customer
+	 */
+	public function setPhoneNumber( $phone_number ) {
+		$this->phone_number = $phone_number;
+		return $this;
+	}
     /**
 	 * @return null
 	 */
@@ -298,26 +338,120 @@ class MailChimp_WooCommerce_Customer {
 		return $this->wordpress_user;
 	}
 
+    /**
+     * @return mixed|null
+     */
+    public function getWordpressUserSubscriberStatus()
+    {
+        if (!$this->wordpress_user) {
+            return null;
+        }
+        return get_user_meta($this->wordpress_user->ID, 'mailchimp_woocommerce_is_subscribed', true);
+    }
+
+    /**
+     * @return $this
+     */
+    public function applyWordpressUserSubscribeStatus()
+    {
+        // if we have a local record of the subscriber status we can use this.
+        if (($status = $this->getWordpressUserSubscriberStatus())) {
+            if (in_array($status, array('subscribed', '1', 'pending'), true)) {
+                $this->subscribed_in_wordpress = true;
+                mailchimp_debug('order_logic', "applied existing wordpress user subscription status to true for {$this->getId()}");
+                return $this->setOptInStatus(true);
+            }
+            mailchimp_debug('order_logic', "did not apply existing wordpress user subscription status for {$this->getId()}");
+            $this->subscribed_in_wordpress = false;
+        } else if (!$this->wordpress_user && !$this->getOptInStatus() && $email = $this->getEmailAddress() ) {
+            $status = mailchimp_get_subscriber_status($email);
+            if (in_array($status, array('subscribed', 'pending'), true)) {
+                $this->setOptInStatus(true);
+            }
+            mailchimp_debug('customer.subscription_statuses', 'Guest user statuses', [
+                'mailchimp_status' => $status,
+            ]);
+        }
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSubscribedInWordpress()
+    {
+        if (null === $this->subscribed_in_wordpress) {
+            $this->applyWordpressUserSubscribeStatus();
+        }
+        return $this->subscribed_in_wordpress;
+    }
+
+    /**
+     * @return $this
+     */
+    public function syncSubscriberStatusFromMailchimp()
+    {
+        $this->status_in_mailchimp = null;
+        if (!is_email($this->email_address) || !($list_id = mailchimp_get_list_id())) {
+            return $this;
+        }
+        try {
+            $subscriber = mailchimp_get_api()->member($list_id, $this->email_address);
+            $this->setOptInStatus(in_array($subscriber['status'], array('subscribed', 'pending'), true) );
+            $this->status_in_mailchimp = $subscriber['status'];
+            if ($this->wordpress_user) {
+                $meta_value = null;
+                if ( $subscriber['status'] === 'transactional' ) {
+                    $meta_value = '0';
+                } elseif ( $subscriber['status'] === 'pending' ) {
+                    $meta_value = '1';
+                } elseif ( $subscriber['status'] === 'archived' ) {
+                    $meta_value = 'archived';
+                } elseif ( $subscriber["status"] === "unsubscribed" ) {
+                    $meta_value = "unsubscribed";
+                }
+                $meta_value !== null && update_user_meta($this->wordpress_user->ID, 'mailchimp_woocommerce_is_subscribed', $meta_value);
+            }
+        } catch (Exception $e) {
+
+        }
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getMailchimpStatus()
+    {
+        return $this->status_in_mailchimp;
+    }
+
 	/**
 	 * @return array
 	 */
 	public function toArray() {
 		$address = $this->getAddress()->toArray();
 
-		return mailchimp_array_remove_empty(
-			array(
-				'id'            => (string) $this->getId(),
-				'email_address' => (string) $this->getEmailAddress(),
-				'opt_in_status' => $this->getOptInStatus(),
-                'marketing_status_updated_at' => $this->getOptInStatusTimeAsString(),
-                'company'       => (string) $this->getCompany(),
-                'first_name'    => (string) $this->getFirstName(),
-				'last_name'     => (string) $this->getLastName(),
-				// 'orders_count' => (int) $this->getOrdersCount(),
-				// 'total_spent' => floatval(number_format($this->getTotalSpent(), 2, '.', '')),
-				'address'       => ( empty( $address ) ? null : $address ),
-			)
+		$array = array(
+			'id'            => (string) $this->getId(),
+			'email_address' => (string) $this->getEmailAddress(),
+			'opt_in_status' => (bool)$this->getOptInStatus(),
+			'marketing_status_updated_at' => $this->getOptInStatusTimeAsString(),
+			'company'       => (string) $this->getCompany(),
+			'first_name'    => (string) $this->getFirstName(),
+			'last_name'     => (string) $this->getLastName(),
+			// 'orders_count' => (int) $this->getOrdersCount(),
+			// 'total_spent' => floatval(number_format($this->getTotalSpent(), 2, '.', '')),
+			'address'       => ( empty( $address ) ? null : $address ),
 		);
+
+		// Add SMS fields if SMS consent is enabled
+		$sms_phone = $this->getPhoneNumber();
+		if ( $this->getSmsOptInStatus() && !empty( $sms_phone ) ) {
+			$array['phone_number'] = (string) $sms_phone;
+		}
+
+		return mailchimp_array_remove_empty( $array );
 	}
 
 	/**

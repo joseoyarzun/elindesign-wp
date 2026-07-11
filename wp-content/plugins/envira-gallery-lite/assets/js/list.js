@@ -688,13 +688,14 @@ var Templater = function(list) {
         }
       }
     } else if (/^tr[\s>]/.exec(item)) {
-      var table = document.createElement('table');
-      table.innerHTML = item;
-      return table.firstChild;
+      var parser = new DOMParser();
+      // Wrap in <table> so the TR element is parsed in valid table context (browsers silently drop bare TR otherwise)
+      var doc = parser.parseFromString( '<table>' + item + '</table>', 'text/html' );
+      return doc.querySelector( 'tr' );
     } else if (item.indexOf("<") !== -1) {
-      var div = document.createElement('div');
-      div.innerHTML = item;
-      return div.firstChild;
+      var divParser = new DOMParser();
+      var divDoc = divParser.parseFromString( item, 'text/html' );
+      return divDoc.body.firstChild;
     } else {
       var source = document.getElementById(list.item);
       if (source) {
@@ -718,7 +719,7 @@ var Templater = function(list) {
         values[valueNames[i].name] = elm ? list.utils.getAttribute(elm, valueNames[i].attr) : "";
       } else {
         elm = list.utils.getByClass(item.elm, valueNames[i], true);
-        values[valueNames[i]] = elm ? elm.innerHTML : "";
+        values[valueNames[i]] = elm ? elm.textContent : ""; // Use textContent (not innerHTML) — symmetric with set(); prevents HTML injection in search/sort values.
       }
       elm = undefined;
     }
@@ -757,7 +758,7 @@ var Templater = function(list) {
       } else {
         elm = list.utils.getByClass(item.elm, valueName, true);
         if (elm) {
-          elm.innerHTML = value;
+          elm.textContent = value;
         }
       }
       elm = undefined;
@@ -1131,7 +1132,8 @@ module.exports = (function() {
       }
       var els = container.getElementsByTagName(tag);
       var elsLen = els.length;
-      var pattern = new RegExp("(^|\\s)"+className+"(\\s|$)");
+      var safeClassName = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var pattern = new RegExp("(^|\\s)"+safeClassName+"(\\s|$)");
       for (var i = 0, j = 0; i < elsLen; i++) {
         if ( pattern.test(els[i].className) ) {
           if (single) {

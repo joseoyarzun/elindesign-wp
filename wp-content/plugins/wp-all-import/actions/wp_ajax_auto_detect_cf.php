@@ -1,12 +1,13 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 function pmxi_wp_ajax_auto_detect_cf(){
 
     if ( ! check_ajax_referer( 'wp_all_import_secure', 'security', false )){
-        exit( json_encode(array('result' => array(), 'msg' => __('Security check', 'wp_all_import_plugin'))) );
+        exit( json_encode(array('result' => array(), 'msg' => __('Security check', 'wp-all-import'))) );
     }
 
     if ( ! current_user_can( PMXI_Plugin::$capabilities ) ){
-        exit( json_encode(array('result' => array(), 'msg' => __('Security check', 'wp_all_import_plugin'))) );
+        exit( json_encode(array('result' => array(), 'msg' => __('Security check', 'wp-all-import'))) );
     }
 
     $input = new PMXI_Input();
@@ -34,6 +35,7 @@ function pmxi_wp_ajax_auto_detect_cf(){
             $fields = $input->post('fields', array());
             break;
         default:
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
             $results = $wpdb->get_results($wpdb->prepare("SELECT DISTINCT meta_key FROM ". $table_prefix ."posts, ". $table_prefix ."postmeta WHERE post_type = %s AND ". $table_prefix ."posts.ID = ". $table_prefix ."postmeta.post_id", $post_type), ARRAY_A);
             if (!empty($results) && !is_wp_error($results)){
                 foreach ($results as $key => $value) {
@@ -51,25 +53,19 @@ function pmxi_wp_ajax_auto_detect_cf(){
             switch ($post_type){
                 case 'import_users':
                 case 'shop_customer':
-                    $values = $wpdb->get_results("
-                        SELECT DISTINCT usermeta.meta_value
-                        FROM ".$wpdb->usermeta." as usermeta
-                        WHERE usermeta.meta_key='".$field."'
-                    ", ARRAY_A);
+                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                    $values = $wpdb->get_results($wpdb->prepare("SELECT DISTINCT usermeta.meta_value FROM {$wpdb->usermeta} as usermeta WHERE usermeta.meta_key = %s", $field), ARRAY_A);
+                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                     break;
                 case 'taxonomies':
-                    $values = $wpdb->get_results("
-                        SELECT DISTINCT termmeta.meta_value
-                        FROM ".$wpdb->termmeta." as termmeta
-                        WHERE termmeta.meta_key='".$field."'
-                    ", ARRAY_A);
+                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                    $values = $wpdb->get_results($wpdb->prepare("SELECT DISTINCT termmeta.meta_value FROM {$wpdb->termmeta} as termmeta WHERE termmeta.meta_key = %s", $field), ARRAY_A);
+                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                     break;
                 default:
-                    $values = $wpdb->get_results("
-                        SELECT DISTINCT postmeta.meta_value
-                        FROM ".$wpdb->postmeta." as postmeta
-                        WHERE postmeta.meta_key='".$field."'
-                    ", ARRAY_A);
+                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                    $values = $wpdb->get_results($wpdb->prepare("SELECT DISTINCT postmeta.meta_value FROM {$wpdb->postmeta} as postmeta WHERE postmeta.meta_key = %s", $field), ARRAY_A);
+                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                     break;
             }
 
@@ -99,18 +95,21 @@ function pmxi_wp_ajax_auto_detect_cf(){
             case 'taxonomies':
                 $custom_type = new stdClass();
                 $custom_type->labels = new stdClass();
-                $custom_type->labels->singular_name = __('Taxonomy Term', 'wp_all_import_plugin');
+                $custom_type->labels->singular_name = __('Taxonomy Term', 'wp-all-import');
                 break;
             default:
                 $custom_type = get_post_type_object( $post_type );
                 break;
         }
-        $msg = sprintf(__('No Custom Fields are present in your database for %s', 'wp_all_import_plugin'), esc_attr($custom_type->labels->name));
+        /* translators: see placeholders in the string below */
+        $msg = sprintf(__('No Custom Fields are present in your database for %s', 'wp-all-import'), esc_attr($custom_type->labels->name));
     }
     elseif (count($result) === 1)
-        $msg = sprintf(__('%s field was automatically detected.', 'wp_all_import_plugin'), count($result));
+        /* translators: see placeholders in the string below */
+        $msg = sprintf(__('%s field was automatically detected.', 'wp-all-import'), count($result));
     else{
-        $msg = sprintf(__('%s fields were automatically detected.', 'wp_all_import_plugin'), count($result));
+        /* translators: see placeholders in the string below */
+        $msg = sprintf(__('%s fields were automatically detected.', 'wp-all-import'), count($result));
     }
 
     exit( json_encode(array('result' => $result, 'msg' => $msg)) );

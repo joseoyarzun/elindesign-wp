@@ -36,12 +36,11 @@ class OMAPI_Rules_Exception extends Exception {
 	/**
 	 * Constructor.
 	 *
-	 * @param string    $message  Exception message.
-	 * @param int       $code     Exception code.
-	 *
-	 * @param Exception $previous Previous exception.
+	 * @param string|bool|null $message  Exception message or boolean value.
+	 * @param int              $code     Exception code.
+	 * @param Exception|null   $previous Previous exception.
 	 */
-	public function __construct( $message = null, $code = 0, Exception $previous = null ) {
+	public function __construct( $message = null, $code = 0, $previous = null ) {
 		if ( is_bool( $message ) ) {
 			$this->bool = $message;
 			$message    = null;
@@ -51,7 +50,7 @@ class OMAPI_Rules_Exception extends Exception {
 			$this->add_exceptions( $previous );
 		}
 
-		parent::__construct( $message, $code, $previous );
+		parent::__construct( $message ?? '', $code, $previous );
 	}
 
 	/**

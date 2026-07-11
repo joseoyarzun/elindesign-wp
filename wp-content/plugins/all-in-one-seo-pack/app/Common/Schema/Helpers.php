@@ -75,32 +75,34 @@ class Helpers {
 	 * @since 4.2.7
 	 *
 	 * @param  array  $schema      The schema data.
-	 * @param  bool   $isValidator Whether we're grabbing the output for the validator.
 	 * @param  bool   $replaceTags Whether the smart tags should be replaced.
 	 * @return string              The schema as JSON.
 	 */
-	public function getOutput( $schema, $isValidator = false, $replaceTags = true ) {
+	public function getOutput( $schema, $replaceTags = true ) {
 		$schema['@graph'] = apply_filters( 'aioseo_schema_output', $schema['@graph'] );
 		$schema['@graph'] = $this->cleanAndParseData( $schema['@graph'], '', $replaceTags );
 
 		// Sort the graphs alphabetically.
 		usort( $schema['@graph'], function ( $a, $b ) {
-			if ( is_array( $a['@type'] ) ) {
+			$typeA = $a['@type'] ?? null;
+			$typeB = $b['@type'] ?? null;
+
+			if ( is_null( $typeA ) || is_array( $typeA ) ) {
 				return 1;
 			}
 
-			if ( is_array( $b['@type'] ) ) {
+			if ( is_null( $typeB ) || is_array( $typeB ) ) {
 				return -1;
 			}
 
-			return strcmp( $a['@type'], $b['@type'] );
+			return strcmp( $typeA, $typeB );
 		} );
 
 		// Allow users to control the default json_encode flags.
 		// Some users report better SEO performance when non-Latin unicode characters are not escaped.
 		$jsonFlags = apply_filters( 'aioseo_schema_json_flags', 0 );
 
-		$json = isset( $_GET['aioseo-dev'] ) || $isValidator // phpcs:ignore HM.Security.NonceVerification.Recommended
+		$json = isset( $_GET['aioseo-dev'] ) || aioseo()->schema->generatingValidatorOutput // phpcs:ignore HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
 			? aioseo()->helpers->wpJsonEncode( $schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE )
 			: aioseo()->helpers->wpJsonEncode( $schema, $jsonFlags );
 

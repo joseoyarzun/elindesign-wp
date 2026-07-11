@@ -6,6 +6,8 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Core\Assets;
@@ -14,8 +16,8 @@ use Google\Site_Kit\Context;
 use Google\Site_Kit\Core\Modules\Module_Sharing_Settings;
 use Google\Site_Kit\Core\Permissions\Permissions;
 use Google\Site_Kit\Core\Storage\Options;
+use Google\Site_Kit\Core\Util\Date;
 use Google\Site_Kit\Core\Util\Feature_Flags;
-use Google\Site_Kit\Core\Util\URL;
 use WP_Dependencies;
 use WP_Post_Type;
 
@@ -45,14 +47,6 @@ final class Assets {
 	private $assets = array();
 
 	/**
-	 * Internal flag for whether assets have been registered yet.
-	 *
-	 * @since 1.2.0
-	 * @var bool
-	 */
-	private $assets_registered = false;
-
-	/**
 	 * Internal list of print callbacks already done.
 	 *
 	 * @since 1.2.0
@@ -78,16 +72,10 @@ final class Assets {
 	 * @since 1.37.0 Enqueues Block Editor assets.
 	 */
 	public function register() {
-		$register_callback = function() {
+		$register_callback = function () {
 			if ( ! is_admin() ) {
 				return;
 			}
-
-			if ( $this->assets_registered ) {
-				return;
-			}
-
-			$this->assets_registered = true;
 			$this->register_assets();
 		};
 		add_action( 'admin_enqueue_scripts', $register_callback );
@@ -95,7 +83,7 @@ final class Assets {
 
 		add_filter(
 			'script_loader_tag',
-			function( $tag, $handle ) {
+			function ( $tag, $handle ) {
 				return $this->add_async_defer_attribute( $tag, $handle );
 			},
 			10,
@@ -115,7 +103,7 @@ final class Assets {
 
 		add_action(
 			'admin_print_scripts-edit.php',
-			function() {
+			function () {
 				global $post_type;
 				if ( 'post' !== $post_type ) {
 					// For CONTEXT_ADMIN_POSTS we only load scripts for the 'post' post type.
@@ -125,7 +113,7 @@ final class Assets {
 
 				array_walk(
 					$assets,
-					function( Asset $asset ) {
+					function ( Asset $asset ) {
 						if ( $asset->has_context( Asset::CONTEXT_ADMIN_POSTS ) ) {
 							$this->enqueue_asset( $asset->get_handle() );
 						}
@@ -134,14 +122,32 @@ final class Assets {
 			}
 		);
 
+		if ( is_admin() ) {
+			add_action(
+				'enqueue_block_assets',
+				function () {
+					$assets = $this->get_assets();
+
+					array_walk(
+						$assets,
+						function ( $asset ) {
+							if ( $asset->has_context( Asset::CONTEXT_ADMIN_BLOCK_EDITOR ) ) {
+								$this->enqueue_asset( $asset->get_handle() );
+							}
+						}
+					);
+				}
+			);
+		}
+
 		add_action(
 			'enqueue_block_editor_assets',
-			function() {
+			function () {
 				$assets = $this->get_assets();
 
 				array_walk(
 					$assets,
-					function( $asset ) {
+					function ( $asset ) {
 						if ( $asset->has_context( Asset::CONTEXT_ADMIN_POST_EDITOR ) ) {
 							$this->enqueue_asset( $asset->get_handle() );
 						}
@@ -150,14 +156,14 @@ final class Assets {
 			}
 		);
 
-		$scripts_print_callback = function() {
+		$scripts_print_callback = function () {
 			$scripts = wp_scripts();
 			$this->run_before_print_callbacks( $scripts, $scripts->queue );
 		};
 		add_action( 'wp_print_scripts', $scripts_print_callback );
 		add_action( 'admin_print_scripts', $scripts_print_callback );
 
-		$styles_print_callback = function() {
+		$styles_print_callback = function () {
 			$styles = wp_styles();
 			$this->run_before_print_callbacks( $styles, $styles->queue );
 		};
@@ -175,11 +181,7 @@ final class Assets {
 	 * @param string $handle Asset handle.
 	 */
 	public function enqueue_asset( $handle ) {
-		// Register assets on-the-fly if necessary (currently the case for admin bar in frontend).
-		if ( ! $this->assets_registered ) {
-			$this->assets_registered = true;
-			$this->register_assets();
-		}
+		$this->register_assets();
 
 		$assets = $this->get_assets();
 		if ( empty( $assets[ $handle ] ) ) {
@@ -218,10 +220,6 @@ final class Assets {
 			'Google+Sans+Display:400,500,700',
 		);
 
-		if ( Feature_Flags::enabled( 'gm3Components' ) ) {
-			$font_families[] = 'Roboto:300,400,500';
-		}
-
 		$filtered_font_families = apply_filters( 'googlesitekit_font_families', $font_families );
 
 		if ( empty( $filtered_font_families ) ) {
@@ -244,11 +242,36 @@ final class Assets {
 	 * @since 1.0.0
 	 */
 	private function register_assets() {
+		if ( $this->has_registered_assets() ) {
+			return;
+		}
+
 		$assets = $this->get_assets();
 
 		foreach ( $assets as $asset ) {
 			$asset->register( $this->context );
 		}
+	}
+
+	/**
+	 * Checks if assets have already been registered.
+	 *
+	 * @since 1.173.0
+	 * @return bool True if already registered, false otherwise.
+	 */
+	private function has_registered_assets() {
+		$assets = $this->get_assets();
+		if ( empty( $assets ) ) {
+			return false;
+		}
+
+		$first = reset( $assets );
+		if ( ! $first instanceof Asset ) {
+			return false;
+		}
+
+		$handle = $first->get_handle();
+		return wp_script_is( $handle, 'registered' );
 	}
 
 	/**
@@ -263,7 +286,7 @@ final class Assets {
 			'script_loader_tag',
 			function ( $tag, $handle ) use ( $assets ) {
 				// TODO: 'hoverintent-js' can be removed from here at some point, see https://github.com/ampproject/amp-wp/pull/3928.
-				if ( $this->context->is_amp() && ( isset( $assets[ $handle ] ) && $assets[ $handle ] instanceof Script || 'hoverintent-js' === $handle ) ) {
+				if ( $this->context->is_amp() && ( isset( $assets[ $handle ] ) && ( $assets[ $handle ] instanceof Script || 'hoverintent-js' === $handle ) ) ) {
 					$tag = preg_replace( '/(?<=<script)(?=\s|>)/i', ' data-ampdevmode', $tag );
 				}
 				return $tag;
@@ -307,7 +330,12 @@ final class Assets {
 			'googlesitekit-datastore-user',
 			'googlesitekit-datastore-ui',
 			'googlesitekit-widgets',
+			'googlesitekit-notifications',
 		);
+
+		if ( Feature_Flags::enabled( 'pdfGeneration' ) ) {
+			array_push( $dependencies, 'googlesitekit-datastore-pdf' );
+		}
 
 		if ( 'dashboard' === $context || 'dashboard-sharing' === $context ) {
 			array_push( $dependencies, 'googlesitekit-components' );
@@ -370,7 +398,7 @@ final class Assets {
 				'googlesitekit-user-data',
 				array(
 					'global'        => '_googlesitekitUserData',
-					'data_callback' => function() {
+					'data_callback' => function () {
 						return $this->get_inline_user_data();
 					},
 				)
@@ -409,7 +437,7 @@ final class Assets {
 				'googlesitekit-dashboard-sharing-data',
 				array(
 					'global'        => '_googlesitekitDashboardSharingData',
-					'data_callback' => function() {
+					'data_callback' => function () {
 						return $this->get_inline_dashboard_sharing_data();
 					},
 				)
@@ -418,7 +446,7 @@ final class Assets {
 				'googlesitekit-tracking-data',
 				array(
 					'global'        => '_googlesitekitTrackingData',
-					'data_callback' => function() {
+					'data_callback' => function () {
 						return $this->get_inline_tracking_data();
 					},
 				)
@@ -427,7 +455,7 @@ final class Assets {
 				'googlesitekit-modules-data',
 				array(
 					'global'        => '_googlesitekitModulesData',
-					'data_callback' => function() {
+					'data_callback' => function () {
 						return $this->get_inline_modules_data();
 					},
 				)
@@ -468,11 +496,7 @@ final class Assets {
 			new Script(
 				'googlesitekit-components',
 				array(
-					'src' => $base_url . (
-						Feature_Flags::enabled( 'gm3Components' )
-							? 'js/googlesitekit-components-gm3.js'
-							: 'js/googlesitekit-components-gm2.js'
-						),
+					'src' => $base_url . 'js/googlesitekit-components.js',
 				)
 			),
 			new Script(
@@ -511,6 +535,7 @@ final class Assets {
 						'googlesitekit-data',
 						'googlesitekit-api',
 						'googlesitekit-user-data',
+						'googlesitekit-datastore-site',
 					),
 				)
 			),
@@ -556,6 +581,15 @@ final class Assets {
 				)
 			),
 			new Script(
+				'googlesitekit-datastore-pdf',
+				array(
+					'src'          => $base_url . 'js/googlesitekit-datastore-pdf.js',
+					'dependencies' => array(
+						'googlesitekit-data',
+					),
+				)
+			),
+			new Script(
 				'googlesitekit-modules',
 				array(
 					'src'          => $base_url . 'js/googlesitekit-modules.js',
@@ -580,9 +614,27 @@ final class Assets {
 				)
 			),
 			new Script(
+				'googlesitekit-notifications',
+				array(
+					'src'          => $base_url . 'js/googlesitekit-notifications.js',
+					'dependencies' => array(
+						'googlesitekit-data',
+						'googlesitekit-i18n',
+						'googlesitekit-components',
+					),
+				)
+			),
+			new Script(
 				'googlesitekit-user-input',
 				array(
 					'src'          => $base_url . 'js/googlesitekit-user-input.js',
+					'dependencies' => $this->get_asset_dependencies( 'dashboard' ),
+				)
+			),
+			new Script(
+				'googlesitekit-key-metrics-setup',
+				array(
+					'src'          => $base_url . 'js/googlesitekit-key-metrics-setup.js',
 					'dependencies' => $this->get_asset_dependencies( 'dashboard' ),
 				)
 			),
@@ -622,6 +674,17 @@ final class Assets {
 					'dependencies' => $this->get_asset_dependencies( 'dashboard' ),
 				)
 			),
+			new Script(
+				'googlesitekit-block-tracking',
+				array(
+					'src'           => $base_url . 'js/googlesitekit-block-tracking.js',
+					'dependencies'  => array(
+						'googlesitekit-tracking-data',
+						'googlesitekit-data',
+					),
+					'load_contexts' => array( Asset::CONTEXT_ADMIN_POST_EDITOR ),
+				)
+			),
 			new Stylesheet(
 				'googlesitekit-admin-css',
 				array(
@@ -629,6 +692,13 @@ final class Assets {
 					'dependencies' => array(
 						'googlesitekit-fonts',
 					),
+				)
+			),
+			new Script(
+				'googlesitekit-admin-pointers-tracking',
+				array(
+					'src'          => $base_url . 'js/googlesitekit-admin-pointers-tracking.js',
+					'dependencies' => $this->get_asset_dependencies(),
 				)
 			),
 			// WP Dashboard assets.
@@ -649,6 +719,15 @@ final class Assets {
 					),
 				)
 			),
+			new Stylesheet(
+				'googlesitekit-authorize-application-css',
+				array(
+					'src'          => $base_url . 'css/googlesitekit-authorize-application-css.css',
+					'dependencies' => array(
+						'googlesitekit-fonts',
+					),
+				)
+			),
 			// Admin bar assets.
 			new Script(
 				'googlesitekit-adminbar',
@@ -656,6 +735,13 @@ final class Assets {
 					'src'          => $base_url . 'js/googlesitekit-adminbar.js',
 					'dependencies' => $dependencies,
 					'execution'    => 'defer',
+				)
+			),
+			new Script(
+				'googlesitekit-metric-selection',
+				array(
+					'src'          => $base_url . 'js/googlesitekit-metric-selection.js',
+					'dependencies' => $this->get_asset_dependencies( 'dashboard' ),
 				)
 			),
 			new Stylesheet(
@@ -709,22 +795,26 @@ final class Assets {
 		$site_url = $this->context->get_reference_site_url();
 
 		$inline_data = array(
-			'homeURL'          => trailingslashit( $this->context->get_canonical_home_url() ),
-			'referenceSiteURL' => esc_url_raw( trailingslashit( $site_url ) ),
-			'adminURL'         => esc_url_raw( trailingslashit( admin_url() ) ),
-			'assetsURL'        => esc_url_raw( $this->context->url( 'dist/assets/' ) ),
-			'widgetsAdminURL'  => esc_url_raw( $this->get_widgets_admin_url() ),
-			'blogPrefix'       => $wpdb->get_blog_prefix(),
-			'ampMode'          => $this->context->get_amp_mode(),
-			'isNetworkMode'    => $this->context->is_network_mode(),
-			'timezone'         => get_option( 'timezone_string' ),
-			'siteName'         => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
-			'enabledFeatures'  => Feature_Flags::get_enabled_features(),
-			'webStoriesActive' => defined( 'WEBSTORIES_VERSION' ),
-			'postTypes'        => $this->get_post_types(),
-			'storagePrefix'    => $this->get_storage_prefix(),
-			'referenceDate'    => apply_filters( 'googlesitekit_reference_date', null ),
-			'productBasePaths' => $this->get_product_base_paths(),
+			'homeURL'           => trailingslashit( $this->context->get_canonical_home_url() ),
+			'referenceSiteURL'  => esc_url_raw( trailingslashit( $site_url ) ),
+			'adminURL'          => esc_url_raw( trailingslashit( admin_url() ) ),
+			'assetsURL'         => esc_url_raw( $this->context->url( 'dist/assets/' ) ),
+			'widgetsAdminURL'   => esc_url_raw( $this->get_widgets_admin_url() ),
+			'blogPrefix'        => $wpdb->get_blog_prefix(),
+			'ampMode'           => $this->context->get_amp_mode(),
+			'isNetworkMode'     => $this->context->is_network_mode(),
+			'timezone'          => get_option( 'timezone_string' ),
+			'startOfWeek'       => (int) get_option( 'start_of_week' ),
+			'siteName'          => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
+			'siteLocale'        => $this->context->get_locale(),
+			'enabledFeatures'   => Feature_Flags::get_enabled_features(),
+			'webStoriesActive'  => defined( 'WEBSTORIES_VERSION' ),
+			'postTypes'         => $this->get_post_types(),
+			'storagePrefix'     => $this->get_storage_prefix(),
+			'referenceDate'     => Date::reference_date(),
+			'productPostType'   => $this->get_product_post_type(),
+			'anyoneCanRegister' => (bool) get_option( 'users_can_register' ),
+			'isMultisite'       => is_multisite(),
 		);
 
 		/**
@@ -780,7 +870,7 @@ final class Assets {
 			return admin_url( 'widgets.php' );
 		}
 
-		return null;
+		return '';
 	}
 
 	/**
@@ -815,6 +905,7 @@ final class Assets {
 			'user' => array(
 				'id'      => $current_user->ID,
 				'email'   => $current_user->user_email,
+				'wpEmail' => $current_user->user_email, // Preserved for features that need the original WP email (email gets overridden during proxy auth).
 				'name'    => $current_user->display_name,
 				'picture' => get_avatar_url( $current_user->user_email ),
 			),
@@ -974,9 +1065,9 @@ final class Assets {
 			return $tag;
 		}
 
-		// Abort adding async/defer for scripts that have this script as a dependency.
+		// Abort adding async/defer for scripts that have this script as a dependency, unless it is an alias.
 		foreach ( wp_scripts()->registered as $script ) {
-			if ( in_array( $handle, $script->deps, true ) ) {
+			if ( $script->src && in_array( $handle, $script->deps, true ) ) {
 				return $tag;
 			}
 		}
@@ -1065,51 +1156,27 @@ final class Assets {
 	}
 
 	/**
-	 * Returns an array of product base paths.
+	 * Gets the product post type.
 	 *
-	 * @since 1.106.0
+	 * @since 1.116.0
 	 *
-	 * @return array The array of product base paths.
+	 * @return string|null The product post type name or null if not present on the website.
 	 */
-	private function get_product_base_paths() {
-		if ( ! Feature_Flags::enabled( 'keyMetrics' ) ) {
-			return array();
-		}
-
-		// Return early if permalinks are not used.
-		if ( ! get_option( 'permalink_structure' ) ) {
-			return array();
-		}
-
-		$product_base_paths = array();
-		$product_type       = get_post_type_object( 'product' );
-
-		// Check whether the product post type is available and public.
-		if ( $product_type instanceof WP_Post_Type && $product_type->public ) {
-			global $wp_rewrite;
-			$permastruct               = $wp_rewrite->get_extra_permastruct( 'product' );
-			$permalink_template        = home_url( $permastruct );
-			$product_url_path          = URL::parse( $permalink_template, PHP_URL_PATH );
-			list( $product_base_path ) = explode( '%product%', $product_url_path, 2 );
-			$product_base_path         = str_replace( $wp_rewrite->rewritecode, $wp_rewrite->rewritereplace, $product_base_path );
-			if ( strpos( $product_base_path, '^' ) !== 0 ) {
-				$product_base_path = '^' . $product_base_path;
-			}
-			$product_base_paths[] = $product_base_path;
-		}
-
+	protected function get_product_post_type() {
 		/**
-		 * Filters product base paths found in WordPress. By default the array contains
-		 * the base path for the "product" post type if it is available in WordPress
-		 * and public.
+		 * Filters the product post type.
 		 *
-		 * @since 1.106.0
+		 * @since 1.116.0
 		 *
-		 * @param array $product_base_paths Array of existing product base paths.
+		 * @param string $product_post_type The product post type name.
 		 */
-		$product_base_paths = apply_filters( 'googlesitekit_product_base_paths', $product_base_paths );
+		$product_post_type = apply_filters( 'googlesitekit_product_post_type', 'product' );
+		$product_type      = get_post_type_object( $product_post_type );
 
-		return $product_base_paths;
+		if ( $product_type instanceof WP_Post_Type && $product_type->public ) {
+			return $product_post_type;
+		}
+
+		return null;
 	}
-
 }

@@ -5,17 +5,17 @@
  * Free to use under the MIT license.
 */
 
-.envira-lazy:not(img){
-    position:relative;
-    height: 0;
-    display: block;
-    overflow: hidden;
+.envira-lazy:not(img) {
+	position: relative;
+	height: 0;
+	display: block;
+	overflow: hidden;
 }
 
 .envira-lazy:not(img) img {
-    position: absolute;
-    top: 0;
-    left: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 .envira-gallery-1-columns .envira-lazy:not(img) img,
@@ -24,11 +24,11 @@
 .envira-gallery-4-columns .envira-lazy:not(img) img,
 .envira-gallery-5-columns .envira-lazy:not(img) img,
 .envira-gallery-6-columns .envira-lazy:not(img) img {
-    position: relative;
+	position: relative;
 }
 
-img.envira-lazy{
-    width: 100%;
+img.envira-lazy {
+	width: 100%;
 }
 
 /* hide the gallery overlay by default and use JS triggers to make them appear when images load */

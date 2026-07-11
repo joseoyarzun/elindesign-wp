@@ -53,7 +53,7 @@ if ( ! function_exists( 'wcml_price_custom_fields' ) ) {
 		 *
 		 * If the returned filter is not an array, it will be replaced with the original value.
 		 *
-		 * @param array       $default_keys Default unfiltered values.
+		 * @param array|mixed $default_keys Default unfiltered values.
 		 * @param int|WP_Post $object_id    The post, product ID or object extending "WP_Post".
 		 */
 		$filtered_keys = apply_filters( 'wcml_price_custom_fields', $filtered_keys, $object_id );
@@ -123,7 +123,7 @@ if ( ! function_exists( 'wcml_safe_redirect' ) ) {
 	 */
 	function wcml_safe_redirect( $location, $status = 302 ) {
 		return wp_safe_redirect( $location, $status, 'WCML' ) && exit;
-	};
+	}
 }
 
 /**
@@ -159,7 +159,7 @@ function wcml_register_script( $handle, $src, $deps = [], $args = [] ) {
 	global $wp_version;
 
 	if ( version_compare( $wp_version,'6.3', '<' ) ) {
-		$args = isset( $args['in_footer'] ) ? $args['in_footer'] : false;
+		$args = $args['in_footer'] ?? false;
 	}
 
 	return wp_register_script( $handle, WCML_PLUGIN_URL . '/' . $src, $deps, WCML_VERSION, $args );

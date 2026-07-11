@@ -22,38 +22,36 @@ namespace Google\Site_Kit_Dependencies\Symfony\Polyfill\Intl\Normalizer;
  */
 class Normalizer
 {
-    const FORM_D = \Normalizer::FORM_D;
-    const FORM_KD = \Normalizer::FORM_KD;
-    const FORM_C = \Normalizer::FORM_C;
-    const FORM_KC = \Normalizer::FORM_KC;
-    const NFD = \Normalizer::NFD;
-    const NFKD = \Normalizer::NFKD;
-    const NFC = \Normalizer::NFC;
-    const NFKC = \Normalizer::NFKC;
+    public const FORM_D = \Normalizer::FORM_D;
+    public const FORM_KD = \Normalizer::FORM_KD;
+    public const FORM_C = \Normalizer::FORM_C;
+    public const FORM_KC = \Normalizer::FORM_KC;
+    public const NFD = \Normalizer::NFD;
+    public const NFKD = \Normalizer::NFKD;
+    public const NFC = \Normalizer::NFC;
+    public const NFKC = \Normalizer::NFKC;
     private static $C;
     private static $D;
     private static $KD;
     private static $cC;
-    private static $ulenMask = array("À" => 2, "Ð" => 2, "à" => 3, "ð" => 4);
-    private static $ASCII = " eiasntrolud][cmp'\ng|hv.fb,:=-q10C2*yx)(L9AS/P\"EjMIk3>5T<D4}B{8FwR67UGN;JzV#HOW_&!K?XQ%Y\\\tZ+~^\$@`\0\1\2\3\4\5\6\7\10\v\f\r\16\17\20\21\22\23\24\25\26\27\30\31\32\33\34\35\36\37";
-    public static function isNormalized($s, $form = self::NFC)
+    private static $ulenMask = ["\xc0" => 2, "\xd0" => 2, "\xe0" => 3, "\xf0" => 4];
+    private static $ASCII = " eiasntrolud][cmp'\ng|hv.fb,:=-q10C2*yx)(L9AS/P\"EjMIk3>5T<D4}B{8FwR67UGN;JzV#HOW_&!K?XQ%Y\\\tZ+~^\$@`\x00\x01\x02\x03\x04\x05\x06\x07\x08\v\f\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f";
+    public static function isNormalized(string $s, int $form = self::FORM_C)
     {
-        if (!\in_array($form, array(self::NFD, self::NFKD, self::NFC, self::NFKC))) {
+        if (!\in_array($form, [self::NFD, self::NFKD, self::NFC, self::NFKC])) {
             return \false;
         }
-        $s = (string) $s;
-        if (!isset($s[\strspn($s, self::$ASCII)])) {
+        if (!isset($s[strspn($s, self::$ASCII)])) {
             return \true;
         }
-        if (self::NFC == $form && \preg_match('//u', $s) && !\preg_match('/[^\\x00-\\x{2FF}]/u', $s)) {
+        if (self::NFC == $form && preg_match('//u', $s) && !preg_match('/[^\x00-\x{2FF}]/u', $s)) {
             return \true;
         }
         return self::normalize($s, $form) === $s;
     }
-    public static function normalize($s, $form = self::NFC)
+    public static function normalize(string $s, int $form = self::FORM_C)
     {
-        $s = (string) $s;
-        if (!\preg_match('//u', $s)) {
+        if (!preg_match('//u', $s)) {
             return \false;
         }
         switch ($form) {
@@ -74,10 +72,13 @@ class Normalizer
                 $K = \true;
                 break;
             default:
-                if (\defined('Normalizer::NONE') && \Normalizer::NONE == $form) {
+                if (\defined('Google\Site_Kit_Dependencies\Normalizer::NONE') && \Normalizer::NONE == $form) {
                     return $s;
                 }
-                return \false;
+                if (80000 > \PHP_VERSION_ID) {
+                    return \false;
+                }
+                throw new \ValueError('normalizer_normalize(): Argument #2 ($form) must be a a valid normalization form');
         }
         if ('' === $s) {
             return '';
@@ -89,8 +90,8 @@ class Normalizer
             self::$D = self::getData('canonicalDecomposition');
             self::$cC = self::getData('combiningClass');
         }
-        if (null !== ($mbEncoding = 2 & (int) \ini_get('mbstring.func_overload') ? \mb_internal_encoding() : null)) {
-            \mb_internal_encoding('8bit');
+        if (null !== $mbEncoding = 2 & (int) \ini_get('mbstring.func_overload') ? mb_internal_encoding() : null) {
+            mb_internal_encoding('8bit');
         }
         $r = self::decompose($s, $K);
         if ($C) {
@@ -100,7 +101,7 @@ class Normalizer
             $r = self::recompose($r);
         }
         if (null !== $mbEncoding) {
-            \mb_internal_encoding($mbEncoding);
+            mb_internal_encoding($mbEncoding);
         }
         return $r;
     }
@@ -111,19 +112,19 @@ class Normalizer
         $combClass = self::$cC;
         $ulenMask = self::$ulenMask;
         $result = $tail = '';
-        $i = $s[0] < "€" ? 1 : $ulenMask[$s[0] & "ð"];
+        $i = $s[0] < "\x80" ? 1 : $ulenMask[$s[0] & "\xf0"];
         $len = \strlen($s);
-        $lastUchr = \substr($s, 0, $i);
+        $lastUchr = substr($s, 0, $i);
         $lastUcls = isset($combClass[$lastUchr]) ? 256 : 0;
         while ($i < $len) {
-            if ($s[$i] < "€") {
+            if ($s[$i] < "\x80") {
                 // ASCII chars
                 if ($tail) {
                     $lastUchr .= $tail;
                     $tail = '';
                 }
-                if ($j = \strspn($s, $ASCII, $i + 1)) {
-                    $lastUchr .= \substr($s, $i, $j);
+                if ($j = strspn($s, $ASCII, $i + 1)) {
+                    $lastUchr .= substr($s, $i, $j);
                     $i += $j;
                 }
                 $result .= $lastUchr;
@@ -132,11 +133,11 @@ class Normalizer
                 ++$i;
                 continue;
             }
-            $ulen = $ulenMask[$s[$i] & "ð"];
-            $uchr = \substr($s, $i, $ulen);
+            $ulen = $ulenMask[$s[$i] & "\xf0"];
+            $uchr = substr($s, $i, $ulen);
             if ($lastUchr < "á„€" || "á„’" < $lastUchr || $uchr < "á…¡" || "á…µ" < $uchr || $lastUcls) {
                 // Table lookup and combining chars composition
-                $ucls = isset($combClass[$uchr]) ? $combClass[$uchr] : 0;
+                $ucls = $combClass[$uchr] ?? 0;
                 if (isset($compMap[$lastUchr . $uchr]) && (!$lastUcls || $lastUcls < $ucls)) {
                     $lastUchr = $compMap[$lastUchr . $uchr];
                 } elseif ($lastUcls = $ucls) {
@@ -154,10 +155,10 @@ class Normalizer
                 $L = \ord($lastUchr[2]) - 0x80;
                 $V = \ord($uchr[2]) - 0xa1;
                 $T = 0;
-                $uchr = \substr($s, $i + $ulen, 3);
+                $uchr = substr($s, $i + $ulen, 3);
                 if ("á†§" <= $uchr && $uchr <= "á‡‚") {
                     $T = \ord($uchr[2]) - 0xa7;
-                    0 > $T && ($T += 0x40);
+                    0 > $T && $T += 0x40;
                     $ulen += 3;
                 }
                 $L = 0xac00 + ($L * 21 + $V) * 28 + $T;
@@ -177,44 +178,44 @@ class Normalizer
         if ($c) {
             $compatMap = self::$KD;
         }
-        $c = array();
+        $c = [];
         $i = 0;
         $len = \strlen($s);
         while ($i < $len) {
-            if ($s[$i] < "€") {
+            if ($s[$i] < "\x80") {
                 // ASCII chars
                 if ($c) {
-                    \ksort($c);
-                    $result .= \implode('', $c);
-                    $c = array();
+                    ksort($c);
+                    $result .= implode('', $c);
+                    $c = [];
                 }
-                $j = 1 + \strspn($s, $ASCII, $i + 1);
-                $result .= \substr($s, $i, $j);
+                $j = 1 + strspn($s, $ASCII, $i + 1);
+                $result .= substr($s, $i, $j);
                 $i += $j;
                 continue;
             }
-            $ulen = $ulenMask[$s[$i] & "ð"];
-            $uchr = \substr($s, $i, $ulen);
+            $ulen = $ulenMask[$s[$i] & "\xf0"];
+            $uchr = substr($s, $i, $ulen);
             $i += $ulen;
             if ($uchr < "ê°€" || "íž£" < $uchr) {
                 // Table lookup
-                if ($uchr !== ($j = isset($compatMap[$uchr]) ? $compatMap[$uchr] : (isset($decompMap[$uchr]) ? $decompMap[$uchr] : $uchr))) {
+                if ($uchr !== $j = $compatMap[$uchr] ?? $decompMap[$uchr] ?? $uchr) {
                     $uchr = $j;
                     $j = \strlen($uchr);
-                    $ulen = $uchr[0] < "€" ? 1 : $ulenMask[$uchr[0] & "ð"];
+                    $ulen = $uchr[0] < "\x80" ? 1 : $ulenMask[$uchr[0] & "\xf0"];
                     if ($ulen != $j) {
                         // Put trailing chars in $s
                         $j -= $ulen;
                         $i -= $j;
                         if (0 > $i) {
-                            $s = \str_repeat(' ', -$i) . $s;
+                            $s = str_repeat(' ', -$i) . $s;
                             $len -= $i;
                             $i = 0;
                         }
                         while ($j--) {
                             $s[$i + $j] = $uchr[$ulen + $j];
                         }
-                        $uchr = \substr($uchr, 0, $ulen);
+                        $uchr = substr($uchr, 0, $ulen);
                     }
                 }
                 if (isset($combClass[$uchr])) {
@@ -227,29 +228,29 @@ class Normalizer
                 }
             } else {
                 // Hangul chars
-                $uchr = \unpack('C*', $uchr);
+                $uchr = unpack('C*', $uchr);
                 $j = ($uchr[1] - 224 << 12) + ($uchr[2] - 128 << 6) + $uchr[3] - 0xac80;
-                $uchr = "á„" . \chr(0x80 + (int) ($j / 588)) . "á…" . \chr(0xa1 + (int) ($j % 588 / 28));
+                $uchr = "\xe1\x84" . \chr(0x80 + (int) ($j / 588)) . "\xe1\x85" . \chr(0xa1 + (int) ($j % 588 / 28));
                 if ($j %= 28) {
-                    $uchr .= $j < 25 ? "á†" . \chr(0xa7 + $j) : "á‡" . \chr(0x67 + $j);
+                    $uchr .= $j < 25 ? "\xe1\x86" . \chr(0xa7 + $j) : "\xe1\x87" . \chr(0x67 + $j);
                 }
             }
             if ($c) {
-                \ksort($c);
-                $result .= \implode('', $c);
-                $c = array();
+                ksort($c);
+                $result .= implode('', $c);
+                $c = [];
             }
             $result .= $uchr;
         }
         if ($c) {
-            \ksort($c);
-            $result .= \implode('', $c);
+            ksort($c);
+            $result .= implode('', $c);
         }
         return $result;
     }
     private static function getData($file)
     {
-        if (\file_exists($file = __DIR__ . '/Resources/unidata/' . $file . '.php')) {
+        if (file_exists($file = __DIR__ . '/Resources/unidata/' . $file . '.php')) {
             return require $file;
         }
         return \false;

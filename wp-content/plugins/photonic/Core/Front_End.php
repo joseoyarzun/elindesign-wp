@@ -25,7 +25,7 @@ class Front_End {
 			   $photonic_fb3_hide_thumbs, $photonic_enable_fb3_thumbnail, $photonic_fb3_disable_zoom, $photonic_fb3_disable_slideshow, $photonic_fb3_enable_download, $photonic_fb3_disable_right_click,
 			   $photonic_lc_transition_effect, $photonic_lc_transition_speed_in, $photonic_lc_transition_speed_out, $photonic_lc_enable_shrink,
 			   $photonic_lg_transition_effect, $photonic_lg_transition_speed, $photonic_disable_lg_download, $photonic_lg_hide_bars_delay,
-			   $photonic_enable_lg_zoom, $photonic_enable_lg_thumbnail, $photonic_enable_lg_fullscreen, $photonic_enable_lg_autoplay,
+			   $photonic_lg_mobile_show_controls, $photonic_lg_mobile_show_close, $photonic_lg_mobile_show_download,
 			   $photonic_tile_spacing, $photonic_tile_min_height, $photonic_pphoto_theme, $photonic_pp_animation_speed,
 			   $photonic_sp_download, $photonic_sp_hide_bars,
 			   $photonic_enable_swipebox_mobile_bars, $photonic_sb_hide_mobile_close, $photonic_sb_hide_bars_delay,
@@ -36,29 +36,11 @@ class Front_End {
 
 		global $photonic_js_variables;
 
-		$lightgallery_plugins = [];
-		if (!empty($photonic_enable_lg_autoplay)) {
-			$lightgallery_plugins[] = 'autoplay';
-		}
-		if (!empty($photonic_enable_lg_fullscreen)) {
-			$lightgallery_plugins[] = 'fullscreen';
-		}
-		if (!empty($photonic_enable_lg_thumbnail)) {
-			$lightgallery_plugins[] = 'thumbnail';
-		}
-		if (!empty($photonic_enable_lg_zoom)) {
-			$lightgallery_plugins[] = 'zoom';
-		}
-		$lightgallery_plugins = implode(',', $lightgallery_plugins);
-
 		$slideshow_library = esc_js(Photonic::$library);
 		$js_array = [
 			'ajaxurl'    => admin_url('admin-ajax.php'),
 			'plugin_url' => PHOTONIC_URL,
 			'debug_on'   => !empty($photonic_debug_on),
-
-			'fbox_show_title'     => 'none' !== $photonic_fbox_title_position,
-			'fbox_title_position' => 'none' === $photonic_fbox_title_position ? 'outside' : esc_js($photonic_fbox_title_position),
 
 			'slide_adjustment' => esc_js($photonic_wp_slide_adjustment ?: 'adapt-height-width'),
 
@@ -71,50 +53,11 @@ class Front_End {
 			'masonry_min_width'    => (empty($photonic_masonry_min_width) || !absint($photonic_masonry_min_width)) ? 200 : absint($photonic_masonry_min_width),
 			'mosaic_trigger_width' => (empty($photonic_mosaic_trigger_width) || !absint($photonic_mosaic_trigger_width)) ? 200 : absint($photonic_mosaic_trigger_width),
 
-			'slideshow_mode'     => (isset($photonic_slideshow_mode) && 'on' === $photonic_slideshow_mode) ? true : false,
+			'slideshow_mode'     => isset($photonic_slideshow_mode) && 'on' === $photonic_slideshow_mode,
 			'slideshow_interval' => (isset($photonic_slideshow_interval) && absint($photonic_slideshow_interval)) ? absint($photonic_slideshow_interval) : 5000,
 			'lightbox_loop'      => empty($photonic_lightbox_no_loop),
 
 			'gallery_panel_width' => (empty($photonic_popup_panel_width) || !absint($photonic_popup_panel_width) || absint($photonic_popup_panel_width) > 100) ? 80 : absint($photonic_popup_panel_width),
-
-			'cb_transition_effect' => esc_js($photonic_cb_transition_effect ?: 'elastic'),
-			'cb_transition_speed'  => (isset($photonic_cb_transition_speed) && absint($photonic_cb_transition_speed)) ? absint($photonic_cb_transition_speed) : 350,
-
-			'fb3_transition_effect'   => esc_js($photonic_fb3_transition_effect ?: 'zoom'),
-			'fb3_transition_speed'    => (isset($photonic_fb3_transition_speed) && absint($photonic_fb3_transition_speed)) ? absint($photonic_fb3_transition_speed) : 366,
-			'fb3_fullscreen_button'   => !empty($photonic_fb3_show_fullscreen),
-			'fb3_fullscreen'          => isset($photonic_enable_fb3_fullscreen) && 'on' === $photonic_enable_fb3_fullscreen ? true : false,
-			'fb3_thumbs_button'       => empty($photonic_fb3_hide_thumbs),
-			'fb3_thumbs'              => isset($photonic_enable_fb3_thumbnail) && 'on' === $photonic_enable_fb3_thumbnail ? true : false,
-			'fb3_zoom'                => empty($photonic_fb3_disable_zoom),
-			'fb3_slideshow'           => empty($photonic_fb3_disable_slideshow),
-			'fb3_download'            => !empty($photonic_fb3_enable_download),
-			'fb3_disable_right_click' => !empty($photonic_fb3_disable_right_click),
-
-			'lc_transition_effect'    => esc_js($photonic_lc_transition_effect ?: 'scrollHorizontal'),
-			'lc_transition_speed_in'  => (isset($photonic_lc_transition_speed_in) && absint($photonic_lc_transition_speed_in)) ? absint($photonic_lc_transition_speed_in) : 350,
-			'lc_transition_speed_out' => (isset($photonic_lc_transition_speed_out) && absint($photonic_lc_transition_speed_out)) ? absint($photonic_lc_transition_speed_out) : 250,
-			'lc_disable_shrink'       => empty($photonic_lc_enable_shrink),
-
-			'lg_plugins'           => $lightgallery_plugins,
-			'lg_transition_effect' => esc_js($photonic_lg_transition_effect ?: 'lg-slide'),
-			'lg_enable_download'   => empty($photonic_disable_lg_download),
-			'lg_hide_bars_delay'   => (isset($photonic_lg_hide_bars_delay) && absint($photonic_lg_hide_bars_delay)) ? absint($photonic_lg_hide_bars_delay) : 6000,
-			'lg_transition_speed'  => (isset($photonic_lg_transition_speed) && absint($photonic_lg_transition_speed)) ? absint($photonic_lg_transition_speed) : 600,
-
-			'pphoto_theme'           => esc_js($photonic_pphoto_theme ?? 'pp_default'),
-			'pphoto_animation_speed' => esc_js($photonic_pp_animation_speed ?: 'fast'),
-
-			'sp_download'  => !empty($photonic_sp_download),
-			'sp_hide_bars' => $photonic_sp_hide_bars,
-
-			'enable_swipebox_mobile_bars' => !empty($photonic_enable_swipebox_mobile_bars),
-			'sb_hide_mobile_close'        => !empty($photonic_sb_hide_mobile_close),
-			'sb_hide_bars_delay'          => (isset($photonic_sb_hide_bars_delay) && absint($photonic_sb_hide_bars_delay)) ? absint($photonic_sb_hide_bars_delay) : 0,
-
-			'vb_disable_vertical_scroll' => empty($photonic_vb_display_vertical_scroll),
-			'vb_title_position'          => esc_js($photonic_vb_title_position),
-			'vb_title_style'             => esc_js($photonic_vb_title_style),
 
 			'lightbox_for_all'    => !empty($photonic_lightbox_for_all),
 			'lightbox_for_videos' => !empty($photonic_lightbox_for_videos),
@@ -126,15 +69,96 @@ class Front_End {
 			'maximize_panel'     => esc_attr__('Show', 'photonic'),
 			'minimize_panel'     => esc_attr__('Hide', 'photonic'),
 		];
+
+		if ('colorbox' === $slideshow_library) {
+			$lb_options = [
+				'cb_transition_effect' => esc_js($photonic_cb_transition_effect ?: 'elastic'),
+				'cb_transition_speed'  => (isset($photonic_cb_transition_speed) && absint($photonic_cb_transition_speed)) ? absint($photonic_cb_transition_speed) : 350,
+			];
+		}
+		elseif ('fancybox' === $slideshow_library || 'fancybox2' === $slideshow_library) {
+			$lb_options = [
+				'fbox_show_title'     => 'none' !== $photonic_fbox_title_position,
+				'fbox_title_position' => 'none' === $photonic_fbox_title_position ? 'outside' : esc_js($photonic_fbox_title_position),
+			];
+		}
+		elseif ('fancybox3' === $slideshow_library) {
+			$lb_options = [
+				'fb3_transition_effect'   => esc_js($photonic_fb3_transition_effect ?: 'zoom'),
+				'fb3_transition_speed'    => (isset($photonic_fb3_transition_speed) && absint($photonic_fb3_transition_speed)) ? absint($photonic_fb3_transition_speed) : 366,
+				'fb3_fullscreen_button'   => !empty($photonic_fb3_show_fullscreen),
+				'fb3_fullscreen'          => isset($photonic_enable_fb3_fullscreen) && 'on' === $photonic_enable_fb3_fullscreen ? true : false,
+				'fb3_thumbs_button'       => empty($photonic_fb3_hide_thumbs),
+				'fb3_thumbs'              => isset($photonic_enable_fb3_thumbnail) && 'on' === $photonic_enable_fb3_thumbnail ? true : false,
+				'fb3_zoom'                => empty($photonic_fb3_disable_zoom),
+				'fb3_slideshow'           => empty($photonic_fb3_disable_slideshow),
+				'fb3_download'            => !empty($photonic_fb3_enable_download),
+				'fb3_disable_right_click' => !empty($photonic_fb3_disable_right_click),
+			];
+		}
+		elseif ('lightcase' === $slideshow_library) {
+			$lb_options = [
+				'lc_transition_effect'    => esc_js($photonic_lc_transition_effect ?: 'scrollHorizontal'),
+				'lc_transition_speed_in'  => (isset($photonic_lc_transition_speed_in) && absint($photonic_lc_transition_speed_in)) ? absint($photonic_lc_transition_speed_in) : 350,
+				'lc_transition_speed_out' => (isset($photonic_lc_transition_speed_out) && absint($photonic_lc_transition_speed_out)) ? absint($photonic_lc_transition_speed_out) : 250,
+				'lc_disable_shrink'       => empty($photonic_lc_enable_shrink),
+			];
+		}
+		elseif ('lightgallery' === $slideshow_library) {
+			$lightgallery_plugins = Photonic::get_lightgallery_plugins();
+			$lightgallery_plugins = implode(',', $lightgallery_plugins);
+
+			$lb_options = [
+				'lg_plugins'           => $lightgallery_plugins,
+				'lg_transition_effect' => esc_js($photonic_lg_transition_effect ?: 'lg-slide'),
+				'lg_enable_download'   => empty($photonic_disable_lg_download),
+				'lg_hide_bars_delay'   => (isset($photonic_lg_hide_bars_delay) && absint($photonic_lg_hide_bars_delay)) ? absint($photonic_lg_hide_bars_delay) : 6000,
+				'lg_transition_speed'  => (isset($photonic_lg_transition_speed) && absint($photonic_lg_transition_speed)) ? absint($photonic_lg_transition_speed) : 600,
+				'lg_mobile_controls'   => !empty($photonic_lg_mobile_show_controls),
+				'lg_mobile_close'      => !empty($photonic_lg_mobile_show_close),
+				'lg_mobile_download'   => !empty($photonic_lg_mobile_show_download),
+			];
+		}
+		elseif ('prettyphoto' === $slideshow_library) {
+			$lb_options = [
+				'pphoto_theme'           => esc_js($photonic_pphoto_theme ?? 'pp_default'),
+				'pphoto_animation_speed' => esc_js($photonic_pp_animation_speed ?: 'fast'),
+			];
+		}
+		elseif ('spotlight' === $slideshow_library) {
+			$lb_options = [
+				'sp_download'  => !empty($photonic_sp_download),
+				'sp_hide_bars' => $photonic_sp_hide_bars,
+			];
+		}
+		elseif ('swipebox' === $slideshow_library) {
+			$lb_options = [
+				'enable_swipebox_mobile_bars' => !empty($photonic_enable_swipebox_mobile_bars),
+				'sb_hide_mobile_close'        => !empty($photonic_sb_hide_mobile_close),
+				'sb_hide_bars_delay'          => (isset($photonic_sb_hide_bars_delay) && absint($photonic_sb_hide_bars_delay)) ? absint($photonic_sb_hide_bars_delay) : 0,
+			];
+		}
+		elseif ('venobox' === $slideshow_library) {
+			$lb_options = [
+				'vb_disable_vertical_scroll' => empty($photonic_vb_display_vertical_scroll),
+				'vb_title_position'          => esc_js($photonic_vb_title_position),
+				'vb_title_style'             => esc_js($photonic_vb_title_style),
+			];
+		}
+
+		if (!empty($lb_options)) {
+			$js_array = array_merge($js_array, $lb_options);
+		}
+
 		$photonic_js_variables = $js_array;
 		return $js_array;
 	}
 
 	/**
-	 * @param $attr
-	 * @return array|bool|string
+	 * @param array $attr
+	 * @return string
 	 */
-	public function get_gallery_images($attr) {
+	public function get_gallery_images(array $attr): string {
 		global $photonic_nested_shortcodes, $photonic_load_mode, $photonic_thumbnail_style;
 		$attr = array_merge(
 			[
@@ -188,7 +212,7 @@ class Front_End {
 		return $images;
 	}
 
-	public function get_lazy_load_button($attr = [], $button_type = 'show_gallery') {
+	public function get_lazy_load_button($attr = [], $button_type = 'show_gallery'): string {
 		$types = [
 			'show_gallery' => 'show_gallery',
 			'js_load'      => 'load_mode'

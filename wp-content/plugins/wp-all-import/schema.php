@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Plugin database schema
  * WARNING:
@@ -26,6 +27,7 @@ if (!empty($wpdb->collate)) {
 
 $table_prefix = PMXI_Plugin::getInstance()->getTablePrefix();
 
+// phpcs:ignore PluginCheck.CodeAnalysis.Heredoc.NotAllowed,WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $plugin_queries = <<<SCHEMA
 CREATE TABLE {$table_prefix}templates (
 	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -94,8 +96,8 @@ CREATE TABLE {$table_prefix}files (
 CREATE TABLE {$table_prefix}images (
 	id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,	
 	attachment_id BIGINT(20) UNSIGNED NOT NULL,
-	image_url TEXT NOT NULL DEFAULT '',
-	image_filename TEXT NOT NULL DEFAULT '',	
+	image_url TEXT,
+	image_filename TEXT,	
 	PRIMARY KEY  (id)
 ) $charset_collate;
 CREATE TABLE {$table_prefix}history (

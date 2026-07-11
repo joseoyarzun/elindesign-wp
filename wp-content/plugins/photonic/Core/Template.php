@@ -10,7 +10,11 @@ namespace Photonic_Plugin\Core;
 class Template {
 	public function __construct() {
 		add_filter('the_content', [&$this, 'load_gallery'], 100, 1);
-		add_filter('the_title', [&$this, 'set_title'], 10, 2);
+		add_filter('the_title', [&$this, 'set_header_title'], 10, 2);
+/*		add_filter('wp_title', [&$this, 'set_meta_title'], 10, 3);
+		if (current_theme_supports('title-tag')) {
+			add_filter('pre_get_document_title', [&$this, 'set_meta_title'], 10, 1);
+		}*/
 	}
 
 	/**
@@ -20,7 +24,7 @@ class Template {
 	 * @param $id
 	 * @return string|void
 	 */
-	public function set_title($title, $id = null) {
+	public function set_header_title($title, $id = null) {
 		global $photonic_page_title, $photonic_gallery_template_page;
 		if (!empty($id)) {
 			if (!empty($photonic_gallery_template_page) && is_page($photonic_gallery_template_page) && 'replace-if-available' === $photonic_page_title && absint($photonic_gallery_template_page) === absint($id)) {
@@ -29,6 +33,34 @@ class Template {
 				}
 			}
 		}
+		return $title;
+	}
+
+	/**
+	 * Changes the title of the template page to the title of the album being displayed.
+	 *
+	 * @param $title
+	 * @param $id
+	 * @return string|void
+	 */
+	public function set_meta_title($title, $seperator = ' &ndash; ', $location = 'right') {
+		global $photonic_page_meta_title, $photonic_gallery_template_page;
+		$id = get_queried_object_id();
+
+		if (!empty($_REQUEST['photonic_gallery_title']) && !empty($photonic_gallery_template_page) && is_page($photonic_gallery_template_page) && 'page' !== $photonic_page_meta_title && absint($photonic_gallery_template_page) === absint($id)) {
+			$album_title = wptexturize(stripslashes_deep(wp_kses_post($_REQUEST['photonic_gallery_title'])));
+
+			if ('replace-if-available' === $photonic_page_meta_title) {
+				return $album_title;
+			}
+			elseif ('append-if-available' === $photonic_page_meta_title) {
+				return $title . $seperator;// . ' - ';// . $album_title;
+			}
+			elseif ('prepend-if-available' === $photonic_page_meta_title) {
+				return $album_title . ' &ndash; ' . $title;
+			}
+		}
+
 		return $title;
 	}
 

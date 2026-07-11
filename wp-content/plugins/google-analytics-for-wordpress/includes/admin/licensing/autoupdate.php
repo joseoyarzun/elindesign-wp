@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Check to see if the plugin file path matches the main pro plugin or an add-on of ours
  *

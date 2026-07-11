@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 function wp_all_import_get_parent_post($identity, $post_type, $import_type = 'post') {
     $page = 0;
 

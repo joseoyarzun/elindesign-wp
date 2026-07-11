@@ -5,7 +5,7 @@
  * https://awesomemotive.com
  * ========================================================== */
 window.OMAPI_Global = window.OMAPI_Global || {};
-(function (window, document, $, app, undefined) {
+(function (window, document, $, app) {
 	'use strict';
 
 	app.updateNotifications = function () {
@@ -55,6 +55,16 @@ window.OMAPI_Global = window.OMAPI_Global || {};
 				.attr('href', app.upgradeUrl);
 
 			app.$.menu.find('.om-menu-highlight').closest('li').addClass('om-submenu-highlight');
+		}
+
+		const bfcmItem = app.$.menu.find('.om-menu-bfcm-highlight');
+
+		if (bfcmItem.length) {
+			// Add BFCM highlight class to menu item.
+			bfcmItem.closest('li').addClass('om-submenu-bfcm-highlight');
+
+			// Keep BFCM at top visually but make parent menu click go to Dashboard.
+			app.$.menu.find('> a').attr('href', 'admin.php?page=optin-monster-dashboard');
 		}
 
 		// If the app is not running, and we should fetch updated notifications...

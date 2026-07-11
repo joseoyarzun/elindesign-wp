@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Mobile Detect Library
  * Motto: "Every business should have a mobile detection script to detect mobile readers"
@@ -1270,7 +1274,7 @@ class UserFeedback_Mobile_Detect {
 	public function __call( $name, $arguments ) {
 		// make sure the name starts with 'is', otherwise
 		if ( substr( $name, 0, 2 ) !== 'is' ) {
-			throw new BadMethodCallException( "No such method exists: $name" );
+			throw new BadMethodCallException( "No such method exists: $name" ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception message not output to browser; third-party library.
 		}
 
 		$this->setDetectionType( self::DETECTION_TYPE_MOBILE );
@@ -1755,7 +1759,7 @@ class UserFeedback_Device_Detect {
 
 	public static function __callStatic( $name, $arguments ) {
 		if ( substr( $name, 0, 2 ) != 'is' ) {
-			$trace = current( debug_backtrace() );
+			$trace = current( debug_backtrace() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- Third-party library; used for internal error reporting only.
 			// Debug::error('No such method exists: ' . $name, $trace);
 			return null;
 		} else {

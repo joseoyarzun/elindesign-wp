@@ -13,9 +13,6 @@ class Factory implements \IWPML_Backend_Action_Loader, \IWPML_Deferred_Action_Lo
 		return 'init';
 	}
 
-	/**
-	 * @return \IWPML_Action|null
-	 */
 	public function create() {
 		/** @var \woocommerce_wpml $woocommerce_wpml */
 		global $woocommerce_wpml;

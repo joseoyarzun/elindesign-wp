@@ -146,10 +146,10 @@ class WP extends Source {
 
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
 			if ('current-post' === $display_type && !empty($_POST['post_id'])) {
-				$short_code['id'] = sanitize_text_field($_POST['post_id']);
+				$short_code['id'] = sanitize_text_field(wp_unslash($_POST['post_id']));
 			}
 			elseif (!empty($_POST['selected_data'])) {
-				$short_code['ids'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['ids'] = sanitize_text_field(wp_unslash($_POST['selected_data']));
 			}
 		}
 		return $short_code;

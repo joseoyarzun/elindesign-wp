@@ -24,9 +24,6 @@ function userfeedback_get_option_name() {
  * @return array
  */
 function userfeedback_get_default_options() {
-	$admin_email       = get_option( 'admin_email' );
-	$admin_email_array = array( $admin_email );
-
 	return array(
 		// Widget
 		'widget_theme'                => 'light',
@@ -51,8 +48,10 @@ function userfeedback_get_default_options() {
 		// Email summaries
 		'summaries_disabled'          => false,
 		'summaries_html_template'     => true,
-		'summaries_email_addresses'   => $admin_email_array,
 		'automatic_updates'   => 'none',
+		// Heatmap settings
+		'heatmap_auto_delete_enabled' => false,
+		'heatmap_retention_period'    => '60',
 	);
 }
 
@@ -88,7 +87,15 @@ function userfeedback_save_options( $settings ) {
 
 	$old_settings = userfeedback_get_options();
 	$settings     = array_merge( userfeedback_get_default_options(), $old_settings, $settings );
-	return update_option( userfeedback_get_option_name(), $settings );
+	$did_update = update_option( userfeedback_get_option_name(), $settings );
+
+	// If it updated, let's update the global variable
+	if ( $did_update ) {
+		global $userfeedback_settings;
+		$userfeedback_settings = $settings;
+	}
+
+	return $did_update;
 }
 
 /**

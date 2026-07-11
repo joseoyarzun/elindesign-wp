@@ -7,6 +7,10 @@
  * @package Envira Gallery Lite
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 /**
  * Notifications Class
  *
@@ -459,8 +463,8 @@ class Envira_Notifications {
 		// Run a security check.
 		check_ajax_referer( 'envira_dismiss_notification', 'nonce' );
 
-		// Check for access and required param.
-		if ( ! $this->has_access() || empty( $_POST['id'] ) ) {
+		// Check for access and required param. Nonce already verified by check_ajax_referer() above; this line is unreachable without a valid nonce.
+		if ( ! $this->has_access() || empty( $_POST['id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified via check_ajax_referer() on line 464; wp_die() is called on failure so execution never reaches here without a valid nonce.
 			wp_send_json_error();
 		}
 

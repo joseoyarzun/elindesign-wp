@@ -5,9 +5,7 @@ namespace Photonic_Plugin\Options;
 use Photonic_Plugin\Core\Utilities;
 
 class Generic extends Option_Tab {
-	private static $instance;
-
-	private function __construct() {
+	protected function __construct() {
 		$this->options = [
 			[
 				'name'     => 'How To',
@@ -61,9 +59,9 @@ class Generic extends Option_Tab {
 							'baguettebox'  => "<a href='https://feimosi.github.io/baguetteBox.js/'>BaguetteBox</a> &ndash; ~10KB JS, ~4KB CSS: Released under the MIT license. No support for YouTube / Vimeo.",
 							'bigpicture'   => "<a href='https://henrygd.me/bigpicture/'>BigPicture</a> &ndash; ~9KB JS, no CSS: Released under the MIT license. No support for videos within galleries.",
 							'glightbox'    => "<a href='https://biati-digital.github.io/glightbox/'>\"Gie\" Lightbox (GLightbox)</a> &ndash; ~54KB JS, ~14KB CSS: Released under the MIT license.",
-							'lightgallery' => "<a href='https://sachinchoolur.github.io/lightGallery/'>Lightgallery</a> &ndash; ~52KB JS (+ Optional plugins), ~21KB CSS, ~26KB fonts: Released under the GPL v3 license.",
+							'lightgallery' => "<a href='https://www.lightgalleryjs.com/'>Lightgallery</a> &ndash; ~55KB JS (+ Optional plugins), ~24KB CSS, ~26KB fonts: Released under the GPL v3 license.",
 							'photoswipe'   => "<a href='https://github.com/dimsemenov/PhotoSwipe/tree/v4.1.3'>PhotoSwipe</a> &ndash; ~41KB JS, ~11KB CSS: Released under the MIT license. No video support for Flickr.",
-							'photoswipe5'  => "<a href='http://photoswipe.com/'>PhotoSwipe 5</a> &ndash; ~66KB JS, ~5KB CSS: Released under the MIT license. No support for old browsers, no video support for Flickr.",
+							'photoswipe5'  => "<a href='https://photoswipe.com/'>PhotoSwipe 5</a> &ndash; ~66KB JS, ~5KB CSS: Released under the MIT license. No support for old browsers, no video support for Flickr.",
 							'spotlight'    => "<a href='https://nextapps-de.github.io/spotlight/'>Spotlight</a> &ndash; ~10KB JS, ~12KB CSS: Released under the Apache 2.0 license.",
 							'venobox'      => '<a href="https://veno.es/venobox/">VenoBox</a> &ndash; ~16KB JS, ~15KB CSS: Released under the MIT license.',
 						],
@@ -72,13 +70,13 @@ class Generic extends Option_Tab {
 						'header'      => 'jQuery Libraries',
 						'description' => "<p>These libraries will automatically load the jQuery library (<strong>~95KB</strong>) to function. This is probably OK if your theme or other plugins are already using jQuery.</p><br/>",
 						'options'     => [
-							'colorbox'      => "<a href='http://colorpowered.com/colorbox/'>Colorbox</a> &ndash; ~12KB JS, ~5KB CSS: Released under the MIT license.",
+							'colorbox'      => "<a href='https://www.jacklmoore.com/colorbox/'>Colorbox</a> &ndash; ~12KB JS, ~5KB CSS: Released under the MIT license.",
 							'fancybox3'     => "<a href='https://fancyapps.com/fancybox/3/'>FancyBox 3</a> &ndash; ~67KB JS, ~16KB CSS: Released under the GPL v3 license.",
-							'featherlight'  => "<a href='http://noelboss.github.io/featherlight/'>Featherlight</a> &ndash; ~13KB JS, ~5KB CSS: Released under the MIT license.",
+							'featherlight'  => "<a href='https://noelboss.github.io/featherlight/'>Featherlight</a> &ndash; ~13KB JS, ~5KB CSS: Released under the MIT license.",
 							'imagelightbox' => "<a href='https://osvaldas.info/image-lightbox-responsive-touch-friendly'>Image Lightbox</a> &ndash; ~6KB JS, ~5KB CSS: Released under the MIT license. No video support.",
-							'lightcase'     => "<a href='http://cornel.bopp-art.com/lightcase/'>LightCase</a> &ndash; ~26KB JS, ~14KB CSS: Released under the GPL license.",
+							'lightcase'     => "<a href='https://cornel.bopp-art.com/lightcase/'>LightCase</a> &ndash; ~26KB JS, ~14KB CSS: Released under the GPL license.",
 							'strip'         => "<a href='http://www.stripjs.com/'>Strip</a> &ndash; ~39KB JS, ~9KB CSS: Released under the CC-BY 4.0 license. YouTube and Vimeo supported, but no support for videos from Flickr etc.",
-							'swipebox'      => "<a href='http://brutaldesign.github.io/swipebox/'>Swipebox</a> &ndash; ~12KB, ~5KB CSS: Released under the MIT license.",
+							'swipebox'      => "<a href='https://brutaldesign.github.io/swipebox/'>Swipebox</a> &ndash; ~12KB, ~5KB CSS: Released under the MIT license.",
 							'thickbox'      => "Thickbox &ndash; ~12KB: Released under the MIT license. No video support.",
 						],
 					],
@@ -105,7 +103,7 @@ class Generic extends Option_Tab {
 						'header'      => 'Not GPL-Compatible',
 						'description' => "<p>These cannot be distributed with Photonic due to licensing restrictions. However, you are free to download them from their websites as long as you adhere to their terms of service.</p><br/>",
 						'options'     => [
-							'fancybox2' => "<a href='http://fancyapps.com/fancybox/'>FancyBox 2</a>: Released under the CC-BY-NC 3.0 license",
+							'fancybox2' => "<a href='https://fancyapps.com/fancybox/'>FancyBox 2</a>: Released under the CC-BY-NC 3.0 license",
 							// 'fancybox4' => "<a href='https://fancyapps.com/'>FancyBox 4</a>: Released under a proprietary license that prevents redistribution. Use the UMD version of the JS file from <a href='https://github.com/fancyapps/ui/tree/main/dist'>here</a>.",
 						],
 					],
@@ -125,7 +123,7 @@ class Generic extends Option_Tab {
 			[
 				'name'     => "Non-bundled Lightbox JS",
 				'desc'     => "If you have chosen a custom lightbox library from the above, enter the full URLs of the JS files for each of them.
-			<strong>Please enter one URL per line</strong>. Note that your URL should start with <code>http://...</code> and you should be able to visit that entry in a browser",
+			<strong>Please enter one URL per line</strong>. Note that your URL should start with <code>http://...</code> or <code>https://...</code>, and you should be able to visit that entry in a browser",
 				'id'       => 'custom_lightbox_js',
 				'grouping' => 'generic-settings',
 				'type'     => 'textarea'
@@ -134,7 +132,7 @@ class Generic extends Option_Tab {
 			[
 				'name'     => "Custom Lightbox CSS",
 				'desc'     => "If you have chosen a custom lightbox library from the above, enter the full URLs of the CSS files for each of them.
-			<strong>Please enter one URL per line</strong>. Note that your URL should start with <code>http://...</code> and you should be able to visit that entry in a browser",
+			<strong>Please enter one URL per line</strong>. Note that your URL should start with <code>http://...</code> or <code>https://...</code>, and you should be able to visit that entry in a browser",
 				'id'       => 'custom_lightbox_css',
 				'grouping' => 'generic-settings',
 				'type'     => 'textarea'
@@ -403,7 +401,7 @@ class Generic extends Option_Tab {
 				'id'       => 'wp_title_caption',
 				'grouping' => 'wp-settings',
 				'type'     => 'select',
-				'options'  => Utilities::title_caption_options(),
+				'options'  => Utilities::title_caption_options(false, false, true),
 			],
 
 			[
@@ -423,21 +421,7 @@ class Generic extends Option_Tab {
 				'type'     => 'checkbox'
 			],
 
-			[
-				'name'     => "Layout processing mode",
-				'desc'     => "When possible, Photonic tries to use CSS to build the advanced layouts (like Justified Grids). 
-					This has the advantage of being fast and can work well with lazy-loading and AJAX-based plugins, particularly if the loading mode (<em>Photonic &rarr; Settings &rarr; Generic Options &rarr; Advanced &rarr; Loading Mode</em>) is PHP. 
-					<br/><br/>The downside is that CSS-based rendering is occasionally incorrect, particularly if the source has incorrect sizes. 
-					If this is a frequent issue, you can default to a JS-generated layout (which is always more accurate). This can be managed individually for each gallery.
-					<br/><br/>Pick your default processor:",
-				'id'       => 'wp_layout_engine',
-				'grouping' => 'wp-settings',
-				'type'     => 'select',
-				'options'  => [
-					'css' => 'Use CSS unless overridden by a gallery individually',
-					'js'  => 'Use JS unless overridden by a gallery individually',
-				]
-			],
+			$this->get_layout_engine_options('wp_layout_engine', 'wp-settings'),
 
 			[
 				'name'     => "Slideshow settings",
@@ -560,9 +544,24 @@ class Generic extends Option_Tab {
 				'type'     => 'select',
 				'options'  => [
 					'replace-if-available' => "Show album title if available, otherwise show the title of the WordPress page",
+					// 'append-if-available'  => "Append album title to the page title if available, otherwise show the title of the WordPress page",
 					'page'                 => "Show the title of the WordPress page",
 				]
 			],
+
+/*			[
+				'name'     => 'Page Meta Title display',
+				'desc'     => "Set the title to be displayed on the title bar of gallery page",
+				'id'       => 'page_meta_title',
+				'grouping' => 'template-page',
+				'type'     => 'select',
+				'options'  => [
+					'replace-if-available'  => "Show album title if available, otherwise show the title of the WordPress page",
+					'prepend-if-available'  => "Prepend album title to the page title if available, otherwise show the title of the WordPress page",
+					'append-if-available'   => "Append album title to the page title if available, otherwise show the title of the WordPress page",
+					'page'                  => "Show the title of the WordPress page",
+				]
+			],*/
 
 			[
 				'name'     => 'Page content display',
@@ -582,19 +581,6 @@ class Generic extends Option_Tab {
 				'desc'     => "Control advanced settings for the plugin",
 				'category' => 'advanced-settings',
 				'type'     => 'section',
-			],
-
-			[
-				'name'     => 'JavaScript Version',
-				'desc'     => "By default Photonic includes modern JS for new browsers and transpiled JS for old browsers. You can control which versions you want to load.",
-				'id'       => 'js_type',
-				'grouping' => 'advanced-settings',
-				'type'     => 'radio',
-				'options'  => [
-					'transpiled' => "<strong>Include only transpiled code</strong> &ndash; This will support all browsers, but the code will include some bloat.",
-					'modules'    => "<strong>Include only modern code</strong> &ndash; This will support newer browsers and <a href='https://caniuse.com/?search=es6'>not old browsers (&lt; 2% of users)</a>, but the code will be lighter and faster.",
-					'all'        => "<strong>Include transpiled and modern code</strong> &ndash; This will support both, newer and older browsers. New browsers and mobile browsers will load only new code, and old browsers will load only old code. In rare cases <a href='https://gist.github.com/jakub-g/5fc11af85a061ca29cc84892f1059fec'>desktop browsers may double-fetch</a>.",
-				]
 			],
 
 			[
@@ -650,12 +636,5 @@ class Generic extends Option_Tab {
 			],
 
 		];
-	}
-
-	public static function get_instance() {
-		if (null === self::$instance) {
-			self::$instance = new Generic();
-		}
-		return self::$instance;
 	}
 }

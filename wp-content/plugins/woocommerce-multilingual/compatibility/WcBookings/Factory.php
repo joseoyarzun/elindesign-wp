@@ -33,6 +33,9 @@ class Factory extends ComponentFactory implements IStandAloneAction {
 			);
 			$hooks[] = new Emails( getSitePress(), getWooCommerceWpml(), self::getWooCommerce() );
 			$hooks[] = new Templates\MyBookings();
+			$hooks[] = new Calendar();
+			$hooks[] = new Slots();
+			$hooks[] = new TranslationEditor\GroupsAndLabels();
 		}
 
 		if ( defined( 'WC_ACCOMMODATION_BOOKINGS_VERSION' ) && wcml_is_multi_currency_on() ) {

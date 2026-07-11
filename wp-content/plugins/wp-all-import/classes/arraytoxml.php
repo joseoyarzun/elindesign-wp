@@ -14,6 +14,7 @@ class PMXI_ArrayToXML
     public static function toXml($data, $rootNodeName = 'data', $xml=null, $lvl = 0)
     {                
 
+    	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
     	$data = apply_filters('wp_all_import_json_to_xml', $data);
      
       if ($xml == null)

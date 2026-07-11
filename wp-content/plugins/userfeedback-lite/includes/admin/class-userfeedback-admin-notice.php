@@ -1,4 +1,8 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Notices admin class.
  *
@@ -232,7 +236,7 @@ final class UserFeedback_Admin_Notice {
 					?>
 					<button type="button" class="notice-dismiss<?php echo esc_attr($dismissible); ?>">
 						<span class="screen-reader-text">
-							<?php esc_html_e( 'Dismiss this notice', 'userfeedback' ); ?>
+							<?php esc_html_e( 'Dismiss this notice', 'userfeedback-lite' ); ?>
 						</span>
 					</button>
 					<?php

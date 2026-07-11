@@ -175,13 +175,13 @@ function userfeedback_ajax_deactivate_addon() {
 	if ( ! current_user_can( 'deactivate_plugins' ) ) {
 		wp_send_json(
 			array(
-				'error' => esc_html__( 'You are not allowed to deactivate plugins', 'userfeedback' ),
+				'error' => esc_html__( 'You are not allowed to deactivate plugins', 'userfeedback-lite' ),
 			)
 		);
 	}
 
 	// Deactivate the addon.
-	$post_data = sanitize_post( $_POST, 'raw' );
+	$post_data = $_POST;
 	if ( isset( $post_data['plugin'] ) ) {
 		if ( isset( $post_data['isnetwork'] ) && $post_data['isnetwork'] ) {
 			deactivate_plugins( $post_data['plugin'], false, true );
@@ -208,13 +208,13 @@ function userfeedback_ajax_install_addon() {
 	if ( ! userfeedback_can_install_plugins() ) {
 		wp_send_json(
 			array(
-				'error' => esc_html__( 'You are not allowed to install plugins', 'userfeedback' ),
+				'error' => esc_html__( 'You are not allowed to install plugins', 'userfeedback-lite' ),
 			)
 		);
 	}
 
 	// Install the addon.
-	$post_data = sanitize_post( $_POST, 'raw' );
+	$post_data = $_POST;
 	if ( isset( $post_data['plugin'] ) ) {
 		$download_url = esc_url_raw(
 			filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_URL )
@@ -286,20 +286,20 @@ function userfeedback_ajax_activate_addon() {
 	if ( ! current_user_can( 'activate_plugins' ) ) {
 		wp_send_json(
 			array(
-				'error' => esc_html__( 'You are not allowed to activate plugins', 'userfeedback' ),
+				'error' => esc_html__( 'You are not allowed to activate plugins', 'userfeedback-lite' ),
 			)
 		);
 	}
 
 	// Activate the addon.
-	$post_data = sanitize_post( $_POST, 'raw' );
+	$post_data = $_POST;
 	if ( isset( $post_data['plugin'] ) ) {
 		if ( isset( $post_data['isnetwork'] ) && $post_data['isnetwork'] ) {
 			$activate = activate_plugin( $post_data['plugin'], null, true );
 		} else {
 			$activate = activate_plugin( $post_data['plugin'] );
 		}
-		
+
 		// Disable MonsterInsights redirect
 		if(strstr($post_data['plugin'], 'google-analytics-for-wordpress')){
 			delete_transient( '_monsterinsights_activation_redirect' );
@@ -374,7 +374,7 @@ function userfeedback_ajax_get_addons() {
 	if ( ! current_user_can( 'userfeedback_save_settings' ) ) {
 		return;
 	}
-	$post_data = sanitize_post( $_POST, 'raw' );
+	$post_data = $_POST;
 	if ( isset( $post_data['network'] ) && intval( $post_data['network'] ) > 0 ) {
 		define( 'WP_NETWORK_ADMIN', true );
 	}
@@ -452,24 +452,3 @@ function userfeedback_parse_addon( $installed_plugins, $addons_type, $addon, $sl
 
 	return $addon;
 }
-
-
-/**
- * Deactivate unlicensed addons.
- *
- * @since 1.0.0
- */
-function userfeedback_deactivate_unlicensed_addons() {
-	$addons            = userfeedback_get_addons();
-	$unlicensed_addons = ($addons && is_array( $addons['unlicensed'] )) ? $addons['unlicensed'] : array();
-	if ( empty( $unlicensed_addons ) ) {
-		return false;
-	}
-	$deactivate = array();
-	foreach ( $unlicensed_addons as $unlicensed_addon ) {
-		$deactivate[] = "userfeedback-{$unlicensed_addon->slug}/userfeedback-{$unlicensed_addon->slug}.php";
-	}
-	deactivate_plugins( $deactivate );
-}
-
-add_action( 'admin_init', 'userfeedback_deactivate_unlicensed_addons' );

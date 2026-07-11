@@ -10,6 +10,10 @@
  * @author  Envira Team
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 ?>
 <!-- Tabs -->
 <ul id="envira-tabs-nav" class="envira-tabs-nav" data-container="#envira-tabs" data-update-hashbang="1">

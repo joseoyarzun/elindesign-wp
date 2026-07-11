@@ -1,6 +1,6 @@
 <?php
 /**
- * Facebook for WooCommerce.
+ * Meta for WooCommerce.
  */
 
 namespace WooCommerce\Facebook\Framework\Api;
@@ -146,6 +146,9 @@ abstract class Base {
 		// parse the response body and tie it to the request
 		$this->response = $this->get_parsed_response( $this->raw_response_body );
 
+		// allow child classes to validate the parsed response (e.g. token errors, rate limits)
+		$this->do_post_parse_response_validation();
+
 		// fire do_action() so other actors can act on request/response data,
 		// primarily used for logging
 		$this->broadcast_request();
@@ -164,6 +167,20 @@ abstract class Base {
 	protected function get_parsed_response( $raw_response_body ) {
 		$handler_class = $this->get_response_handler();
 		return new $handler_class( $raw_response_body );
+	}
+
+
+	/**
+	 * Validates the parsed response after it has been instantiated.
+	 *
+	 * Child classes can override this to check for API-specific error
+	 * conditions (e.g. invalid tokens, rate limits) and throw exceptions
+	 * or set transients accordingly.
+	 *
+	 * @since 3.5.17
+	 */
+	protected function do_post_parse_response_validation() {
+		// no-op by default — child classes (e.g. API.php) override this
 	}
 
 
@@ -242,8 +259,9 @@ abstract class Base {
 	 * @return string
 	 */
 	protected function get_request_uri() {
-		$uri   = $this->request_uri . $this->get_request_path();
-		$query = $this->get_request_query();
+		$base_path = $this->get_request()->get_base_path_override() ?? $this->request_uri;
+		$uri       = $base_path . $this->get_request_path();
+		$query     = $this->get_request_query();
 
 		// Append any query params to the URL when necessary.
 		if ( $query ) {
@@ -400,7 +418,7 @@ abstract class Base {
 	 * @return array
 	 */
 	protected function get_request_headers() {
-		return $this->request_headers;
+		return array_merge( $this->request_headers, $this->get_request()->get_request_specific_headers() );
 	}
 
 
@@ -680,6 +698,7 @@ abstract class Base {
 		if ( ! Helper::str_starts_with( $url, 'https://' ) ) {
 			return;
 		}
+		//phpcs:ignore: WordPress.WP.AlternativeFunctions.curl_curl_setopt
 		curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
 	}
 

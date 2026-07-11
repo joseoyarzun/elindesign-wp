@@ -20,7 +20,7 @@ namespace Google\Site_Kit_Dependencies\Google\Auth;
 /**
  * Describes a class which supports signing arbitrary strings.
  */
-interface SignBlobInterface extends \Google\Site_Kit_Dependencies\Google\Auth\FetchAuthTokenInterface
+interface SignBlobInterface extends FetchAuthTokenInterface
 {
     /**
      * Sign a string using the method which is best for a given credentials type.
@@ -39,5 +39,5 @@ interface SignBlobInterface extends \Google\Site_Kit_Dependencies\Google\Auth\Fe
      *     one is required to obtain a client name.
      * @return string
      */
-    public function getClientName(callable $httpHandler = null);
+    public function getClientName(?callable $httpHandler = null);
 }

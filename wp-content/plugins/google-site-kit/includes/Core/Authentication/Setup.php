@@ -16,7 +16,7 @@ use Google\Site_Kit\Core\Authentication\Exception\Exchange_Site_Code_Exception;
 use Google\Site_Kit\Core\Authentication\Exception\Missing_Verification_Exception;
 use Google\Site_Kit\Core\Permissions\Permissions;
 use Google\Site_Kit\Core\Storage\User_Options;
-use Google\Site_Kit\Core\Util\Feature_Flags;
+use Google\Site_Kit\Core\Util\Remote_Features;
 
 /**
  * Base class for authentication setup.
@@ -118,14 +118,23 @@ class Setup {
 	 * Composes the oAuth proxy get help link.
 	 *
 	 * @since 1.81.0
+	 * @since 1.167.0 Added support for custom error codes.
 	 *
+	 * @param string|null $error_code The error code. Optional. Defaults to null.
 	 * @return string The get help link.
 	 */
-	private function get_oauth_proxy_failed_help_link() {
+	private function get_oauth_proxy_failed_help_link( $error_code = null ) {
+		// Map `request_failed` to the error ID `request_to_auth_proxy_failed` for backwards compatibility.
+		if ( null === $error_code || 'request_failed' === $error_code ) {
+			$error_id = 'request_to_auth_proxy_failed';
+		} else {
+			$error_id = $error_code;
+		}
+
 		return sprintf(
 			/* translators: 1: Support link URL. 2: Get help string. */
 			__( '<a href="%1$s" target="_blank">%2$s</a>', 'google-site-kit' ),
-			esc_url( add_query_arg( 'error_id', 'request_to_auth_proxy_failed', $this->proxy_support_link_url ) ),
+			esc_url( add_query_arg( 'error_id', $error_id, $this->proxy_support_link_url ) ),
 			esc_html__( 'Get help', 'google-site-kit' )
 		);
 	}
@@ -136,7 +145,7 @@ class Setup {
 	 * @since 1.48.0
 	 */
 	public function handle_action_setup_start() {
-		$nonce        = htmlspecialchars( $this->context->input()->filter( INPUT_GET, 'nonce' ) );
+		$nonce        = htmlspecialchars( $this->context->input()->filter( INPUT_GET, 'nonce' ) ?? '' );
 		$redirect_url = $this->context->input()->filter( INPUT_GET, 'redirect', FILTER_DEFAULT );
 
 		$this->verify_nonce( $nonce, Google_Proxy::ACTION_SETUP_START );
@@ -156,8 +165,6 @@ class Setup {
 			? $this->google_proxy->sync_site_fields( $this->credentials, 'sync' )
 			: $this->google_proxy->register_site( 'sync' );
 
-		$oauth_proxy_failed_help_link = $this->get_oauth_proxy_failed_help_link();
-
 		if ( is_wp_error( $oauth_setup_redirect ) ) {
 			$error_message = $oauth_setup_redirect->get_error_message();
 			if ( empty( $error_message ) ) {
@@ -170,7 +177,7 @@ class Setup {
 					esc_html__( 'The request to the authentication proxy has failed with an error: %1$s %2$s.', 'google-site-kit' ),
 					esc_html( $error_message ),
 					wp_kses(
-						$oauth_proxy_failed_help_link,
+						$this->get_oauth_proxy_failed_help_link( $oauth_setup_redirect->get_error_code() ),
 						array(
 							'a' => array(
 								'href'   => array(),
@@ -188,7 +195,7 @@ class Setup {
 					/* translators: %s: Get help link. */
 					esc_html__( 'The request to the authentication proxy has failed. Please, try again later. %s.', 'google-site-kit' ),
 					wp_kses(
-						$oauth_proxy_failed_help_link,
+						$this->get_oauth_proxy_failed_help_link(),
 						array(
 							'a' => array(
 								'href'   => array(),
@@ -216,17 +223,17 @@ class Setup {
 	 */
 	public function handle_action_verify() {
 		$input               = $this->context->input();
-		$step                = htmlspecialchars( $input->filter( INPUT_GET, 'step' ) );
-		$nonce               = htmlspecialchars( $input->filter( INPUT_GET, 'nonce' ) );
-		$code                = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_code' ) );
-		$site_code           = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_site_code' ) );
-		$verification_token  = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_verification_token' ) );
-		$verification_method = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_verification_token_type' ) );
+		$step                = htmlspecialchars( $input->filter( INPUT_GET, 'step' ) ?? '' );
+		$nonce               = htmlspecialchars( $input->filter( INPUT_GET, 'nonce' ) ?? '' );
+		$code                = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_code' ) ?? '' );
+		$site_code           = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_site_code' ) ?? '' );
+		$verification_token  = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_verification_token' ) ?? '' );
+		$verification_method = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_verification_token_type' ) ?? '' );
 
 		$this->verify_nonce( $nonce );
 
 		if ( ! current_user_can( Permissions::SETUP ) ) {
-			wp_die( esc_html__( 'You don\'t have permissions to set up Site Kit.', 'google-site-kit' ), 403 );
+			wp_die( esc_html__( 'You don’t have permissions to set up Site Kit.', 'google-site-kit' ), 403 );
 		}
 
 		if ( ! $code ) {
@@ -275,15 +282,15 @@ class Setup {
 	 */
 	public function handle_action_exchange_site_code() {
 		$input     = $this->context->input();
-		$step      = htmlspecialchars( $input->filter( INPUT_GET, 'step' ) );
-		$nonce     = htmlspecialchars( $input->filter( INPUT_GET, 'nonce' ) );
-		$code      = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_code' ) );
-		$site_code = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_site_code' ) );
+		$step      = htmlspecialchars( $input->filter( INPUT_GET, 'step' ) ?? '' );
+		$nonce     = htmlspecialchars( $input->filter( INPUT_GET, 'nonce' ) ?? '' );
+		$code      = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_code' ) ?? '' );
+		$site_code = htmlspecialchars( $input->filter( INPUT_GET, 'googlesitekit_site_code' ) ?? '' );
 
 		$this->verify_nonce( $nonce );
 
 		if ( ! current_user_can( Permissions::SETUP ) ) {
-			wp_die( esc_html__( 'You don\'t have permissions to set up Site Kit.', 'google-site-kit' ), 403 );
+			wp_die( esc_html__( 'You don’t have permissions to set up Site Kit.', 'google-site-kit' ), 403 );
 		}
 
 		if ( ! $code || ! $site_code ) {

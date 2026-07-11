@@ -1,7 +1,6 @@
 <?php
 
 use WCML\Multicurrency\Transient\Hooks as TransientHooks;
-use WPML\FP\Fns;
 
 /**
  * Class WCML_Currencies_Payment_Gateways
@@ -16,31 +15,23 @@ class WCML_Currencies_Payment_Gateways {
 	/** @var array */
 	private $available_gateways;
 
-	/** @var array */
-	private $supported_gateways;
+	private array $supported_gateways = [];
 
 	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var WPML_WP_API */
-	private $wp_api;
-
 	/**
 	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param WPML_WP_API      $wp_api
 	 */
-	public function __construct( woocommerce_wpml $woocommerce_wpml, WPML_WP_API $wp_api ) {
+	public function __construct( woocommerce_wpml $woocommerce_wpml ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
-		$this->wp_api           = $wp_api;
 	}
 
 	public function add_hooks() {
-		add_filter( 'woocommerce_payment_gateways', Fns::tap( Fns::withoutRecursion(
-			Fns::identity(),
-			[ $this, 'init_gateways' ]
-		) ), PHP_INT_MAX );
+		add_action( 'wp_loaded', [ $this, 'init_gateways' ] );
 
 		add_filter( 'woocommerce_gateway_description', [ $this, 'filter_gateway_description' ], 10, 2 );
+		add_filter( 'woocommerce_paypal_payments_gateway_description', [ $this, 'filter_paypal_payments_gateway_description' ], 10, 2 );
 		add_filter( 'option_woocommerce_stripe_settings', [ 'WCML_Payment_Gateway_Stripe', 'filter_stripe_settings' ] );
 		add_filter( 'option_woocommerce-ppcp-settings', [ 'WCML_Payment_Gateway_PayPal_V2', 'filter_ppcp_args' ] );
 
@@ -131,6 +122,24 @@ class WCML_Currencies_Payment_Gateways {
 	}
 
 	/**
+	 * @since WooCommerce PayPal Payments 3.3.0
+	 *
+	 * @param string $description Gateway description (already sanitized with wp_kses_post).
+	 * @param object $gateway     Gateway instance.
+	 * @see \WooCommerce\PayPalCommerce\WcGateway\Gateway\PayPalGateway
+	 *
+	 * @return string
+	 */
+	public function filter_paypal_payments_gateway_description( $description, $gateway ) {
+		$id = \WPML\FP\Obj::prop( 'id', $gateway );
+		if ( is_null( $id ) ) {
+			return $description;
+		}
+
+		return $this->filter_gateway_description( $description, $id );
+	}
+
+	/**
 	 * @param string $description
 	 * @param string $id
 	 *
@@ -139,7 +148,10 @@ class WCML_Currencies_Payment_Gateways {
 	public function filter_gateway_description( $description, $id ) {
 		$this->init_gateways();
 
-		if ( in_array( $id, array_keys( $this->supported_gateways ), true ) ) {
+		if (
+			in_array( $id, array_keys( $this->supported_gateways ), true )
+			&& in_array( $id, array_keys( $this->payment_gateways ), true )
+		) {
 
 			$client_currency  = $this->woocommerce_wpml->multi_currency->get_client_currency();
 			$default_currency = wcml_get_woocommerce_currency_option();
@@ -184,7 +196,7 @@ class WCML_Currencies_Payment_Gateways {
 	}
 
 	private function store_supported_gateways() {
-		if ( is_array( $this->supported_gateways ) ) {
+		if ( ! empty( $this->supported_gateways ) ) {
 			$client_currency = $this->woocommerce_wpml->multi_currency->get_client_currency();
 			foreach ( $this->supported_gateways as $id => $supported_gateway ) {
 				if ( $this->is_a_valid_gateway( $id, $supported_gateway ) ) {

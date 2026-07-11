@@ -65,12 +65,12 @@ class MulticurrencyHooks implements \IWPML_Action {
 	 * Filter Subscription Sign-up fee cost
 	 *
 	 * @param string     $subscriptionSignUpFee
-	 * @param WC_Product $product
+	 * @param WC_Product|mixed $product
 	 *
 	 * @return string
 	 */
 	public function subscriptions_product_sign_up_fee_filter( $subscriptionSignUpFee, $product ) {
-		if ( $product && ! $this->proratingPrice ) {
+		if ( is_object( $product ) && ! $this->proratingPrice ) {
 			$currency = $this->woocommerce_wpml->multi_currency->get_client_currency();
 
 			if ( wcml_get_woocommerce_currency_option() !== $currency ) {

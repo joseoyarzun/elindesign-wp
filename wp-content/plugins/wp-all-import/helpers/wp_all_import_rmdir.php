@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 function wp_all_import_rmdir($dir) {
     if (@file_exists($dir)) {
         $scanned_files = @scandir($dir);
@@ -6,9 +8,10 @@ function wp_all_import_rmdir($dir) {
             $files = array_diff($scanned_files, array('.','..'));
             if (!empty($files)){
                 foreach ($files as $file) {
-                    (is_dir("$dir/$file")) ? wp_all_import_rmdir("$dir/$file") : @unlink("$dir/$file");
+                    (is_dir("$dir/$file")) ? wp_all_import_rmdir("$dir/$file") : wp_delete_file("$dir/$file");
                 }
             }
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
             return @rmdir($dir);
         }
     }

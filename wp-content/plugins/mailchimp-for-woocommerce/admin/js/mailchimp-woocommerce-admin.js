@@ -3,6 +3,29 @@
 
 	$(window).on('load', function() {
 
+		$(document).on('click', '.js-mailchimp-woocommerce-send-event', function(e) {
+			e.preventDefault();
+			let target = $(this).attr('target') || '_self';
+			let href = $(this).attr('href');
+
+			let mcEvent = $(this).data('mc-event');
+			let mcEventContext = $(this).data('mc-tab');
+
+			var data = {
+				action:'mailchimp_woocommerce_send_event',
+				mc_event: mcEvent,
+				mc_context: mcEventContext
+			};
+
+			$.post(ajaxurl, data, function(response) {
+				window.open( href, target);
+
+				if (!response.success) {
+					console.error(response);
+				}
+			});
+		})
+
 		// show/hide optional settings
 		var optionalSettings = false;
 		$('.optional-settings-button').click(function () {
@@ -15,6 +38,10 @@
 				$(this).find('span').addClass('active');
 				optionalSettings = true;
 			}
+		});
+
+		$('#mc_notice_button').on('click', function() {
+			$('.mc-wc-notice').fadeOut()
 		});
 
 		// re-enable disable select input on audience settings submit
@@ -77,6 +104,11 @@
 			$temp.remove();
 			$('.mc-woocommerce-copy-log-button span.clipboard').hide();
 			$('.mc-woocommerce-copy-log-button span.yes').show();
+			var data = {
+				action:'mailchimp_woocommerce_send_event',
+				mc_event: 'save_log',
+			};
+			$.post(ajaxurl, data, function(response) {});
 		});
 
 		$('.mc-woocommerce-copy-log-button').mouseleave(function (e) {
@@ -138,10 +170,44 @@
 			var data = form.serialize();
 			data+="&mailchimp_woocommerce_resync=1"
 			return $.ajax({type: "POST", url: form.attr('action'), data: data}).done(function(data) {
-				window.location.reload();
+				setTimeout(function() {
+					let searchParams = new URLSearchParams(window.location.search);
+					searchParams.set('tab', 'sync');
+					let newUrl = window.location.origin + window.location.pathname + '?' + searchParams.toString()
+
+					window.location.href = newUrl
+				}, 100)
 			}).fail(function(xhr) {
 				Swal.hideLoading();
 				Swal.showValidationMessage(phpVars.l10n.resync_failed);
+			});
+		});
+
+		let executing_chimpstatic = false;
+
+		$('#mailchimp_woocommerce_toggle_chimpstatic_script').off('click').on('click', function(e) {
+			e.preventDefault();
+			if (executing_chimpstatic) {
+				console.log("preventing duplicate button clicks for chimpstatic script");
+				return null;
+			}
+			executing_chimpstatic = true;
+
+			Swal.fire({
+				title: phpVars.l10n.toggling_chimpstatic_in_progress,
+				onBeforeOpen: () => {
+					Swal.showLoading()
+				}
+			});
+
+			var data = {
+				action:'mailchimp_woocommerce_toggle_chimpstatic_script',
+			};
+
+			console.log('about to toggle mailchimp script options');
+			$.post(ajaxurl, data, function(response) {
+				console.log('toggled mailchimp script', data.status);
+				window.location.reload();
 			});
 		});
 
@@ -163,7 +229,7 @@
 
 			const swalWithBootstrapButtons = Swal.mixin({
 				customClass: {
-				  confirmButton: 'button button-primary tab-content-submit disconnect-confirm',
+				  confirmButton: 'button button-default mc-wc-btn-disconnect',
 				  cancelButton: 'button button-default mc-woocommerce-resync-button disconnect-button'
 				},
 				buttonsStyling: false,
@@ -331,11 +397,12 @@
 										$('#mailchimp-oauth-error').hide();
 										$('#mailchimp-oauth-connecting').hide();
 										$('#mailchimp-oauth-connected').show();
-										
-										// get access_token from finishResponse and fill api-key field value including data_center
-										var accessToken = JSON.parse(finishResponse.data.body).access_token + '-' + JSON.parse(finishResponse.data.body).data_center 
-										$('#mailchimp-woocommerce-mailchimp-api-key').val(accessToken);
 
+										let body = JSON.parse(finishResponse.data.body);
+										// get access_token from finishResponse and fill api-key field value including data_center
+										var accessToken = body.access_token + '-' + body.data_center
+										$('#mailchimp-woocommerce-mailchimp-api-key').val(accessToken);
+										
 										// always go to next step on success, so change url of wp_http_referer
 										if ($('input[name=mailchimp_woocommerce_wizard_on]').val() == 1) {
 											var query = window.location.href.match(/^(.*)\&/);
@@ -366,7 +433,11 @@
 
 		// Remove Initial Sync Banner oon dismiss
 		$('#setting-error-mailchimp-woocommerce-initial-sync-end .notice-dismiss').click(function(e){
-			$.get(phpVars.removeReviewBannerRestUrl, [], function(response){
+			$.ajax({
+				url: phpVars.removeReviewBannerRestUrl,
+				method: 'GET',
+				beforeSend: function (xhr) { xhr.setRequestHeader('X-WP-Nonce', phpVars.restNonce); }
+			}).done(function (response) {
 				console.log(response);
 			});
 		});
@@ -374,6 +445,14 @@
 		$('#tower_box_switch').change(function (e){
 			var switch_button = this;
 			var opt = this.checked ? 1 : 0;
+			var notice = $('.mc-wc-notice');
+			let notice_content = $('#mc_notice_text');
+			var content = $('.mc-wc-tab-content');
+
+			//content.addClass('loading');
+
+			notice_content.text('');
+			notice.removeClass('error success');
 
 			var data = {
 				action: 'mailchimp_woocommerce_tower_status',
@@ -384,14 +463,14 @@
 			$('#tower_box_status_' + opt).show();
 
 			$.post(ajaxurl, data, function(response) {
+				content.removeClass('loading');
 				if (response.success) {
-					$('#mc-tower-save').html(response.data);
-					$('#mc-tower-save').css('color', '#628735').show().fadeOut(3000);
+					notice_content.text(response.data);
+					notice.addClass('success').fadeIn();
 					switch_button.checked = opt;
 				}
 				else {
-					$('#mc-tower-save').html(response.data.error);
-					$('#mc-tower-save').css('color', 'red').show().fadeOut(3000);
+					$('<div class="notices-content-wrapper sync-notices"><div class="notice notice-error inline is-dismissible"><p>' + response.data.error +'</p></div></div>').insertAfter('.mc-wc-tab-buttons');
 					switch_button.checked = 1 - opt;
 					$('.tower_box_status').hide();
 					$('#tower_box_status_' + (1 - opt)).show();
@@ -402,9 +481,17 @@
 		$('#comm_box_switch').change(function (e){
 			var switch_button = this;
 			var opt = this.checked ? 1 : 0;
-			
+			var notice = $('.mc-wc-notice');
+			let notice_content = $('#mc_notice_text');
+			var content = $('.mc-wc-tab-content');
+
+			//content.addClass('loading');
+
+			notice_content.text('');
+			notice.removeClass('error success');
+
 			var data = {
-				action: 'mailchimp_woocommerce_communication_status', 
+				action: 'mailchimp_woocommerce_communication_status',
 				opt: opt
 			}
 
@@ -412,14 +499,16 @@
 			$('#comm_box_status_' + opt).show();
 
 			$.post(ajaxurl, data, function(response) {
+				content.removeClass('loading');
 				if (response.success) {
-					$('#mc-comm-save').html(response.data);
-					$('#mc-comm-save').css('color', '#628735').show().fadeOut(3000);
+					notice_content.text(response.data);
+					notice
+						.addClass('success')
+						.fadeIn();
 					switch_button.checked = opt;
 				}
 				else {
-					$('#mc-comm-save').html(response.data.error);
-					$('#mc-comm-save').css('color', 'red').show().fadeOut(3000);
+					$('<div class="notices-content-wrapper sync-notices"><div class="notice notice-error inline is-dismissible"><p>' + response.data.error +'</p></div></div>').insertAfter('.mc-wc-tab-buttons');
 					switch_button.checked = 1 - opt;
 					$('.comm_box_status').hide();
 					$('#comm_box_status_' + (1 - opt)).show();

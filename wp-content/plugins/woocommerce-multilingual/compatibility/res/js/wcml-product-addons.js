@@ -61,7 +61,7 @@ jQuery(function($) {
 		const wrapperInGlobalAddons = $('.wcml_custom_prices');
 
 		if(wrapperInGlobalAddons.length > 0){
-			wrapperInGlobalAddons.insertAfter( $('.global-addons-form tr:eq(2)') ).show();
+			wrapperInGlobalAddons.insertAfter( $('.global-addons-form > tbody > tr:eq(2)') ).show();
 		}
 	}
 

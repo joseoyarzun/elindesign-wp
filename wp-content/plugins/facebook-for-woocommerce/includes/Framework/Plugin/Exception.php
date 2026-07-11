@@ -1,12 +1,11 @@
 <?php
-// phpcs:ignoreFile
 /**
- * Facebook for WooCommerce.
+ * Meta for WooCommerce.
  */
 
 namespace WooCommerce\Facebook\Framework\Plugin;
 
-defined( 'ABSPATH' ) or exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Plugin Framework Exception - generic Exception

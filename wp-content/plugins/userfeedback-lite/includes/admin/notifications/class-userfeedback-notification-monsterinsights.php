@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Install MI Notification class.
  *
@@ -18,10 +22,10 @@ class UserFeedback_Notification_MonsterInsights extends UserFeedback_Notificatio
 	public $license_types = array( 'lite', 'plus', 'pro' );
 
 	public function prepare() {
-		$this->title   = __( 'See The Stats That Matter', 'userfeedback' );
-		$this->content = __( 'Install MonsterInsights to see the website stats that matter and learn more about who is providing user feedback on your website.', 'userfeedback' );
+		$this->title   = __( 'See The Stats That Matter', 'userfeedback-lite' );
+		$this->content = __( 'Install MonsterInsights to see the website stats that matter and learn more about who is providing user feedback on your website.', 'userfeedback-lite' );
 
-		$this->add_action( __( 'Install MonsterInsights' ), 'install_monsterinsights' );
+		$this->add_action( __( 'Install MonsterInsights', 'userfeedback-lite' ), 'install_monsterinsights' );
 
 		return parent::prepare();
 	}

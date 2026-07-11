@@ -9,9 +9,12 @@
  */
 
 // Exit if accessed directly.
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+use Envira\Admin\Envira_Permissions;
 
 /**
  * Common Helper Class
@@ -66,12 +69,17 @@ class Envira_Gallery_Common_Admin {
 		// Load the base class object.
 		$this->base = Envira_Gallery_Lite::get_instance();
 
+		add_action( 'admin_init', [ $this, 'add_capabilities' ] );
+
 		// Handle any necessary DB upgrades.
 		add_action( 'admin_init', [ $this, 'db_upgrade' ] );
 
+		// Add new section in WordPress media settings page.
+		add_action( 'admin_init', [ $this, 'envira_gallery_media_settings_add_new_section' ] );
+
 		// Load admin assets.
-		add_action( 'admin_enqueue_scripts', [ $this, 'admin_styles' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'admin_scripts' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'admin_styles' ], 10, 1 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'admin_scripts' ], 10, 1 );
 
 		// Delete any gallery association on attachment deletion. Also delete any extra cropped images.
 		add_action( 'delete_attachment', [ $this, 'delete_gallery_association' ] );
@@ -88,9 +96,22 @@ class Envira_Gallery_Common_Admin {
 		add_action( 'in_admin_footer', [ $this, 'footer_template' ] );
 		add_action( 'admin_footer', [ $this, 'notifications_template' ] );
 		add_action( 'admin_menu', [ $this, 'add_upgrade_menu_item' ], 99 );
-		add_action('admin_head', [ $this, 'admin_inline_styles' ] );
+		add_action( 'admin_menu', [ $this, 'add_cdn_menu_item' ], 11 );
+		add_action( 'admin_head', [ $this, 'admin_inline_styles' ] );
 		add_action( 'admin_footer', [ $this, 'admin_sidebar_target' ] );
 
+		// Add action to output JS for Envira CDN menu item.
+		add_action( 'admin_footer', [ $this, 'admin_cdn_menu_target_blank' ] );
+	}
+
+	/**
+	 * Set capabilities for Envira Gallery Lite.
+	 *
+	 * @return void
+	 */
+	public function add_capabilities() {
+
+		( new \Envira\Admin\Envira_Capabilities() )->add_capabilities();
 	}
 
 	/**
@@ -103,10 +124,19 @@ class Envira_Gallery_Common_Admin {
 	public function admin_inline_styles() {
 		echo '<style>
 			.envira-sidebar-upgrade-pro {
-				background-color: #37993B;
+				background-color: #00ac53;
+			}
+			.envira-sidebar-upgrade-pro:hover {
+				background-color: #1c803d;
 			}
 			.envira-sidebar-upgrade-pro a {
 				color: #fff !important;
+			}
+			.cdn_new_badge {
+				color:#f18200;
+				vertical-align:super;
+				font-size:9px;
+				margin-left:3px;
 			}
 		</style>';
 	}
@@ -123,6 +153,7 @@ class Envira_Gallery_Common_Admin {
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
 			$('li.envira-sidebar-upgrade-pro a').attr('target','_blank');
+			$('a:has(.cdn_new_badge)').attr('target','_blank');
 		});
 		</script>
 		<?php
@@ -165,7 +196,27 @@ class Envira_Gallery_Common_Admin {
 			$submenu['edit.php?post_type=envira'][ $upgrade_link_position ][] = 'envira-sidebar-upgrade-pro';
 		}
 		// phpcs:enable WordPress.WP.GlobalVariablesOverride.Prohibited
+	}
 
+	/**
+	 * Add CDN menu item.
+	 *
+	 * @return void
+	 */
+	public function add_cdn_menu_item() {
+		global $submenu;
+		$utm = '?utm_source=envira-gallery-lite&utm_medium=lite-plugin&utm_campaign=admin-menu&utm_content=' . ENVIRA_LITE_VERSION;
+		// Only add if the submenu exists.
+		if ( isset( $submenu['edit.php?post_type=envira'] ) ) {
+			$submenu['edit.php?post_type=envira'][] = [
+				// Use HTML in the menu title, but be aware some WP versions may not render it.
+				'Envira CDN <span class="cdn_new_badge">NEW</span>',
+				'manage_options',
+				'https://enviragallery.com/cdn/' . $utm,
+				// Add a custom class to target with JS for opening in new tab
+				'cdn-menu-item-target-blank',
+			];
+		}
 	}
 
 	/**
@@ -389,9 +440,10 @@ class Envira_Gallery_Common_Admin {
 	 *
 	 * @since 1.3.1
 	 *
+	 * @param string $hook Page Hook.
 	 * @return void Return early if not on the proper screen.
 	 */
-	public function admin_styles() {
+	public function admin_styles( $hook ) {
 
 		// Get current screen.
 		$screen = get_current_screen();
@@ -405,6 +457,15 @@ class Envira_Gallery_Common_Admin {
 		wp_register_style( $this->base->plugin_slug . '-admin-style', plugins_url( 'assets/css/admin.css', $this->base->file ), [], $this->base->version );
 		wp_enqueue_style( $this->base->plugin_slug . '-admin-style' );
 
+		// Sanitize $_GET['post_type'] at the point of ingestion using sanitize_key() — fixes unvalidated input read (nonce verification N/A for enqueue hooks; sanitization is the correct mitigation here).
+		$post_type = isset( $_GET['post_type'] ) ? sanitize_key( $_GET['post_type'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only query param used only for conditional style loading, not for data mutation; sanitized above.
+		if ( 'envira_page_envira-gallery-settings' === $hook && 'envira' === $post_type ) { // Uses sanitized $post_type instead of raw $_GET value.
+
+			wp_enqueue_style( 'envira-gallery-settings-style-css', plugins_url( 'assets/css/settings.css', $this->base->file ), false, $this->base->version );
+			wp_enqueue_style( 'envira-choice-css', plugins_url( 'assets/css/choices.css', $this->base->file ), false, $this->base->version );
+
+		}
+
 		// Fire a hook to load in custom admin styles.
 		do_action( 'envira_gallery_admin_styles' );
 	}
@@ -414,9 +475,10 @@ class Envira_Gallery_Common_Admin {
 	 *
 	 * @since 1.3.5
 	 *
+	 * @param string $hook Page Hook.
 	 * @return void Return early if not on the proper screen.
 	 */
-	public function admin_scripts() {
+	public function admin_scripts( $hook ) {
 
 		// Get current screen.
 		$screen = get_current_screen();
@@ -427,8 +489,27 @@ class Envira_Gallery_Common_Admin {
 		}
 
 		wp_enqueue_script( 'clipboard' );
+
+		wp_register_script( $this->base->plugin_slug . '-tabs-script', plugins_url( 'assets/js/min/tabs-min.js', $this->base->file ), [ 'jquery' ], $this->base->version, true );
+		wp_enqueue_script( $this->base->plugin_slug . '-tabs-script' );
+
 		// Load necessary admin scripts.
 		wp_register_script( $this->base->plugin_slug . '-admin-script', plugins_url( 'assets/js/min/admin-min.js', $this->base->file ), [ 'jquery', 'clipboard' ], $this->base->version, false );
+
+		if ( 'envira_page_envira-gallery-settings' === $hook ) {
+			wp_register_script( $this->base->plugin_slug . '-permissions-check', plugins_url( 'assets/js/min/envira-permissions-min.js', $this->base->file ), [], $this->base->version, false );
+			wp_register_script( $this->base->plugin_slug . '-permissions-modal-js', plugins_url( 'assets/js/lib/a11y-dialog.min.js', $this->base->file ), [], $this->base->version, false );
+
+			$permissions = new Envira_Permissions();
+			$permissions->envira_permissions_localize();
+			wp_enqueue_script( $this->base->plugin_slug . '-choice-js', plugins_url( 'assets/js/lib/choices.min.js', $this->base->file ), [ 'jquery' ], $this->base->version, false );
+
+			// For permisson modal.
+			wp_enqueue_script( $this->base->plugin_slug . '-permissions-modal-js' );
+			wp_enqueue_script( $this->base->plugin_slug . '-permissions-check' );
+
+		}
+
 		wp_enqueue_script( $this->base->plugin_slug . '-admin-script' );
 		wp_localize_script(
 			$this->base->plugin_slug . '-admin-script',
@@ -447,7 +528,30 @@ class Envira_Gallery_Common_Admin {
 				'unlock_url'                 => esc_url( $this->get_upgrade_link( 'https://enviragallery.com/pricing', 'listgallery', 'unlock' ) ),
 				'unlock_title'               => esc_html__( 'Unlock All Features', 'envira-gallery-lite' ),
 				'unlock_text'                => esc_html__( 'Upgrade to Pro to get access to Albums, Protected Images,  Video Galleries, and more!', 'envira-gallery-lite' ),
-				'unlock_btn'				 => esc_html__( 'Unlock Gallery Features '),
+				'unlock_btn'                 => esc_html__( 'Upgrade to Pro', 'envira-gallery-lite' ),
+				'unlock_icon'                => plugins_url( 'assets/css/images/envira-green.png', $this->base->file ),
+			]
+		);
+
+		// Load gallery convert script.
+		wp_register_script( $this->base->plugin_slug . '-convert-gallery-script', plugins_url( 'assets/js/min/gallery-convert-min.js', $this->base->file ), [ 'jquery' ], $this->base->version, false );
+
+		wp_enqueue_script( $this->base->plugin_slug . '-convert-gallery-script' );
+
+		wp_localize_script(
+			$this->base->plugin_slug . '-convert-gallery-script',
+			'envira_gallery_convert',
+			[
+				'bulk_convert_rest_url'      => rest_url( 'envira-convert/v1/bulk-convert' ),
+				'process_item_rest_url'      => rest_url( 'envira-convert/v1/process-gallery' ),
+				'gallery_convert_rest_nonce' => wp_create_nonce( 'wp_rest' ),
+				'bulk_confirmation_alert'    => __( 'Are you sure you want to convert? This action cannot be reversed.', 'envira-gallery-lite' ),
+				'bulk_conversion_started'    => __( 'Gallery conversion in progress... Please do not close this window or refresh the page until the process is complete.', 'envira-gallery-lite' ),
+				'found_posts_text'           => __( 'posts found containing WordPress galleries.', 'envira-gallery-lite' ),
+				'conversion_completed'       => __( 'Gallery conversion completed.', 'envira-gallery-lite' ),
+				'failed_conversion_logs'     => __( 'Failed Conversion Logs:', 'envira-gallery-lite' ),
+				'post_id_text'               => __( 'Post ID', 'envira-gallery-lite' ),
+				'edit_post_text'             => __( 'Edit Post', 'envira-gallery-lite' ),
 			]
 		);
 
@@ -530,7 +634,12 @@ class Envira_Gallery_Common_Admin {
 
 			// Delete the resized image.
 			if ( file_exists( $file ) ) {
-				@unlink( $file ); // @codingStandardsIgnoreLine
+				$real_file    = realpath( $file ); // resolve canonical path — $metadata['file'] and $dims come from the DB and can be tampered with to contain ../ sequences
+				$real_basedir = realpath( $wp_upload_dir['basedir'] ); // resolve basedir with symlinks expanded for reliable prefix comparison
+				if ( $real_file && $real_basedir && 0 === strpos( $real_file, trailingslashit( $real_basedir ) ) ) {
+					// only unlink when the resolved path is confirmed inside the uploads directory
+					@unlink( $real_file ); // @codingStandardsIgnoreLine
+				}
 			}
 		}
 	}
@@ -656,6 +765,9 @@ class Envira_Gallery_Common_Admin {
 	 * - define( 'ENVIRA_GALLERY_SHAREASALE_ID', 1234 );
 	 * - get_option( 'envira_gallery_shareasale_id' ); (with the option being in the wp_options table)
 	 *
+	 * Additionally, you can completely override the final URL using:
+	 * - add_filter( 'envira_gallery_shareasale_entire_redirect_url', function( $url, $original_url, $medium, $button, $append, $shareasale_id ) { return 'your-custom-url'; } );
+	 *
 	 * utm_source = liteplugin
 	 * utm_medium = page
 	 * utm_campaign = what button was clicked, etc.
@@ -688,6 +800,9 @@ class Envira_Gallery_Common_Admin {
 		// Whether we have an ID or not, filter the ID.
 		$shareasale_id = apply_filters( 'envira_gallery_shareasale_id', $shareasale_id );
 
+		// Build the URL first, then allow it to be completely overridden
+		$final_url = '';
+
 		// If at this point we still don't have an ID, we really don't have one!
 		// Just return the standard upgrade URL.
 		if ( empty( $shareasale_id ) ) {
@@ -695,13 +810,128 @@ class Envira_Gallery_Common_Admin {
 				// prevent a possible typo.
 				$url = false;
 			}
-			$url = ( false !== $url ) ? trailingslashit( esc_url( $url ) ) : 'https://enviragallery.com/lite/';
-			return $url . '?utm_source=liteplugin&utm_medium=' . $medium . '&utm_campaign=' . $button . $append;
+			$url       = ( false !== $url ) ? trailingslashit( esc_url( $url ) ) : 'https://enviragallery.com/lite/';
+			$final_url = $url . '?utm_source=liteplugin&utm_medium=' . $medium . '&utm_campaign=' . $button . $append;
+		} else {
+			// If here, we have a ShareASale ID
+			// Build ShareASale URL with redirect.
+			$final_url = 'http://www.shareasale.com/r.cfm?u=' . $shareasale_id . '&b=566240&m=51693&afftrack=&urllink=enviragallery%2Ecom%2Flite%2F';
 		}
 
-		// If here, we have a ShareASale ID
-		// Return ShareASale URL with redirect.
-		return 'http://www.shareasale.com/r.cfm?u=' . $shareasale_id . '&b=566240&m=51693&afftrack=&urllink=enviragallery%2Ecom%2Flite%2F';
+		// Allow complete URL override via new filter
+		$final_url = apply_filters( 'envira_gallery_shareasale_entire_redirect_url', $final_url, $url, $medium, $button, $append, $shareasale_id );
+
+		return $final_url;
+	}
+
+	/**
+	 * Callback for the Envira Gallery Media Settings section.
+	 *
+	 * @return void
+	 */
+	public function envira_gallery_media_settings_add_new_section() {
+		// Register a new section in the "Media" settings page.
+		add_settings_section(
+			'envira_gallery_convert_section',
+			__( 'Envira Gallery', 'envira-gallery-lite' ),
+			[ $this, 'envira_gallery_convert_section_callback' ],
+			'media'
+		);
+	}
+
+	/**
+	 * Callback for the Envira Gallery content section.
+	 *
+	 * @return void
+	 */
+	public function envira_gallery_convert_section_callback() {
+		?>
+		<p><?php esc_html_e( 'Convert all of your existing WP Galleries to Envira Galleries. Take advantage of advanced options like drag and drop features, themes, lightboxes, and much more.', 'envira-gallery-lite' ); ?></p>
+		<?php
+			$convert_button = __( 'Convert to Envira Gallery', 'envira-gallery-lite' );
+		?>
+		<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=envira&page=envira-gallery-settings#!envira-tab-convert_to_envira' ) ); ?>" title="<?php echo esc_attr( $convert_button ); ?>" class="button button-secondary envira-media-settings-convert-btn"><?php echo esc_attr( $convert_button ); ?></a></p>
+		<?php
+	}
+
+	/**
+	 * Renders the post types dropdown.
+	 *
+	 * @return void
+	 */
+	public function envira_render_post_types_dropdown() {
+		// Exclusions for keywords, exact names, and labels.
+		$exclusions = [
+			'keywords'    => [ 'envira', 'ngg', 'nextgen', 'photocrati', 'gallery', 'elementor' ],
+			'exact_names' => [ 'e-landing-page' ],
+			'labels'      => [ 'NextGEN', 'Gallery' ],
+		];
+
+		// Retrieve all custom post types.
+		$post_types = get_post_types( [ '_builtin' => false ], 'objects' );
+
+		// Filter post types based on exclusions.
+		$filtered_post_types = array_filter(
+			$post_types,
+			function ( $post_type ) use ( $exclusions ) {
+				// Exclude based on keywords in the post type name.
+				foreach ( $exclusions['keywords'] as $keyword ) {
+					if ( strpos( $post_type->name, $keyword ) !== false ) {
+						return false;
+					}
+				}
+
+				// Exclude based on exact post type names.
+				if ( in_array( $post_type->name, $exclusions['exact_names'], true ) ) {
+					return false;
+				}
+
+				// Exclude based on labels.
+				foreach ( $exclusions['labels'] as $label ) {
+					if ( strpos( $post_type->label, $label ) !== false ) {
+						return false;
+					}
+				}
+
+				return true; // Include post type if it passes all checks.
+			}
+		);
+
+		// Allow users to modify the post types list.
+		$filtered_post_types = apply_filters( 'envira_convert_post_types', $filtered_post_types );
+		?>
+		<div class="envira-posttype-dropdown-section">
+			<select name="envira_convert_post_types_dropdown" id="envira_convert_post_types_dropdown">
+				<option value=""><?php esc_html_e( 'Select Post Type for Conversion', 'envira-gallery-lite' ); ?></option>
+				<option value="post"><?php esc_html_e( 'Posts', 'envira-gallery-lite' ); ?></option>
+				<option value="page"><?php esc_html_e( 'Pages', 'envira-gallery-lite' ); ?></option>
+				<?php
+				foreach ( $filtered_post_types as $post_type ) {
+					?>
+					<option value="<?php echo esc_html( $post_type->name ); ?>">
+						<?php echo esc_html( $post_type->label ); ?>
+					</option>
+					<?php
+				}
+				?>
+			</select>
+			<br/>
+			<span class="envira-posttype-dropdown-error"><?php esc_html_e( 'Please select a post type for conversion.', 'envira-gallery-lite' ); ?></span>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Add link target.
+	 */
+	public function admin_cdn_menu_target_blank() {
+		?>
+		<script type="text/javascript">
+			jQuery(document).ready(function($) {
+				$('span.cdn_new_badge').closest('li').find('a').attr('target', '_blank');
+			});
+		</script>
+		<?php
 	}
 
 	/**

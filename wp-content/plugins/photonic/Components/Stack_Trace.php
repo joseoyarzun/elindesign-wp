@@ -2,8 +2,9 @@
 
 namespace Photonic_Plugin\Components;
 
+use Photonic_Plugin\Core\Photonic;
 use Photonic_Plugin\Layouts\Core_Layout;
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Platforms\Base;
 
 class Stack_Trace implements Printable {
 	public $events = [];
@@ -36,7 +37,7 @@ class Stack_Trace implements Printable {
 		}
 	}
 
-	public function pop_from_first_open_event() {
+	public function pop_from_first_open_event(): bool {
 		$found = false;
 		foreach ($this->events as $id => $event) {
 			if (isset($event['start']) && !isset($event['end'])) {
@@ -62,7 +63,7 @@ class Stack_Trace implements Printable {
 		return $found;
 	}
 
-	private function get_nested_element($indent = "\t") {
+	private function get_nested_element($indent = "\t"): string {
 		$ret = '';
 		foreach ($this->events as $trace) {
 			$trace_items = [];
@@ -82,16 +83,16 @@ class Stack_Trace implements Printable {
 	}
 
 
-	public function html(Core $module, Core_Layout $layout = null, $print = false) {
+	public function html(Base $module, Core_Layout $layout = null, $print = false): string {
 		$ret = "<!--\n";
-		$ret .= "Stats for Platform: {$module->provider}, Gallery: {$module->gallery_index}\n";
+		$ret .= "Stats for Platform: {$module->provider}, Gallery: {$module->gallery_index}, Library: {$layout->get_library()}\n";
 		$ret .= $this->get_nested_element();
 		$ret .= "-->\n";
 
 		if ($print) {
-			echo wp_kses_post($ret);
+			echo wp_kses($ret, Photonic::$safe_tags);
 		}
 
-		return wp_kses_post($ret);
+		return wp_kses($ret, Photonic::$safe_tags);
 	}
 }

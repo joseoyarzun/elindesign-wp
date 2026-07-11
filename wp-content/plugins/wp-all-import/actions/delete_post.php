@@ -1,5 +1,6 @@
 <?php 
 
+if ( ! defined( 'ABSPATH' ) ) exit;
 function pmxi_delete_post($post_id) {
     if (!empty($post_id) && is_numeric($post_id)){
         $post    = new PMXI_Post_Record();

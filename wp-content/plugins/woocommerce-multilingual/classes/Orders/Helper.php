@@ -120,4 +120,27 @@ class Helper {
 		return COTHelper::isOrderEditAdminScreen() || LegacyHelper::isOrderEditAdminScreen();
 	}
 
+	/**
+	 * @return bool
+	 */
+	public static function isEditingNewOrderItems() {
+		return (
+				isset( $_POST['action'] )
+				&& in_array(
+					$_POST['action'],
+					[
+						'woocommerce_add_order_item',
+						'woocommerce_remove_order_item',
+						'woocommerce_calc_line_taxes',
+						'woocommerce_save_order_items',
+					],
+					true
+				)
+			)
+			||
+			(
+				isset( $_GET['action'] )
+				&& $_GET['action'] === 'woocommerce_json_search_products_and_variations'
+			);
+	}
 }

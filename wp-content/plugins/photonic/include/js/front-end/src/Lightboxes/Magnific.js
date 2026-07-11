@@ -58,7 +58,7 @@ export class PhotonicMagnific extends Lightbox {
 							self.setHash(this.currItem.el[0]);
 						}
 						if (this.currItem.type === 'inline') {
-							$(this.content).append($('<div></div>').html($(this.currItem.el).data('title')));
+							$(this.content).append($('<div></div>').html(Util.HTMLSanitizer.SanitizeHTML($(this.currItem.el).data('title'))));
 						}
 					},
 					imageLoadComplete: function() {

@@ -128,8 +128,8 @@ class Instagram extends Source {
 	}
 
 	public function make_request($display_type, $for, $flattened_fields): array {
-		require_once PHOTONIC_PATH . '/Modules/Instagram.php';
-		$module = \Photonic_Plugin\Modules\Instagram::get_instance();
+		require_once PHOTONIC_PATH . '/Platforms/Instagram.php';
+		$module = \Photonic_Plugin\Platforms\Instagram::get_instance();
 		$base_url = 'https://' . $this->api_base . '/me/media?fields=' . $module->field_list . '&access_token=' . $module->access_token;
 		$response = wp_remote_request($base_url, ['sslverify' => PHOTONIC_SSL_VERIFY]);
 
@@ -192,10 +192,10 @@ class Instagram extends Source {
 
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
 			if ('single-photo' === $display_type) {
-				$short_code['media_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['media_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('album-photo' === $display_type) {
-				$short_code['carousel'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['carousel'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 		}
 

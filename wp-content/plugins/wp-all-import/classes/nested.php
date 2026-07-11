@@ -76,8 +76,8 @@ if ( ! class_exists('PMXI_Nested')){
 					}
 				}					
 				foreach ($tmp_files as $tmp_file) { // remove all temporary files created
-					@unlink($tmp_file);
-				}	
+					wp_delete_file($tmp_file);
+				}
 			}
 		}
 

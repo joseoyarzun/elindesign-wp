@@ -38,7 +38,7 @@ export class PhotonicPhotoSwipe extends Lightbox {
 				'                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>\n' +
 				'                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>\n' +
 				'\n' +
-				'                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->\n' +
+				'                <!-- Preloader demo https://codepen.io/dimsemenov/pen/yyBWoR -->\n' +
 				'                <!-- element will get class pswp__preloader--active when preloader is running -->\n' +
 				'                <div class="pswp__preloader">\n' +
 				'                    <div class="pswp__preloader__icn">\n' +
@@ -123,7 +123,7 @@ export class PhotonicPhotoSwipe extends Lightbox {
 					if (link.getAttribute('data-html5-href') !== null) {
 						item = {
 							html: '<div class="photonic-video" id="ps-' + link.getAttribute('href').substring(1) + '">\n<video class="photonic" controls preload="none"><source src="' + link.getAttribute('data-html5-href') + '" type="video/mp4">Your browser does not support HTML5 videos</video>',
-							title: link.getAttribute('data-title')
+							title: Util.HTMLSanitizer.SanitizeHTML(link.getAttribute('data-title'))
 						};
 					}
 					else {
@@ -131,7 +131,7 @@ export class PhotonicPhotoSwipe extends Lightbox {
 							src: link.getAttribute('href'),
 							w: 0,
 							h: 0,
-							title: link.getAttribute('data-title'),
+							title: Util.HTMLSanitizer.SanitizeHTML(link.getAttribute('data-title')),
 							pid: pid[1]
 						};
 					}
@@ -167,7 +167,7 @@ export class PhotonicPhotoSwipe extends Lightbox {
 
 				item = {
 					html: '<div class="photonic-video" id="ps-' + href.getAttribute('id') + '">\n<video class="photonic" controls preload="none"><source src="' + link.getAttribute('data-html5-href') + '" type="video/mp4">Your browser does not support HTML5 videos</video>',
-					title: link.getAttribute('data-title') || link.getAttribute('title') || ''
+					title: Util.HTMLSanitizer.SanitizeHTML(link.getAttribute('data-title')) || Util.getText(link.getAttribute('title')) || ''
 				}
 			}
 			self.videos.push([item]);
@@ -216,7 +216,7 @@ export class PhotonicPhotoSwipe extends Lightbox {
 			shareButtons = [
 				{id:'facebook', label:'Share on Facebook', url:'https://www.facebook.com/sharer/sharer.php?u={{url}}&title={{text}}'},
 				{id:'twitter', label:'Share on Twitter', url:'https://twitter.com/share?url={{url}}&text={{text}}'},
-				{id:'pinterest', label:'Pin it', url:'http://www.pinterest.com/pin/create/button/?url={{url}}&media={{image_url}}&description={{text}}'}
+				{id:'pinterest', label:'Pin it', url:'https://www.pinterest.com/pin/create/button/?url={{url}}&media={{image_url}}&description={{text}}'}
 			];
 		}
 		shareButtons.push({id:'download', label:'Download image', url:'{{raw_image_url}}', download:true});

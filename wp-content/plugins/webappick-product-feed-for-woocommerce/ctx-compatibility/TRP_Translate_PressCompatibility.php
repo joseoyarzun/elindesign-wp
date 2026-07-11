@@ -313,6 +313,13 @@ class TRP_Translate_PressCompatibility {
 	 * @return string
 	 */
 	public function trp_translate_strings( $output, $product, $config ) { // phpcs:ignore
+
+		if($config->get_feed_language()!='en_US') {
+			$output = str_replace(' - ', ' &#8211; ', $output);
+			$output = str_replace("'", '&#8217;', $output);
+			$output = preg_replace('/(\d)x(\d)/', '$1&#215;$2', $output);
+		}
+
 		$original_output        = $output;
 		$strings                = self::get_translatable_strings( $output );
 		$strings                = array_map( 'trp_full_trim', $strings );

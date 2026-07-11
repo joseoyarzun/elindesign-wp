@@ -304,7 +304,7 @@ if ( ! function_exists( 'oceanwp_woo_fragments' ) ) {
 
 	function oceanwp_woo_fragments( $fragments ) {
 		$fragments['.wcmenucart-shortcode .wcmenucart-total'] = '<span class="wcmenucart-total">' . WC()->cart->get_total() . '</span>';
-		$fragments['.wcmenucart-shortcode .wcmenucart-count'] = '<span class="wcmenucart-count">' . WC()->cart->get_cart_contents_count() . '</span>';
+		$fragments['.wcmenucart-shortcode .count-item']       = '<span class="count-item">' . WC()->cart->get_cart_contents_count() . '</span>';
 		$fragments['.oceanwp-woo-total']                      = '<span class="oceanwp-woo-total">' . WC()->cart->get_total() . '</span>';
 		$fragments['.oceanwp-woo-cart-count']                 = '<span class="oceanwp-woo-cart-count">' . WC()->cart->get_cart_contents_count() . '</span>';
 		return $fragments;
@@ -439,7 +439,9 @@ if ( ! function_exists( 'oceanwp_woo_cart_icon_shortcode' ) ) {
 
 			// Add style
 			if ( ! empty( $css ) ) {
-				echo "<style type=\"text/css\">\n" . wp_strip_all_tags( oceanwp_minify_css( $css ) ) . "\n</style>";
+				wp_register_style( 'ocean-woo_cart-shortcode', false );
+				wp_enqueue_style( 'ocean-woo_cart-shortcode' );
+				wp_add_inline_style( 'ocean-woo_cart-shortcode', wp_strip_all_tags( oceanwp_minify_css( $css ) ) );
 			}
 		}
 
@@ -451,10 +453,24 @@ if ( ! function_exists( 'oceanwp_woo_cart_icon_shortcode' ) ) {
 				<?php
 				if ( true == $total ) {
 					?>
-					<span class="wcmenucart-total"><?php WC()->cart->get_total(); ?></span>
+					<span class="wcmenucart-total">
+						<?php
+						if ( is_object( WC()->cart ) ) {
+							echo WC()->cart->get_total();
+						}
+						?>
+					</span>
 				<?php } ?>
 				<span class="wcmenucart-cart-icon">
-					<span class="wcmenucart-count"><?php WC()->cart->get_cart_contents_count(); ?></span>
+					<span class="wcmenucart-count">
+						<span class="count-item">
+							<?php
+							if ( is_object( WC()->cart ) ) {
+								echo WC()->cart->get_cart_contents_count();
+							}
+							?>
+						</span>
+					</span>
 				</span>
 			</a>
 			<?php
@@ -499,7 +515,7 @@ if ( ! function_exists( 'oceanwp_woo_total_cart_shortcode' ) ) {
 		}
 
 		$html  = '<span class="oceanwp-woo-total">';
-		$html .= WC()->cart->get_total();
+		$html .= is_object( WC()->cart ) ? WC()->cart->get_total() : '';
 		$html .= '</span>';
 
 		return $html;
@@ -530,7 +546,7 @@ if ( ! function_exists( 'oceanwp_woo_cart_items_shortcode' ) ) {
 		}
 
 		$html  = '<span class="oceanwp-woo-cart-count">';
-		$html .= WC()->cart->get_cart_contents_count();
+		$html .= is_object( WC()->cart ) ? WC()->cart->get_cart_contents_count() : '';
 		$html .= '</span>';
 
 		return $html;
@@ -599,7 +615,7 @@ if ( ! function_exists( 'oceanwp_woo_free_shipping_left' ) ) {
 			if ( isset( WC()->cart->cart_contents_total ) ) {
 				$total = ( WC()->cart->prices_include_tax ) ? ( WC()->cart->cart_contents_total + WC()->cart->get_cart_contents_tax() ) : WC()->cart->cart_contents_total;
 				if ( $total >= $min_free_shipping_amount ) {
-					return do_shortcode( wp_kses_post( $content_reached ) );
+					return strip_shortcodes( wp_kses_post( $content_reached ) );
 				} else {
 					$content = str_replace( '%left_to_free%', '<span class="oceanwp-woo-left-to-free">' . wc_price( ( $min_free_shipping_amount - $total ) * $multiply_by ) . '</span>', wp_kses_post( $content ) );
 					$content = str_replace( '%free_shipping_min_amount%', '<span class="oceanwp-woo-left-to-free">' . wc_price( ( $min_free_shipping_amount ) * $multiply_by ) . '</span>', wp_kses_post( $content ) );
@@ -607,7 +623,6 @@ if ( ! function_exists( 'oceanwp_woo_free_shipping_left' ) ) {
 				}
 			}
 		}
-
 	}
 }
 
@@ -758,9 +773,10 @@ if ( ! function_exists( 'oceanwp_breadcrumb_shortcode' ) ) {
 				$css .= '.oceanwp-breadcrumb .site-breadcrumbs a:hover {color:' . esc_attr( $hover_color ) . ';}';
 			}
 
-			// Add style
 			if ( ! empty( $css ) ) {
-				echo "<style type=\"text/css\">\n" . wp_strip_all_tags( oceanwp_minify_css( $css ) ) . "\n</style>";
+				wp_register_style( 'ocean-breadcrumbs-shortcode', false );
+				wp_enqueue_style( 'ocean-breadcrumbs-shortcode' );
+				wp_add_inline_style( 'ocean-breadcrumbs-shortcode', wp_strip_all_tags( oceanwp_minify_css( $css ) ) );
 			}
 		}
 
@@ -830,6 +846,7 @@ if ( ! function_exists( 'oceanwp_svg_icon_shortcode' ) ) {
 	function oceanwp_svg_icon_shortcode( $atts, $content = null ) {
 
 		$owp_icon = '';
+		$location = true;
 
 		// Extract attributes.
 		$attr = shortcode_atts(
@@ -837,6 +854,7 @@ if ( ! function_exists( 'oceanwp_svg_icon_shortcode' ) ) {
 				'icon'        => 'Add an icon class',
 				'class'       => '',
 				'title'       => '',
+				'location'    => $location,
 				'desc'        => '',
 				'area_hidden' => true,
 				'fallback'    => false,
@@ -844,8 +862,28 @@ if ( ! function_exists( 'oceanwp_svg_icon_shortcode' ) ) {
 			$atts
 		);
 
-		if ( function_exists( 'ocean_svg' ) ) {
-			$owp_icon = ocean_svg( $attr['icon'], false, $attr['class'], $attr['title'], $attr['desc'], $attr['area_hidden'], $attr['fallback'] );
+		$attr['icon']        = sanitize_html_class( $attr['icon'] );
+		$attr['class']       = sanitize_html_class( $attr['class'] );
+		$attr['title']       = sanitize_text_field( $attr['title'] );
+		$attr['desc']        = sanitize_text_field( $attr['desc'] );
+		$attr['location']    = filter_var( $attr['location'], FILTER_VALIDATE_BOOLEAN );
+		$attr['area_hidden'] = filter_var( $attr['area_hidden'], FILTER_VALIDATE_BOOLEAN );
+		$attr['fallback']    = filter_var( $attr['fallback'], FILTER_VALIDATE_BOOLEAN );
+
+		if ( isset($attr['location']) && $attr['location'] === true ) {
+			$location = true;
+		} else if ( isset($attr['location']) && $attr['location'] === false ) {
+			$location = false;
+		}
+
+		if ( true === $location ) {
+			if ( function_exists( 'ocean_svg' ) ) {
+				$owp_icon = ocean_svg( $attr['icon'], $location, false, $attr['class'], $attr['title'], $attr['desc'], $attr['area_hidden'], $attr['fallback'] );
+			}
+		} else {
+			if ( function_exists( 'oceanwp_icon' ) ) {
+				$owp_icon = oceanwp_icon( $attr['icon'], false, $attr['class'], $attr['title'], $attr['desc'], $attr['area_hidden'], $attr['fallback']);
+			}
 		}
 
 		return $owp_icon;

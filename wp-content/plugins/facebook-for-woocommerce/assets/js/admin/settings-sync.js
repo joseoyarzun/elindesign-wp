@@ -4,7 +4,7 @@
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 jQuery( document ).ready( function( $ ) {
@@ -174,8 +174,6 @@ jQuery( document ).ready( function( $ ) {
 				action: 'wc_facebook_sync_products',
 				nonce:  facebook_for_woocommerce_settings_sync.sync_products_nonce,
 			}, function ( response ) {
-
-				console.log( response );
 
 				if ( ! response.success ) {
 

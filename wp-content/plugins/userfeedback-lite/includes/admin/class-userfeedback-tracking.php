@@ -1,4 +1,8 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Tracking functions for reporting plugin usage to the UserFeedback site for users that have opted in
  *
@@ -38,8 +42,8 @@ class UserFeedback_Tracking {
 		$theme_data = wp_get_theme();
 
 		// Specific UF data
-		$surveys_count = UserFeedback_Survey::count();
-		$tracked_data  = get_option( 'userfeedback_tracking_data', array() );
+		$active_surveys_data  = $this->get_active_surveys_data();
+		$tracked_data         = get_option( 'userfeedback_tracking_data', array() );
 
 		$settings = array_merge( userfeedback_get_options(), $tracked_data );
 
@@ -64,13 +68,14 @@ class UserFeedback_Tracking {
 		$data['email']          = get_bloginfo( 'admin_email' );
 		$data['key']            = userfeedback_get_license_key();
 		$data['sas']            = userfeedback_get_shareasale_id();
-		$data['settings']       = $settings;
-		$data['surveys_count']  = $surveys_count;
-		$data['pro']            = (int) userfeedback_is_pro_version();
+		$data['settings']       = wp_json_encode( $settings );
+		$data['uf_active_surveys_count']  = $active_surveys_data['count'];
+		$data['uf_active_survey_names']   = wp_json_encode( $active_surveys_data['names'] );
+		$data['pro']                   = (int) userfeedback_is_pro_version();
 		$data['sites']          = $count_b;
 		$data['usagetracking']  = get_option( 'userfeedback_usage_tracking_config', false );
 		$data['usercount']      = function_exists( 'get_user_count' ) ? get_user_count() : 'Not Set';
-		$data['timezoneoffset'] = date( 'P' );
+		$data['timezoneoffset'] = wp_date( 'P' );
 
 		// Retrieve current plugin information
 		if ( ! function_exists( 'get_plugins' ) ) {
@@ -87,11 +92,44 @@ class UserFeedback_Tracking {
 			}
 		}
 
-		$data['active_plugins']   = $active_plugins;
-		$data['inactive_plugins'] = $plugins;
+		$data['active_plugins']   = wp_json_encode( $active_plugins );
+		$data['inactive_plugins'] = wp_json_encode( $plugins );
 		$data['locale']           = get_locale();
 
 		return $data;
+	}
+
+	/**
+	 * Get active surveys count and names
+	 *
+	 * Active surveys are those with status 'publish' and either no scheduled
+	 * publish date or a publish date in the past.
+	 *
+	 * @since 1.1.0
+	 * @return array Array with 'count' and 'names' keys
+	 */
+	private function get_active_surveys_data() {
+		$active_surveys = UserFeedback_Survey::where(
+			array(
+				'status'     => 'publish'
+			)
+		)->get();
+
+		$count = is_array( $active_surveys ) ? count( $active_surveys ) : 0;
+		$names = array();
+
+		if ( is_array( $active_surveys ) ) {
+			foreach ( $active_surveys as $survey ) {
+				if ( ! empty( $survey->title ) ) {
+					$names[] = $survey->title;
+				}
+			}
+		}
+
+		return array(
+			'count' => $count,
+			'names' => $names,
+		);
 	}
 
 	public function send_checkin( $override = false, $ignore_last_checkin = false ) {
@@ -141,10 +179,10 @@ class UserFeedback_Tracking {
 	public function schedule_send() {
 		if ( ! wp_next_scheduled( 'userfeedback_usage_tracking_cron' ) ) {
 			$tracking             = array();
-			$tracking['day']      = rand( 0, 6 );
-			$tracking['hour']     = rand( 0, 23 );
-			$tracking['minute']   = rand( 0, 59 );
-			$tracking['second']   = rand( 0, 59 );
+			$tracking['day']      = wp_rand( 0, 6 );
+			$tracking['hour']     = wp_rand( 0, 23 );
+			$tracking['minute']   = wp_rand( 0, 59 );
+			$tracking['second']   = wp_rand( 0, 59 );
 			$tracking['offset']   = ( $tracking['day'] * DAY_IN_SECONDS ) +
 									( $tracking['hour'] * HOUR_IN_SECONDS ) +
 									( $tracking['minute'] * MINUTE_IN_SECONDS ) +
@@ -166,7 +204,8 @@ class UserFeedback_Tracking {
 		}
 
 		// Send an initial check in on settings save
-		$post_data      = sanitize_post( $_POST, 'raw' );
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Capability check above; triggered via settings form which has its own nonce.
+		$post_data      = $_POST;
 		$anonymous_data = isset( $post_data['anonymous_data'] ) ? 1 : 0;
 		if ( $anonymous_data ) {
 			$this->send_checkin( true, true );
@@ -175,7 +214,8 @@ class UserFeedback_Tracking {
 	}
 
 	public function check_for_optin() {
-		if ( ! ( ! empty( $_REQUEST['uf_action'] ) && 'opt_into_tracking' === $_REQUEST['uf_action'] ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Capability check below; tracking opt-in via GET action.
+		if ( ! ( ! empty( $_REQUEST['uf_action'] ) && 'opt_into_tracking' === sanitize_key( wp_unslash( $_REQUEST['uf_action'] ) ) ) ) {
 			return;
 		}
 
@@ -196,7 +236,8 @@ class UserFeedback_Tracking {
 	}
 
 	public function check_for_optout() {
-		if ( ! ( ! empty( $_REQUEST['uf_action'] ) && 'opt_out_of_tracking' === $_REQUEST['uf_action'] ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Capability check below; tracking opt-out via GET action.
+		if ( ! ( ! empty( $_REQUEST['uf_action'] ) && 'opt_out_of_tracking' === sanitize_key( wp_unslash( $_REQUEST['uf_action'] ) ) ) ) {
 			return;
 		}
 
@@ -219,7 +260,7 @@ class UserFeedback_Tracking {
 		// Adds once weekly to the existing schedules.
 		$schedules['weekly'] = array(
 			'interval' => 604800,
-			'display'  => __( 'Once Weekly', 'userfeedback' ),
+			'display'  => __( 'Once Weekly', 'userfeedback-lite' ),
 		);
 		return $schedules;
 	}

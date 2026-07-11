@@ -5,7 +5,7 @@ namespace Photonic_Plugin\Layouts;
 use Photonic_Plugin\Components\Header;
 use Photonic_Plugin\Components\Single_Photo;
 use Photonic_Plugin\Core\Photonic;
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Platforms\Base;
 
 /**
  * Layout Manager to generate the grid layouts and the "Justified Grid" layout, all of which use the same markup. The Justified Grid layout is
@@ -16,9 +16,17 @@ use Photonic_Plugin\Modules\Core;
 abstract class Core_Layout {
 	protected $library;
 	protected $layout;
+	protected $common_parameters = [];
+	protected $prompt_title;
+	protected $prompt_submit;
+	protected $prompt_text;
 
 	protected function __construct() {
 		$this->library = esc_attr(Photonic::$library);
+
+		$this->prompt_title = esc_attr__('Protected Content', 'photonic');
+		$this->prompt_submit = esc_attr__('Access', 'photonic');
+		$this->prompt_text = esc_attr__('This album is password-protected. Please provide a valid password.', 'photonic');
 	}
 
 	final public static function get_instance() {
@@ -35,10 +43,10 @@ abstract class Core_Layout {
 	 * Generates the markup for a single photo.
 	 *
 	 * @param Single_Photo $photo Pertinent pieces of information about the photo - the source (src), the photo page (href), title and caption.
-	 * @param $module Core The object calling this. A CSS class is created in the header, photonic-single-<code>$module->provider</code>-photo-header
+	 * @param Base $module The object calling this. A CSS class is created in the header, photonic-single-<code>$module->provider</code>-photo-header.
 	 * @return string
 	 */
-	public function generate_single_photo_markup(Single_Photo $photo, $module) {
+	public function generate_single_photo_markup(Single_Photo $photo, Base $module): string {
 		$module->push_to_stack('Generate single photo markup');
 		$ret = '';
 
@@ -74,10 +82,10 @@ abstract class Core_Layout {
 	 * information about the child counts.
 	 *
 	 * @param Header $header
-	 * @param $module
+	 * @param Base $module
 	 * @return string
 	 */
-	public function generate_header_markup(Header $header, $module) {
+	public function generate_header_markup(Header $header, Base $module): string {
 		if ('lightbox' === $header->display_location || $this instanceof Slideshow) {
 			return '';
 		}
@@ -165,5 +173,33 @@ abstract class Core_Layout {
 			}
 		}
 		return $ret;
+	}
+
+	/**
+	 * @return string|void
+	 */
+	public function get_library(): string {
+		return $this->library;
+	}
+
+	public function get_title($title, $titles = [], $short_code = []): string {
+		if (empty($short_code['caption']) || 'none' === $short_code['caption']) {
+			return '';
+		}
+		else {
+			$priority = explode('-', $short_code['caption']);
+			if (count($priority) === 1) {
+				return $titles[$priority[0]] ?? '';
+			}
+			else {
+				foreach ($priority as $p) {
+					if (!empty($titles[$p])) {
+						return $titles[$p];
+					}
+				}
+			}
+		}
+
+		return $title;
 	}
 }

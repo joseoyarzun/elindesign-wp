@@ -112,6 +112,15 @@ class OMAPI_Pages {
 	 */
 	public function get_registered_pages() {
 		if ( empty( $this->pages ) ) {
+			$bfcmitem = $this->should_show_bfcf_menu_item();
+
+			// Add BFCM item to pages array for redirect handling, but mark it to skip auto-registration
+			// since it's registered manually in Menu.php to control position.
+			if ( $bfcmitem ) {
+				$bfcmitem['skip_auto_register'] = true;
+				$this->pages['optin-monster-bfcm'] = $bfcmitem;
+			}
+
 			$this->pages['optin-monster-campaigns'] = array(
 				'name'     => __( 'Campaigns', 'optin-monster-api' ),
 				'app'      => true,
@@ -170,14 +179,6 @@ class OMAPI_Pages {
 				'callback' => array( $this, 'render_app_loading_page' ),
 			);
 
-			$this->pages['optin-monster-onboarding-wizard'] = array(
-				'name'     => __( 'Onboarding Wizard', 'optin-monster-api' ),
-				'callback' => array( $this, 'render_app_loading_page' ),
-				'hidden'   => true,
-			);
-
-			$bfcmitem = $this->should_show_bfcf_menu_item();
-
 			// If user upgradeable, add an upgrade link to menu.
 			if ( $this->base->can_show_upgrade() ) {
 				$this->pages['optin-monster-upgrade'] = array(
@@ -190,10 +191,6 @@ class OMAPI_Pages {
 					'callback'  => '__return_null',
 				);
 				add_filter( 'om_add_inline_script', array( $this, 'add_upgrade_url_to_js' ), 10, 2 );
-			}
-
-			if ( $bfcmitem ) {
-				$this->pages['optin-monster-bfcm'] = $bfcmitem;
 			}
 
 			foreach ( $this->pages as $slug => $page ) {
@@ -209,58 +206,64 @@ class OMAPI_Pages {
 	 *
 	 * @since 2.11.0
 	 *
-	 * @return bool
+	 * @return bool|array
 	 */
 	public function should_show_bfcf_menu_item() {
-		$now          = new DateTime( 'now', new DateTimeZone( 'America/New_York' ) );
-		$promo_start  = gmdate( 'Y-m-d 10:00:00', strtotime( 'first Monday of November' ) );
-		$bf_end       = gmdate( 'Y-m-d 23:59:59', strtotime( 'first Tuesday of December' ) );
-		$is_bf_window = OMAPI_Utils::date_within( $now, $promo_start, $bf_end );
+		$timezone     = new DateTimeZone( 'America/New_York' );
+		$now          = new DateTime( 'now', $timezone );
 		$year         = $now->format( 'Y' );
 
-		if ( $is_bf_window ) {
+		// Get Thanksgiving as a DateTime object in ET timezone with explicit year.
+		$thanksgiving = new DateTime( "fourth Thursday of November {$year}", $timezone );
 
+		// Create date objects by cloning and modifying in ET timezone.
+		$promo_start = clone $thanksgiving;
+		$promo_start->modify( '-3 days' )->setTime( 9, 0, 0 );
+
+		$bf_end = clone $thanksgiving;
+		$bf_end->modify( '+3 days' )->setTime( 23, 59, 59 );
+
+		$cm_start = clone $thanksgiving;
+		$cm_start->modify( '+4 days' )->setTime( 0, 0, 0 );
+
+		$cm_end = clone $thanksgiving;
+		$cm_end->modify( '+8 days' )->setTime( 23, 59, 59 );
+
+		// Check if we're in Black Friday window (Monday before Thanksgiving to Sunday after).
+		$is_bf_window = $now >= $promo_start && $now <= $bf_end;
+		// Check if we're in Cyber Monday window (Monday after BF to Friday).
+		$is_cm_window = $now >= $cm_start && $now <= $cm_end;
+
+		if ( $is_bf_window || $is_cm_window ) {
 			$url = OMAPI_Urls::marketing(
-				'black-friday/',
+				'pricing',
 				array(
 					'utm_medium'   => 'pluginMenu',
 					'utm_campaign' => "BF{$year}",
 				)
 			);
 
-			$thanksgiving = strtotime( 'fourth Thursday of November' );
-			$bf_start     = gmdate( 'Y-m-d 10:00:00', $thanksgiving - ( 3 * DAY_IN_SECONDS ) );
-			$is_pre_sale  = OMAPI_Utils::date_before( $now, $bf_start );
-
-			if ( ! $is_pre_sale && OMAPI_ApiKey::has_credentials() ) {
-				$url = $this->base->is_lite_user()
-					? OMAPI_Urls::marketing(
-						'pricing-wp/',
-						array(
-							'utm_medium'   => 'pluginMenu',
-							'utm_campaign' => "BF{$year}",
-						)
+			if ( OMAPI_ApiKey::has_credentials() ) {
+				$url = OMAPI_Urls::upgrade(
+					'pluginMenu',
+					'',
+					'',
+					array(
+						'utm_campaign' => "BF{$year}",
+						'feature'      => false,
 					)
-					: OMAPI_Urls::upgrade(
-						'pluginMenu',
-						'',
-						'',
-						array(
-							'utm_campaign' => "BF{$year}",
-							'feature'      => false,
-						)
-					);
+				);
 			}
 
-			$cyber_monday = gmdate( 'Y-m-d 10:00:00', $thanksgiving + ( 4 * DAY_IN_SECONDS ) );
-			$is_cm_window = ! OMAPI_Utils::date_before( $now, $cyber_monday );
 			return array(
-				'name'      => $is_cm_window
-					? esc_html__( 'Cyber Monday!', 'optin-monster-api' )
-					: esc_html__( 'Black Friday!', 'optin-monster-api' ),
-				'redirect'  => esc_url_raw( $url ),
-				'callback'  => '__return_null',
-				'highlight' => true,
+				'name'           => esc_html__( 'BFCM 60% OFF!', 'optin-monster-api' ),
+				'alternate-name' => $is_cm_window
+					? esc_html__( 'Cyber Monday Sale!', 'optin-monster-api' )
+					: esc_html__( 'Black Friday Sale!', 'optin-monster-api' ),
+				'redirect'       => esc_url_raw( $url ),
+				'callback'       => '__return_null',
+				'highlight'      => true,
+				'bfcm-highlight' => true,
 			);
 		}
 
@@ -357,6 +360,11 @@ class OMAPI_Pages {
 		$hooks = array();
 
 		foreach ( $pages as $page ) {
+			// Skip pages marked for manual registration.
+			if ( ! empty( $page['skip_auto_register'] ) ) {
+				continue;
+			}
+
 			if ( ! empty( $page['callback'] ) ) {
 				$parent_slug = $parent_page_name;
 
@@ -367,6 +375,8 @@ class OMAPI_Pages {
 				$menu_title = ! empty( $page['menu'] ) ? $page['menu'] : $page['name'];
 				if ( $this->maybe_add_new_badge( $page ) ) {
 					$menu_title .= ' <span class="omapi-menu-new">New!<span>';
+				} elseif ( ! empty( $page['bfcm-highlight'] ) ) {
+					$menu_title = '<span class="om-menu-bfcm-highlight">' . $menu_title . '</span>';
 				} elseif ( ! empty( $page['highlight'] ) ) {
 					$menu_title = '<span class="om-menu-highlight">' . $menu_title . '</span>';
 				}
@@ -409,10 +419,8 @@ class OMAPI_Pages {
 			return;
 		}
 
-		// TODO: wp_redirect() found. Using wp_safe_redirect(), along with the
-		// `allowed_redirect_hosts` filter if needed, can help avoid any chances
-		// of malicious redirects within code.
-		wp_redirect( esc_url_raw( $pages[ $plugin_page ]['redirect'] ) );
+		add_filter( 'allowed_redirect_hosts', 'OMAPI_Urls::allowed_redirect_hosts' );
+		wp_safe_redirect( esc_url_raw( $pages[ $plugin_page ]['redirect'] ) );
 		exit;
 	}
 
@@ -440,7 +448,6 @@ class OMAPI_Pages {
 		$classes = implode( ' ', $classes );
 
 		return $classes;
-
 	}
 
 	/**
@@ -502,8 +509,8 @@ class OMAPI_Pages {
 
 			$creds = $this->base->get_api_credentials();
 
-			$admin_parts = OMAPI_Utils::parse_url( admin_url( 'admin.php' ) );
-			$url_parts   = OMAPI_Utils::parse_url( $this->base->url );
+			$admin_parts = wp_parse_url( admin_url( 'admin.php' ) );
+			$url_parts   = wp_parse_url( $this->base->url );
 
 			$current_user = wp_get_current_user();
 
@@ -549,8 +556,23 @@ class OMAPI_Pages {
 				'showReview'      => $this->base->review->should_show_review(),
 				'timezone'        => wp_timezone_string(),
 			);
-			$js_args  = wp_parse_args( $args, $defaults );
-			$js_args  = apply_filters( 'optin_monster_campaigns_js_api_args', $js_args );
+
+			// Add the onboarding connection token if it exists.
+			$connection_token = $this->base->get_option( 'connectionToken' );
+			if ( ! empty( $connection_token ) ) {
+				$args['connectionToken'] = $connection_token;
+			}
+
+			$onboarding_plugins = $this->base->get_option( 'onboardingPlugins', '', array() );
+			if ( ! empty( $onboarding_plugins ) ) {
+				$args['onboardingPlugins'] = $onboarding_plugins;
+			}
+
+			$args['isWpmlActive'] = OMAPI_Utils::is_wpml_active();
+			$args['wpmlDomains']  = OMAPI_Utils::get_wpml_language_domains();
+
+			$js_args = wp_parse_args( $args, $defaults );
+			$js_args = apply_filters( 'optin_monster_campaigns_js_api_args', $js_args );
 
 			$loader->localize( $js_args );
 
@@ -623,5 +645,4 @@ class OMAPI_Pages {
 			$page['new_badge_period']['end']
 		);
 	}
-
 }

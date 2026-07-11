@@ -6,6 +6,8 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Modules\Tag_Manager;
@@ -23,7 +25,8 @@ use Google\Site_Kit\Core\Storage\Setting_With_Owned_Keys_Trait;
  * @ignore
  */
 class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interface {
-	use Setting_With_Legacy_Keys_Trait, Setting_With_Owned_Keys_Trait;
+	use Setting_With_Legacy_Keys_Trait;
+	use Setting_With_Owned_Keys_Trait;
 
 	const OPTION = 'googlesitekit_tagmanager_settings';
 
@@ -80,7 +83,6 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 			'internalContainerID'    => '',
 			'internalAMPContainerID' => '',
 			'useSnippet'             => true,
-			'gaPropertyID'           => '',
 		);
 	}
 
@@ -92,7 +94,7 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 	 * @return callable|null
 	 */
 	protected function get_sanitize_callback() {
-		return function( $option ) {
+		return function ( $option ) {
 			if ( is_array( $option ) ) {
 				if ( isset( $option['useSnippet'] ) ) {
 					$option['useSnippet'] = (bool) $option['useSnippet'];

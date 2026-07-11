@@ -11,8 +11,15 @@ window.OMAPI_Editor = window.OMAPI_Editor || {};
 
 /**
  * OptinMonster Classic Editor functionality.
+ *
+ * @param {object} window The global window object.
+ * @param {object} document The global document object.
+ * @param {object} $ jQuery
+ * @param {object} app The OMAPI_Editor app object.
+ *
+ * @returns {void}
  */
-(function (window, document, $, app, undefined) {
+(function (window, document, $, app) {
 	'use strict';
 
 	// Make sure the OMAPI and OMAPI.monsterlink global is set.
@@ -45,7 +52,7 @@ window.OMAPI_Editor = window.OMAPI_Editor || {};
 	 *
 	 * @since 2.3.0
 	 *
-	 * @returns {Object|null} Tinymce editor instance or null if not found.
+	 * @returns {object|null} Tinymce editor instance or null if not found.
 	 */
 	app.getActiveEditor = function () {
 		const editorId = app.getActiveEditorId();
@@ -159,7 +166,7 @@ window.OMAPI_Editor = window.OMAPI_Editor || {};
 	 *
 	 * @since 2.3.0
 	 *
-	 * @param {Object} $select jQuery object for campaign-select element.
+	 * @param {object} $select jQuery object for campaign-select element.
 	 *
 	 * @returns {void}
 	 */
@@ -257,10 +264,10 @@ window.OMAPI_Editor = window.OMAPI_Editor || {};
 					</label>`
 						: `<p class="om-monsterlink-upgrade"><span>${
 								app.i18n.upgrade_monsterlink
-						  }</span> <a href="${app.upgradeUri.replace(
+							}</span> <a href="${app.upgradeUri.replace(
 								'--FEATURE--',
 								'monster-link'
-						  )}" target="_blank" rel="noopener">${app.i18n.upgrade}</a></p>`
+							)}" target="_blank" rel="noopener">${app.i18n.upgrade}</a></p>`
 				}
 			</div>
 		`);
@@ -295,7 +302,7 @@ window.OMAPI_Editor = window.OMAPI_Editor || {};
 	 *
 	 * @since 2.3.0
 	 *
-	 * @param {Object} editor The editor object.
+	 * @param {object} editor The editor object.
 	 *
 	 * @returns {void}
 	 */

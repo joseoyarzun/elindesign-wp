@@ -36,6 +36,11 @@ class Emails implements \IWPML_Action {
 	private $classes;
 
 	/**
+	 * @var array
+	 */
+	private $initialStates = [];
+
+	/**
 	 * @param \SitePress        $sitepress
 	 * @param \woocommerce_wpml $woocommerce_wpml
 	 * @param \WooCommerce      $woocommerce
@@ -54,37 +59,30 @@ class Emails implements \IWPML_Action {
 		add_filter( 'woocommerce_email_get_option', [ $this, 'translateHeadingAndSubject' ], 20, 4 );
 
 		// These actions are hooked to 'trigger' in each WC_Email that WooCommerce Bookings sends.
-		add_action( 'woocommerce_admin_new_booking_notification', $this->handle( [
-			\WC_Email_New_Booking::class,
-		] ), self::PRIORITY_BEFORE_EMAIL_TRIGGER );
-
-		add_action( 'woocommerce_booking_confirmed_notification', $this->handle( [
-			\WC_Email_Booking_Confirmed::class,
-		] ), self::PRIORITY_BEFORE_EMAIL_TRIGGER );
-
-		add_action( 'wc-booking-reminder', $this->handle( [
-			\WC_Email_Booking_Reminder::class,
-		] ), self::PRIORITY_BEFORE_EMAIL_TRIGGER );
-
-		add_action( 'woocommerce_booking_pending-confirmation_to_cancelled_notification', $this->handle( [
-			\WC_Email_Booking_Cancelled::class,
-			\WC_Email_Admin_Booking_Cancelled::class,
-		] ), self::PRIORITY_BEFORE_EMAIL_TRIGGER );
-
-		add_action( 'woocommerce_booking_confirmed_to_cancelled_notification', $this->handle( [
-			\WC_Email_Booking_Cancelled::class,
-			\WC_Email_Admin_Booking_Cancelled::class,
-		] ), self::PRIORITY_BEFORE_EMAIL_TRIGGER );
-
-		add_action( 'woocommerce_booking_paid_to_cancelled_notification', $this->handle( [
-			\WC_Email_Booking_Cancelled::class,
-			\WC_Email_Admin_Booking_Cancelled::class,
-		] ), self::PRIORITY_BEFORE_EMAIL_TRIGGER );
-
-		add_action( 'woocommerce_booking_unpaid_to_cancelled_notification', $this->handle( [
-			\WC_Email_Booking_Cancelled::class,
-			\WC_Email_Admin_Booking_Cancelled::class,
-		] ), self::PRIORITY_BEFORE_EMAIL_TRIGGER );
+		wpml_collect( [
+			'woocommerce_admin_new_booking_notification'              => [ \WC_Email_New_Booking::class ],
+			'woocommerce_booking_pending-confirmation'                => [ \WC_Email_Booking_Pending_Confirmation::class ],
+			'woocommerce_booking_confirmed_notification'              => [ \WC_Email_Booking_Confirmed::class ],
+			'wc-booking-reminder'                                     => [ \WC_Email_Booking_Reminder::class ],
+			'woocommerce_booking_pending-confirmation_to_cancelled_notification' => [
+				\WC_Email_Booking_Cancelled::class,
+				\WC_Email_Admin_Booking_Cancelled::class,
+			],
+			'woocommerce_booking_confirmed_to_cancelled_notification' => [
+				\WC_Email_Booking_Cancelled::class,
+				\WC_Email_Admin_Booking_Cancelled::class,
+			],
+			'woocommerce_booking_paid_to_cancelled_notification'      => [
+				\WC_Email_Booking_Cancelled::class,
+				\WC_Email_Admin_Booking_Cancelled::class,
+			],
+			'woocommerce_booking_unpaid_to_cancelled_notification'    => [
+				\WC_Email_Booking_Cancelled::class,
+				\WC_Email_Admin_Booking_Cancelled::class,
+			],
+		] )->each( function( $classes, $hook ) {
+			add_action( $hook, $this->handle( $classes ), self::PRIORITY_BEFORE_EMAIL_TRIGGER );
+		} );
 	}
 
 	public function init() {
@@ -178,8 +176,14 @@ class Emails implements \IWPML_Action {
 
 		$emailObject = $this->getEmailObject( $class );
 		if ( $emailObject ) {
-			/* @phpstan-ignore-next-line */
-			$emailObject->trigger( $bookingId );
+			if ( ! array_key_exists( $class, $this->initialStates ) ) {
+				$this->initialStates[ $class ] = $emailObject->enabled;
+			} else {
+				$emailObject->enabled = $this->initialStates[ $class ];
+			}
+			if ( method_exists( $emailObject, 'trigger' ) ) {
+				$emailObject->trigger( $bookingId );
+			}
 			$emailObject->enabled = 'no';
 		}
 	}

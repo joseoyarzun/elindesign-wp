@@ -11,6 +11,7 @@
 namespace Google\Site_Kit\Core\Util;
 
 use Google\Site_Kit\Context;
+use Google\Site_Kit\Core\Email_Reporting\Email_Log;
 use Google\Site_Kit\Core\Authentication\Authentication;
 use Google\Site_Kit\Core\Permissions\Permissions;
 use Google\Site_Kit\Core\REST_API\REST_Route;
@@ -56,7 +57,7 @@ class Reset {
 	 *
 	 * @since 1.30.0
 	 *
-	 * @return string
+	 * @return string The admin URL that triggers the reset action.
 	 */
 	public static function url() {
 		return add_query_arg(
@@ -88,7 +89,7 @@ class Reset {
 	public function register() {
 		add_filter(
 			'googlesitekit_rest_routes',
-			function( $routes ) {
+			function ( $routes ) {
 				return array_merge( $routes, $this->get_rest_routes() );
 			}
 		);
@@ -112,11 +113,15 @@ class Reset {
 		$this->delete_options( 'site' );
 		$this->delete_user_options( 'site' );
 		$this->delete_post_meta( 'site' );
+		$this->delete_term_meta( 'site' );
+		$this->delete_posts( 'site' );
 
 		if ( $this->context->is_network_mode() ) {
 			$this->delete_options( 'network' );
 			$this->delete_user_options( 'network' );
 			$this->delete_post_meta( 'network' );
+			$this->delete_term_meta( 'network' );
+			$this->delete_posts( 'network' );
 		}
 
 		wp_cache_flush();
@@ -220,6 +225,102 @@ class Reset {
 	}
 
 	/**
+	 * Deletes all Site Kit term meta settings.
+	 *
+	 * @since 1.146.0
+	 *
+	 * @param string $scope Scope of the deletion ('site' or 'network').
+	 */
+	private function delete_term_meta( $scope ) {
+		global $wpdb;
+
+		$sites = array();
+		if ( 'network' === $scope ) {
+			$sites = get_sites(
+				array(
+					'fields' => 'ids',
+					'number' => 9999999,
+				)
+			);
+		} else {
+			$sites[] = get_current_blog_id();
+		}
+
+		foreach ( $sites as $site_id ) {
+			$prefix = $wpdb->get_blog_prefix( $site_id );
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$prefix}termmeta WHERE `meta_key` LIKE %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					static::KEY_PATTERN
+				)
+			);
+		}
+	}
+
+	/**
+	 * Deletes all Site Kit custom post type posts.
+	 *
+	 * @since 1.167.0
+	 *
+	 * @param string $scope Scope of the deletion ('site' or 'network').
+	 */
+	private function delete_posts( $scope ) {
+		$sites = array();
+		if ( 'network' === $scope ) {
+			$sites = get_sites(
+				array(
+					'fields' => 'ids',
+					'number' => 9999999,
+				)
+			);
+		} elseif ( 'site' === $scope ) {
+			$sites[] = get_current_blog_id();
+		} else {
+			return;
+		}
+
+		foreach ( $sites as $site_id ) {
+			$switched = false;
+
+			if ( get_current_blog_id() !== (int) $site_id ) {
+				// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.switch_to_blog_switch_to_blog
+				switch_to_blog( $site_id );
+				$switched = true;
+			}
+
+			$posts_per_batch = 100;
+			do {
+				// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.get_posts_get_posts
+				$post_ids = get_posts(
+					array(
+						'post_type'      => Email_Log::POST_TYPE,
+						'post_status'    => array(
+							Email_Log::STATUS_SENT,
+							Email_Log::STATUS_FAILED,
+							Email_Log::STATUS_SCHEDULED,
+						),
+						'fields'         => 'ids',
+						'posts_per_page' => $posts_per_batch,
+						'no_found_rows'  => true,
+						'orderby'        => 'ID',
+						'order'          => 'ASC',
+					)
+				);
+
+				foreach ( $post_ids as $post_id ) {
+					wp_delete_post( $post_id, true );
+				}
+			} while ( ! empty( $post_ids ) );
+
+			if ( $switched ) {
+				restore_current_blog();
+			}
+		}
+	}
+
+	/**
 	 * Gets related REST routes.
 	 *
 	 * @since 1.3.0
@@ -227,7 +328,7 @@ class Reset {
 	 * @return array List of REST_Route objects.
 	 */
 	private function get_rest_routes() {
-		$can_setup = function() {
+		$can_setup = function () {
 			return current_user_can( Permissions::SETUP );
 		};
 
@@ -237,9 +338,12 @@ class Reset {
 				array(
 					array(
 						'methods'             => WP_REST_Server::EDITABLE,
-						'callback'            => function( WP_REST_Request $request ) {
+						'callback'            => function () {
 							$this->all();
 							$this->maybe_hard_reset();
+
+							// Call hooks on plugin reset. This is used to reset the ad blocking recovery notification.
+							do_action( 'googlesitekit_reset' );
 
 							return new WP_REST_Response( true );
 						},
@@ -263,8 +367,11 @@ class Reset {
 			$authentication->invalid_nonce_error( static::ACTION );
 		}
 		if ( ! current_user_can( Permissions::SETUP ) ) {
-			wp_die( esc_html__( 'You don\'t have permissions to set up Site Kit.', 'google-site-kit' ), 403 );
+			wp_die( esc_html__( 'You don’t have permissions to set up Site Kit.', 'google-site-kit' ), 403 );
 		}
+
+		// Call hooks on plugin reset. This is used to reset the ad blocking recovery notification.
+		do_action( 'googlesitekit_reset' );
 
 		$this->all();
 		$this->maybe_hard_reset();
@@ -309,5 +416,4 @@ class Reset {
 		$reset_persistent = new Reset_Persistent( $this->context );
 		$reset_persistent->all();
 	}
-
 }

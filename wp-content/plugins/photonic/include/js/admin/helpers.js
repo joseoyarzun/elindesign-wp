@@ -2,9 +2,9 @@ $ = jQuery.noConflict();
 jQuery(document).ready(function($) {
 	$(document).on('click', '.photonic-helper input[type="button"]', function() {
 		$('.photonic-waiting').show();
-		var formValues = $('#photonic-helper-form').serialize();
-		var result = $(this).closest('.photonic-helper-area').find('.result');
-		var nextToken = $(this).data('photonicToken') === undefined ? '' : '&nextPageToken=' + $(this).data('photonicToken');
+		const formValues = $('#photonic-helper-form').serialize();
+		const result = $(this).closest('.photonic-helper-area').find('.result');
+		const nextToken = $(this).data('photonicToken') === undefined ? '' : '&nextPageToken=' + $(this).data('photonicToken');
 		$.post(ajaxurl, "action=photonic_invoke_helper&helper=" + this.id + '&' + formValues + nextToken, function(data) {
 			if (data.trim().length >= 3 && data.trim().substr(0,3) === '<tr') {
 				$($(result).find('input[type="button"]')[0]).closest('tr').remove();
@@ -20,8 +20,8 @@ jQuery(document).ready(function($) {
 	window.photonicSaveToken = function photonicSaveToken(e) {
 		e.preventDefault();
 		$('.photonic-waiting').show();
-		var provider = $(this).data('photonicProvider');
-		var nonce =  $(this).data('photonicNonce');
+		const provider = $(this).data('photonicProvider');
+		const nonce = $(this).data('photonicNonce');
 		var token = $('#' + provider + '-token').text();
 		var tokenSecret = $('#' + provider + '-token-secret').text();
 		var tokenExpiresIn = $('#' + provider + '-token-expires-in').val();
@@ -46,11 +46,11 @@ jQuery(document).ready(function($) {
 		return ( prop && prop in params ) ? params[ prop ] : params;
 	};
 
-	$('.photonic-google-refresh').click(function(e) {
+	$('.photonic-google-refresh, .photonic-deviantart-refresh').click(function(e) {
 		e.preventDefault();
 		var $clicked = $(this);
 		$('.photonic-waiting').show();
-		var provider = 'google';
+		var provider = $clicked.data('photonicProvider'); // 'google';
 		var result = $('#' + provider + '-result');
 		var args = {'action': 'photonic_obtain_token', 'provider': provider, 'code': $('#photonic-' + provider + '-oauth-code').val(), 'state': $('#photonic-' + provider + '-oauth-state').val(), '_ajax_nonce': $clicked.data('photonicNonce') };
 		$.post(ajaxurl, args, function(data) {

@@ -7,6 +7,10 @@
  * @package Envira Gallery
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 /**
  * Mobile Detect Class.
  */

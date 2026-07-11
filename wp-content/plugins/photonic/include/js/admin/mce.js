@@ -1,6 +1,13 @@
-var photonicClickedNode;
+let photonicClickedNode;
 (function($) {
 	tinymce.PluginManager.add('photonic', function(editor, url) {
+		const wizardButton = document.querySelector('#photonic-add-gallery');
+		const nativeMediaLibrary = new PhotonicWPNativeUI(sendDataToWizard, getDataFromWizard);
+		const mceTab = document.getElementById('content-tmce'), htmlTab = document.getElementById('content-html');
+		let lastClickedTab = mceTab; // We are in the MCE Editor, so this must be the clicked tab.
+
+		nativeMediaLibrary.waitForIFrame();
+
 		function html(cls, data, type) {
 			data = window.encodeURIComponent(data);
 			return '<img src="' + tinymce.Env.transparentSrc + '" class="wp-media mceItem ' + cls + '" ' + 'data-wp-media="' + data + '" data-mce-resize="false" data-mce-placeholder="1" alt="" title="Photonic ' + type + ' gallery" />';
@@ -12,9 +19,9 @@ var photonicClickedNode;
 				return name ? window.decodeURIComponent(name[1]) : '';
 			}
 
-			var newContent;
+			let newContent;
 			newContent = content.replace(/(?:<p(?: [^>]+)?>)*(<img [^>]+>)(?:<\/p>)*/g, function(match, image) {
-				var data = getAttr(image, 'data-wp-media');
+				const data = getAttr(image, 'data-wp-media');
 				if (data) {
 					return '<p>' + data + '</p>';
 				}
@@ -25,7 +32,7 @@ var photonicClickedNode;
 		}
 
 		editor.on('mouseup', function(event) {
-			var dom = editor.dom,
+			const dom = editor.dom,
 				node = event.target;
 
 			function unselect() {
@@ -47,63 +54,60 @@ var photonicClickedNode;
 
 		// Register the command so that it can be invoked by using tinyMCE.activeEditor.execCommand('...');
 		editor.addCommand('Photonic_Gallery', function(ui, v) {
-			var node = editor.selection.getNode();
-			var type = v.type;
+			const node = editor.selection.getNode();
+			const type = v.type;
 
-			var shortcode = wp.mce.views.getText(node);
-			var shortcodeObj = wp.shortcode.next(Photonic_Admin_JS.shortcode, shortcode);
-			var shortcodeAttr = shortcodeObj.shortcode.attrs.named;
+			const shortcode = wp.mce.views.getText(node);
+			const shortcodeObj = wp.shortcode.next(Photonic_Admin_JS.shortcode, shortcode);
+			const shortcodeAttr = shortcodeObj.shortcode.attrs.named;
 
-			var template = $('#tmpl-photonic-editor-' + type).html();
-			template = $(template);
+			const template = (new DOMParser().parseFromString(document.getElementById('tmpl-photonic-editor-' + type).innerHTML.replace('<script type="text/html" id="tmpl-photonic-editor-' + type + '">', '').replace('</script>', ''), 'text/html')).body
 
 			// First, set all the inputs and selects in the template to the shortcode values
-			var inputs = template.find('input');
-			$(inputs).each(function(idx, input) {
+			template.querySelectorAll('input').forEach(input => {
 				if (shortcodeAttr[input.name] !== undefined) {
-					template.find('input[name="' + input.name + '"]').attr('value', shortcodeAttr[input.name]);
+					template.querySelector('input[name="' + input.name + '"]').value = shortcodeAttr[input.name];
 				}
-				else if (shortcodeAttr[$(input).attr('alt_id')] !== undefined) {
-					template.find('input[alt_id="' + $(input).attr('alt_id') + '"]').attr('value', shortcodeAttr[$(input).attr('alt_id')]);
+				else if (input.getAttribute('alt_id') && shortcodeAttr[input.getAttribute('alt_id')] !== undefined) {
+					template.querySelector('input[alt_id="' + input.getAttribute('alt_id') + '"]').value = shortcodeAttr[input.getAttribute('alt_id')];
 				}
 			});
 
-			var selects = template.find('select');
-			$(selects).each(function(idx, select) {
+			template.querySelectorAll('select').forEach(select => {
 				if (shortcodeAttr[select.name] !== undefined) {
-					template.find('select[name="' + select.name + '"] option[value="' + shortcodeAttr[select.name] + '"]').prop('selected', 'selected');
+					template.querySelector('select[name="' + select.name + '"]').value = shortcodeAttr[select.name];
 				}
-				else if (shortcodeAttr[$(select).attr('alt_id')] !== undefined) {
-					template.find('select[alt_id="' + $(select).attr('alt_id') + '"] option[value="' + shortcodeAttr[$(select).attr('alt_id')] + '"]').prop('selected', 'selected');
+				else if (select.getAttribute('alt_id') && shortcodeAttr[select.getAttribute('alt_id')] !== undefined) {
+					template.querySelector('select[alt_id="' + select.getAttribute('alt_id') + '"]').value = shortcodeAttr[select.getAttribute('alt_id')];
 				}
 			});
 
 			// Passing the template to the WindowManager has issues retrieving values, so we now dynamically get the fields
 			// The previous step is necessary, otherwise the shortcode values are not passed.
-			var rows = template.find('label');
-			var fields = [];
-			$(rows).each(function(idx, row) {
-				var label = $(row).find('span.label').text();
-				var field = $(row).find('input,select');
-				var tooltip = $(row).find('span.hint').text();
-				if (field.length > 0) {
-					var fieldObj = {
-						type: field[0].nodeName === 'INPUT' ? 'textbox' : (field[0].nodeName === 'SELECT' ? 'listbox' : ''),
-						name: field[0].name,
+			const fields = [];
+			template.querySelectorAll('label').forEach(row => {
+				const label = row.querySelector('span.label').innerText;
+				const field = row.querySelector('input, select');
+				const tooltip = row.querySelector('span.hint') ? row.querySelector('span.hint') : undefined;
+
+				if (field) {
+					const fieldObj = {
+						type: field.nodeName === 'INPUT' ? 'textbox' : (field.nodeName === 'SELECT' ? 'listbox' : ''),
+						name: field.name,
 						label: label,
-						value: field[0].value,
-						tooltip: tooltip
+						value: field.value,
+						tooltip: tooltip.innerText
 					};
-					if (field[0].nodeName === 'SELECT') {
+					if (field.nodeName === 'SELECT') {
 						fieldObj.values = [];
-						$(field[0]).children().each(function() {
-							fieldObj.values[fieldObj.values.length] = {
-								text: $(this).text(),
-								value: this.value
-							}
+						Array.from(field.children).forEach(option => {
+							fieldObj.values.push({
+								text: option.innerText,
+								value: option.value
+							});
 						});
 					}
-					fields[fields.length] = fieldObj;
+					fields.push(fieldObj);
 				}
 			});
 
@@ -114,70 +118,62 @@ var photonicClickedNode;
 				height: 400,
 				body: fields,
 				onsubmit: function(e) {
-					var insertCode = '[' + Photonic_Admin_JS.shortcode + ' type="' + (type === 'wp' ? 'default' : type) + '"';
-					var newCode = e.data;
-					$.each(newCode, function(idx, obj) {
+					let insertCode = '[' + Photonic_Admin_JS.shortcode + ' type="' + (type === 'wp' ? 'default' : type) + '"';
+					const newCode = e.data;
+					Object.entries(newCode).forEach(([idx, obj]) => {
 						if (obj !== '') {
-							insertCode += ' ' + idx + "='" + $('<div/>').text(decodeURIComponent(obj)).html() + "'";
+							insertCode += ' ' + idx + "='" + decodeURIComponent(obj).replace(/<[^>]+>/g, '') + "'";
 						}
 					});
 					insertCode += ']';
-					$(node).attr('data-wpview-text', encodeURIComponent(insertCode));
+
+					node.setAttribute('data-wpview-text', encodeURIComponent(insertCode));
 				}
 			});
 		});
 
 		// Register the command so that it can be invoked by using tinyMCE.activeEditor.execCommand('...');
-		editor.addCommand('Photonic_Gallery_Flow', function(ui, v) {
-			var node = editor.selection.getNode();
-			photonicClickedNode = node;
-			var type = v.type;
+		editor.addCommand('Photonic_Gallery_Wizard', function(ui, v) {
+			photonicClickedNode = editor.selection.getNode();
 
-			var shortcode = wp.mce.views.getText(node);
-			var shortcodeObj = wp.shortcode.next(Photonic_Admin_JS.shortcode, shortcode);
-			var scParameter = window.btoa(JSON.stringify(shortcodeObj));
-			scParameter = scParameter.replace(/^=+|=+$/g, '');
 			// No s**t, but the TB code ignores everything after the TB_iframe=true parameter, hence appending TB_iframe=true to the end
-			tb_show('Edit Gallery', (Photonic_Admin_JS.flow_url + '&shortcode=' + scParameter).replace('&TB_iframe=true', '') + '&TB_iframe=true');
+			// tb_show('Edit Gallery', (Photonic_Admin_JS.flow_url + '&shortcode=' + scParameter).replace('&TB_iframe=true', '') + '&TB_iframe=true');
+			tb_show('Edit Gallery', Photonic_Admin_JS.flow_url);
 		});
 
 		function verifyHTML(string) {
-			var settings = {};
+			const settings = {};
 
-			if (! window.tinymce) {
+			if (!window.tinymce) {
 				return string.replace(/<[^>]+>/g, '');
 			}
 
-			if (! string || (string.indexOf('<') === -1 && string.indexOf('>') === -1)) {
+			if (!string || (string.indexOf('<') === -1 && string.indexOf('>') === -1)) {
 				return string;
 			}
 
-			schema = schema || new window.tinymce.html.Schema(settings);
-			parser = parser || new window.tinymce.html.DomParser(settings, schema);
-			serializer = serializer || new window.tinymce.html.Serializer(settings, schema);
+			const schema = new window.tinymce.html.Schema(settings);
+			const parser = new window.tinymce.html.DomParser(settings, schema);
+			const serializer = new window.tinymce.html.Serializer(settings, schema);
 
 			return serializer.serialize(parser.parse(string, { forced_root_block: false }));
 		}
 
 		function getPhotonicType(img) {
-			img = $(img);
-			var type = 'default';
-			if (img.hasClass('photonic-gallery-flickr')) {
+			let type = 'default';
+			if (img.classList.contains('photonic-gallery-flickr')) {
 				type = 'flickr';
 			}
-			else if (img.hasClass('photonic-gallery-picasa')) {
-				type = 'picasa';
-			}
-			else if (img.hasClass('photonic-gallery-google')) {
+			else if (img.classList.contains('photonic-gallery-google')) {
 				type = 'google';
 			}
-			else if (img.hasClass('photonic-gallery-smugmug')) {
+			else if (img.classList.contains('photonic-gallery-smugmug')) {
 				type = 'smugmug';
 			}
-			else if (img.hasClass('photonic-gallery-zenfolio')) {
+			else if (img.classList.contains('photonic-gallery-zenfolio')) {
 				type = 'zenfolio';
 			}
-			else if (img.hasClass('photonic-gallery-instagram')) {
+			else if (img.classList.contains('photonic-gallery-instagram')) {
 				type = 'instagram';
 			}
 			return type;
@@ -190,20 +186,19 @@ var photonicClickedNode;
 
 			// Lifted verbatim from mce-view.js, "base" code
 			edit: function(text, update) {
-				var media = wp.media;
-				var type = this.type;
+				const media = wp.media;
+				const type = this.type;
 				if (type === Photonic_Admin_JS.shortcode && type !== 'gallery') {
 					if (Photonic_Admin_JS.disable_flow) {
 						editor.execCommand('Photonic_Gallery', '', {type: 'default'});
 					}
 					else {
-						editor.execCommand('Photonic_Gallery_Flow', '', {type: 'default'});
+						editor.execCommand('Photonic_Gallery_Wizard', '', {type: 'default'});
 					}
-//					editor.execCommand('Photonic_Gallery', '', {type: 'default'});
 					return;
 				}
 
-				var frame = media[ type ].edit(text);
+				let frame = media[ type ].edit(text);
 
 				this.pausePlayers && this.pausePlayers();
 
@@ -221,8 +216,8 @@ var photonicClickedNode;
 			},
 
 			initialize: function() {
-				var shortcodeAttr = this.shortcode.attrs.named;
-				var type;
+				const shortcodeAttr = this.shortcode.attrs.named;
+				let type;
 				if (shortcodeAttr['type'] === undefined) {
 					type = Photonic_Admin_JS.default_gallery_type;
 				}
@@ -233,8 +228,8 @@ var photonicClickedNode;
 					// Lifted, almost verbatim, from wp-includes/js/mce-view.js. This is the default gallery processing code.
 					// If Photonic_Admin_JS.shortcode != 'gallery', the code from WP will be called anyway. Otherwise this code will be triggered
 					// if type == 'default'.
-					var media = wp.media;
-					var attachments = media.gallery.attachments(this.shortcode, media.view.settings.post.id),
+					const media = wp.media;
+					let attachments = media.gallery.attachments(this.shortcode, media.view.settings.post.id),
 						attrs = this.shortcode.attrs.named,
 						self = this;
 
@@ -277,21 +272,21 @@ var photonicClickedNode;
 			tooltip: 'Edit ', // trailing space is needed, used for context
 			icon: 'dashicon dashicons-edit',
 			onclick: function() {
-				var node = editor.selection.getNode();
+				const node = editor.selection.getNode();
 				if (editor.dom.hasClass(node, 'wpview')) {
-					var img = $(node).find('img.photonic-gallery'); // Placeholder
-					var div = $(node).find('div.gallery');
+					const img = node.querySelector('img.photonic-gallery'); // Placeholder
+					const div = node.querySelector('div.gallery');
 
-					if (!img.hasClass('photonic-gallery') && editor.dom.hasClass( node, 'wpview' )) { // Open Native Gallery editor if that is what is in "wpview".
+					if ((img === null || !img.classList.contains('photonic-gallery')) && editor.dom.hasClass( node, 'wpview' )) { // Open Native Gallery editor if that is what is in "wpview".
 						wp.mce.views.edit(editor, node);
 					}
-					else if ((div.length > 0 && Photonic_Admin_JS.shortcode !== 'gallery') || img.hasClass('photonic-gallery')) {
-						var type = getPhotonicType(img);
+					else if ((div && Photonic_Admin_JS.shortcode !== 'gallery') || img.classList.contains('photonic-gallery')) {
+						const type = getPhotonicType(img);
 						if (Photonic_Admin_JS.disable_flow) {
 							editor.execCommand('Photonic_Gallery', '', {type: type});
 						}
 						else {
-							editor.execCommand('Photonic_Gallery_Flow', '', {type: type});
+							editor.execCommand('Photonic_Gallery_Wizard', '', {type: type});
 						}
 					}
 				}
@@ -302,12 +297,12 @@ var photonicClickedNode;
 			if (e.target.nodeName === 'IMG' && e.target.className.indexOf('photonic-gallery') > -1) {
 				e.preventDefault();
 
-				var type = getPhotonicType(e.target);
+				const type = getPhotonicType(e.target);
 				if (Photonic_Admin_JS.disable_flow) {
 					editor.execCommand('Photonic_Gallery', '', {type: type});
 				}
 				else {
-					editor.execCommand('Photonic_Gallery_Flow', '', {type: type});
+					editor.execCommand('Photonic_Gallery_Wizard', '', {type: type});
 				}
 				return false;
 			}
@@ -315,6 +310,48 @@ var photonicClickedNode;
 				return false;
 			}
 		});
+
+		function sendDataToWizard(messageChannel) {
+			const shortcode = wp.mce.views.getText(photonicClickedNode);
+			const shortcodeObj = wp.shortcode.next(Photonic_Admin_JS.shortcode, shortcode);
+
+			// Second, send the actual shortcode
+			messageChannel.port1.postMessage({
+				type: 'photonicMCENode',
+				object: {
+					shortcode: shortcodeObj
+				}
+			});
+		}
+
+		function getDataFromWizard(data) {
+			if (photonicClickedNode) {
+				photonicClickedNode.setAttribute('data-wpview-text', encodeURIComponent(data.html));
+			}
+			else {
+				editor.execCommand('mceInsertContent', false, data.html);
+			}
+		}
+
+		if (wizardButton) {
+			wizardButton.addEventListener('click', e => {
+				// Need to null this out, since a user can click on the button to add a new gallery, but the `photonicClickedNode` might be carrying the previously clicked node's data
+				photonicClickedNode = null;
+			});
+		}
+
+		if (mceTab && htmlTab) {
+			[mceTab, htmlTab].forEach(button => {
+				button.addEventListener('click', e => {
+					if (lastClickedTab.id !== button.id) {
+						lastClickedTab = button;
+						if (button.id === mceTab.id) {
+							nativeMediaLibrary.waitForIFrame();
+						}
+					}
+				});
+			});
+		}
 
 		wp.mce.views.register(Photonic_Admin_JS.shortcode, wp.mce.photonic_view_renderer);
 	});

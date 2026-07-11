@@ -76,8 +76,6 @@ abstract class KOM_Request {
 	/**
 	 * Returns the settings for the plugin based on the orders payment method.
 	 *
-	 * @param int $order_id WooCommerce order ID.
-	 *
 	 * @return array
 	 */
 	private function get_settings() {
@@ -104,7 +102,6 @@ abstract class KOM_Request {
 		}
 
 		return false;
-
 	}
 
 	/**
@@ -148,6 +145,23 @@ abstract class KOM_Request {
 	}
 
 	/**
+	 * Get the domain to use for the request.
+	 *
+	 * @param string $klarna_variant The Klarna variant to use (e.g., 'klarna_payments', 'kco').
+	 *
+	 * @return string The domain to use for the request.
+	 */
+	public static function get_api_domain( $klarna_variant = 'klarna_payments' ) {
+		// If the klarna variant is not KCO, return klarna.com.
+		if ( 'kco' !== $klarna_variant ) {
+			return 'klarna.com';
+		}
+
+		// If the variant is KCO, return kustom.co.
+		return 'kustom.co';
+	}
+
+	/**
 	 * Get the API base URL.
 	 *
 	 * @return string
@@ -155,7 +169,8 @@ abstract class KOM_Request {
 	protected function get_api_url_base() {
 		$region     = strtolower( apply_filters( 'klarna_base_region', $this->get_klarna_api_region() ) );
 		$playground = $this->use_playground() ? '.playground' : '';
-		return "https://api{$region}{$playground}.klarna.com/";
+		$domain     = self::get_api_domain( $this->get_klarna_variant() );
+		return "https://api{$region}{$playground}.{$domain}/";
 	}
 
 	/**
@@ -174,7 +189,7 @@ abstract class KOM_Request {
 		$url  = $this->get_request_url();
 		$args = $this->get_request_args();
 		if ( is_wp_error( $args ) || ( isset( $args['body'] ) && is_null( json_decode( $args['body'] ) ) ) ) {
-			return $args;
+			return is_wp_error( $args ) ? $args : new WP_Error( 'invalid_json', __( 'Invalid JSON response from the server.', 'woocommerce' ) );
 		}
 		$response = wp_remote_request( $url, $args );
 		return $this->process_response( $response, $args, $url );
@@ -275,12 +290,10 @@ abstract class KOM_Request {
 		$country = $this->get_klarna_country();
 		if ( 'klarna_payments' === $variant ) {
 			$country_string = strtolower( $country );
-		} else {
-			if ( 'US' === $country ) {
+		} elseif ( 'US' === $country ) {
 				$country_string = 'us';
-			} else {
-				$country_string = 'eu';
-			}
+		} else {
+			$country_string = 'eu';
 		}
 
 		$key = "{$prefix}{$component_name}_{$country_string}";
@@ -368,6 +381,13 @@ abstract class KOM_Request {
 	 * @return void
 	 */
 	protected function log_response( $response, $request_args, $code ) {
+		foreach ( $request_args['headers'] as $header => $value ) {
+			if ( 'authorization' === strtolower( $header ) ) {
+				// If it is longer than 15 char., it most likely has a token. This is an assumption that is safe even if it is wrong.
+				$request_args['headers'][ $header ] = strlen( $value ) > 15 ? '[REDACTED]' : '[MISSING]';
+				break;
+			}
+		}
 		$log = WC_Klarna_Logger::format_log( $this->klarna_order_id, $this->method, $this->log_title, $request_args, $response, $code );
 		WC_Klarna_Logger::log( $log, $this->order_id );
 	}

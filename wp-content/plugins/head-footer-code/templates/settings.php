@@ -1,51 +1,41 @@
 <?php
 /**
- * Head & Footer Code General Settings page template
+ * General plugin settings page template.
  *
- * @category Template
- * @package Head_Footer_Code
- * @author Aleksandar Urosevic
- * @license https://www.gnu.org/copyleft/gpl-3.0.html GNU General Public License v3.0
- * @link https://urosevic.net
+ * @package    Head_Footer_Code
+ * @category   Template
+ * @since      1.0.0
  */
 
 // If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
-	die;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
+
 ?>
 <div class="wrap" id="head_footer_code_settings">
-	<h2>
-		<?php echo esc_html( HFC_PLUGIN_NAME . ' ' . __( 'Settings' ) ); ?>
-		<span class="ver">v. <?php echo esc_html( HFC_VER ); ?></span>
-	</h2>
-	<div class="head_footer_code_wrapper">
-		<div class="content_cell">
-			<form method="post" action="options.php">
-			<?php
-				settings_fields( 'head_footer_code_settings' );
-				do_settings_sections( HFC_PLUGIN_SLUG );
-				submit_button();
-			?>
-			</form>
-		</div><!-- .content_cell -->
-
-		<div class="sidebar_container">
-			<a href="https://wordpress.org/plugins/head-footer-code/#faq" class="auhfc-button" target="_blank"><?php esc_html_e( 'FAQ', 'head-footer-code' ); ?></a>
-			<br />
-			<a href="https://wordpress.org/support/plugin/head-footer-code/" class="auhfc-button" target="_blank"><?php esc_html_e( 'Community Support', 'head-footer-code' ); ?></a>
-			<br />
-			<a href="https://wordpress.org/support/plugin/head-footer-code/reviews/#new-post" class="auhfc-button" target="_blank">
-				<?php
-				printf(
-					/* translators: %s will be replaced with plugin name Head & Footer Code */
-					esc_html__( 'Review %s plugin', 'head-footer-code' ),
-					HFC_PLUGIN_NAME
-				);
-				?>
-			</a>
-		</div><!-- .sidebar_container -->
-	</div><!-- .head_footer_code_wrapper -->
+	<h1 class="wp-heading-inline">
+		<?php
+		printf(
+			/* translators: Plugin name */
+			esc_html__( '%s Settings', 'head-footer-code' ),
+			esc_html( $this->plugin->name )
+		);
+		?>
+		<span class="ver">v. <?php echo esc_html( $this->plugin->version ); ?></span>
+		<span class="actions long-header">
+			<a href="https://wordpress.org/plugins/head-footer-code/#faq" class="page-title-action" target="_blank"><?php esc_html_e( 'FAQ', 'head-footer-code' ); ?></a>
+			<a href="https://wordpress.org/support/plugin/head-footer-code/" class="page-title-action" target="_blank"><?php esc_html_e( 'Community Support', 'head-footer-code' ); ?></a>
+		</span>
+	</h1>
+	<form method="post" action="options.php">
+	<?php
+		settings_fields( 'head_footer_code_settings' );
+		settings_errors();
+		do_settings_sections( $this->plugin->slug );
+		submit_button();
+	?>
+	</form>
 </div>
 <script type="text/javascript">
 jQuery(document).ready(function($) {

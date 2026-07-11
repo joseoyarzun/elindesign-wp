@@ -190,7 +190,7 @@ class OMAPI_WooCommerce extends OMAPI_Integrations_Base {
 		}
 
 		$data['woocommerce'] = self::version();
-		$data                = array_merge( $data, OMAPI_Api::getUrlArgs() );
+		$data                = array_merge( $data, OMAPI_Api::get_url_args() );
 
 		// Get the OptinMonster API credentials.
 		$creds = $this->get_request_api_credentials();
@@ -394,7 +394,7 @@ class OMAPI_WooCommerce extends OMAPI_Integrations_Base {
 		}
 
 		// Get current site details.
-		$site = OMAPI_Utils::parse_url( site_url() );
+		$site = wp_parse_url( site_url() );
 		$host = isset( $site['host'] ) ? $site['host'] : '';
 
 		// Get any options we have stored.

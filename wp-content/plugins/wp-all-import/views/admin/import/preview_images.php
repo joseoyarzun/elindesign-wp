@@ -1,9 +1,19 @@
+<?php if ( ! defined( 'ABSPATH' ) ) exit; // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals ?>
 <div id="post-preview" class="wpallimport-preview_images">
 
 	<div class="title">
 		<div class="navigation">			
 			<?php if ($tagno > 1): ?><a href="#prev" class="previous_element">&nbsp;</a><?php else: ?><span class="previous_element">&nbsp;</span><?php endif ?>
-			<?php printf(__('<strong><input type="text" value="%s" name="tagno" class="tagno"/></strong><span class="out_of"> of <strong class="pmxi_count">%s</strong></span>', 'wp_all_import_plugin'), intval($tagno), intval(PMXI_Plugin::$session->count)); ?>
+			<?php echo wp_kses( sprintf(
+				/* translators: 1: current tag index, 2: total tag count */
+				__('<strong><input type="text" value="%1$s" name="tagno" class="tagno"/></strong><span class="out_of"> of <strong class="pmxi_count">%2$s</strong></span>', 'wp-all-import'),
+				intval($tagno),
+				intval(PMXI_Plugin::$session->count)
+			), array(
+				'strong' => array('class' => array()),
+				'span'   => array('class' => array()),
+				'input'  => array('type' => array(), 'value' => array(), 'name' => array(), 'class' => array()),
+			) ); ?>
 			<?php if ($tagno < PMXI_Plugin::$session->count): ?><a href="#next" class="next_element">&nbsp;</a><?php else: ?><span class="next_element">&nbsp;</span><?php endif ?>			
 		</div>
 	</div>
@@ -14,16 +24,16 @@
 			<?php $this->error() ?>
 		<?php endif ?>
 
-		<h3><?php _e('Test Images', 'wp_all_import_plugin'); ?></h3>	
+		<h3><?php esc_html_e('Test Images', 'wp-all-import'); ?></h3>	
 
 		<?php 
 
 		if ( ! empty($featured_images) ){		
 
 			?>
-			<p><?php _e('Click to test that your images are able to be accessed by WP All Import.', 'wp_all_import_plugin'); ?></p>
+			<p><?php esc_html_e('Click to test that your images are able to be accessed by WP All Import.', 'wp-all-import'); ?></p>
 
-			<a class="test_images" href="javascript:void(0);" style="margin-left:0;" rel="<?php echo esc_attr($post[$get['slug'] . 'download_images']); ?>"><?php _e('Run Test', 'wp_all_import_plugin'); ?></a>
+			<a class="test_images" href="javascript:void(0);" style="margin-left:0;" rel="<?php echo esc_attr($post[$get['slug'] . 'download_images']); ?>"><?php esc_html_e('Run Test', 'wp-all-import'); ?></a>
 					
 			<?php			
 
@@ -57,22 +67,22 @@
 
 					?>
 					<div class="test_progress">
-						<div class="img_preloader"><?php _e('Retrieving images...'); ?></div>
+						<div class="img_preloader"><?php esc_html_e('Retrieving images...', 'wp-all-import'); ?></div>
 						<div class="img_success"></div>
 						<div class="img_failed"></div>
 					</div>
-					<h4><?php _e('WP All Import will import images from the following file paths:', 'wp_all_import_plugin'); ?></h4>
-					<p><?php _e('Please ensure the images exists at these file paths', 'wp_all_import_plugin'); ?></p>
+					<h4><?php esc_html_e('WP All Import will import images from the following file paths:', 'wp-all-import'); ?></h4>
+					<p><?php esc_html_e('Please ensure the images exists at these file paths', 'wp-all-import'); ?></p>
 					<ul class="images_list">
 						<?php foreach ($imgs as $img) :
 							$img = wp_all_import_filter_html_kses($img);
                             ?>
 
-							<li rel="<?php echo esc_attr(trim($img));?>"><?php echo trim(preg_replace('%.*/wp-content%', '/wp-content', $wp_uploads['basedir']) . DIRECTORY_SEPARATOR . PMXI_Plugin::FILES_DIRECTORY . DIRECTORY_SEPARATOR . esc_html(trim($img))); ?></li>
+							<li rel="<?php echo esc_attr(trim($img));?>"><?php echo esc_html( trim(preg_replace('%.*/wp-content%', '/wp-content', $wp_uploads['basedir']) . DIRECTORY_SEPARATOR . PMXI_Plugin::FILES_DIRECTORY . DIRECTORY_SEPARATOR . trim($img)) ); ?></li>
 						
 						<?php endforeach; ?> 					
 					</ul>
-					<h4><?php _e('Here are the above URLs, in &lt;img&gt; tags. '); ?></h4>
+					<h4><?php esc_html_e('Here are the above URLs, in &lt;img&gt; tags. ', 'wp-all-import'); ?></h4>
 					
 					<?php 
 					foreach ($imgs as $img) {
@@ -93,12 +103,12 @@
 
 					?>
 					<div class="test_progress">
-						<div class="img_preloader"><?php _e('Searching images...'); ?></div>
+						<div class="img_preloader"><?php esc_html_e('Searching images...', 'wp-all-import'); ?></div>
 						<div class="img_success"></div>
 						<div class="img_failed"></div>
 					</div>
-					<h4><?php _e('WP All Import will import images from the media library', 'wp_all_import_plugin'); ?></h4>
-					<p><?php _e('Please ensure the images exists at media library', 'wp_all_import_plugin'); ?></p>
+					<h4><?php esc_html_e('WP All Import will import images from the media library', 'wp-all-import'); ?></h4>
+					<p><?php esc_html_e('Please ensure the images exists at media library', 'wp-all-import'); ?></p>
 					<ul class="images_list">
 						<?php foreach ($imgs as $img) : ?>
 
@@ -117,7 +127,7 @@
 						
 						<?php endforeach; ?> 					
 					</ul>
-					<h4><?php _e('Here are the above URLs, in &lt;img&gt; tags. '); ?></h4>
+					<h4><?php esc_html_e('Here are the above URLs, in &lt;img&gt; tags. ', 'wp-all-import'); ?></h4>
 					
 					<?php 
 					foreach ($imgs as $img) 
@@ -145,12 +155,12 @@
 					
 					?>
 						<div class="test_progress">
-							<div class="img_preloader"><?php _e('Download in progress...'); ?></div>
+							<div class="img_preloader"><?php esc_html_e('Download in progress...', 'wp-all-import'); ?></div>
 							<div class="img_success"></div>
 							<div class="img_failed"></div>
 						</div>
-						<h4><?php _e('WP All Import will attempt to import images from the following URLs:'); ?></h4>
-						<p><?php _e('Please check the URLs to ensure they point to valid images'); ?></p>
+						<h4><?php esc_html_e('WP All Import will attempt to import images from the following URLs:', 'wp-all-import'); ?></h4>
+						<p><?php esc_html_e('Please check the URLs to ensure they point to valid images', 'wp-all-import'); ?></p>
 						<ul class="images_list">
 							<?php foreach ($imgs as $img):
 								$img = wp_all_import_filter_html_kses($img);
@@ -160,7 +170,7 @@
 							
 							<?php endforeach; ?>					
 						</ul>
-						<h4><?php _e('Here are the above URLs, in &lt;img&gt; tags. '); ?></h4>
+						<h4><?php esc_html_e('Here are the above URLs, in &lt;img&gt; tags. ', 'wp-all-import'); ?></h4>
 						<?php foreach ($imgs as $img) :
 					        $img = wp_all_import_filter_html_kses($img);
 
@@ -178,7 +188,7 @@
 		else
 		{
 			?>
-			<p><?php _e('Images not found for current record.', 'wp_all_import_plugin'); ?></p>
+			<p><?php esc_html_e('Images not found for current record.', 'wp-all-import'); ?></p>
 			<?php
 		}
 		?>

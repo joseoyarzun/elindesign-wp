@@ -1,3 +1,69 @@
+##### [Version 2.6.22](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.21...v2.6.22) (2026-05-19)
+
+- Updated dependencies
+
+##### [Version 2.6.21](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.20...v2.6.21) (2026-04-06)
+
+- Updated dependencies
+
+##### [Version 2.6.20](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.19...v2.6.20) (2025-09-04)
+
+- Updated dependencies
+
+##### [Version 2.6.19](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.18...v2.6.19) (2025-07-11)
+
+- Improved onboarding wizard
+
+##### [Version 2.6.18](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.17...v2.6.18) (2025-05-27)
+
+- Updated dependencies
+
+##### [Version 2.6.17](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.16...v2.6.17) (2025-04-16)
+
+- Updated dependencies
+
+##### [Version 2.6.16](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.15...v2.6.16) (2025-01-10)
+
+- Fixed compatibility issue with WordPress 6.7
+- Fixed broken onboarding layout
+
+##### [Version 2.6.15](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.14...v2.6.15) (2024-12-04)
+
+- Codebase changes.
+
+##### [Version 2.6.14](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.13...v2.6.14) (2024-11-11)
+
+- Fixed conflict with WPForms
+- Updated dependencies
+
+##### [Version 2.6.13](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.12...v2.6.13) (2024-10-14)
+
+- Codebase updates.
+
+##### [Version 2.6.12](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.11...v2.6.12) (2024-09-17)
+
+### Bug Fixes
+- **Compatibility with Elementor**: Fixes a compatibility issue with Elementor.
+- **Fixes Checkbox Styles**: Fixes a styling issue with Checkbox in the wizard that makes it almost invisible on screen.
+
+##### [Version 2.6.11](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.10...v2.6.11) (2024-04-18)
+
+### Improvements
+​- **Updated internal dependencies:​​** Enhanced performance and security.
+
+##### [Version 2.6.10](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.9...v2.6.10) (2024-02-28)
+
+### Fixes
+- Updated dependencies
+
+##### [Version 2.6.9](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.8...v2.6.9) (2023-12-22)
+
+### Bug Fixes
+- Fixed compatibility issue with WP 6.4
+- Fixed broken templates layout issue on the Safari browser
+- Enhanced security
+- Fixed compatibility issue with WP-Optimize
+
 ##### [Version 2.6.8](https://github.com/Codeinwp/wp-maintenance-mode/compare/v2.6.7...v2.6.8) (2023-06-07)
 
 - Fix the Save button Module tab not working

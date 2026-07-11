@@ -3,10 +3,10 @@ Contributors: klarna, krokedil, NiklasHogefjord, automattic
 Tags: woocommerce, klarna
 Donate link: https://klarna.com
 Requires at least: 4.0
-Tested up to: 6.3.1
+Tested up to: 6.9
 Requires PHP: 7.3
 WC requires at least: 5.0.0
-WC tested up to: 8.2.0
+WC tested up to: 10.5.2
 Stable tag: trunk
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -23,6 +23,63 @@ Provides post-purchase order management for Klarna Payments for WooCommerce and 
 For help setting up and configuring Klarna Order Management for WooCommerce please refer to our [documentation](https://docs.krokedil.com/article/149-klarna-order-management/).
 
 == Changelog ==
+= 2026.02.23    - version 1.11.0 =
+* Feature       - Use the kustom.co API endpoint for orders placed with Kustom Checkout (KCO).
+
+= 2026.02.17    - version 1.10.3 =
+* Fix           - Removed an unnecessary period from the return fee text.
+
+= 2026.01.21    - version 1.10.2 =
+* Fix           - Fully refunded orders are now always set to 'refunded' status.
+* Fix           - The return button text is now correctly updated when the return fee amount is zero.
+* Fix           - The 'tax_rate' field is now added to the return fee order line. Thanks to @ValentinOtt for the contribution!
+
+= 2025.11.05    - version 1.10.1 =
+* Fix           - Refund fee is now only available for supported countries and not sent in the refund request if the fee amount is zero, allowing refunds without a fee where not supported.
+
+= 2025.10.06    - version 1.10.0 =
+* Feature       - Added support for return fees on refunds; return fee is added as a fee to the refund order and shown in admin, customer emails, and "My account" page.
+* Feature       - Scheduled actions for the current order are now shown on the admin order view.
+* Enhancement   - Added refund order id as reference in request to Klarna.
+
+= 2025.08.27    - version 1.9.9 =
+* Tweak         - Redacted sensitive information from the log.
+
+= 2025.06.17    - version 1.9.8 =
+* Tweak         - Updated API endpoints for merchants using Kustom credentials.
+
+= 2025.05.19    - version 1.9.7 =
+* Fix           - Error messages are now displayed in certain cases where failed order returns previously showed none.
+
+= 2025.05.05    - version 1.9.6 =
+* Tweak         - Added filter 'kom_order_update_args', allowing you to modify the arguments sent to Klarna through the update order request.
+
+= 2025.02.18    - version 1.9.5 =
+* Tweak         - Added check for Klarna Payments for WooCommerce 4.0.0 credential-based visibility, to disable order management when needed.
+* Fix           - Fixed duplication of WooCommerce order items on order synchronization.
+* Fix           - Fixed PHP notice "Only variables should be passed by reference".
+
+= 2025.01.14    - version 1.9.4 =
+* Fix           - Resolved error for meta box content by not attempting to print content when Klarna order is not defined.
+* Fix           - Resolved PHP 8 deprecation warning.
+
+= 2024.11.12    - version 1.9.3 =
+* Fix           - Fixed typo in order note, saying "capture" instead of "refund".
+
+= 2024.08.19    - version 1.9.2 =
+* Tweak         - Allow error message to be translatable for unknown errors.
+* Fix           - You should now be able to overwrite the recurring payment token from the admin Subscription page.
+
+= 2024.03.05    - version 1.9.1 =
+* Fix           - Fixed a critical error when refunding an order that contain a product that was permanently deleted from the store (thanks @Zaglov!).
+* Fix           - Fixed a critical error when attempting to retrieve the product URLs of a product that was permanently deleted from the store (thanks @Zaglov!).
+* Fix           - Closed an open HTML tag.
+
+= 2023.12.06    - version 1.9.0 =
+* Feature       - Added a toggle in the order metabox that allow you to disable the order synchronization. When disabled, you can modify the WooCommerce order in any way (e.g., change order status, modify order lines) without effecting the corresponding Klarna order. By default, order synchronization is always enabled.
+* Fix           - Fixed an issue where metadata was not properly saved.
+* Fix           - Added a check to ensure that a Klarna order is always, at most, processed once. This should prevent accidental order re-processing.
+
 = 2023.10.10    - version 1.8.3 =
 * Fix           - Fixed a critical error that happened when creating a new, manual order if HPOS was enabled.
 

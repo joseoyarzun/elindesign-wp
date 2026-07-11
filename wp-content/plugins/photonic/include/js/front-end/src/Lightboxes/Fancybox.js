@@ -1,4 +1,5 @@
 import {Lightbox} from "./Lightbox";
+import * as Util from "../Util";
 
 export class PhotonicFancybox extends Lightbox {
 	constructor($) {
@@ -15,7 +16,7 @@ export class PhotonicFancybox extends Lightbox {
 
 	formatTitle(title, currentArray, currentIndex, currentOpts) {
 		if (currentArray[currentIndex].getAttribute('data-title') !== undefined && currentArray[currentIndex].getAttribute('data-title') !== '') {
-			return currentArray[currentIndex].getAttribute('data-title');
+			return Util.HTMLSanitizer.SanitizeHTML(currentArray[currentIndex].getAttribute('data-title'));
 		}
 		return title;
 	};

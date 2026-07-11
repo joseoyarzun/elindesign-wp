@@ -5,6 +5,10 @@
  * @package Envira Gallery Lite
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 ?>
 <div class="envira-admin-content">
 	<div class="envira-admin-modal">
@@ -17,43 +21,43 @@
 		</p>
 		<div class="envira-admin-model-lists envira-clear">
 			<ul class="left">
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Easily Create Albums</li>
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Add Galleries Directly</li>
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Manage Cover Photo</li>
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Show Gallery Titles</li>
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Manage Columns and Gutters</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Easily Create Albums</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Add Galleries Directly</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Manage Cover Photo</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Show Gallery Titles</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Manage Columns and Gutters</li>
 
 			</ul>
 			<ul class="right">
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Display the Number of Images</li>
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Drag and Drop Your Galleries</li>
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Add Album Description</li>
-				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Much More!</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Display the Number of Images</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Drag and Drop Your Galleries</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Add Album Description</li>
+				<li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg></i>Much More!</li>
 
 			</ul>
 		</div>
 		</div>
 		<div class="envira-admin-modal-bonus">
-			<svg class="check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#7cc048"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg>
+			<svg class="check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28px" height="28px" fill="#00ac53"><path d="M256 48a208 208 0 110 416 208 208 0 110-416zm0 464a256 256 0 100-512 256 256 0 100 512zm113-303c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"></path></svg>
 			<p>
 				<?php
-			printf(
+				printf(
 				// Translators: %1$s - Opening strong tag, do not translate. %2$s - Closing strong tag, do not translate. %3$s - Opening span tag, do not translate. %4$s - Closing strong tag, do not translate.
-				esc_html__( '%1$sBonus%2$s: Envira Gallery Lite users get %3$s 50%% off%4$s regular price, automatically applied at checkout', 'envira-gallery-lite' ),
-				'<strong>',
-				'</strong>',
-				'<span class="envira-green"><strong>',
+					esc_html__( '%1$sBonus%2$s: Envira Gallery Lite users get %3$s 50%% off%4$s regular price, automatically applied at checkout', 'envira-gallery-lite' ),
+					'<strong>',
+					'</strong>',
+					'<span class="envira-green"><strong>',
 					'</strong></span>'
-			);
-			?>
+				);
+				?>
 			</p>
 		</div>
 		<div class="envira-admin-modal-button">
 		<a href="<?php echo esc_url( Envira_Gallery_Common_Admin::get_instance()->get_upgrade_link( 'https://enviragallery.com/pricing', 'albumsPage', 'upgrade' ) ); ?>" class="button envira-button envira-primary-button" target="_blank" rel="noopener noreferrer">
-		<?php esc_html_e( 'Upgrade to Envira Gallery Pro Now', 'envira-gallery' ); ?>
+		<?php esc_html_e( 'Upgrade to Envira Gallery Pro Now', 'envira-gallery-lite' ); ?>
 		</a>
 		</div>
-		<a class="envira-admin-modal-text-link" href="<?php echo esc_url( admin_url( 'edit.php?post_type=envira&page=envira-gallery-settings' ) ); ?>"><?php esc_html_e('Already Purchased?', 'envira-gallery-lite' ); ?></a>
+		<a class="envira-admin-modal-text-link" href="<?php echo esc_url( admin_url( 'edit.php?post_type=envira&page=envira-gallery-settings' ) ); ?>"><?php esc_html_e( 'Already Purchased?', 'envira-gallery-lite' ); ?></a>
 	</div>
 	<div class="wrap">
 		<h1 class="wp-heading-inline">

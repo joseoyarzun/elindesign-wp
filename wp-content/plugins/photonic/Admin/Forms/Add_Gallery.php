@@ -162,7 +162,7 @@ class Add_Gallery {
 
 if (current_user_can('edit_posts') && isset($_REQUEST['nonce']) && wp_verify_nonce($_REQUEST['nonce'], 'photonic-vanilla-form-' . get_current_user_id())) {
 	if (isset($_POST['photonic-submit'])) {
-		$photonic_user_shortcode = stripslashes(sanitize_text_field($_POST['photonic-shortcode']));
+		$photonic_user_shortcode = stripslashes(sanitize_text_field($_POST['photonic-shortcode'] ?? ''));
 		media_send_to_editor($photonic_user_shortcode);
 		return;
 	}

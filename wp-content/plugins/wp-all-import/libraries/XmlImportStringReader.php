@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
 /**
  * @author Olexandr Zanichkovsky <olexandr.zanichkovsky@zophiatech.com>
  * @package General
@@ -35,7 +36,7 @@ class XmlImportStringReader implements XmlImportReaderInterface
     if (is_string($input))
       $this->buffer = $input;
     else
-      throw new InvalidArgumentException("String expected as argument.");
+      throw new InvalidArgumentException(esc_html("String expected as argument."));
   }
 
   /**

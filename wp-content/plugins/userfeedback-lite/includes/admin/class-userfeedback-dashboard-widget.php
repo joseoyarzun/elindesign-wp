@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Dashboard widget class.
  *
@@ -27,7 +31,7 @@ class UserFeedback_Dashboard_Widget {
 
 		wp_add_dashboard_widget(
 			self::WIDGET_KEY,
-			esc_html__( 'UserFeedback', 'userfeedback' ),
+			esc_html__( 'UserFeedback', 'userfeedback-lite' ),
 			array( $this, 'dashboard_widget_content' )
 		);
 

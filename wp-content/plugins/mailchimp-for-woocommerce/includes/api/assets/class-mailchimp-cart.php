@@ -12,8 +12,8 @@ class MailChimp_WooCommerce_Cart {
 
 	protected $store_id;
 	protected $id;
+	protected $session_id;
 	protected $customer;
-	protected $campaign_id;
 	protected $checkout_url;
 	protected $currency_code;
 	protected $order_total;
@@ -26,6 +26,12 @@ class MailChimp_WooCommerce_Cart {
 	 */
 	public function setId( $unique_id ) {
 		$this->id = $unique_id;
+
+		return $this;
+	}
+
+    public function setSessionId( $session_id ) {
+		$this->session_id = $session_id;
 
 		return $this;
 	}
@@ -80,36 +86,6 @@ class MailChimp_WooCommerce_Cart {
 	}
 
 	/**
-	 * @param $id
-	 * @param bool $throw_if_invalid
-	 * @return $this
-	 * @throws Exception
-	 */
-	public function setCampaignID( $id, $throw_if_invalid = false ) {
-		$api = MailChimp_WooCommerce_MailChimpApi::getInstance();
-		$cid = trim( $id );
-		if ( ! empty( $cid ) && ( $campaign = $api->getCampaign( $cid, $throw_if_invalid ) ) ) {
-			$this->campaign_id = $campaign['id'];
-		}
-		return $this;
-	}
-
-	/**
-	 * @return $this
-	 */
-	public function removeCampaignID() {
-		$this->campaign_id = null;
-		return $this;
-	}
-
-	/**
-	 * @return mixed
-	 */
-	public function getCampaignID() {
-		return $this->campaign_id;
-	}
-
-	/**
 	 * @param $url
 	 * @return $this
 	 */
@@ -134,7 +110,8 @@ class MailChimp_WooCommerce_Cart {
 	 * @return $this
 	 */
 	public function setCurrencyCode() {
-		$this->currency_code = get_woocommerce_currency();
+        $default_currency = get_woocommerce_currency();
+        $this->currency_code = apply_filters('mailchimp_woocommerce_cart_currency_code', $default_currency, $this->session_id);
 
 		return $this;
 	}
@@ -144,7 +121,8 @@ class MailChimp_WooCommerce_Cart {
 	 */
 	public function getCurrencyCode() {
 		if ( empty( $this->currency_code ) ) {
-			$this->currency_code = get_woocommerce_currency();
+            $default_currency = get_woocommerce_currency();
+            $this->currency_code = apply_filters('mailchimp_woocommerce_cart_currency_code', $default_currency, $this->session_id);
 		}
 
 		return $this->currency_code;
@@ -208,7 +186,6 @@ class MailChimp_WooCommerce_Cart {
 			array(
 				'id'            => (string) $this->getId(),
 				'customer'      => $this->getCustomer()->toArray(),
-				'campaign_id'   => (string) $this->getCampaignID(),
 				'checkout_url'  => (string) $this->getCheckoutURL(),
 				'currency_code' => (string) $this->getCurrencyCode(),
 				'order_total'   => floatval( $this->getOrderTotal() ),
@@ -229,7 +206,6 @@ class MailChimp_WooCommerce_Cart {
 	public function toArrayForUpdate() {
 		return mailchimp_array_remove_empty(
 			array(
-				'campaign_id'   => (string) $this->getCampaignID(),
 				'checkout_url'  => (string) $this->getCheckoutURL(),
 				'currency_code' => (string) $this->getCurrencyCode(),
 				'order_total'   => $this->getOrderTotal(),
@@ -252,7 +228,6 @@ class MailChimp_WooCommerce_Cart {
 		$singles = array(
 			'store_id',
 			'id',
-			'campaign_id',
 			'checkout_url',
 			'currency_code',
 			'order_total',

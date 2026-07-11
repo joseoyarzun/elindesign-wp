@@ -3,7 +3,7 @@
 namespace Photonic_Plugin\Admin\Wizard;
 
 use Photonic_Plugin\Core\Utilities;
-use Requests;
+use WpOrg\Requests\Requests;
 
 class Zenfolio extends Source {
 	private static $instance;
@@ -453,7 +453,7 @@ class Zenfolio extends Source {
 				return ['error' => $this->error_mandatory];
 			}
 
-			$login_name = sanitize_text_field($_POST['login_name']);
+			$login_name = sanitize_text_field(wp_unslash($_POST['login_name']));
 			global $photonic_zenfolio_default_user;
 			if ('current' === $for && empty($photonic_zenfolio_default_user)) {
 				return ['error' => sprintf(esc_html__('Default user not defined under %1$s. %2$sSelect "Another user" and put in your user id.', 'photonic'), '<em>Photonic &rarr; Settings &rarr; Zenfolio &rarr; Zenfolio Photo Settings &rarr; Default User</em>', '<br/>')];
@@ -514,10 +514,10 @@ class Zenfolio extends Source {
 			}
 
 			if ('single-photo' === $display_type) {
-				require_once PHOTONIC_PATH . '/Modules/Zenfolio.php';
+				require_once PHOTONIC_PATH . '/Platforms/Zenfolio.php';
 
 				$photo_array = [];
-				$gallery = \Photonic_Plugin\Modules\Zenfolio::get_instance();
+				$gallery = \Photonic_Plugin\Platforms\Zenfolio::get_instance();
 				$requests = [];
 				foreach ($objects as $object) {
 					$parameters = [];
@@ -533,10 +533,12 @@ class Zenfolio extends Source {
 						'data'    => $request['body'],
 					];
 				}
+
 				$responses = Requests::request_multiple($requests);
+
 				if (!empty($responses)) {
 					foreach ($responses as $ps_response) {
-						if (is_a($ps_response, 'Requests_Response')) {
+						if (is_a($ps_response, 'WpOrg\Requests\Response')) {
 							$ps_response = json_decode($ps_response->body);
 							if (!empty($ps_response->result)) {
 								$ps_response = $ps_response->result;
@@ -650,11 +652,11 @@ class Zenfolio extends Source {
 			}
 			elseif ('single-photo' === $display_type) {
 				$short_code['view'] = 'photos';
-				$short_code['object_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['object_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('gallery-photo' === $display_type/* || $display_type == 'collection-photo'*/) {
 				$short_code['view'] = 'photosets';
-				$short_code['object_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['object_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('multi-gallery' === $display_type || 'multi-collection' === $display_type || 'multi-gallery-collection' === $display_type) {
 				$short_code['view'] = 'photosets';
@@ -667,7 +669,7 @@ class Zenfolio extends Source {
 			}
 			elseif ('group' === $display_type) {
 				$short_code['view'] = 'group';
-				$short_code['object_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['object_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('group-hierarchy' === $display_type) {
 				$short_code['view'] = 'hierarchy';

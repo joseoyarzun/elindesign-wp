@@ -2,10 +2,10 @@ import {Core} from "./Core";
 import * as Util from "./Util";
 import {JustifiedGrid} from "./Layouts/Justified";
 import {Masonry} from "./Layouts/Masonry";
+import {MasonryHorizontal} from "./Layouts/MasonryHorizontal";
 import {Mosaic} from "./Layouts/Mosaic";
 import {Tooltip} from "./Components/Tooltip";
 import {Modal} from "./Components/Modal";
-import {Slider} from "./Layouts/Slider";
 
 let spinners = 0;
 
@@ -20,6 +20,13 @@ const bypassPopup = data => {
 	}
 
 	Util.hide(panel);
+	const images = panel.querySelectorAll('img');
+	images.forEach(image => {
+		if ((image.getAttribute('src') === null || image.getAttribute('src') === '') && image.getAttribute('data-src') !== null) {
+			image.setAttribute('src', image.getAttribute('data-src'));
+			image.removeAttribute('data-src');
+		}
+	});
 	document.body.appendChild(panel);
 	Core.moveHTML5External();
 	const lightbox = Core.getLightbox();
@@ -42,18 +49,18 @@ const bypassPopup = data => {
 };
 
 const displayPopup = (data, provider, popup, panelId) => {
-	const safePanelId = panelId.replace('.', '\\.'); // FOR EXISTING ELEMENTS WHCICH NEED SANITIZED PANELID
+	const safePanelId = panelId.replace('.', '\\.'); // FOR EXISTING ELEMENTS WHICH NEED SANITIZED PANELID
 	const div = Util.getElement(data).firstElementChild;
 	const grid = div.querySelector('.modal-gallery');
 
-	Core.waitForImages(grid).then(() => {
+	const doImageLayout = () => {
 		const popupPanel = document.querySelector('#photonic-' + provider + '-' + popup + '-' + safePanelId);
 		if (popupPanel) {
 			popupPanel.appendChild(div);
 			Util.show(popupPanel);
 		}
 
-		Modal(div,{
+		Modal(div, {
 			modalTarget: 'photonic-' + provider + '-panel-' + safePanelId,
 			color: '#000',
 			width: Photonic_JS.gallery_panel_width + '%',
@@ -67,7 +74,17 @@ const displayPopup = (data, provider, popup, panelId) => {
 
 		Tooltip('[data-photonic-tooltip]', '.photonic-tooltip-container');
 		Core.hideLoading();
-	});
+	};
+
+	if (grid.classList.contains('sizes-present')) {
+		Core.watchForImages(grid);
+		doImageLayout();
+	}
+	else {
+		Core.waitForImages(grid).then(() => {
+			doImageLayout();
+		});
+	}
 };
 
 const redisplayPopupContents = (provider, panelId, panel, args) => {
@@ -159,6 +176,12 @@ export const processL3Request = (clicked, header, args) => {
 			else if (layout.classList.contains('photonic-masonry-layout')) {
 				Masonry(false, false);
 			}
+			else if (layout.classList.contains('photonic-masonry-horizontal-layout')) {
+				MasonryHorizontal(false, false);
+			}
+			else if (layout.classList.contains('sizes-present')) {
+				Core.watchForImages(layout);
+			}
 
 			const level2 = returnedStream.querySelectorAll('.photonic-level-2');
 
@@ -184,6 +207,14 @@ export const lazyLoad = evt => {
 	const args = {
 		'action': 'photonic_lazy_load',
 		'shortcode': shortcode
+	};
+
+	const countdownSpinners = () => {
+		spinners--;
+
+		if (spinners <= 0) {
+			Core.hideLoading();
+		}
 	};
 
 	Util.post(Photonic_JS.ajaxurl, args, data => {
@@ -248,25 +279,31 @@ export const lazyLoad = evt => {
 				Masonry(false, true, '#' + newDivId + ' .photonic-masonry-layout');
 				spinners--;
 			}
+			else if (document.querySelectorAll('#' + newDivId + ' .photonic-masonry-horizontal-layout').length > 0) {
+				MasonryHorizontal(false, true, '#' + newDivId + ' .photonic-masonry-horizontal-layout');
+				spinners--;
+			}
 			else if (document.querySelectorAll('#' + newDivId + ' .photonic-mosaic-layout').length > 0) {
 				Mosaic(false, true, '#' + newDivId + ' .photonic-mosaic-layout');
 				spinners--;
 			}
 			// Slider(document.querySelector('#photonic-slideshow-' + max));
 
-			Core.waitForImages(div).then(() => {
-				const standard = document.documentElement.querySelectorAll('#' + newDivId + ' .photonic-standard-layout .photonic-level-1, ' + '#' + newDivId + ' .photonic-standard-layout .photonic-level-2');
-				standard.forEach(image => {
-					image.style.display = 'inline-block';
-				});
+			if (div.classList.contains('sizes-present') || (div.querySelector('.sizes-present') !== null)) {
+				Core.watchForImages(div);
 				Core.standardizeTitleWidths();
-
-				spinners--;
-
-				if (spinners <= 0) {
-					Core.hideLoading();
-				}
-			});
+				countdownSpinners();
+			}
+			else {
+				Core.waitForImages(div).then(() => {
+					const standard = document.documentElement.querySelectorAll('#' + newDivId + ' .photonic-standard-layout .photonic-level-1, ' + '#' + newDivId + ' .photonic-standard-layout .photonic-level-2');
+					standard.forEach(image => {
+						image.style.display = 'inline-block';
+					});
+					Core.standardizeTitleWidths();
+					countdownSpinners();
+				});
+			}
 			Core.moveHTML5External();
 
 			clicked.parentNode.removeChild(clicked);

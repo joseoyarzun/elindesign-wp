@@ -4,9 +4,6 @@ namespace WCML\Attributes;
 
 class LookupFiltersFactory implements \IWPML_Frontend_Action_Loader {
 	
-	/**
-	 * @return \IWPML_Action|null
-	 */
 	public function create() {
 		/**
 		 * @var \SitePress $sitepress

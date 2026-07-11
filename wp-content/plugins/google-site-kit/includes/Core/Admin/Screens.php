@@ -14,9 +14,12 @@ use Google\Site_Kit\Context;
 use Google\Site_Kit\Core\Assets\Assets;
 use Google\Site_Kit\Core\Authentication\Authentication;
 use Google\Site_Kit\Core\Dismissals\Dismissed_Items;
+use Google\Site_Kit\Core\Key_Metrics\Key_Metrics_Setup_Completed_By;
 use Google\Site_Kit\Core\Modules\Modules;
 use Google\Site_Kit\Core\Permissions\Permissions;
+use Google\Site_Kit\Core\Storage\Options;
 use Google\Site_Kit\Core\Storage\User_Options;
+use Google\Site_Kit\Core\User\Initial_Setup_Settings;
 use Google\Site_Kit\Core\Util\Feature_Flags;
 
 /**
@@ -64,6 +67,14 @@ final class Screens {
 	private $authentication;
 
 	/**
+	 * User_Options instance.
+	 *
+	 * @since 1.167.0
+	 * @var User_Options
+	 */
+	private $user_options;
+
+	/**
 	 * Associative array of $hook_suffix => $screen pairs.
 	 *
 	 * @since 1.0.0
@@ -80,17 +91,20 @@ final class Screens {
 	 * @param Assets         $assets  Optional. Assets API instance. Default is a new instance.
 	 * @param Modules        $modules Optional. Modules instance. Default is a new instance.
 	 * @param Authentication $authentication  Optional. Authentication instance. Default is a new instance.
+	 * @param User_Options   $user_options  Optional. User_Options instance. Default is a new instance.
 	 */
 	public function __construct(
 		Context $context,
-		Assets $assets = null,
-		Modules $modules = null,
-		Authentication $authentication = null
+		?Assets $assets = null,
+		?Modules $modules = null,
+		?Authentication $authentication = null,
+		?User_Options $user_options = null
 	) {
 		$this->context        = $context;
 		$this->assets         = $assets ?: new Assets( $this->context );
 		$this->modules        = $modules ?: new Modules( $this->context );
 		$this->authentication = $authentication ?: new Authentication( $this->context );
+		$this->user_options   = $user_options ?: new User_Options( $this->context );
 	}
 
 	/**
@@ -102,7 +116,7 @@ final class Screens {
 		if ( $this->context->is_network_mode() ) {
 			add_action(
 				'network_admin_menu',
-				function() {
+				function () {
 					$this->add_screens();
 				}
 			);
@@ -110,21 +124,21 @@ final class Screens {
 
 		add_action(
 			'admin_menu',
-			function() {
+			function () {
 				$this->add_screens();
 			}
 		);
 
 		add_action(
 			'admin_enqueue_scripts',
-			function( $hook_suffix ) {
+			function ( $hook_suffix ) {
 				$this->enqueue_screen_assets( $hook_suffix );
 			}
 		);
 
 		add_action(
 			'admin_page_access_denied',
-			function() {
+			function () {
 				// Redirect dashboard to splash if no dashboard access (yet).
 				$this->no_access_redirect_dashboard_to_splash();
 				// Redirect splash to (shared) dashboard if splash is dismissed.
@@ -138,7 +152,7 @@ final class Screens {
 		// Ensure the menu icon always is rendered correctly, without enqueueing a global CSS file.
 		add_action(
 			'admin_head',
-			function() {
+			function () {
 				?>
 				<style type="text/css">
 					#adminmenu .toplevel_page_googlesitekit-dashboard img {
@@ -153,7 +167,7 @@ final class Screens {
 			}
 		);
 
-		$remove_notices_callback = function() {
+		$remove_notices_callback = function () {
 			global $hook_suffix;
 
 			if ( empty( $hook_suffix ) ) {
@@ -171,24 +185,22 @@ final class Screens {
 		add_filter( 'custom_menu_order', '__return_true' );
 		add_filter(
 			'menu_order',
-			function( array $menu_order ) {
+			function ( array $menu_order ) {
 				// Move the Site Kit dashboard menu item to be one after the index.php item if it exists.
 				$dashboard_index = array_search( 'index.php', $menu_order, true );
 
-				$sitekit_index = false;
+				if ( false === $dashboard_index ) {
+					return $menu_order;
+				}
+
 				foreach ( $menu_order as $key => $value ) {
 					if ( strpos( $value, self::PREFIX ) === 0 ) {
-						$sitekit_index = $key;
-						$sitekit_value = $value;
+						unset( $menu_order[ $key ] );
+						array_splice( $menu_order, $dashboard_index + 1, 0, $value );
 						break;
 					}
 				}
 
-				if ( false === $dashboard_index || false === $sitekit_index ) {
-					return $menu_order;
-				}
-				unset( $menu_order[ $sitekit_index ] );
-				array_splice( $menu_order, $dashboard_index + 1, 0, $sitekit_value );
 				return $menu_order;
 			}
 		);
@@ -232,7 +244,7 @@ final class Screens {
 
 		add_action(
 			"load-{$hook_suffix}",
-			function() use ( $screen ) {
+			function () use ( $screen ) {
 				$screen->initialize( $this->context );
 			}
 		);
@@ -278,8 +290,22 @@ final class Screens {
 		}
 
 		if ( current_user_can( Permissions::VIEW_SPLASH ) ) {
+			$notification = $this->context->input()->filter( INPUT_GET, 'notification' );
+			$panel        = $this->context->input()->filter( INPUT_GET, 'panel' );
+
 			wp_safe_redirect(
-				$this->context->admin_url( 'splash' )
+				$this->context->admin_url(
+					'splash',
+					array_filter(
+						array(
+							'notification' => $notification,
+							'panel'        => $panel,
+						),
+						function ( $value ) {
+							return null !== $value && '' !== $value;
+						}
+					)
+				)
 			);
 			exit;
 		}
@@ -302,8 +328,22 @@ final class Screens {
 		}
 
 		if ( current_user_can( Permissions::VIEW_DASHBOARD ) ) {
+			$notification = $this->context->input()->filter( INPUT_GET, 'notification' );
+			$panel        = $this->context->input()->filter( INPUT_GET, 'panel' );
+
 			wp_safe_redirect(
-				$this->context->admin_url()
+				$this->context->admin_url(
+					'dashboard',
+					array_filter(
+						array(
+							'notification' => $notification,
+							'panel'        => $panel,
+						),
+						function ( $value ) {
+							return null !== $value && '' !== $value;
+						}
+					)
+				)
 			);
 			exit;
 		}
@@ -358,16 +398,66 @@ final class Screens {
 			new Screen(
 				self::PREFIX . 'dashboard',
 				array(
-					'title'            => __( 'Dashboard', 'google-site-kit' ),
-					'capability'       => Permissions::VIEW_DASHBOARD,
-					'enqueue_callback' => function( Assets $assets ) {
+					'title'               => __( 'Dashboard', 'google-site-kit' ),
+					'capability'          => Permissions::VIEW_DASHBOARD,
+					'enqueue_callback'    => function ( Assets $assets ) {
 						if ( $this->context->input()->filter( INPUT_GET, 'permaLink' ) ) {
 							$assets->enqueue_asset( 'googlesitekit-entity-dashboard' );
 						} else {
 							$assets->enqueue_asset( 'googlesitekit-main-dashboard' );
 						}
 					},
-					'render_callback'  => function( Context $context ) {
+					'initialize_callback' => function ( Context $context ) {
+						if ( ! Feature_Flags::enabled( 'setupFlowRefresh' ) ) {
+							return;
+						}
+
+						$is_view_only = ! $this->authentication->is_authenticated();
+
+						if ( ! $is_view_only ) {
+							$initial_setup_settings      = ( new Initial_Setup_Settings( $this->user_options ) )->get();
+							$is_analytics_setup_complete = $initial_setup_settings['isAnalyticsSetupComplete'];
+
+							if ( false === $is_analytics_setup_complete ) {
+								$slug = $context->input()->filter( INPUT_GET, 'slug' );
+								$show_progress = $context->input()->filter( INPUT_GET, 'showProgress', FILTER_VALIDATE_BOOLEAN );
+								$re_auth = $context->input()->filter( INPUT_GET, 'reAuth', FILTER_VALIDATE_BOOLEAN );
+
+								if ( 'analytics-4' === $slug && $re_auth && $show_progress ) {
+									return;
+								}
+
+								$is_analytics_connected = $this->modules->is_module_connected( 'analytics-4' );
+
+								if ( $is_analytics_connected ) {
+									wp_safe_redirect(
+										$context->admin_url(
+											'key-metrics-setup',
+											array(
+												'showProgress' => 'true',
+											)
+										)
+									);
+
+									exit;
+								} else {
+									wp_safe_redirect(
+										$context->admin_url(
+											'dashboard',
+											array(
+												'slug'   => 'analytics-4',
+												'showProgress' => 'true',
+												'reAuth' => 'true',
+											)
+										)
+									);
+
+									exit;
+								}
+							}
+						}
+					},
+					'render_callback'     => function ( Context $context ) {
 						$is_view_only = ! $this->authentication->is_authenticated();
 
 						$setup_slug = htmlspecialchars( $context->input()->filter( INPUT_GET, 'slug' ) ?: '' );
@@ -408,7 +498,7 @@ final class Screens {
 					'capability'          => Permissions::VIEW_SPLASH,
 					'parent_slug'         => $show_splash_in_menu ? Screen::MENU_SLUG : self::PARENT_SLUG_NULL,
 					// This callback will redirect to the dashboard on successful authentication.
-					'initialize_callback' => function( Context $context ) {
+					'initialize_callback' => function ( Context $context ) {
 						// Get the dismissed items for this user.
 						$user_options = new User_Options( $context );
 						$dismissed_items = new Dismissed_Items( $user_options );
@@ -442,9 +532,15 @@ final class Screens {
 							wp_safe_redirect(
 								$context->admin_url(
 									'dashboard',
-									array(
-										// Pass through the notification parameter, or removes it if none.
-										'notification' => $context->input()->filter( INPUT_GET, 'notification' ),
+									array_filter(
+										array(
+											// Pass through supported params, or remove if none.
+											'notification' => $context->input()->filter( INPUT_GET, 'notification' ),
+											'panel'        => $context->input()->filter( INPUT_GET, 'panel' ),
+										),
+										function ( $value ) {
+											return null !== $value && '' !== $value;
+										}
 									)
 								)
 							);
@@ -462,16 +558,14 @@ final class Screens {
 			),
 		);
 
-		if ( Feature_Flags::enabled( 'keyMetrics' ) ) {
-			$screens[] = new Screen(
-				self::PREFIX . 'user-input',
-				array(
-					'title'       => __( 'User Input', 'google-site-kit' ),
-					'capability'  => Permissions::MANAGE_OPTIONS,
-					'parent_slug' => self::PARENT_SLUG_NULL,
-				)
-			);
-		}
+		$screens[] = new Screen(
+			self::PREFIX . 'user-input',
+			array(
+				'title'       => __( 'User Input', 'google-site-kit' ),
+				'capability'  => Permissions::MANAGE_OPTIONS,
+				'parent_slug' => self::PARENT_SLUG_NULL,
+			)
+		);
 
 		$screens[] = new Screen(
 			self::PREFIX . 'ad-blocking-recovery',
@@ -482,7 +576,37 @@ final class Screens {
 			)
 		);
 
+		$screens[] = new Screen(
+			self::PREFIX . 'metric-selection',
+			array(
+				'title'               => __( 'Select Key Metrics', 'google-site-kit' ),
+				'capability'          => Permissions::MANAGE_OPTIONS,
+				'parent_slug'         => self::PARENT_SLUG_NULL,
+				// This callback will redirect to the dashboard if key metrics is already set up.
+				'initialize_callback' => function ( Context $context ) {
+					$options = new Options( $context );
+					$is_key_metrics_setup = ( new Key_Metrics_Setup_Completed_By( $options ) )->get();
+
+					if ( $is_key_metrics_setup ) {
+						wp_safe_redirect(
+							$context->admin_url( 'dashboard' )
+						);
+
+						exit;
+					}
+				},
+			)
+		);
+
+		$screens[] = new Screen(
+			self::PREFIX . 'key-metrics-setup',
+			array(
+				'title'       => __( 'Key Metrics Setup', 'google-site-kit' ),
+				'capability'  => Permissions::MANAGE_OPTIONS,
+				'parent_slug' => self::PARENT_SLUG_NULL,
+			)
+		);
+
 		return $screens;
 	}
-
 }

@@ -6,6 +6,8 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Modules\Search_Console;
@@ -39,10 +41,13 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 		// Backwards compatibility with previous dedicated option.
 		add_filter(
 			'default_option_' . self::OPTION,
-			function ( $default ) {
-				$default['propertyID'] = $this->options->get( 'googlesitekit_search_console_property' ) ?: '';
+			function ( $default_option ) {
+				if ( ! is_array( $default_option ) ) {
+					$default_option = $this->get_default();
+				}
+				$default_option['propertyID'] = $this->options->get( 'googlesitekit_search_console_property' ) ?: '';
 
-				return $default;
+				return $default_option;
 			}
 		);
 	}
@@ -73,5 +78,4 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 			'propertyID',
 		);
 	}
-
 }

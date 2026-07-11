@@ -30,12 +30,13 @@ class ConflictingPlugins {
 	 * @return void
 	 */
 	public function maybeShowNotice() {
-		$dismissed = get_option( '_aioseo_conflicting_plugins_dismissed', true );
+		$userId    = get_current_user_id();
+		$dismissed = get_user_meta( $userId, '_aioseo_conflicting_plugins_dismissed', true );
 		if ( '1' === $dismissed ) {
 			return;
 		}
 
-		if ( ! current_user_can( 'activate_plugins' ) ) {
+		if ( ! current_user_can( 'deactivate_plugins' ) ) {
 			return;
 		}
 
@@ -61,7 +62,7 @@ class ConflictingPlugins {
 	public function showNotice() {
 		$type = ! empty( aioseo()->conflictingPlugins->getConflictingPlugins( 'seo' ) ) ? 'SEO' : 'sitemap';
 		?>
-		<div class="notice notice-error aioseo-conflicting-plugins-notice is-dismissible">
+		<div class="notice notice-error aioseo-conflicting-plugin-notice is-dismissible">
 			<p>
 				<?php
 				echo wp_kses(
@@ -113,7 +114,7 @@ class ConflictingPlugins {
 					deactivateBtn
 
 				// Add an event listener to the dismiss button.
-				dismissBtn = document.querySelector('.aioseo-conflicting-plugins-notice .notice-dismiss')
+				dismissBtn = document.querySelector('.aioseo-conflicting-plugin-notice .notice-dismiss')
 				dismissBtn.addEventListener('click', function (event) {
 					var httpRequest = new XMLHttpRequest(),
 						postData    = ''
@@ -127,7 +128,7 @@ class ConflictingPlugins {
 					httpRequest.send(postData)
 				})
 
-				deactivateBtn = document.querySelector('.aioseo-conflicting-plugins-notice .deactivate-conflicting-plugins')
+				deactivateBtn = document.querySelector('.aioseo-conflicting-plugin-notice .deactivate-conflicting-plugins')
 				deactivateBtn.addEventListener('click', function (event) {
 					event.preventDefault()
 
@@ -168,7 +169,8 @@ class ConflictingPlugins {
 
 		check_ajax_referer( 'aioseo-dismiss-conflicting-plugins', 'nonce' );
 
-		update_option( '_aioseo_conflicting_plugins_dismissed', true );
+		$userId = get_current_user_id();
+		update_user_meta( $userId, '_aioseo_conflicting_plugins_dismissed', true );
 
 		return wp_send_json_success();
 	}

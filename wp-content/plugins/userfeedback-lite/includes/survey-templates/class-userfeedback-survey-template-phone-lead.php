@@ -1,12 +1,19 @@
 <?php
 
-class UserFeedback_Survey_Template_Phone_Lead extends UserFeedback_Survey_Template {
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
+class UserFeedback_Survey_Template_Phone_Lead extends UserFeedback_Survey_Template {
 
 	/**
 	 * @inheritdoc
 	 */
 	protected $template_key = 'phone-lead';
+
+	protected $categories = array(
+		'ecommerce'
+	);
 
 	/**
 	 * @inheritdoc
@@ -17,14 +24,16 @@ class UserFeedback_Survey_Template_Phone_Lead extends UserFeedback_Survey_Templa
 	 * @inheritdoc
 	 */
 	public function get_name() {
-		return __( 'Phone Lead Form', 'userfeedback' );
+		return __( 'Phone Lead Form', 'userfeedback-lite' );
 	}
 
 	/**
 	 * @inheritdoc
 	 */
 	public function get_description() {
-		return __( 'Ask your customers for a phone number to receive a call back.', 'userfeedback' );
+		return array(
+			'title' => __( 'Ask your customers for a phone number to receive a call back.', 'userfeedback-lite' )
+		);
 	}
 
 	/**
@@ -37,11 +46,11 @@ class UserFeedback_Survey_Template_Phone_Lead extends UserFeedback_Survey_Templa
 			'questions' => array(
 				array(
 					'type'  => 'text',
-					'title' => __( "Have questions? Provide us your phone number and we'll give you a call!", 'userfeedback' ),
+					'title' => __( "Have questions? Provide us your phone number and we'll give you a call!", 'userfeedback-lite' ),
 				),
 				array(
 					'type'  => 'text',
-					'title' => __( "What's Your Name?", 'userfeedback' ),
+					'title' => __( "What's Your Name?", 'userfeedback-lite' ),
 				),
 			),
 		);

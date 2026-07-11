@@ -28,6 +28,23 @@ use WP_Term;
 class ProductHelper {
 
 	/**
+	 * Safe unserialize that prevents PHP Object Injection.
+	 *
+	 * @param mixed $data The data to unserialize.
+	 * @return mixed The unserialized data or original if not serialized.
+	 */
+	private static function safe_unserialize( $data ) {
+		if ( ! is_string( $data ) ) {
+			return $data;
+		}
+		if ( ! \is_serialized( $data ) ) {
+			return $data;
+		}
+		// Use allowed_classes = false to prevent object instantiation
+		return @unserialize( $data, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+	}
+
+	/**
 	 * Advance Custom Field (ACF) Prefix
 	 *
 	 * @since 3.1.18
@@ -385,20 +402,22 @@ class ProductHelper {
 	 * @return array|false
 	 */
 	private static function array_search_key( $needle_key, $structure ) {
-		foreach ( $structure as $key => $value ) {
-			if ( strpos( $key, $needle_key ) !== false ) {
+        if (is_array($structure) || is_object($structure)) {
+            foreach ($structure as $key => $value) {
+                if (strpos($key, $needle_key) !== false) {
 
-				return [
-					'attribute'  => $value,
-					'mattribute' => $key,
-				];
-			}
-			if ( is_array( $value ) ) {
-				if ( ( $result = self::array_search_key( $needle_key, $value ) ) !== false ) {
-					return $result;
-				}
-			}
-		}
+                    return [
+                        'attribute' => $value,
+                        'mattribute' => $key,
+                    ];
+                }
+                if (is_array($value)) {
+                    if (($result = self::array_search_key($needle_key, $value)) !== false) {
+                        return $result;
+                    }
+                }
+            }
+        }
 
 		return false;
 	}
@@ -524,10 +543,13 @@ class ProductHelper {
 		$value = self::fetch_product_attribute( $attr, $product );
 
 		// Retrieve attribute value from the parent product if it's a variation and the attribute value is empty.
-		if ( '' === $value && $product->is_type( 'variation' ) ) {
-			$parent_product = \wc_get_product( $product->get_parent_id() );
-			if ( $parent_product ) {
-				$value = self::fetch_product_attribute( $attr, $parent_product );
+
+		if ( $product instanceof WC_Product ) {
+			if ('' === $value && $product->is_type('variation')) {
+				$parent_product = \wc_get_product($product->get_parent_id());
+				if ($parent_product) {
+					$value = self::fetch_product_attribute($attr, $parent_product);
+				}
 			}
 		}
 
@@ -542,13 +564,17 @@ class ProductHelper {
 	 *
 	 * @return string The attribute value.
 	 */
-	private static function fetch_product_attribute( $attr, WC_Product $product ) {
-		if ( \woo_feed_wc_version_check( 3.2 ) ) {
-			return $product->get_attribute( $attr );
+	private static function fetch_product_attribute( $attr, $product ) {
+		if ($product instanceof WC_Product) {
+			if (\woo_feed_wc_version_check(3.2)) {
+				return $product->get_attribute($attr);
+			}
+
+			// Fallback for WooCommerce versions below 3.2.
+			return \implode(',', \wc_get_product_terms($product->get_id(), $attr, array('fields' => 'names')));
 		}
 
-		// Fallback for WooCommerce versions below 3.2.
-		return \implode( ',', \wc_get_product_terms( $product->get_id(), $attr, array( 'fields' => 'names' ) ) );
+		return '';
 	}
 
 	/**
@@ -587,7 +613,7 @@ class ProductHelper {
 	 * Test case is available in CTXFeed\tests\wpunit\Output\CategoryMappingTest.
 	 */
 	public static function get_category_mapping( $mapping_name, $product_id ) {
-		$mapping_settings = \maybe_unserialize( \get_option( $mapping_name ) );
+		$mapping_settings = self::safe_unserialize( \get_option( $mapping_name ) );
 
 		if ( ! isset( $mapping_settings['cmapping'], $mapping_settings['gcl-cmapping'] ) ) {
 			return '';
@@ -703,7 +729,7 @@ class ProductHelper {
 	 */
 	public static function get_dynamic_attribute( $product, $attribute_name, $merchant_attribute, $config ) {
 		$get_attribute_value_by_type = new AttributeValueByType( $attribute_name, $merchant_attribute, $product, $config );
-		$get_value                   = \maybe_unserialize( \get_option( $attribute_name ) );
+		$get_value                   = self::safe_unserialize( \get_option( $attribute_name ) );
 		$wf_dattribute_code          = $get_value['wfDAttributeCode'] ?? '';
 		$attribute                   = isset( $get_value['attribute'] ) ? (array) $get_value['attribute'] : array();
 		$condition                   = isset( $get_value['condition'] ) ? (array) $get_value['condition'] : array();

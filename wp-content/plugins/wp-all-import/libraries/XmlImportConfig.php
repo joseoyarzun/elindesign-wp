@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
 /**
  * @author Olexandr Zanichkovsky <olexandr.zanichkovsky@zophiatech.com>
  * @author Pavel Kulbakin <p.kulbakin@gmail.com>

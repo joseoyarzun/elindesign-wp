@@ -1,5 +1,5 @@
 const path = require('path');
-const webpack = require('webpack');
+//require('webpack');
 
 // Create the entry points - one per lightbox
 const entryPoints = {
@@ -42,7 +42,7 @@ const toIgnore = ['none', 'fancybox2', 'thickbox'];
 
 // Plugins
 const plugins = [
-	"@babel/plugin-transform-arrow-functions",
+//	"@babel/plugin-transform-arrow-functions",
 	"@babel/plugin-transform-async-to-generator",
 	"@babel/plugin-transform-modules-commonjs",
 	"@babel/plugin-transform-runtime",
@@ -68,7 +68,7 @@ providerPlugins['combo-slider'].Splide = '../../../../ext/splide/splide.js';
 
 const moduleTypes = [
 	{
-		type: 'es6',
+		type: 'es8',
 		module: {
 			rules: [{
 				test: /\.js$/, // Look for any .js files.
@@ -91,7 +91,7 @@ const moduleTypes = [
 			}],
 		},
 		folder: 'out',
-		target: 'es6',
+		target: 'es8',
 	}
 ];
 
@@ -112,29 +112,14 @@ const environments = [
 ];
 
 /**
- * For each lightbox, we have two variants of files generated: ES6 modules, and ES5 code. This goes into 2 top level folders:
- * 	- module		: Contains files pertaining to ES6 modules
- * 	- nomodule		: Contains transpiled files for older JS versions
+ * For each lightbox, we generate ES8 files that combine the Photonic scripts. The lightbox and slider scripts are excluded from this.
  *
- * Each top-level folder has 4 types of file combinations:
- * 	- solo			: Just the Photonic code, nothing else; lightbox and slider are supplied by theme / another plugin
- * 	- solo-slider	: Slider script + Photonic code; lightbox is supplied by theme / another plugin
- * 	- combo			: Lightbox script + Photonic code; slider is supplied by theme / another plugin
- * 	- combo-slider	: Lightbox script + Third party slider script + Photonic code; this is an all-inclusive bundle
+ * The DEV file is unminified, while the PROD file is minified.
  *
- * Each file combination folder has 4 files per lightbox:
- * 	- DEV + Map		: An unminified file and its sourcemap
- * 	- PROD + Map	: A minified file and its sourcemap
  */
 const config = [];
 Object.entries(entryPoints).forEach(([combination, entry]) => {
 	moduleTypes.forEach((module) => {
-		if (module.type === 'es5') {
-			Object.entries(entry).forEach(([lightbox, files]) => {
-				files.unshift('../include/js/front-end/src/Polyfill.js');
-			});
-		}
-
 		environments.forEach((env) => {
 			// Configuration object
 			// 	-	entry:				Lists all entry points
@@ -163,53 +148,8 @@ Object.entries(entryPoints).forEach(([combination, entry]) => {
 	});
 });
 
-/*
 Object.entries(esmEntryPoints).forEach(([combination, entry]) => {
 	moduleTypes.forEach((module) => {
-		if (module.type === 'es5') {
-			Object.entries(entry).forEach(([lightbox, files]) => {
-				files.unshift('../include/js/front-end/src/Polyfill.js');
-			});
-		}
-
-		environments.forEach((env) => {
-			config.push({
-				name: module.type + '-' + env.type + '-' + combination,
-				mode: env.mode,
-				devtool: env.sourceMap,// 'source-map',
-				entry: entry,
-				module: module.module,
-				target: module.target,
-				output: {
-					filename: 'photonic-[name]' + env.extension + '.js',
-					path: path.join(__dirname, '/../include/js/front-end/' + module.folder),
-					environment: {
-						module: true,
-						dynamicImport: true,
-					},
-				},
-				experiments: {
-					outputModule: true,
-				},
-				externalsType: 'import',
-				externals: {
-					'../../../../ext/photoswipe5/photoswipe5.js': 'https://unpkg.com/photoswipe',
-					'../../../../ext/photoswipe5/photoswipe5-lightbox.js': 'https://unpkg.com/photoswipe/dist/photoswipe-lightbox.esm.js',
-				},
-			});
-		});
-	});
-});
-*/
-
-Object.entries(esmEntryPoints).forEach(([combination, entry]) => {
-	moduleTypes.forEach((module) => {
-		if (module.type === 'es5') {
-			Object.entries(entry).forEach(([lightbox, files]) => {
-				files.unshift('../include/js/front-end/src/Polyfill.js');
-			});
-		}
-
 		environments.forEach((env) => {
 			config.push({
 				name: module.type + '-' + env.type + '-' + combination,

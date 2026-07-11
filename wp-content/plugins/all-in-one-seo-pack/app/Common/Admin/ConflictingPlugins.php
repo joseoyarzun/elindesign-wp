@@ -21,7 +21,7 @@ class ConflictingPlugins {
 	 *
 	 * @var array
 	 */
-	private $conflictingPluginSlugs = [
+	protected $conflictingPluginSlugs = [
 		// Note: We should NOT add Jetpack here since they automatically disable their SEO module when ours is active.
 		'wordpress-seo',
 		'seo-by-rank-math',
@@ -29,15 +29,6 @@ class ConflictingPlugins {
 		'autodescription',
 		'slim-seo',
 		'squirrly-seo',
-		'redirection',
-		'eps-301-redirects',
-		'simple-301-redirects',
-		'301-redirects',
-		'404-to-homepage',
-		'quick-301-redirects',
-		'all-404-redirect-to-homepage',
-		'redirect-redirection',
-		'safe-redirect-manager',
 		'google-sitemap-generator',
 		'xml-sitemap-feed',
 		'www-xml-sitemap-generator-org',
@@ -45,7 +36,7 @@ class ConflictingPlugins {
 	];
 
 	/**
-	 * Class Constructor.
+	 * Class constructor.
 	 *
 	 * @since 4.0.0
 	 */
@@ -55,7 +46,7 @@ class ConflictingPlugins {
 			return;
 		}
 
-		add_action( 'init', [ $this, 'init' ] );
+		add_action( 'admin_init', [ $this, 'init' ], 20 );
 	}
 
 	/**
@@ -66,8 +57,7 @@ class ConflictingPlugins {
 	 * @return void
 	 */
 	public function init() {
-		// Only do this for users who can install/deactivate plugins.
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! current_user_can( 'deactivate_plugins' ) ) {
 			return;
 		}
 
@@ -117,7 +107,10 @@ class ConflictingPlugins {
 	 * @return array        An array of conflicting plugins.
 	 */
 	public function getConflictingPlugins( $type ) {
-		$activePlugins = get_option( 'active_plugins' );
+		$activePlugins = wp_get_active_and_valid_plugins();
+		if ( is_multisite() ) {
+			$activePlugins = array_merge( $activePlugins, wp_get_active_network_plugins() );
+		}
 
 		$conflictingPlugins = [];
 		switch ( $type ) {
@@ -142,7 +135,16 @@ class ConflictingPlugins {
 				break;
 		}
 
-		return array_intersect( $conflictingPlugins, $activePlugins );
+		$activeConflictingPlugins = [];
+		foreach ( $activePlugins as $pluginFilePath ) {
+			foreach ( $conflictingPlugins as $index => $pluginPath ) {
+				if ( false !== strpos( $pluginFilePath, $pluginPath ) ) {
+					$activeConflictingPlugins[ $index ] = $pluginPath;
+				}
+			}
+		}
+
+		return $activeConflictingPlugins;
 	}
 
 	/**

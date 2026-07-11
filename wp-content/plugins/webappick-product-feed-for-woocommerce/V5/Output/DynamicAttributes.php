@@ -20,6 +20,22 @@ use WC_Product;
  */
 class DynamicAttributes {
 
+	/**
+	 * Safe unserialize that prevents PHP Object Injection.
+	 *
+	 * @param mixed $data The data to unserialize.
+	 * @return mixed The unserialized data or original if not serialized.
+	 */
+	private static function safe_unserialize( $data ) {
+		if ( ! is_string( $data ) ) {
+			return $data;
+		}
+		if ( ! is_serialized( $data ) ) {
+			return $data;
+		}
+		// Use allowed_classes = false to prevent object instantiation
+		return @unserialize( $data, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+	}
 
 	/**
 	 * Get the value of a dynamic attribute
@@ -34,7 +50,7 @@ class DynamicAttributes {
 	public static function getDynamicAttributeValue( $attribute, $merchant_attribute, $product, $config, $parent_product=null ) {
 
 		//$get_attribute_value_by_type = new AttributeValueByType( $attribute, $merchant_attribute, $product, $config );
-		$getValue         = maybe_unserialize( get_option( $attribute ) );
+		$getValue         = self::safe_unserialize( get_option( $attribute ) );
 		$wfDAttributeCode = isset( $getValue['wfDAttributeCode'] ) ? $getValue['wfDAttributeCode'] : '';
 		$attribute        = isset( $getValue['attribute'] ) ? (array) $getValue['attribute'] : array();
 		$condition        = isset( $getValue['condition'] ) ? (array) $getValue['condition'] : array();
@@ -66,6 +82,20 @@ class DynamicAttributes {
 					}
 
 					$conditionName = ( new AttributeValueByType( $attribute, $product, $config, $merchant_attribute, $parent_product ) )->get_value( $name );
+
+					if($config->get_feed_template()=='custom2' && !is_numeric($conditionName) && $conditionName!='') {
+						$number_format= $config->get_number_format();
+						if(isset($number_format['decimal_separator']) && $number_format['decimal_separator']==','){
+							// Get the last decimals characters
+							$decimals_str = substr($conditionName, -($number_format['decimals']+1));
+							// Check if the character exists in that substring
+							if(!strpos($decimals_str, ',')){
+								$decimals_dot = str_replace(",",".",$decimals_str);
+								$conditionName = str_replace($decimals_str,$decimals_dot ,$conditionName);
+								$conditionName = str_replace(',','' ,$conditionName);
+							}
+						}
+					}
 
 					if ( 'weight' === $name ) {
 						$unit = ' ' . get_option( 'woocommerce_weight_unit' );
@@ -203,7 +233,14 @@ class DynamicAttributes {
 						default:
 							break;
 					}
+
 				}
+
+				if($config->get_feed_template()=='custom2' && is_numeric($conditionName) && $conditionName!='') {
+					$number_format= $config->get_number_format();
+					$result = number_format( $result, $number_format['decimals'], $number_format['decimal_separator'], $number_format['thousand_separator']  );
+				}
+
 				$result_array[ $key ] = array(
 					'conditionName'     => $conditionName,
 					'result'            => $result,

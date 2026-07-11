@@ -67,8 +67,11 @@ body.post-type-envira_album {
 		* Page Title Action (i.e. Add New)
 		*/
 		a.page-title-action {
+			background: $primary_color;
+			border-color: $primary_color;
+			color: $white;
 			position: relative;
-			top: -53px;
+			top: -37px;
 			left: 115px; /* default - English */
 			&:hover {
 				background: $primary_button_color_hover;
@@ -86,13 +89,13 @@ body.post-type-envira_album {
 		*/
 		> h1,
 		> h2 {
-			margin: 0 0 20px 0;
-			padding: 15px 0 10px;
 			background: $white;
 			font-weight: 600;
 			font-size: 20px;
 			width: 100%;
 			text-indent: 20px;
+			padding-bottom: 9px;
+			margin-right: 0px;
 
 			/**
 			* Page Title Action (i.e. Add New)
@@ -178,7 +181,6 @@ body.post-type-envira_album {
 		@include borderRadius(2px);
 		padding: 0 16px 1px;
 		height: 33px;
-		line-height: 30px;
 		text-decoration: none;
 		text-shadow: none;
 		font-weight: 600;
@@ -230,8 +232,8 @@ body.post-type-envira_album {
 			color: $white;
 
 			&:hover {
-				background: $primary_button_color_hover;
-				border-color: $primary_button_color_hover;
+				background: $primary_button_color_hover !important;
+				border-color: $primary_button_color_hover !important;
 				color: $white;
 			}
 		}
@@ -322,7 +324,7 @@ body.post-type-envira_album.locale-fr-fr {
 	display: none;
 }
 #envira-top-notification {
-	border-top: 3px solid #D99B3D;
+	border-top: 3px solid $primary_color;
 	position: relative;
 	background-color: #DDDDDD;
 	text-align: center;
@@ -336,7 +338,7 @@ body.post-type-envira_album.locale-fr-fr {
 		font-size: 13px;
 	}
 	a {
-		color: #D88913;
+		color: $primary_color;
 		font-size: 13px;
 	}
 	.envira-dismiss {
@@ -372,6 +374,24 @@ body.post-type-envira_album.locale-fr-fr {
 			*/
 			@include mq(xs) {
 				width: 90%;
+			}
+		}
+
+		a.envira-logo-link{
+			outline: none;
+			border: none;
+			box-shadow: none;
+
+			&:focus {
+				outline: none;
+				border: none;
+				box-shadow: none;
+			}
+
+			&:active {
+				outline: none;
+				border: none;
+				box-shadow: none;
 			}
 		}
 	}
@@ -733,7 +753,7 @@ body.post-type-envira_album.post-php {
 		border-bottom: 1px solid #DDDDDD;
 		display: flex;
 		margin: 0;
-		padding: 24px;
+		padding: 20px;
 		font-size: 14px;
 		color: #3C434A99;
 		&:first-child {
@@ -760,7 +780,7 @@ body.post-type-envira_album.post-php {
 		}
 	}
 	.envira-button {
-		padding: 8px 14px;
+		padding: 5px;
 		border-radius: 4px;
 		text-decoration: none;
 		font-size: 12px;
@@ -771,6 +791,11 @@ body.post-type-envira_album.post-php {
 		&.envira-button-secondary {
 			border: 1px solid #DDDDDD;
 		}
+	}
+	.envira-notification-actions{
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 
 }
@@ -1016,6 +1041,21 @@ body.post-type-envira .postbox-header {
 		td:not(.check-column) {
 		display: table-cell;
 	}
+	body.post-type-envira,
+	body.post-type-envira_album {
+		/**
+		* Wrapper
+		*/
+		div.wrap {
+			/**
+			* Page Title Action (i.e. Add New)
+			*/
+			a.page-title-action {
+				top: -47px;
+				padding: 0 10px !important;
+			}
+		}
+	}
 }
 
 /* ==========================================================================
@@ -1035,7 +1075,7 @@ body.post-type-envira .postbox-header {
 				/**
 				* Allow space for the "Search results for..." text to display, when searching
 				*/
-				padding-bottom: 40px;
+				padding-bottom: 9px;
 
 				/**
 				* Subtitle (search results title)
@@ -1045,6 +1085,13 @@ body.post-type-envira .postbox-header {
 					width: 100%;
 					padding: 0;
 				}
+			}
+			/**
+			* Page Title Action (i.e. Add New)
+			*/
+			a.page-title-action {
+				top: -48px;
+				padding: 0 10px !important;
 			}
 		}
 	}
@@ -1102,6 +1149,33 @@ div.addon-tag:after {
 	-ms-transform: skew(-45deg);
 	transform: skew(-45deg);
 	z-index: -1;
+}
+
+@media (max-width: 449px) {
+	.addon-tag {
+		padding: 5px 25px 5px 12px;
+		font-size: 10px;
+	}
+}
+
+@media (min-width: 449px) and (max-width: 1449px) {
+	.addon-tag {
+		padding: 5px 30px 5px 12px;
+		font-size: 12px;
+	}
+}
+
+@media (min-width: 1449px) and (max-width: 1649px) {
+	.addon-tag {
+		padding: 10px 38px 10px 16px;
+		font-size: 13px;
+	}
+}
+
+@media (min-width: 1649px) and (max-width: 1749px) {
+	.addon-tag {
+		padding: 10px 40px 10px 18px;
+	}
 }
 
 .envira-admin-content {
@@ -1193,7 +1267,12 @@ div.addon-tag:after {
 		font-size: 21px;
 		height: 50px;
 		line-height: 48px;
-		background-color: $dark_green;
+		background-color: $primary_color;
+
+		&:hover {
+			background-color: $primary_button_color_hover;
+			border-color: $primary_button_color_hover;
+		}
 	}
 	.wrap{
 		webkit-filter: blur(3px);
@@ -1243,7 +1322,6 @@ div.addon-tag:after {
 
 
 .envira-settings-tab {
-	padding: 20px;
 	box-sizing: border-box;
 	#envira-gallery-refresh-submit {
 		margin-left: 10px;
@@ -1328,7 +1406,7 @@ div.addon-tag:after {
      vertical-align: baseline;
 	}
 	.envira-external-req{
-	    border: 1px solid $primary-color;
+	    border: 1px solid $primary_color;
 	    border-radius: 4px;
 	    padding: 30px;
 	    h2{
@@ -1396,6 +1474,66 @@ div.addon-tag:after {
 				color: #3C434AB2;
 			}
 		}
+		#convert-to-envira-tab-content {
+			h3 {
+				font-size: 17px;
+			}
+			p {
+				font-size: 14px;
+				color: #3C434AB2;
+			}
+			a.convert-envira-gallery-tab-btn {
+				margin-top: 15px;
+			}
+			.envira-posttype-dropdown-error {
+				display: none;
+				color: red;
+				font-size: 13px;
+			}
+			.envira-convert-gallery-message {
+				display: none;
+				font-size: 13px;
+
+				&.success {
+					color: #2E2E2E;
+				}
+				&.error {
+					color: red;
+				}
+			}
+			.envira-convert-process-logs {
+				display: none;
+				margin-top: 15px;
+
+				p {
+					font-size: 13px;
+					color: #414a4c;
+					font-weight: 400;
+					margin-top: 5px;
+					margin-bottom: 5px;
+				}
+			}
+			.envira-convert-progress-bar-container {
+				width: 100%;
+				background-color: #f3f3f3;
+				border: 1px solid #ddd;
+				border-radius: 25px;
+				margin: 10px 0;
+				height: 10px;
+				position: relative;
+
+				.envira-convert-progress-bar {
+					width: 0;
+					height: 100%;
+					background-color: #4caf50;
+					border-radius: 25px;
+					transition: width 0.5s ease;
+				}
+			}
+			.envira-convert-important-note {
+				color: #000;
+			}
+		}
 		tr {
 			border-bottom: 1px solid #ddd;
 		}
@@ -1438,7 +1576,7 @@ div.addon-tag:after {
 	box-sizing: border-box;
 
 	td {
-		border-left: 5px solid #3871AC;
+		border-left: 5px solid $primary_color;
 		div {
 			padding: 5px 0;
 			display: flex;
@@ -1456,6 +1594,10 @@ div.addon-tag:after {
 			svg {
 				padding-right: 20px;
 			}
+			.envira-unlock-icon {
+				width: 40px;
+				margin-right: 10px;
+			}
 
 		}
 		.envira-button-blue {
@@ -1464,9 +1606,120 @@ div.addon-tag:after {
 			height: 38px !important;
 			line-height: 38px !important;
 		}
+
+		.envira-button-green {
+			background: $primary_color;
+			border-radius: 5px;
+			border: none;
+			font-size: 14px;
+
+			&:hover {
+				background: $primary_button_color_hover;
+				border-color: $primary_button_color_hover;
+				color: $white;
+				opacity: 1;
+			}
+		}
 	}
 }
 .envira-green {
 	color: #37993B;
 }
 
+
+/* ==========================================================================
+	 Envira Permissions Modal - uses a11y-dialog
+	 ========================================================================== */
+/**
+ * 1. Make the dialog container, and its child overlay spread across
+ *    the entire window.
+ */
+#envira-gallery-settings .dialog-container,
+#envira-gallery-settings .dialog-overlay {
+	position: fixed; /* 1 */
+	top: 0; /* 1 */
+	right: 0; /* 1 */
+	bottom: 0; /* 1 */
+	left: 0; /* 1 */
+}
+
+/**
+ * 1. Make sure the dialog container and all its descendants sits on
+ *    top of the rest of the page.
+ * 2. Make the dialog container a flex container to easily center the
+ *    dialog.
+ */
+#envira-gallery-settings .dialog-container {
+	z-index: 2; /* 1 */
+	display: flex; /* 2 */
+}
+
+/**
+ * 1. Make sure the dialog container and all its descendants are not
+ *    visible and not focusable when it is hidden.
+ */
+#envira-gallery-settings .dialog-container[aria-hidden='true'] {
+	display: none; /* 1 */
+}
+
+/**
+  * 1. Make the overlay look like an overlay.
+  */
+#envira-gallery-settings .dialog-overlay {
+	background-color: rgb(43 46 56 / 0.9); /* 1 */
+	animation: fade-in 200ms both;
+	opacity: 0.5;
+}
+
+/**
+  * 1. Vertically and horizontally center the dialog in the page.
+  * 2. Make sure the dialog sits on top of the overlay.
+  * 3. Make sure the dialog has an opaque background.
+  */
+#envira-gallery-settings .dialog-content {
+	margin: auto; /* 1 */
+	z-index: 2; /* 2 */
+	position: relative; /* 2 */
+	background-color: white; /* 3 */
+	animation: fade-in 400ms 200ms both, slide-up 400ms 200ms both;
+	padding: 2em;
+	max-width: 90%;
+	width: 600px;
+	border-radius: 5px;
+	border-top: #00ac53 5px solid;
+	font-size: 1rem;
+	text-align: center;
+}
+#envira-gallery-settings .dialog-content p{
+	font-size: 1.2rem;
+	margin: 0 0 16px;
+}
+
+#envira-gallery-settings .dialog-content h3{
+	font-size: 1.4rem;
+}
+
+#envira-gallery-settings .dialog-content .envira-dialog-btn.primary{
+	background-color: #00ac53;
+	color: #fff;
+	border: 0;
+	border-radius: 5px;
+	cursor:pointer;
+	font-weight: 600;
+	line-height: 20px;
+	outline: none;
+	padding: 11px 17px;
+}
+
+#envira-gallery-settings .dialog-content .envira-dialog-btn{
+	background-color: #777777;
+	color: #fff;
+	border: 0;
+	border-radius: 5px;
+	cursor:pointer;
+	margin-left:10px;
+	font-weight: 600;
+	line-height: 20px;
+	outline: none;
+	padding: 11px 17px;
+}

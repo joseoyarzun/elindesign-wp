@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
 /**
  * @author Olexandr Zanichkovsky <olexandr.zanichkovsky@zophiatech.com>
  * @author Pavel Kulbakin <p.kulbakin@gmail.com>
@@ -49,8 +50,10 @@ class XmlImportTemplate {
 	{			
 		
 		ob_start();
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting
 		$err_lvl = error_reporting(E_ALL);
 		include $this->cachedTemplate;
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting
 		error_reporting($err_lvl);
 		
 		return ob_get_clean();
@@ -69,7 +72,7 @@ class XmlImportTemplate {
 			$result = array();
 			foreach ($xpath as $xp) { // concatenate multiple elements into 1 string
 				ob_start();
-				echo $xp;
+				echo $xp; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Captured into output buffer for internal concatenation, not sent to response.
 				$result[] = $this->trimValues ? trim(ob_get_clean()) : ob_get_clean();
 			}			
 			return implode(XmlImportConfig::getInstance()->getMultiGlue(), $result);

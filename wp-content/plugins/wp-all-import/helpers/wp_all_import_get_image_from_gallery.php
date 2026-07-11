@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 function wp_all_import_get_image_from_gallery($image_name, $targetDir = FALSE, $bundle_type = 'images', $logger = false) {
 
@@ -28,26 +30,30 @@ function wp_all_import_get_image_from_gallery($image_name, $targetDir = FALSE, $
     $attch = '';
 
     // search attachment by attached file
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $attachment_metas = $wpdb->get_results($wpdb->prepare("SELECT * FROM " . $wpdb->postmeta . " WHERE meta_key = %s AND (meta_value = %s OR meta_value = %s OR meta_value = %s OR meta_value LIKE %s ESCAPE '$' OR meta_value LIKE %s ESCAPE '$' OR meta_value LIKE %s ESCAPE '$');", '_wp_attached_file', $image_name, $scaled_name, $rotated_name, "%/" . str_replace('_', '$_', $image_name), "%/" . str_replace('_', '$_', $scaled_name), "%/" . str_replace('_', '$_', $rotated_name)));
 
     if (!empty($attachment_metas)) {
         foreach ($attachment_metas as $attachment_meta) {
-            $attch = $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $wpdb->posts . " WHERE ID = %d;", $attachment_meta->post_id));
+            $attch = $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $wpdb->posts . " WHERE ID = %d;", $attachment_meta->post_id)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             if (!empty($attch)) {
-                $logger and call_user_func($logger, sprintf(__('- Found existing image with ID `%s` by meta key _wp_attached_file equals to `%s`...', 'wp_all_import_plugin'), $attch->ID, trim($image_name)));
+                /* translators: see placeholders in the string below */
+                $logger and call_user_func($logger, sprintf(__('- Found existing image with ID `%1$s` by meta key _wp_attached_file equals to `%2$s`...', 'wp-all-import'), $attch->ID, trim($image_name)));
                 break;
             }
         }
     }
 
     if (empty($attch)) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $attachment_metas = $wpdb->get_results($wpdb->prepare("SELECT * FROM " . $wpdb->postmeta . " WHERE meta_key = %s AND (meta_value = %s OR meta_value = %s OR meta_value = %s OR meta_value LIKE %s ESCAPE '$' OR meta_value LIKE %s ESCAPE '$' OR meta_value LIKE %s ESCAPE '$');", '_wp_attached_file', sanitize_file_name($image_name), sanitize_file_name($scaled_name), sanitize_file_name($rotated_name), "%/" . str_replace('_', '$_', sanitize_file_name($image_name)), "%/" . str_replace('_', '$_', sanitize_file_name($scaled_name)), "%/" . str_replace('_', '$_', sanitize_file_name($rotated_name))));
 
         if (!empty($attachment_metas)) {
             foreach ($attachment_metas as $attachment_meta) {
-                $attch = $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $wpdb->posts . " WHERE ID = %d;", $attachment_meta->post_id));
+                $attch = $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $wpdb->posts . " WHERE ID = %d;", $attachment_meta->post_id)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
                 if (!empty($attch)) {
-                    $logger and call_user_func($logger, sprintf(__('- Found existing image with ID `%s` by meta key _wp_attached_file equals to `%s`...', 'wp_all_import_plugin'), $attch->ID, sanitize_file_name($image_name)));
+                    /* translators: see placeholders in the string below */
+                    $logger and call_user_func($logger, sprintf(__('- Found existing image with ID `%1$s` by meta key _wp_attached_file equals to `%2$s`...', 'wp-all-import'), $attch->ID, sanitize_file_name($image_name)));
                     break;
                 }
             }
@@ -56,9 +62,11 @@ function wp_all_import_get_image_from_gallery($image_name, $targetDir = FALSE, $
 
     if (empty($attch)) {
         // Search attachment by file name with extension.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $attch = $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $wpdb->posts . " WHERE (post_title = %s OR post_name = %s) AND post_type = %s", $image_name, sanitize_title($image_name), "attachment") . " AND post_mime_type LIKE 'image%';");
         if (!empty($attch)) {
-            $logger and call_user_func($logger, sprintf(__('- Found existing image with ID `%s` by post_title or post_name equals to `%s`...', 'wp_all_import_plugin'), $attch->ID, $image_name));
+            /* translators: see placeholders in the string below */
+            $logger and call_user_func($logger, sprintf(__('- Found existing image with ID `%1$s` by post_title or post_name equals to `%2$s`...', 'wp-all-import'), $attch->ID, $image_name));
         }
     }
 
@@ -70,9 +78,10 @@ function wp_all_import_get_image_from_gallery($image_name, $targetDir = FALSE, $
         if ($bundle_type == 'images' and ($img_meta = wp_read_image_metadata($targetDir . DIRECTORY_SEPARATOR . $original_image_name))) {
             if (trim($img_meta['title']) && !is_numeric(sanitize_title($img_meta['title']))) {
                 $img_title = $img_meta['title'];
-                $attch = $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $wpdb->posts . " WHERE post_title = %s AND post_type = %s AND post_mime_type LIKE %s;", $img_title, "attachment", "image%"));
+                $attch = $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $wpdb->posts . " WHERE post_title = %s AND post_type = %s AND post_mime_type LIKE %s;", $img_title, "attachment", "image%")); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
                 if (!empty($attch)){
-                    $logger and call_user_func($logger, sprintf(__('- Found existing image with ID `%s` by post_title equals to `%s`...', 'wp_all_import_plugin'), $attch->ID, $img_title));
+                    /* translators: see placeholders in the string below */
+                    $logger and call_user_func($logger, sprintf(__('- Found existing image with ID `%1$s` by post_title equals to `%2$s`...', 'wp-all-import'), $attch->ID, $img_title));
                 }
             }
         }

@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 function pmxi_pmxi_before_xml_import( $import_id ) {
 	delete_option('wp_all_import_taxonomies_hierarchy_' . $import_id);
 
@@ -13,7 +14,8 @@ function pmxi_pmxi_before_xml_import( $import_id ) {
         $current_hash = get_option('_wp_all_import_functions_hash_' . $import_id, false);
         if ($functions_hash !== $current_hash) {
             global $wpdb;
-            $wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'pmxi_hash WHERE import_id = ' . $import_id );
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}pmxi_hash WHERE import_id = %d", (int) $import_id ) );
             update_option('_wp_all_import_functions_hash_' . $import_id, $functions_hash, false);
         }
     }

@@ -5,7 +5,7 @@
  * https://awesomemotive.com
  * ========================================================== */
 window.OMAPI_Plugins = window.OMAPI_Plugins || {};
-(function (window, document, $, app, undefined) {
+(function (window, document, $, app) {
 	'use strict';
 
 	app.handleSubmission = (event) => {
@@ -48,10 +48,11 @@ window.OMAPI_Plugins = window.OMAPI_Plugins || {};
 				if (jqXHR.responseJSON && jqXHR.responseJSON.data) {
 					try {
 						message += `<br>(data: ${JSON.stringify(jqXHR.responseJSON.data)})`;
-					} catch (e) {}
+					} catch {}
 				}
 
 				const action = app.pluginData.installed ? 'activate' : 'install';
+
 				// eslint-disable-next-line no-console
 				console.error(`Could not ${action} the ${app.pluginData.name} plugin`, {
 					jqXHR,

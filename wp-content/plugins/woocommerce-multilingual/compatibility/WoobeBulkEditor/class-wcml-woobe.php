@@ -54,9 +54,9 @@ class WCML_Woobe implements \IWPML_Action {
 	/**
 	 * Check if filter runs during the  bulk price update
 	 *
-	 * @param int    $product_id Product ID
-	 * @param string $field_key  Key of processed custom field
-	 * @param mixed  $value      Value of processed custom field
+	 * @param int|mixed $product_id Product ID
+	 * @param string    $field_key  Key of processed custom field
+	 * @param mixed     $value      Value of processed custom field
 	 *
 	 * @return bool
 	 */

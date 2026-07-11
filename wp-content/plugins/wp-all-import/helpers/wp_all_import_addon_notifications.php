@@ -1,6 +1,9 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! function_exists('wp_all_import_addon_notifications') ){
 	function wp_all_import_addon_notifications(){
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( ! empty($_GET['page']) and preg_match('%(pmxi-admin)%i', sanitize_key($_GET['page'])))
 		{
 			if ( ! function_exists( 'is_plugin_active' ) ) require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -118,7 +121,8 @@ if ( ! function_exists('wp_all_import_addon_notifications') ){
 					<div class="updated notice is-dismissible wpallimport-dismissible" rel="acf_addon"><p>
 						<?php 
 							printf(
-								__('Make imports easier with the <strong>Advanced Custom Fields Add-On</strong> for WP All Import: <a href="%s" target="_blank">Read More</a>', 'wp_all_import_plugin'),
+								/* translators: see placeholders in the string below */
+								wp_kses_post( __('Make imports easier with the <strong>Advanced Custom Fields Add-On</strong> for WP All Import: <a href="%s" target="_blank">Read More</a>', 'wp-all-import') ),
 								'http://www.wpallimport.com/advanced-custom-fields/'
 							);
 						?>
@@ -134,11 +138,11 @@ if ( ! function_exists('wp_all_import_addon_notifications') ){
 					<!--div class="wpallimport-wrapper updated notice is-dismissible wpallimport-dismissible" rel="wp_all_export" style="margin: 10px 0; padding: 12px 0;">
 						<div class="wpallimport-notify-wrapper">
 							<div class="found_records speedup" style="margin-top: 20px;">
-								<h3 style="font-size:26px;"><?php _e('WP All Export', 'wp_all_import_plugin');?></h3>
-								<h4><?php _e("Export anything in WordPress to CSV, XML, or Excel.", "wp_all_import_plugin"); ?></h4>
+								<h3 style="font-size:26px;"><?php esc_html_e('WP All Export', 'wp-all-import');?></h3>
+								<h4><?php esc_html_e("Export anything in WordPress to CSV, XML, or Excel.", "wp-all-import"); ?></h4>
 							</div>		
 						</div>		
-						<a class="button button-primary button-hero wpallimport-large-button wpallimport-wpae-notify-read-more" href="http://www.wpallimport.com/export" target="_blank"><?php _e('Read More', 'wp_all_import_plugin');?></a>
+						<a class="button wpallimport-large-button wpallimport-wpae-notify-read-more" href="http://www.wpallimport.com/export" target="_blank"><?php esc_html_e('Read More', 'wp-all-import');?></a>
 					</div-->
 					<?php
 				}				
@@ -151,7 +155,8 @@ if ( ! function_exists('wp_all_import_addon_notifications') ){
 						?>
 						<div class="updated notice is-dismissible wpallimport-dismissible" rel="<?php echo sanitize_key(esc_attr($addon['title'])); ?>"><p>
 							<?php printf(
-									__('Make imports easier with the <strong>free %s Add-On</strong> for WP All Import: <a href="%s" target="_blank">Get Add-On</a>', 'wp_all_import_plugin'),
+									/* translators: see placeholders in the string below */
+									wp_kses_post( __('Make imports easier with the <strong>free %1$s Add-On</strong> for WP All Import: <a href="%2$s" target="_blank">Get Add-On</a>', 'wp-all-import') ),
 									wp_kses_post($addon['title']),
 									esc_url($addon['url'])
 								  );

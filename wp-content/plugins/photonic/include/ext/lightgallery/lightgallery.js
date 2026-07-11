@@ -1,5 +1,5 @@
 /*!
- * lightgallery | 2.4.0 | January 29th 2022
+ * lightgallery | 2.7.1 | January 11th 2023
  * http://www.lightgalleryjs.com/
  * Copyright (c) 2020 Sachin Neravath;
  * @license GPLv3
@@ -12,19 +12,19 @@
 }(this, (function () { 'use strict';
 
 	/*! *****************************************************************************
-	Copyright (c) Microsoft Corporation.
+    Copyright (c) Microsoft Corporation.
 
-	Permission to use, copy, modify, and/or distribute this software for any
-	purpose with or without fee is hereby granted.
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
 
-	THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-	REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-	AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-	INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-	LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-	OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-	PERFORMANCE OF THIS SOFTWARE.
-	***************************************************************************** */
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
+    ***************************************************************************** */
 
 	var __assign = function() {
 		__assign = Object.assign || function __assign(t) {
@@ -102,6 +102,8 @@
 		defaultCaptionHeight: 0,
 		ariaLabelledby: '',
 		ariaDescribedby: '',
+		resetScrollPosition: true,
+		hideScrollbar: false,
 		closable: true,
 		swipeToClose: true,
 		closeOnTap: true,
@@ -110,6 +112,7 @@
 		loop: true,
 		escKey: true,
 		keyPress: true,
+		trapFocus: true,
 		controls: true,
 		slideEndAnimation: true,
 		hideControlOnEnd: false,
@@ -726,6 +729,14 @@
 			}
 			return "<div class=\"lg-video-cont " + videoClass + "\" style=\"" + videoContStyle + "\">\n                <div class=\"lg-video-play-button\">\n                <svg\n                    viewBox=\"0 0 20 20\"\n                    preserveAspectRatio=\"xMidYMid\"\n                    focusable=\"false\"\n                    aria-labelledby=\"" + playVideoString + "\"\n                    role=\"img\"\n                    class=\"lg-video-play-icon\"\n                >\n                    <title>" + playVideoString + "</title>\n                    <polygon class=\"lg-video-play-icon-inner\" points=\"1,0 20,10 1,20\"></polygon>\n                </svg>\n                <svg class=\"lg-video-play-icon-bg\" viewBox=\"0 0 50 50\" focusable=\"false\">\n                    <circle cx=\"50%\" cy=\"50%\" r=\"20\"></circle></svg>\n                <svg class=\"lg-video-play-icon-circle\" viewBox=\"0 0 50 50\" focusable=\"false\">\n                    <circle cx=\"50%\" cy=\"50%\" r=\"20\"></circle>\n                </svg>\n            </div>\n            " + (dummyImg || '') + "\n            <img class=\"lg-object lg-video-poster\" src=\"" + _poster + "\" />\n        </div>";
 		},
+		getFocusableElements: function (container) {
+			var elements = container.querySelectorAll('a[href]:not([disabled]), button:not([disabled]), textarea:not([disabled]), input[type="text"]:not([disabled]), input[type="radio"]:not([disabled]), input[type="checkbox"]:not([disabled]), select:not([disabled])');
+			var visibleElements = [].filter.call(elements, function (element) {
+				var style = window.getComputedStyle(element);
+				return style.display !== 'none' && style.visibility !== 'hidden';
+			});
+			return visibleElements;
+		},
 		/**
 		 * @desc Create dynamic elements array from gallery items when dynamic option is false
 		 * It helps to avoid frequent DOM interaction
@@ -829,6 +840,7 @@
 			this.currentItemsInDom = [];
 			// Scroll top value before lightGallery is opened
 			this.prevScrollTop = 0;
+			this.bodyPaddingRight = 0;
 			this.isDummyImageRemoved = false;
 			this.dragOrSwipeEnabled = false;
 			this.mediaContainerPosition = {
@@ -1176,6 +1188,27 @@
 				return this.settings.dynamicEl || [];
 			}
 		};
+		LightGallery.prototype.shouldHideScrollbar = function () {
+			return (this.settings.hideScrollbar &&
+				document.body === this.settings.container);
+		};
+		LightGallery.prototype.hideScrollbar = function () {
+			if (!this.shouldHideScrollbar()) {
+				return;
+			}
+			this.bodyPaddingRight = parseFloat($LG('body').style().paddingRight);
+			var bodyRect = document.documentElement.getBoundingClientRect();
+			var scrollbarWidth = window.innerWidth - bodyRect.width;
+			$LG(document.body).css('padding-right', scrollbarWidth + this.bodyPaddingRight + 'px');
+			$LG(document.body).addClass('lg-overlay-open');
+		};
+		LightGallery.prototype.resetScrollBar = function () {
+			if (!this.shouldHideScrollbar()) {
+				return;
+			}
+			$LG(document.body).css('padding-right', this.bodyPaddingRight + 'px');
+			$LG(document.body).removeClass('lg-overlay-open');
+		};
 		/**
 		 * Open lightGallery.
 		 * Open gallery with specific slide by passing index of the slide as parameter.
@@ -1211,8 +1244,8 @@
 			if (this.lgOpened)
 				return;
 			this.lgOpened = true;
-			this.outer.get().focus();
 			this.outer.removeClass('lg-hide-items');
+			this.hideScrollbar();
 			// Add display block, but still has opacity 0
 			this.$container.addClass('lg-show');
 			var itemsToBeInsertedToDom = this.getItemsToBeInsertedToDom(index, index);
@@ -1271,6 +1304,12 @@
 					_this.$backdrop.addClass('in');
 					_this.$container.addClass('lg-show-in');
 				}, 10);
+				setTimeout(function () {
+					if (_this.settings.trapFocus &&
+						document.body === _this.settings.container) {
+						_this.trapFocus();
+					}
+				}, _this.settings.backdropDuration + 50);
 				// lg-visible class resets gallery opacity to 1
 				if (!_this.zoomFromOrigin || !transform) {
 					setTimeout(function () {
@@ -1658,9 +1697,11 @@
 				if (!$currentSlide.hasClass('lg-loaded')) {
 					setTimeout(function () {
 						if (_this.getSlideType(currentGalleryItem) === 'image') {
+							var alt = currentGalleryItem.alt;
+							var altAttr = alt ? 'alt="' + alt + '"' : '';
 							$currentSlide
 								.find('.lg-img-wrap')
-								.append(utils.getImgMarkup(index, src, '', srcset, sizes, currentGalleryItem.sources));
+								.append(utils.getImgMarkup(index, src, altAttr, srcset, sizes, currentGalleryItem.sources));
 							if (srcset || sources) {
 								var $img = $currentSlide.find('.lg-object');
 								_this.initPictureFill($img);
@@ -2111,23 +2152,23 @@
 						$item.get().contains(e.target)) &&
 						!_this.outer.hasClass('lg-zoomed') &&
 						!_this.lgBusy &&
-						e.targetTouches.length === 1) {
+						e.touches.length === 1) {
 						isSwiping = true;
 						_this.touchAction = 'swipe';
 						_this.manageSwipeClass();
 						startCoords = {
-							pageX: e.targetTouches[0].pageX,
-							pageY: e.targetTouches[0].pageY,
+							pageX: e.touches[0].pageX,
+							pageY: e.touches[0].pageY,
 						};
 					}
 				});
 				this.$inner.on('touchmove.lg', function (e) {
 					if (isSwiping &&
 						_this.touchAction === 'swipe' &&
-						e.targetTouches.length === 1) {
+						e.touches.length === 1) {
 						endCoords = {
-							pageX: e.targetTouches[0].pageX,
-							pageY: e.targetTouches[0].pageY,
+							pageX: e.touches[0].pageX,
+							pageY: e.touches[0].pageY,
 						};
 						_this.touchMove(startCoords, endCoords, e);
 						isMoved = true;
@@ -2446,6 +2487,36 @@
 				$element.off("click.lgcustom-item-" + $element.attr('data-lg-id'));
 			}
 		};
+		LightGallery.prototype.trapFocus = function () {
+			var _this = this;
+			this.$container.get().focus({
+				preventScroll: true,
+			});
+			$LG(window).on("keydown.lg.global" + this.lgId, function (e) {
+				if (!_this.lgOpened) {
+					return;
+				}
+				var isTabPressed = e.key === 'Tab' || e.keyCode === 9;
+				if (!isTabPressed) {
+					return;
+				}
+				var focusableEls = utils.getFocusableElements(_this.$container.get());
+				var firstFocusableEl = focusableEls[0];
+				var lastFocusableEl = focusableEls[focusableEls.length - 1];
+				if (e.shiftKey) {
+					if (document.activeElement === firstFocusableEl) {
+						lastFocusableEl.focus();
+						e.preventDefault();
+					}
+				}
+				else {
+					if (document.activeElement === lastFocusableEl) {
+						firstFocusableEl.focus();
+						e.preventDefault();
+					}
+				}
+			});
+		};
 		LightGallery.prototype.manageCloseGallery = function () {
 			var _this = this;
 			if (!this.settings.closable)
@@ -2496,7 +2567,9 @@
 				return 0;
 			}
 			this.LGel.trigger(lGEvents.beforeClose);
-			$LG(window).scrollTop(this.prevScrollTop);
+			if (this.settings.resetScrollPosition && !this.settings.hideScrollbar) {
+				$LG(window).scrollTop(this.prevScrollTop);
+			}
 			var currentItem = this.items[this.index];
 			var transform;
 			if (this.zoomFromOrigin && currentItem) {
@@ -2541,6 +2614,8 @@
 					_this.outer.removeClass('lg-zoom-from-image');
 				}
 				_this.$container.removeClass('lg-show');
+				// Reset scrollbar
+				_this.resetScrollBar();
 				// Need to remove inline opacity as it is used in the stylesheet as well
 				_this.$backdrop
 					.removeAttr('style')
@@ -2553,8 +2628,8 @@
 						instance: _this,
 					});
 				}
-				if (_this.outer.get()) {
-					_this.outer.get().blur();
+				if (_this.$container.get()) {
+					_this.$container.get().blur();
 				}
 				_this.lgOpened = false;
 			}, removeTimeout + 100);
@@ -2618,6 +2693,15 @@
 			this.updateCounterTotal();
 			this.manageSingleSlideClassName();
 		};
+		LightGallery.prototype.destroyGallery = function () {
+			this.destroyModules(true);
+			if (!this.settings.dynamic) {
+				this.invalidateItems();
+			}
+			$LG(window).off(".lg.global" + this.lgId);
+			this.LGel.off('.lg');
+			this.$container.remove();
+		};
 		/**
 		 * Destroy lightGallery.
 		 * Destroy lightGallery and its plugin instances completely
@@ -2632,17 +2716,13 @@
 		 *
 		 */
 		LightGallery.prototype.destroy = function () {
-			var _this = this;
 			var closeTimeout = this.closeGallery(true);
-			setTimeout(function () {
-				_this.destroyModules(true);
-				if (!_this.settings.dynamic) {
-					_this.invalidateItems();
-				}
-				$LG(window).off(".lg.global" + _this.lgId);
-				_this.LGel.off('.lg');
-				_this.$container.remove();
-			}, closeTimeout);
+			if (closeTimeout) {
+				setTimeout(this.destroyGallery.bind(this), closeTimeout);
+			}
+			else {
+				this.destroyGallery();
+			}
 			return closeTimeout;
 		};
 		return LightGallery;
@@ -2656,8 +2736,10 @@
 
 })));
 
+
+
 /*!
- * lightgallery | 2.4.0 | January 29th 2022
+ * lightgallery | 2.7.1 | January 11th 2023
  * http://www.lightgalleryjs.com/
  * Copyright (c) 2020 Sachin Neravath;
  * @license GPLv3
@@ -2670,19 +2752,19 @@
 }(this, (function () { 'use strict';
 
 	/*! *****************************************************************************
-	Copyright (c) Microsoft Corporation.
+    Copyright (c) Microsoft Corporation.
 
-	Permission to use, copy, modify, and/or distribute this software for any
-	purpose with or without fee is hereby granted.
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
 
-	THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-	REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-	AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-	INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-	LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-	OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-	PERFORMANCE OF THIS SOFTWARE.
-	***************************************************************************** */
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
+    ***************************************************************************** */
 
 	var __assign = function() {
 		__assign = Object.assign || function __assign(t) {
@@ -2703,6 +2785,7 @@
 		gotoNextSlideOnVideoEnd: true,
 		autoplayVideoOnSlide: false,
 		videojs: false,
+		videojsTheme: '',
 		videojsOptions: {},
 	};
 
@@ -2747,17 +2830,58 @@
 			})
 			.join('&');
 	};
+	var paramsToObject = function (url) {
+		var paramas = url
+			.slice(1)
+			.split('&')
+			.map(function (p) { return p.split('='); })
+			.reduce(function (obj, pair) {
+				var _a = pair.map(decodeURIComponent), key = _a[0], value = _a[1];
+				obj[key] = value;
+				return obj;
+			}, {});
+		return paramas;
+	};
+	var getYouTubeParams = function (videoInfo, youTubePlayerParamsSettings) {
+		if (!videoInfo.youtube)
+			return '';
+		var slideUrlParams = videoInfo.youtube[2]
+			? paramsToObject(videoInfo.youtube[2])
+			: '';
+		// For youtube first params gets priority if duplicates found
+		var defaultYouTubePlayerParams = {
+			wmode: 'opaque',
+			autoplay: 0,
+			mute: 1,
+			enablejsapi: 1,
+		};
+		var playerParamsSettings = youTubePlayerParamsSettings || {};
+		var youTubePlayerParams = __assign(__assign(__assign({}, defaultYouTubePlayerParams), playerParamsSettings), slideUrlParams);
+		var youTubeParams = "?" + param(youTubePlayerParams);
+		return youTubeParams;
+	};
+	var isYouTubeNoCookie = function (url) {
+		return url.includes('youtube-nocookie.com');
+	};
 	var getVimeoURLParams = function (defaultParams, videoInfo) {
 		if (!videoInfo || !videoInfo.vimeo)
 			return '';
 		var urlParams = videoInfo.vimeo[2] || '';
-		urlParams =
-			urlParams[0] == '?' ? '&' + urlParams.slice(1) : urlParams || '';
-		var defaultPlayerParams = defaultParams
+		var defaultPlayerParams = defaultParams && Object.keys(defaultParams).length !== 0
 			? '&' + param(defaultParams)
 			: '';
-		// For vimeo last parms gets priority if duplicates found
-		var vimeoPlayerParams = "?autoplay=0&muted=1" + defaultPlayerParams + urlParams;
+		// Support private video
+		var urlWithHash = videoInfo.vimeo[0].split('/').pop() || '';
+		var urlWithHashWithParams = urlWithHash.split('?')[0] || '';
+		var hash = urlWithHashWithParams.split('#')[0];
+		var isPrivate = videoInfo.vimeo[1] !== hash;
+		if (isPrivate) {
+			urlParams = urlParams.replace("/" + hash, '');
+		}
+		urlParams =
+			urlParams[0] == '?' ? '&' + urlParams.slice(1) : urlParams || '';
+		// For vimeo last params gets priority if duplicates found
+		var vimeoPlayerParams = "?autoplay=0&muted=1" + (isPrivate ? "&h=" + hash : '') + defaultPlayerParams + urlParams;
 		return vimeoPlayerParams;
 	};
 
@@ -2927,16 +3051,12 @@
 			var commonIframeProps = "allowtransparency=\"true\"\n            frameborder=\"0\"\n            scrolling=\"no\"\n            allowfullscreen\n            mozallowfullscreen\n            webkitallowfullscreen\n            oallowfullscreen\n            msallowfullscreen";
 			if (videoInfo.youtube) {
 				var videoId = 'lg-youtube' + index;
-				var slideUrlParams = videoInfo.youtube[2]
-					? videoInfo.youtube[2] + '&'
-					: '';
-				// For youtube first parms gets priority if duplicates found
-				var youTubePlayerParams = "?" + slideUrlParams + "wmode=opaque&autoplay=0&mute=1&enablejsapi=1";
-				var playerParams = youTubePlayerParams +
-					(this.settings.youTubePlayerParams
-						? '&' + param(this.settings.youTubePlayerParams)
-						: '');
-				video = "<iframe allow=\"autoplay\" id=" + videoId + " class=\"lg-video-object lg-youtube " + addClass + "\" " + videoTitle + " src=\"//www.youtube.com/embed/" + (videoInfo.youtube[1] + playerParams) + "\" " + commonIframeProps + "></iframe>";
+				var youTubeParams = getYouTubeParams(videoInfo, this.settings.youTubePlayerParams);
+				var isYouTubeNoCookieURL = isYouTubeNoCookie(src);
+				var youtubeURL = isYouTubeNoCookieURL
+					? '//www.youtube-nocookie.com/'
+					: '//www.youtube.com/';
+				video = "<iframe allow=\"autoplay\" id=" + videoId + " class=\"lg-video-object lg-youtube " + addClass + "\" " + videoTitle + " src=\"" + youtubeURL + "embed/" + (videoInfo.youtube[1] + youTubeParams) + "\" " + commonIframeProps + "></iframe>";
 			}
 			else if (videoInfo.vimeo) {
 				var videoId = 'lg-vimeo' + index;
@@ -2972,7 +3092,9 @@
 				Object.keys(videoAttributes_1 || {}).forEach(function (key) {
 					html5VideoAttrs_1 += key + "=\"" + videoAttributes_1[key] + "\" ";
 				});
-				video = "<video class=\"lg-video-object lg-html5 " + (this.settings.videojs ? 'video-js' : '') + "\" " + html5VideoAttrs_1 + ">\n                " + html5VideoMarkup + "\n                Your browser does not support HTML5 video.\n            </video>";
+				video = "<video class=\"lg-video-object lg-html5 " + (this.settings.videojs && this.settings.videojsTheme
+					? this.settings.videojsTheme + ' '
+					: '') + " " + (this.settings.videojs ? ' video-js' : '') + "\" " + html5VideoAttrs_1 + ">\n                " + html5VideoMarkup + "\n                Your browser does not support HTML5 video.\n            </video>";
 			}
 			return video;
 		};
@@ -3158,3 +3280,4 @@
 	return Video;
 
 })));
+

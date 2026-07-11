@@ -1,10 +1,11 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * @param $post_type
  * @param $post
  */
 function pmxi_pmxi_extend_options_custom_fields($post_type, $post) {
-	if ( class_exists('ACF') && ! is_plugin_active('wpai-acf-add-on/wpai-acf-add-on.php') ) {
+	if ( class_exists('ACF') && ! is_plugin_active('wpai-acf-add-on/wpai-acf-add-on.php') && !class_exists('PMAI_Plugin')) {
 
 		global $acf;
 		
@@ -25,6 +26,7 @@ function pmxi_pmxi_extend_options_custom_fields($post_type, $post) {
 				$groups = acf_get_local_field_groups();
 			}
 		} else {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			$groups = apply_filters('acf/get_field_groups', array());
 		}
 

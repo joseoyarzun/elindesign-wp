@@ -1,6 +1,8 @@
 <?php
 
+use WCML\COT\Helper as COTHelper;
 use WCML\Orders\Helper as OrdersHelper;
+use WCML\Orders\Legacy\Helper as LegacyHelper;
 use WPML\FP\Fns;
 use WPML\FP\Just;
 use WPML\FP\Logic;
@@ -27,11 +29,6 @@ class WCML_Multi_Currency_Prices {
 	private $multi_currency;
 
 	/**
-	 * @var string
-	 */
-	private $orders_list_currency;
-
-	/**
 	 * @var bool
 	 */
 	private $isSavingPost = false;
@@ -47,7 +44,6 @@ class WCML_Multi_Currency_Prices {
 		add_filter( 'woocommerce_currency', [ $this, 'currency_filter' ] );
 		add_filter( 'wcml_price_currency', [ $this, 'price_currency_filter' ] );
 		add_filter( 'get_post_metadata', [ $this, 'product_price_filter' ], 10, 4 );
-		add_filter( 'get_post_metadata', [ $this, 'variation_prices_filter' ], 12, 4 );
 		add_filter( 'wcml_formatted_price', [ $this, 'formatted_price' ], 10, 2 );
 
 		if ( $this->multi_currency->load_filters ) {
@@ -131,7 +127,7 @@ class WCML_Multi_Currency_Prices {
 
 	public function price_currency_filter( $currency ) {
 
-		if ( $this->is_multi_currency_filters_loaded() ) {
+		if ( empty( $currency ) || $this->is_multi_currency_filters_loaded() ) {
 			$currency = $this->multi_currency->get_client_currency();
 		}
 
@@ -236,10 +232,10 @@ class WCML_Multi_Currency_Prices {
 
 		if (
 			$unlocked
+			&& ! $this->isSavingPost
+			&& $this->is_multi_currency_filters_loaded()
 			&& in_array( get_post_type( $object_id ), [ 'product', 'product_variation' ], true )
 			&& in_array( $meta_key, wcml_price_custom_fields( $object_id ), true )
-			&& $this->is_multi_currency_filters_loaded()
-			&& ! $this->isSavingPost
 		) {
 			$unlocked = false;
 			$currency = $this->multi_currency->get_client_currency();
@@ -248,7 +244,7 @@ class WCML_Multi_Currency_Prices {
 			$get_price_by_legacy_ccr = function() use ( $object_id, $meta_key, $single, $currency ) {
 				// exception for products migrated from before WCML 3.1 with independent prices.
 				// legacy prior 3.1.
-				$original_object_id = apply_filters( 'translate_object_id', $object_id, get_post_type( $object_id ), false, getSitePress()->get_default_language() );
+				$original_object_id = apply_filters( 'wpml_object_id', $object_id, get_post_type( $object_id ), false, getSitePress()->get_default_language() );
 				$ccr_rate           = Obj::path( [ $meta_key, $currency ], (array) get_post_meta( $original_object_id, '_custom_conversion_rate', true ) );
 
 				if (
@@ -289,43 +285,7 @@ class WCML_Multi_Currency_Prices {
 			$unlocked = true;
 		}
 
-		return isset( $price ) ? $price : $null;
-	}
-
-	public function variation_prices_filter( $null, $object_id, $meta_key, $single ) {
-
-		if ( empty( $meta_key ) && get_post_type( $object_id ) === 'product_variation' ) {
-			static $no_filter = false;
-
-			if ( empty( $no_filter ) && $this->is_multi_currency_filters_loaded() ) {
-				$no_filter = true;
-
-				$variation_fields = get_post_meta( $object_id );
-
-				$manual_prices = $this->multi_currency->custom_prices->get_product_custom_prices( $object_id, $this->multi_currency->get_client_currency() );
-
-				foreach ( $variation_fields as $k => $v ) {
-
-					if ( in_array( $k, [ '_price', '_regular_price', '_sale_price' ], true ) ) {
-
-						foreach ( $v as $j => $amount ) {
-
-							if ( isset( $manual_prices[ $k ] ) ) {
-								$variation_fields[ $k ][ $j ] = $manual_prices[ $k ];     // manual price.
-
-							} elseif ( $amount ) {
-								$variation_fields[ $k ][ $j ] = apply_filters( 'wcml_raw_price_amount', $amount );   // automatic conversion.
-							}
-						}
-					}
-				}
-
-				$no_filter = false;
-			}
-		}
-
-		return isset( $variation_fields ) ? $variation_fields : $null;
-
+		return $price ?? $null;
 	}
 
 	/**
@@ -408,7 +368,7 @@ class WCML_Multi_Currency_Prices {
 	/**
 	 * Convert back to default currency.
 	 *
-	 * @param float        $amount
+	 * @param float|mixed  $amount
 	 * @param string|false $currency
 	 *
 	 * @return float
@@ -441,7 +401,7 @@ class WCML_Multi_Currency_Prices {
 
 	public function apply_rounding_rules( $price, $currency = false ) {
 
-		if ( is_null( $this->currency_options ) ) {
+		if ( empty( $this->currency_options ) ) {
 			global $woocommerce_wpml;
 			$this->currency_options = $woocommerce_wpml->get_setting( 'currency_options' );
 		}
@@ -497,17 +457,13 @@ class WCML_Multi_Currency_Prices {
 	 * The PHP 5.2 compatible equivalent to "round($amount, 0, PHP_ROUND_HALF_UP)"
 	 *
 	 * @param float|int $amount
-	 *
-	 * @return float|int
 	 */
-	private function round_up( $amount ) {
+	private function round_up( $amount ): float {
 		if ( $amount - floor( $amount ) < 0.5 ) {
-			$amount = floor( $amount );
-		} else {
-			$amount = ceil( $amount );
+			return floor( $amount );
 		}
 
-		return $amount;
+		return ceil( $amount );
 	}
 
 	/**
@@ -660,53 +616,24 @@ class WCML_Multi_Currency_Prices {
 	}
 
 
-	private function check_admin_order_currency_code() {
+	private function get_context_currency_code() {
 		global $pagenow;
 
-		$actions              = [
-			'woocommerce_add_order_item',
-			'woocommerce_remove_order_item',
-			'woocommerce_save_order_items',
-			'woocommerce_calc_line_taxes',
-		];
-		$is_ajax_order_action =
-			wp_doing_ajax() &&
-			(
-			(
-				isset( $_POST['action'] ) &&
-				in_array( $_POST['action'], $actions ) ||
-				(
-					isset( $_GET['action'] ) &&
-					$_GET['action'] == 'woocommerce_json_search_products_and_variations'
-				)
-			)
-			);
-
-		$is_shop_order_new = $pagenow == 'post-new.php' && isset( $_GET['post_type'] ) && $_GET['post_type'] == 'shop_order';
-
-		if ( ( $is_ajax_order_action || $is_shop_order_new ) && isset( $_COOKIE['_wcml_order_currency'] ) ) {
+		if ( ( OrdersHelper::isEditingNewOrderItems() || OrdersHelper::isOrderCreateAdminScreen() ) && isset( $_COOKIE['_wcml_order_currency'] ) ) {
 			$currency_code = $_COOKIE['_wcml_order_currency'];
-		} elseif ( isset( $_GET['post'] ) && get_post_type( $_GET['post'] ) == 'shop_order' ) {
+		} elseif ( LegacyHelper::isOrderEditAdminScreen() ) {
 			$currency_code = OrdersHelper::getCurrency( $_GET['post'], true );
+		} elseif ( COTHelper::isOrderEditAdminScreen() && isset( $_GET['id'] ) ) {
+			$currency_code = OrdersHelper::getCurrency( (int) $_GET['id'], true );
 		} elseif ( isset( $_GET['page'] ) && $_GET['page'] == 'wc-reports' && isset( $_COOKIE['_wcml_reports_currency'] ) ) {
 			$currency_code = $_COOKIE['_wcml_reports_currency'];
 		} elseif ( isset( $_COOKIE['_wcml_dashboard_currency'] ) && is_admin() && ! defined( 'DOING_AJAX' ) && $pagenow == 'index.php' ) {
-			$currency_code = $_COOKIE['_wcml_dashboard_currency'];
+			$currency_code = $_COOKIE['_wcml_dashboard_currency']; // This case might be useless.
 		} else {
 			$currency_code = $this->multi_currency->get_client_currency();
 		}
 
 		return apply_filters( 'wcml_filter_currency_position', $currency_code );
-
-	}
-
-	/**
-	 * @depecated since WCML 5.3.0.
-	 *
-	 * @return string|null
-	 */
-	public function get_admin_order_currency_code() {
-		return $this->check_admin_order_currency_code();
 
 	}
 
@@ -754,10 +681,10 @@ class WCML_Multi_Currency_Prices {
 	 */
 	private function filter_currency_option_in_global_secondary_currency( $option, $value ) {
 		$default_currency = $this->multi_currency->get_default_currency();
-		$currency_code    = $this->check_admin_order_currency_code();
+		$currency_code    = $this->get_context_currency_code();
 
 		if ( $currency_code !== $default_currency ) {
-			return $this->get_currency_option( $currency_code, $option )->getOrElse( $value );
+			$value = $this->get_currency_option( $currency_code, $option )->getOrElse( $value );
 		}
 
 		return $value;

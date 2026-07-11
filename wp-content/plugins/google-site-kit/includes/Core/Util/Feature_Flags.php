@@ -6,6 +6,8 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Core\Util;
@@ -38,7 +40,7 @@ class Feature_Flags {
 	 * @return bool
 	 */
 	public static function enabled( $feature ) {
-		if ( ! $feature || ! is_string( $feature ) || empty( static::$features ) ) {
+		if ( ! $feature || ! is_string( $feature ) || empty( self::$features ) ) {
 			return false;
 		}
 
@@ -66,8 +68,8 @@ class Feature_Flags {
 	public static function get_enabled_features() {
 		$enabled_features = array();
 
-		foreach ( static::$features as $feature_name ) {
-			if ( static::enabled( $feature_name ) ) {
+		foreach ( self::$features as $feature_name ) {
+			if ( self::enabled( $feature_name ) ) {
 				$enabled_features[] = $feature_name;
 			}
 		}
@@ -84,7 +86,7 @@ class Feature_Flags {
 	 */
 	public static function set_features( $features ) {
 		if ( is_array( $features ) || $features instanceof ArrayAccess ) {
-			static::$features = $features;
+			self::$features = $features;
 		}
 	}
 
@@ -96,7 +98,6 @@ class Feature_Flags {
 	 * @return array An array of all available features.
 	 */
 	public static function get_available_features() {
-		return static::$features;
+		return self::$features;
 	}
-
 }

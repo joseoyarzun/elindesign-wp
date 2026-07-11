@@ -8,10 +8,19 @@ use Photonic_Plugin\Core\Utilities;
 class Google_Photos extends Source {
 	private static $instance;
 
+	private $notice;
+
 	protected function __construct() {
 		parent::__construct();
 		$this->provider = 'google';
 		$this->api_base = Wizard::base_apis()['google'];
+		$this->notice = sprintf(
+			esc_html__('%1$sAPI Shutdown%2$s%3$sGoogle is making a change to its APIs, which make them unusable for browsing on the web. This will prevent Photonic from working after %1$s31st March 2025%2$s. Please switch to a different platform to avoid disruption.%4$s', 'photonic'),
+			'<strong>',
+			'</strong>',
+			'<p>',
+			'</p>'
+		);
 
 		$this->allowed_image_sizes['google'] = [
 			'thumb_size' => [
@@ -80,6 +89,7 @@ class Google_Photos extends Source {
 	public function get_screen_2(): array {
 		return [
 			'header'  => esc_html__('Choose Type of Gallery', 'photonic'),
+			'notice' => $this->notice,
 			'display' => [
 				'display_type' => [
 					'desc'    => esc_html__('What do you want to show?', 'photonic'),
@@ -102,6 +112,7 @@ class Google_Photos extends Source {
 			'header'             => esc_html__('Build your gallery', 'photonic'),
 			'multi-photo'        => [
 				'header'  => esc_html__('All your photos', 'photonic'),
+				'notice' => $this->notice,
 				'desc'    => esc_html__('You can show all your photos, or apply filters to show some of them.', 'photonic'),
 				'display' => [
 					'date_filters' => [
@@ -135,6 +146,7 @@ class Google_Photos extends Source {
 			],
 			'album-photo'        => [
 				'header'  => esc_html__('Pick your album', 'photonic'),
+				'notice' => $this->notice,
 				'desc'    => esc_html__('From the list below pick the album whose photos you wish to display. Photos from that album will show up as thumbnails.', 'photonic'),
 				'display' => [
 					'container' => [
@@ -146,6 +158,7 @@ class Google_Photos extends Source {
 			],
 			'shared-album-photo' => [
 				'header'  => esc_html__('Pick your album', 'photonic'),
+				'notice' => $this->notice,
 				'desc'    => esc_html__('From the list below pick the album whose photos you wish to display. Photos from that album will show up as thumbnails.', 'photonic'),
 				'display' => [
 					'container' => [
@@ -157,6 +170,7 @@ class Google_Photos extends Source {
 			],
 			'multi-album'        => [
 				'header'  => esc_html__('Pick your albums', 'photonic'),
+				'notice' => $this->notice,
 				'desc'    => esc_html__('From the list below pick the albums you wish to display. Each album will show up as a single thumbnail.', 'photonic'),
 				'display' => [
 					'selection' => [
@@ -264,8 +278,8 @@ class Google_Photos extends Source {
 	public function make_request($display_type, $for, $flattened_fields): array {
 		global $photonic_google_refresh_token;
 
-		require_once PHOTONIC_PATH . '/Modules/Google_Photos.php';
-		$module = \Photonic_Plugin\Modules\Google_Photos::get_instance();
+		require_once PHOTONIC_PATH . '/Platforms/Google_Photos.php';
+		$module = \Photonic_Plugin\Platforms\Google_Photos::get_instance();
 		$module->authenticate($photonic_google_refresh_token);
 
 		$parameters = [];
@@ -341,16 +355,16 @@ class Google_Photos extends Source {
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
 			if ('album-photo' === $display_type) {
 				$short_code['view'] = 'photos';
-				$short_code['album_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['album_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('shared-album-photo' === $display_type) {
 				$short_code['view'] = 'shared-photos';
-				$short_code['album_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['album_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('multi-photo' === $display_type) {
 				$short_code['view'] = 'photos';
-				$date_filters = !empty($_POST['date_filters']) ? sanitize_text_field($_POST['date_filters']) : '';
-				$date_range_filters = !empty($_POST['date_range_filters']) ? sanitize_text_field($_POST['date_range_filters']) : '';
+				$date_filters = !empty($_POST['date_filters']) ? sanitize_text_field(wp_unslash($_POST['date_filters'])) : '';
+				$date_range_filters = !empty($_POST['date_range_filters']) ? sanitize_text_field(wp_unslash($_POST['date_range_filters'])) : '';
 				$short_code['date_filters'] = trim($date_filters . ',' . $date_range_filters, ',');
 			}
 			elseif ('multi-album' === $display_type) {

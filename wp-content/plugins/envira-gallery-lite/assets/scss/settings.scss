@@ -1,7 +1,7 @@
 /* ==========================================================================
    settings.css loads on all the Envira Settings Administration Screen
 
-   Any styles that will be used by the Settings section (or are useful to be 
+   Any styles that will be used by the Settings section (or are useful to be
    included for future use) should be added to this file:
    - Settings
    - Settings Tabs
@@ -23,13 +23,13 @@
 		display: block;
 	}
 }
-.nav-tab { 
+.nav-tab {
 	// ensure tabs are floated
 	float: left;
 }
 
 #envira-gallery-settings {
-	padding: 20px 0;
+	padding: 10px 0;
 
 	#envira-gallery-refresh-submit {
 		margin-left: 10px;
@@ -43,7 +43,7 @@
 	*/
 	.envira-clear {
 	    clear: both;
-	
+
 		&:after {
 		    clear: both;
 		    content: '.';
@@ -133,17 +133,17 @@
 #envira-tabs {
 	.form-table {
 		th, td {
-			padding-top: 40px;
-			padding-bottom: 40px;	
+			padding-top: 15px;
+			padding-bottom: 15px;
 		}
 		th {
 			@include mq(sm) {
-				padding-top: 40px;
+				padding-top: 5px;
 				padding-bottom: 10px;
 				padding-right: 0px !important;
 			}
 			@include mq(xs) {
-				padding-top: 40px;
+				padding-top: 5px;
 				padding-bottom: 10px;
 				padding-right: 0px !important;
 			}
@@ -151,20 +151,20 @@
 		tr#envira-settings-key-box th { /* bit of a hack */
 			@include mq(sm) {
 				padding-top: 20px;
-			}	
+			}
 			@include mq(xs) {
 				padding-top: 20px;
-			}	
+			}
 		}
 		td {
 			@include mq(sm) {
 				padding-top: 0;
 				padding-right: 0px;
-			}	
+			}
 			@include mq(xs) {
 				padding-top: 0;
 				padding-right: 0px;
-			}	
+			}
 		}
 		tr {
 			border-bottom: 1px solid #ddd;
@@ -239,6 +239,21 @@
 		}
 	}
 }
+/* ==========================================================================
+   Permissions
+   ========================================================================== */
+
+#envira-settings-permissions-default input[type='checkbox']:checked + .envira-switch {
+	background: #3871ac;
+	&:before {
+		left: 15px;
+	}
+}
+#envira-settings-permissions-default input[type='checkbox'] {
+	position: absolute;
+	visibility: hidden;
+}
+
 
 /* ==========================================================================
    Responsive

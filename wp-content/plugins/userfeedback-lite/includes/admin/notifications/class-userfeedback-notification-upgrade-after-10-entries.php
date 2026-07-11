@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  *
  * @see UserFeedback_Notification_Event
@@ -15,12 +19,12 @@ class UserFeedback_Notification_Upgrade_After_10_Entries extends UserFeedback_No
 	public $license_types = array( 'lite' );
 
 	public function prepare() {
-		$this->title   = __( 'Upgrade to Unlock Additional Features', 'userfeedback' );
+		$this->title   = __( 'Upgrade to Unlock Additional Features', 'userfeedback-lite' );
 		$this->content =
-			__( 'Export all of your UserFeedback responses and entire history with with UserFeedback Pro.', 'userfeedback' );
+			__( 'Export all of your UserFeedback responses and entire history with with UserFeedback Pro.', 'userfeedback-lite' );
 
 		$this->buttons[] = array(
-			'text'        => __( 'Upgrade to Pro', 'userfeedback' ),
+			'text'        => __( 'Upgrade to Pro', 'userfeedback-lite' ),
 			'url'         => userfeedback_get_upgrade_link(),
 			'is_external' => true,
 		);

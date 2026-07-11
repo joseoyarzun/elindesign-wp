@@ -1,5 +1,120 @@
 == Changelog ==
 
+= 3.32 =
+
+*	Fixed: Bug that was causing an error in the wizard, "Invalid screen value: 6" in some scenarios.
+*	Fixed: Bug that was causing the MCE editor to show the last opened gallery if a user clicked on the button to create a new gallery.
+*	Removed: Some old code that is no longer in use.
+
+= 3.31 =
+
+*	Fixed: Bug that was preventing the wizard sources from showing up in some undefined scenarios
+
+= 3.30 =
+
+*	Changed: Reduced dependency on jQuery for the wizard and its related components
+*	Changed: Significantly rewrote the Wizard UI code, to separate IFrame functionality from the main window
+*	Fixed: Compatibility issue with the Gutenberg Plugin
+*	Fixed: Cross-Origin messages with block editor enabled in some conditions
+*	Fixed: Bug in MCE Editor that was preventing the addition of galleries
+
+= 3.25 =
+
+*	Fixed: Blocks were not working in the Site Editor
+
+= 3.24 =
+
+*	Fixed: Bug in sanitizing for Spotlight lightbox
+
+= 3.23 =
+
+*	Fixed: Bug in sanitize function was causing errors for missing titles
+
+= 3.22 =
+
+*	Changed: Security hardening of JS against XSS attacks
+
+= 3.21 =
+
+*	Added: New sizes for Flickr videos
+
+= 3.20 =
+
+*	Changed: WP version compatibility updated to 6.8
+*	Removed: Ability to create and edit Google Photos galleries
+*	Removed: Google Photos sections from Helpers page
+*	Removed: Instagram and Google Photos authentication sections
+
+= 3.15 =
+
+*	Changed: Updated stable tag to 3.15
+
+= 3.14 =
+
+*	Changed: Added code to make Google galleries gracefully disappear
+*	Changed: WP version compatibility updated to 6.7
+*	Changed: Refactored flow.js to wizard.js
+*	Changed: Improved support for the "Plugin Check" plugin
+
+= 3.13 =
+
+*	Added: Warning notices about the impending Google Photos shutdown.
+*	Changed: Added adaptability for the "Plugin Check" plugin.
+
+= 3.12 =
+
+*	Changed: Updated stable tag to 3.12
+
+= 3.11 =
+
+*	Changed: Minimum PHP version compatibility bumped up to 7.3
+*	Changed: Updated WP compatibility support to 6.6
+*	Changed: For native galleries, if the size is missing, the code will now return a mime-type thumbnail.
+*	Removed: Polyfill.js is no longer a part of the script, hence removing the file.
+
+= 3.10 =
+
+*	Added: New layout, "Horizontal Masonry", for left-to-right ordering in masonry layouts.
+*	Added: Ability to select more options for the title in WP galleries.
+*	Changed: Minimum WP version compatibility bumped up to 6.2.
+*	Changed: Minimum PHP version compatibility bumped up to 7.2.
+*	Fixed: Lazy-expanded Flickr collections were not showing square thumbnails.
+*	Fixed: Zenfolio issue where square thumbnails were not showing a uniform size.
+*	Fixed: LightGallery thumbnails were not showing in lazy-loaded galleries.
+*	Fixed: Corrected a PHP 8.1-specific warning.
+*	Changed: Removed unnecessary markup (data attributes) from slideshows.
+
+= 3.05 =
+
+*	Fixed: Thumbnails within lightbox were not showing up (https://wordpress.org/support/topic/thumbnails-inside-a-lightbox/).
+*	Fixed: When the number of columns was being set explicitly, the grids were displaying information in a single column (https://wordpress.org/support/topic/initial-number-of-albums-displayed/).
+*	Fixed: "More" button was not showing up for WordPress galleries.
+*	Fixed: For certain installations, CSS was not being read correctly; corrected by escaping the data uri SVG used in a background image (https://wordpress.org/support/topic/latest-update-3-04-breaks-website/).
+
+= 3.04 =
+
+*	Added: Full support for lazy-loading.
+*	HTML / CSS Change: Cleaned up a lot of the HTML markup, reducing payload.
+*	Added: Ability to show "More" for WordPress galleries.
+*	Changed: Flickr photos now pick URLs from the url parameter instead of constructing based on the Farm and Server.
+
+= 3.03 =
+
+*	Changed: Updated PHP support to 7.1; no new syntax yet.
+*	Changed: Updated WP compatibility support to 6.4
+*	Changed: Renamed "Modules" to "Platforms" and "Core.php" to "Base.php"
+*	Removed: Options for transpiled code, since IE support was dropped in version 3.00.
+*	Added: Hooks <code>photonic_custom_sort_albums</code> and <code>photonic_custom_sort_photos</code> for sorting output before printing.
+*	Changed: Updated lightbox scripts to latest versions - Lightgallery, PhotoSwipe, Splide
+*	Fixed: Sort options in the Wizard were displaying for all types of Flickr level 1 displays (multiple / album / gallery photos) - corrected to only display for multiple photos (https://wordpress.org/support/topic/flickr-photoset-sorting-only-descending/)
+*	Fixed: SmugMug keyword settings for albums, when defined through the Wizard, were not working (https://wordpress.org/support/topic/smugmug-filter-on-keywords-not-working-for-me/)
+*	Fixed: Header options in a shortcode were not being deconstructed via the Wizard
+*	Added: Ability to show LightGallery controls on mobiles (https://wordpress.org/support/topic/close-button-in-lightgallery-on-mobile/)
+
+= 3.02 =
+
+*	Changed: Version number in readme.txt to be consistent.
+
 = 3.01 =
 
 *	Changed: Plugin file header to include PHP version requirements. Previously only included in readme.txt

@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 if (!function_exists('is_exists_term')){
 	
 	function is_exists_term( $term, $taxonomy = '', $parent = null ){		

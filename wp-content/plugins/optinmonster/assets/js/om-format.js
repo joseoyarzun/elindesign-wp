@@ -14,9 +14,9 @@ wp.richText.registerFormatType('optinmonster/om-format', {
 	tagName: 'a',
 	className: 'om-format',
 	attributes: {
-		url: 'href',
-		target: 'target',
-		rel: 'rel',
+		'url': 'href',
+		'target': 'target',
+		'rel': 'rel',
 		'data-slug': 'data-slug',
 	},
 	edit: MonsterLinkFormat,

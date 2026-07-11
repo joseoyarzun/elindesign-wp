@@ -20,7 +20,8 @@ class WCML_Setup_Multi_Currency_UI extends WCML_Setup_Step {
 			],
 			'documentation_url' => WCML_Tracking_Link::getWcmlMultiCurrencyDoc( false, [ 'utm_term' => WCML_Tracking_Link::UTM_TERM_WIZARD ] ),
 			'multi_currency_on' => wcml_is_multi_currency_on(),
-			'continue_url'      => $this->next_step_url,
+			'continue_url_multicurrency_on'  => add_query_arg( WCML_Setup::MULTI_CURRENCY_STATUS_GET_KEY, '1', $this->next_step_url ),
+			'continue_url_multicurrency_off' => add_query_arg( WCML_Setup::MULTI_CURRENCY_STATUS_GET_KEY, '0', $this->next_step_url ),
 			'go_back_url'       => $this->previous_step_url,
 		];
 	}

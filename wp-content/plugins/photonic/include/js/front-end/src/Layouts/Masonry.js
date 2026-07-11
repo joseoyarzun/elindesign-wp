@@ -23,23 +23,38 @@ export const Masonry = (resized, jsLoaded, selector) => {
 	minWidth = parseInt(minWidth);
 
 	selection.forEach((grid) => {
-		Core.waitForImages(grid).then(() => {
-			let columns = grid.getAttribute('data-photonic-gallery-columns');
-			columns = (isNaN(parseInt(columns)) || parseInt(columns) <= 0) ? 3 : parseInt(columns);
+		let columns = grid.getAttribute('data-photonic-gallery-columns');
+		columns = (isNaN(parseInt(columns)) || parseInt(columns) <= 0) ? 3 : parseInt(columns);
+
+		const buildLayout = (grid, fadeIn) => {
 			const viewportWidth = Math.floor(grid.getBoundingClientRect().width),
 				idealColumns = (viewportWidth / columns) > minWidth ? columns : Math.floor(viewportWidth / minWidth);
+
 			if (idealColumns !== undefined && idealColumns !== null) {
 				grid.style.columnCount = idealColumns.toString();
 			}
-			Array.from(grid.getElementsByTagName('img')).forEach(img => {
-				Util.fadeIn(img);
-				img.style.display = 'block';
-			});
+
+			if (fadeIn) {
+				Array.from(grid.getElementsByTagName('img')).forEach(img => {
+					Util.fadeIn(img);
+				});
+			}
+
 			Core.showSlideupTitle();
 			if (!resized && !jsLoaded) {
 				Core.hideLoading();
 			}
-		});
+		};
+
+		if (grid.classList.contains('sizes-present')) {
+			Core.watchForImages(grid);
+			buildLayout(grid, false);
+		}
+		else {
+			Core.waitForImages(grid).then(() => {
+				buildLayout(grid, true);
+			});
+		}
 	});
 	if (console !== undefined && Photonic_JS.debug_on !== '0' && Photonic_JS.debug_on !== '') console.timeEnd('Masonry');
 };

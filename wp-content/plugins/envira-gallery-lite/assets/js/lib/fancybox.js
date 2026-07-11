@@ -103,7 +103,7 @@
             }
             H.type = Y;
             H.href = W;
-            H.title = ab;
+            H.title = ab.replace(/<[^>]*>/g, '');
             if (H.autoDimensions) {
                 if (H.type == "html" || H.type == "inline" || H.type == "ajax") {
                     H.width = "auto";

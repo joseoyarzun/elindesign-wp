@@ -34,6 +34,13 @@ jQuery(document).ready(function ($) {
 		});
 	});
 
+	/**
+	 * Unbind events when the campaign selector is unmounted.
+	 *
+	 * @param {object} data Data object containing the campaign slug and target document.
+	 *
+	 * @returns {void}
+	 */
 	function postToMailPoet(data) {
 		// Now make an ajax request to make the optin locally.
 		$.post(

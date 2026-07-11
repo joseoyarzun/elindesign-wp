@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Surveys Controller class.
  *
@@ -31,6 +35,32 @@ class UserFeedback_Surveys {
 				'methods'             => 'GET',
 				'callback'            => array( $this, 'get_surveys' ),
 				'permission_callback' => array( $this, 'create_edit_surveys_permission_check' ),
+				'args'                => array(
+					'filter' => array(
+						'type'              => 'object',
+						'sanitize_callback' => array( $this, 'sanitize_filter_param' ),
+					),
+					'orderby' => array(
+						'type'              => 'string',
+						'sanitize_callback' => array( $this, 'sanitize_orderby_param' ),
+					),
+					'order' => array(
+						'type'              => 'string',
+						'sanitize_callback' => array( $this, 'sanitize_order_param' ),
+					),
+					'select' => array(
+						'type'              => 'array',
+						'sanitize_callback' => array( $this, 'sanitize_select_param' ),
+					),
+					'page' => array(
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
+					'per_page' => array(
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
+				),
 			)
 		);
 
@@ -144,6 +174,83 @@ class UserFeedback_Surveys {
 	}
 
 	/**
+	 * Sanitize filter parameter to prevent SQL injection
+	 *
+	 * @param mixed $filters
+	 * @return array
+	 */
+	public function sanitize_filter_param( $filters ) {
+		if ( ! is_array( $filters ) ) {
+			return array();
+		}
+
+		// Only 'status' and 'type' are valid filter attributes for surveys
+		$allowed_filter_attrs = array( 'status', 'type' );
+		$sanitized = array();
+
+		foreach ( $filters as $key => $value ) {
+			// Only allow whitelisted column names
+			$sanitized_key = sanitize_key( $key );
+			if ( in_array( $sanitized_key, $allowed_filter_attrs, true ) ) {
+				$sanitized[ $sanitized_key ] = sanitize_text_field( $value );
+			}
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Sanitize orderby parameter to prevent SQL injection
+	 *
+	 * @param string $orderby
+	 * @return string
+	 */
+	public function sanitize_orderby_param( $orderby ) {
+		// Allowed columns from UserFeedback_Survey::get_columns()
+		$allowed_orderby = array( 'id', 'title', 'status', 'type', 'impressions', 'publish_at', 'created_at' );
+
+		$orderby = sanitize_key( $orderby );
+
+		return in_array( $orderby, $allowed_orderby, true ) ? $orderby : 'id';
+	}
+
+	/**
+	 * Sanitize order parameter
+	 *
+	 * @param string $order
+	 * @return string
+	 */
+	public function sanitize_order_param( $order ) {
+		$order = strtolower( sanitize_key( $order ) );
+		return in_array( $order, array( 'asc', 'desc' ), true ) ? $order : 'desc';
+	}
+
+	/**
+	 * Sanitize select parameter to prevent SQL injection
+	 *
+	 * @param mixed $select
+	 * @return array
+	 */
+	public function sanitize_select_param( $select ) {
+		if ( ! is_array( $select ) ) {
+			return array( '*' );
+		}
+
+		// Allowed columns from UserFeedback_Survey::get_columns()
+		$allowed_columns = array( 'id', 'title', 'status', 'type', 'questions', 'settings', 'notifications', 'impressions', 'publish_at', 'created_at' );
+		$sanitized = array();
+
+		foreach ( $select as $column ) {
+			$sanitized_column = sanitize_key( $column );
+			if ( in_array( $sanitized_column, $allowed_columns, true ) ) {
+				$sanitized[] = $sanitized_column;
+			}
+		}
+
+		return ! empty( $sanitized ) ? $sanitized : array( '*' );
+	}
+
+	/**
 	 * Get Surveys
 	 *
 	 * @return WP_REST_Response
@@ -159,6 +266,12 @@ class UserFeedback_Surveys {
 
 		if ( $request->has_param( 'filter' ) ) {
 			$filters = $request->get_param( 'filter' );
+
+			// Sanitization callback should have already cleaned this,
+			// but add defensive check for safety
+			if ( ! is_array( $filters ) ) {
+				$filters = array();
+			}
 
 			foreach ( $filters as $attr => $value ) {
 				if ( $value === 'all' ) {
@@ -188,6 +301,7 @@ class UserFeedback_Surveys {
 						true
 					);
 				} else {
+					// Only 'status' and 'type' should reach here due to sanitization
 					$query->add_where(
 						array(
 							$attr => $value,
@@ -311,6 +425,7 @@ class UserFeedback_Surveys {
 		}
 
 		$params = $request->get_params();
+		$params = apply_filters('userfeedback_save_survey_params', $params, $survey_id);
 		$survey_count = UserFeedback_Survey::count();
 
 		if(isset($params['title']) && 'First Survey' === $params['title'] && $survey_count > 0) {
@@ -326,9 +441,20 @@ class UserFeedback_Surveys {
 			$survey = UserFeedback_Survey::find( $survey_id );
 		} else {
 			$number_of_surveys = UserFeedback_Survey::count();
-			$new_survey_title  =
-				empty( $params['title'] ) ?
-					sprintf( __( 'Survey #%d', 'userfeedback' ), $number_of_surveys + 1 ) : $params['title'];
+			// translators: %d is the survey number.
+			$new_survey_title  = empty( $params['title'] ) ? sprintf( __( 'Survey #%d', 'userfeedback-lite' ), $number_of_surveys + 1 ) : $params['title'];
+
+			/**
+			 * Add type for nps surveys
+			 * Surveys created from the template `nps` is marked as NPS survey
+			 */
+			if (
+				! isset( $survey_id ) &&
+				isset( $params[ 'template' ] ) &&
+				'nps' === $params[ 'template' ]
+			) {
+				$params['type'] = 'nps';
+			}
 
 			$new_id = UserFeedback_Survey::create(
 				array_merge(
@@ -358,7 +484,8 @@ class UserFeedback_Surveys {
 			array_merge(
 				(array) $survey,
 				array(
-					'title'  => sprintf( __( 'Copy of %s', 'userfeedback' ), $survey->title ),
+					// translators: %s is the original survey title.
+					'title'  => sprintf( __( 'Copy of %s', 'userfeedback-lite' ), $survey->title ),
 					'status' => 'draft',
 				)
 			)
@@ -450,34 +577,34 @@ class UserFeedback_Surveys {
 
 		$links = [
 			[
-				'text' => __( 'Support', 'userfeedback' ),
+				'text' => __( 'Support', 'userfeedback-lite' ),
 				'link' => $is_pro ? userfeedback_get_url('footer_link', 'made-with-love', 'https://www.userfeedback.com/contact/') : 'https://wordpress.org/support/plugin/userfeedback-lite/',
 				'target' => '_blank',
 			],
 			[
-				'text' => __( 'Docs', 'userfeedback' ),
+				'text' => __( 'Docs', 'userfeedback-lite' ),
 				'link' => userfeedback_get_url('footer_link', 'made-with-love', 'https://www.userfeedback.com/docs/'),
 				'target' => '_blank',
 			],
 			[
-				'text' => __( 'Free Plugins', 'userfeedback' ),
+				'text' => __( 'Free Plugins', 'userfeedback-lite' ),
 				'link' => admin_url('admin.php?page=userfeedback_settings#/about'),
 				'target' => '_self',
 			],
 			[
-				'text' => __( 'Suggest a Feature', 'userfeedback' ),
+				'text' => __( 'Suggest a Feature', 'userfeedback-lite' ),
 				'link' => userfeedback_get_url('footer_link', 'made-with-love', 'https://www.userfeedback.com/suggest-feature/'),
 				'target' => '_blank',
 			],
 		];
 		if(!empty($links)){
 			echo '<div class="userfeedback-love">';
-			echo esc_html__('Made with ♥ by the UserFeedback Team', 'userfeedback');
+			echo esc_html__('Made with ♥ by the UserFeedback Team', 'userfeedback-lite');
 			$links_output = [];
 			foreach($links as $link){
 				$links_output[] = '<a target="'.esc_attr($link['target']).'" href="'.esc_url($link['link']).'">' . esc_html($link['text']) . '</a>';
 			}
-			echo '<div>'. implode('<span class="sep">/</span>', $links_output) .'</div>';
+			echo wp_kses_post( '<div>' . implode( '<span class="sep">/</span>', $links_output ) . '</div>' );
 			echo '</div>';
 		}
 		

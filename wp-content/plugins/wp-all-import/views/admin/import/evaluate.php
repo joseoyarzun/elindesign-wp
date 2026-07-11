@@ -1,12 +1,15 @@
+<?php if ( ! defined( 'ABSPATH' ) ) exit; ?>
 <div class="updated found_records">
 	<?php if ($is_csv):?>
-		<h3><?php printf(__('<span class="matches_count">%s</span> <strong>%s</strong> will be imported', 'wp_all_import_plugin'), intval($node_list_count), _n('row', 'rows', $node_list_count, 'wp_all_import_plugin')); ?></h3>
+		<?php /* translators: %1$s: number of matched rows, %2$s: row/rows label */ ?>
+		<h3><?php echo wp_kses( sprintf(__('<span class="matches_count">%1$s</span> <strong>%2$s</strong> will be imported', 'wp-all-import'), intval($node_list_count), esc_html(_n('row', 'rows', $node_list_count, 'wp-all-import'))), array('span' => array('class' => array()), 'strong' => array()) ); ?></h3>
 	<?php else:?>
-		<h3><?php printf(__('<span class="matches_count">%s</span> <strong>%s</strong> %s will be imported', 'wp_all_import_plugin'), intval($node_list_count), PMXI_Plugin::$session->source['root_element'], _n('element', 'elements', $node_list_count, 'wp_all_import_plugin')); ?></h3>
+		<?php /* translators: %1$s: number of matched elements, %2$s: root element name, %3$s: element/elements label */ ?>
+		<h3><?php echo wp_kses( sprintf(__('<span class="matches_count">%1$s</span> <strong>%2$s</strong> %3$s will be imported', 'wp-all-import'), intval($node_list_count), esc_html(PMXI_Plugin::$session->source['root_element']), esc_html(_n('element', 'elements', $node_list_count, 'wp-all-import'))), array('span' => array('class' => array()), 'strong' => array()) ); ?></h3>
 	<?php endif; ?>
-	<h4><?php _e('Click an element to select it, or scroll down to add filtering options.', 'wp_all_import_plugin'); ?></h4>
+	<h4><?php esc_html_e('Click an element to select it, or scroll down to add filtering options.', 'wp-all-import'); ?></h4>
 	<?php if (PMXI_Plugin::getInstance()->getOption('highlight_limit') and $elements->length > PMXI_Plugin::getInstance()->getOption('highlight_limit')): ?>
-		<p><?php _e('<strong>Note</strong>: Highlighting is turned off since can be very slow on large sets of elements.', 'wp_all_import_plugin') ?></p>
+		<p><?php echo wp_kses( __('<strong>Note</strong>: Highlighting is turned off since can be very slow on large sets of elements.', 'wp-all-import'), array('strong' => array()) ) ?></p>
 	<?php endif ?>
 </div>
 <div id="current_xml">	

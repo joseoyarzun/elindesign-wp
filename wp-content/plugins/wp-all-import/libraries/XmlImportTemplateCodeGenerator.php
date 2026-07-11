@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_is_writable, WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * @author Olexandr Zanichkovsky <olexandr.zanichkovsky@zophiatech.com>
  * @package General

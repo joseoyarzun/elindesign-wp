@@ -12,8 +12,14 @@ window.OMAPI_WooCommerce_Metaboxes = window.OMAPI_WooCommerce_Metaboxes || {};
  * This contains the functionality for our WooCommerce education metaboxes.
  *
  * @since 2.1.0
+ *
+ * @param {object} window The global window object.
+ * @param {object} document The global document object.
+ * @param {object} app The application object.
+ *
+ * @returns {void}
  */
-(function (window, document, app, undefined) {
+(function (window, document, app) {
 	/**
 	 * Cache DOM objects.
 	 *
@@ -58,9 +64,9 @@ window.OMAPI_WooCommerce_Metaboxes = window.OMAPI_WooCommerce_Metaboxes || {};
 	/**
 	 * Remove Active Class
 	 *
-	 * @param {NodeList} options the tab options.
-	 *
 	 * @since 2.1.0
+	 *
+	 * @param {NodeList} options the tab options.
 	 *
 	 * @returns {void}
 	 */

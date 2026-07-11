@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! function_exists('get_taxonomies_by_object_type')):
 /**
  * get_taxnomies doesn't filter propery by object_type, so these function can be used when filtering by object type requied

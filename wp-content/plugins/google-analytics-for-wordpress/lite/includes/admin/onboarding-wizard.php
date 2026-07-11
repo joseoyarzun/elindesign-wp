@@ -37,7 +37,7 @@ class MonsterInsights_Onboarding_Wizard {
 			$this,
 			'get_install_errors',
 		) );
-		
+
 		add_action( 'wp_ajax_nopriv_onboarding_monsterinsights_onboarding_get_errors', array(
 			$this,
 			'onboarding_get_install_errors',
@@ -139,7 +139,7 @@ class MonsterInsights_Onboarding_Wizard {
 				'is_eu'                => $this->should_include_eu_addon(),
 				'activate_nonce'       => wp_create_nonce( 'monsterinsights-activate' ),
 				'install_nonce'        => wp_create_nonce( 'monsterinsights-install' ),
-				'exit_url'             => add_query_arg( 'page', 'monsterinsights_reports', admin_url( 'admin.php' ) ),
+				'exit_url'             => add_query_arg( 'page', 'monsterinsights_overview_report', admin_url( 'admin.php' ) ),
 				'shareasale_id'        => monsterinsights_get_shareasale_id(),
 				'shareasale_url'       => monsterinsights_get_shareasale_url( monsterinsights_get_shareasale_id(), '' ),
 				// Used to add notices for future deprecations.
@@ -147,11 +147,11 @@ class MonsterInsights_Onboarding_Wizard {
 				'plugin_version'       => MONSTERINSIGHTS_VERSION,
 				'migrated'             => monsterinsights_get_option( 'gadwp_migrated', false ),
 				'allow_file_edit'      => $is_file_edit_allowed,
-				'reports_url'          => admin_url( 'admin.php?page=monsterinsights_reports' ),
+				'reports_url'          => admin_url( 'admin.php?page=monsterinsights_overview_report' ),
 			)
 		);
 
-		$text_domain = monsterinsights_is_pro_version() ? 'google-analytics-premium' : 'google-analytics-for-wordpress';
+		$text_domain = monsterinsights_get_plugin_textdomain();
 
 		wp_scripts()->add_inline_script(
 			'monsterinsights-vue-script',

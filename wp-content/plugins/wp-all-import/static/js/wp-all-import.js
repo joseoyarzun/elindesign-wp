@@ -7,7 +7,8 @@
       $(this).parents("div.updated:first").slideUp();
       $.post(
         "admin.php?page=pmxi-admin-settings&action=dismiss",
-        { dismiss: true },
+        { dismiss: true ,
+          security: wp_all_import_security },
         function (data) {},
         "html"
       );
@@ -17,7 +18,8 @@
       $(this).parents("div.updated:first").slideUp();
       $.post(
         "admin.php?page=pmxi-admin-settings&action=dismiss_manage_top",
-        { dismiss: true },
+        { dismiss: true ,
+          security: wp_all_import_security },
         function (data) {},
         "json"
       );
@@ -27,7 +29,8 @@
       $(this).parents("div.updated_bottom").slideUp();
       $.post(
         "admin.php?page=pmxi-admin-settings&action=dismiss_manage_bottom",
-        { dismiss: true },
+        { dismiss: true,
+          security: wp_all_import_security },
         function (data) {},
         "json"
       );

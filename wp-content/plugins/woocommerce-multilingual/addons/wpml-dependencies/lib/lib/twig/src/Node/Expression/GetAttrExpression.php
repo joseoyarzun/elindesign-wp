@@ -15,7 +15,7 @@ use WPML\Core\Twig\Compiler;
 use WPML\Core\Twig\Template;
 class GetAttrExpression extends \WPML\Core\Twig\Node\Expression\AbstractExpression
 {
-    public function __construct(\WPML\Core\Twig\Node\Expression\AbstractExpression $node, \WPML\Core\Twig\Node\Expression\AbstractExpression $attribute, \WPML\Core\Twig\Node\Expression\AbstractExpression $arguments = null, $type, $lineno)
+    public function __construct(\WPML\Core\Twig\Node\Expression\AbstractExpression $node, \WPML\Core\Twig\Node\Expression\AbstractExpression $attribute, ?\WPML\Core\Twig\Node\Expression\AbstractExpression $arguments = null, $type, $lineno)
     {
         $nodes = ['node' => $node, 'attribute' => $attribute];
         if (null !== $arguments) {

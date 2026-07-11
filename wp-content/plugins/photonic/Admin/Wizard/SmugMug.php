@@ -288,21 +288,7 @@ class SmugMug extends Source {
 							'Descending' => esc_html__('Descending', 'photonic'),
 						],
 					],
-					'headers'     => [
-						'desc'    => esc_html__('Show Header', 'photonic'),
-						'type'    => 'select',
-						'options' => [
-							''                        => $this->default_from_settings,
-							'none'                    => esc_html__('No header', 'photonic'),
-							'title'                   => esc_html__('Title only', 'photonic'),
-							'thumbnail'               => esc_html__('Thumbnail only', 'photonic'),
-							'counter'                 => esc_html__('Counts only', 'photonic'),
-							'title,counter'           => esc_html__('Title and counts', 'photonic'),
-							'thumbnail,counter'       => esc_html__('Thumbnail and counts', 'photonic'),
-							'thumbnail,title'         => esc_html__('Thumbnail and title', 'photonic'),
-							'thumbnail,title,counter' => esc_html__('Thumbnail, title and counts', 'photonic'),
-						],
-					],
+					'headers'     => $this->get_header_options(),
 				],
 				'L2'         => [
 					'site_password'    => [
@@ -380,8 +366,8 @@ class SmugMug extends Source {
 	public function make_request($display_type, $for, $flattened_fields): array {
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
 			global $photonic_smug_access_token, $photonic_smug_default_user;
-			require_once PHOTONIC_PATH . '/Modules/SmugMug.php';
-			$module = \Photonic_Plugin\Modules\SmugMug::get_instance();
+			require_once PHOTONIC_PATH . '/Platforms/SmugMug.php';
+			$module = \Photonic_Plugin\Platforms\SmugMug::get_instance();
 
 			if ('current' === $for && empty($photonic_smug_default_user)) {
 				return ['error' => sprintf(esc_html__('Default user not defined under %1$s. %2$sSelect "Another user" and put in your user id.', 'photonic'), '<em>Photonic &rarr; Settings &rarr; SmugMug &rarr; SmugMug Settings &rarr; Default User</em>', '<br/>')];
@@ -391,7 +377,7 @@ class SmugMug extends Source {
 				return ['error' => $this->error_mandatory];
 			}
 
-			$nick_name = sanitize_text_field($_POST['user']);
+			$nick_name = sanitize_text_field(wp_unslash($_POST['user']));
 			$user = 'current' === $for ? $photonic_smug_default_user : ('other' === $for ? $nick_name : '');
 			$args = [
 				'APIKey'        => $module->api_key,
@@ -596,11 +582,11 @@ class SmugMug extends Source {
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
 			if ('album-photo' === $display_type) {
 				$short_code['view'] = 'album';
-				$short_code['album'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['album'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('folder-photo' === $display_type) {
 				$short_code['view'] = 'images';
-				$short_code['folder'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['folder'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('user-photo' === $display_type) {
 				$short_code['view'] = 'images';
@@ -613,7 +599,7 @@ class SmugMug extends Source {
 			}
 			elseif ('folder' === $display_type) {
 				$short_code['view'] = 'folder';
-				$short_code['folder'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['folder'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 		}
 

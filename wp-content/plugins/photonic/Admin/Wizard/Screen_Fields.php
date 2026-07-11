@@ -25,17 +25,18 @@ class Screen_Fields {
 			'wp'        => 'WP.php',
 			'flickr'    => 'Flickr.php',
 			'smugmug'   => 'SmugMug.php',
-			'google'    => 'Google_Photos.php',
+			// 'google'    => 'Google_Photos.php',
 			'zenfolio'  => 'Zenfolio.php',
-			'instagram' => 'Instagram.php',
+			// 'instagram' => 'Instagram.php',
 		];
 		$this->layout_options = [
-			'square'    => esc_html__('Square Grid', 'photonic'),
-			'circle'    => esc_html__('Circular Icon Grid', 'photonic'),
-			'random'    => esc_html__('Justified Grid', 'photonic'),
-			'masonry'   => esc_html__('Masonry', 'photonic'),
-			'mosaic'    => esc_html__('Mosaic', 'photonic'),
-			'slideshow' => esc_html__('Slideshow', 'photonic'),
+			'square'             => esc_html__('Square Grid', 'photonic'),
+			'circle'             => esc_html__('Circular Icon Grid', 'photonic'),
+			'random'             => esc_html__('Justified Grid', 'photonic'),
+			'masonry'            => esc_html__('Masonry (top-to-bottom ordered)', 'photonic'),
+			'masonry-horizontal' => esc_html__('Horizontal Masonry (left-to-right ordered)', 'photonic'),
+			'mosaic'             => esc_html__('Mosaic', 'photonic'),
+			'slideshow'          => esc_html__('Slideshow', 'photonic'),
 		];
 	}
 
@@ -157,11 +158,10 @@ class Screen_Fields {
 		$output['circle'] = $output['square'];
 		$output['masonry'] = $output['random'];
 		$output['masonry']['columns'] = $source->get_column_options();
+		$output['masonry-horizontal'] = $output['masonry'];
 		$output['mosaic'] = $output['random'];
 		unset($output['random']['title_position']['options']['below']);
 		unset($output['mosaic']['title_position']['options']['below']);
-		unset($output['masonry']['layout_engine']);
-		unset($output['mosaic']['layout_engine']);
 		$output['L3']['popup_type'] = $output['L2']['popup_type'];
 
 		return $output;

@@ -4,15 +4,14 @@
 
 #maintenance-options input,
 .ui-widget {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
-    sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif !important;
 }
 #maintenance-options input {
   font-size: 14px;
 }
 
 #maintenance-options #icon-maintenance {
-  background: url('../images/icon.png') no-repeat center center transparent;
+  background: url("../images/icon.png") no-repeat center center transparent;
 }
 
 #maintenance-options input.upload_btn {
@@ -118,7 +117,7 @@
 
 /*Checkbox*/
 .tzCheckBox {
-  background: url('../images/background.png ') no-repeat right bottom;
+  background: url("../images/background.png ") no-repeat right bottom;
   display: inline-block;
   min-width: 60px;
   height: 33px;
@@ -147,7 +146,7 @@
 }
 
 .tzCBPart {
-  background: url('../images/background.png ') no-repeat left bottom;
+  background: url("../images/background.png ") no-repeat left bottom;
   width: 14px;
   position: absolute;
   top: 0;
@@ -259,7 +258,7 @@
   width: 50%;
 }
 
-#maintenance-options input[type='checkbox'] {
+#maintenance-options input[type="checkbox"] {
   margin: 0 5px 0 0;
 }
 
@@ -293,7 +292,7 @@
   margin-left: 10px;
 }
 
-#maintenance-maillists .mailing_fields input[type='text'] {
+#maintenance-maillists .mailing_fields input[type="text"] {
   min-width: 35%;
 }
 
@@ -418,7 +417,7 @@
 .theme-thumb .ribbon::after {
   position: absolute;
   z-index: -1;
-  content: '';
+  content: "";
   display: block;
 }
 .theme-thumb .ribbon i {
@@ -435,11 +434,31 @@
 }
 
 /******** DIALOG ********/
-#dialog-form-new-info-form label, #dialog-form-new-info-form input { display:block; margin-bottom: 5px; }
-#dialog-form-new-info-form input.text { margin-bottom:12px; width:95%; padding: .4em; }
-#dialog-form-new-info-form fieldset { padding:0; border:0; margin-top:25px; }
-#dialog-form-new-info-form input.ui-state-error { padding: .3em !important; background: palevioletred; }
-#dialog-form-new-info p.ui-state-highlight { border: 1px solid transparent !important; padding: 0.3em !important; background: palevioletred; display: inline; }
+#dialog-form-new-info-form label,
+#dialog-form-new-info-form input {
+  display: block;
+  margin-bottom: 5px;
+}
+#dialog-form-new-info-form input.text {
+  margin-bottom: 12px;
+  width: 95%;
+  padding: 0.4em;
+}
+#dialog-form-new-info-form fieldset {
+  padding: 0;
+  border: 0;
+  margin-top: 25px;
+}
+#dialog-form-new-info-form input.ui-state-error {
+  padding: 0.3em !important;
+  background: palevioletred;
+}
+#dialog-form-new-info p.ui-state-highlight {
+  border: 1px solid transparent !important;
+  padding: 0.3em !important;
+  background: palevioletred;
+  display: inline;
+}
 
 .new-version-dialog .ui-dialog-titlebar-close {
   visibility: hidden;
@@ -490,7 +509,18 @@
   border: 3px solid #42982e;
 }
 
-#promo-wpfssl a.button:hover, #promo-wpfssl a.button:active, #promo-wpfssl a.button:focus {
+#promo-wpcaptcha {
+  border: 3px solid #4285f4;
+}
+
+#promo-mtnc {
+  background: url("../images/clouds.png") no-repeat center center transparent;
+  border: 2px solid #000000;
+}
+
+#promo-wpfssl a.button:hover,
+#promo-wpfssl a.button:active,
+#promo-wpfssl a.button:focus {
   box-shadow: 0px 0px 10px 0px rgb(50 138 210 / 52%);
   background: #42982e;
   color: white;
@@ -647,3 +677,50 @@ label sup {
   list-style: disc;
   list-style-position: inside;
 }
+
+.mtnc-list {
+  list-style-type: circle;
+  list-style-position: outside;
+  margin-left: 14px;
+  line-height: 150%;
+}
+
+/* weglot upsell dialog */
+.weglot-upsell-dialog .ui-dialog-titlebar {
+  background: linear-gradient(140deg, #335ee2 10%, #271f50 90%);
+  text-align: center;
+  height: 55px;
+}
+.weglot-upsell-dialog .ui-dialog-titlebar img {
+  height: 32px;
+  display: inline-block;
+  margin: 11px 0 0 0;
+}
+.weglot-upsell-dialog .ui-dialog-titlebar-close {
+  color: #fff;
+  height: 55px;
+  display: none;
+}
+.weglot-upsell-dialog .ui-dialog-titlebar-close:hover {
+  color: #333;
+}
+.weglot-upsell-dialog .ui-dialog-content {
+  padding: 0;
+}
+.weglot-upsell-dialog .ui-tabs-nav {
+  text-align: center;
+}
+.weglot-upsell-dialog .ui-tabs .upsell-tab {
+  padding: 20px 15px;
+  text-align: center;
+}
+.weglot-upsell-dialog a {
+  color: #333;
+}
+.weglot-upsell-dialog a:hover {
+  color: #000;
+}
+option.weglot-promo {
+  color: #2980b9;
+}
+/* upsell dialog */

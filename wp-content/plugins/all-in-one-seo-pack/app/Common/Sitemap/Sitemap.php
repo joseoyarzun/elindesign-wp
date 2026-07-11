@@ -88,7 +88,6 @@ class Sitemap extends SitemapAbstract {
 		$this->query         = new Query();
 		$this->file          = new File();
 		$this->image         = new Image\Image();
-		$this->ping          = new Ping();
 		$this->priority      = new Priority();
 		$this->output        = new Output();
 		$this->helpers       = new Helpers();
@@ -156,17 +155,17 @@ class Sitemap extends SitemapAbstract {
 
 		$contents = aioseo()->helpers->decodeHtmlEntities( aioseo()->htaccess->getContents() );
 		if ( get_option( 'permalink_structure' ) ) {
-			if ( preg_match( '/All in One SEO Sitemap Rewrite Rules/i', $contents ) && ! aioseo()->core->cache->get( 'aioseo_sitemap_htaccess_rewrite_rules_remove' ) ) {
+			if ( preg_match( '/All in One SEO Sitemap Rewrite Rules/i', (string) $contents ) && ! aioseo()->core->cache->get( 'aioseo_sitemap_htaccess_rewrite_rules_remove' ) ) {
 				aioseo()->core->cache->update( 'aioseo_sitemap_htaccess_rewrite_rules_remove', time(), HOUR_IN_SECONDS );
 
-				$contents = preg_replace( "/$escapedRewriteRules/i", '', $contents );
+				$contents = preg_replace( "/$escapedRewriteRules/i", '', (string) $contents );
 				aioseo()->htaccess->saveContents( $contents );
 			}
 
 			return;
 		}
 
-		if ( preg_match( '/All in One SEO Sitemap Rewrite Rules/i', $contents ) || aioseo()->core->cache->get( 'aioseo_sitemap_htaccess_rewrite_rules_add' ) ) {
+		if ( preg_match( '/All in One SEO Sitemap Rewrite Rules/i', (string) $contents ) || aioseo()->core->cache->get( 'aioseo_sitemap_htaccess_rewrite_rules_add' ) ) {
 			return;
 		}
 
@@ -204,9 +203,9 @@ class Sitemap extends SitemapAbstract {
 		$detectedFiles = [];
 		if ( ! $isGeneralSitemapStatic ) {
 			foreach ( $files as $filename ) {
-				if ( preg_match( '#.*sitemap.*#', $filename ) ) {
+				if ( preg_match( '#.*sitemap.*#', (string) $filename ) ) {
 					// We don't want to delete the video sitemap here at all.
-					$isVideoSitemap = preg_match( '#.*video.*#', $filename ) ? true : false;
+					$isVideoSitemap = preg_match( '#.*video.*#', (string) $filename ) ? true : false;
 					if ( ! $isVideoSitemap ) {
 						$detectedFiles[] = $filename;
 					}
@@ -314,15 +313,15 @@ class Sitemap extends SitemapAbstract {
 		}
 
 		// This is a hack to prevent WordPress from running it's default stuff during our processing.
-		global $wp_query;
-		$wp_query->is_home = false;
+		global $wp_query; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
+		$wp_query->is_home = false; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
 
 		// This prevents the sitemap from including terms twice when WPML is active.
 		if ( class_exists( 'SitePress' ) ) {
-			global $sitepress_settings;
+			global $sitepress_settings; // phpcs:ignore Squiz.NamingConventions.ValidVariableName
 			// Before building the sitemap make sure links aren't translated.
 			// The setting should not be updated in the DB.
-			$sitepress_settings['auto_adjust_ids'] = 0;
+			$sitepress_settings['auto_adjust_ids'] = 0; // phpcs:ignore Squiz.NamingConventions.ValidVariableName, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 		}
 
 		// If requested sitemap should be static and doesn't exist, then generate it.
@@ -331,7 +330,7 @@ class Sitemap extends SitemapAbstract {
 
 		$options = aioseo()->options->noConflict();
 		if ( ! $options->sitemap->{aioseo()->sitemap->type}->enable ) {
-			$this->notFoundPage();
+			aioseo()->helpers->notFoundPage();
 
 			return;
 		}
@@ -389,7 +388,7 @@ class Sitemap extends SitemapAbstract {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
-		if ( ! aioseo()->core->fs->exists( get_home_path() . $_SERVER['REQUEST_URI'] ) ) {
+		if ( isset( $_SERVER['REQUEST_URI'] ) && ! aioseo()->core->fs->exists( get_home_path() . sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) ) ) {
 			$this->scheduleRegeneration();
 		}
 	}
@@ -405,21 +404,6 @@ class Sitemap extends SitemapAbstract {
 		$charset = aioseo()->helpers->getCharset();
 		header( "Content-Type: text/xml; charset=$charset", true );
 		header( 'X-Robots-Tag: noindex, follow', true );
-	}
-
-	/**
-	 * Redirects to a 404 Not Found page if the sitemap is disabled.
-	 *
-	 * @since 4.0.0
-	 *
-	 * @return void
-	 */
-	public function notFoundPage() {
-		global $wp_query;
-		$wp_query->set_404();
-		status_header( 404 );
-		include get_404_template();
-		exit;
 	}
 
 	/**

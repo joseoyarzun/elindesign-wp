@@ -1,4 +1,8 @@
 <?php
+// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fread
+// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+// phpcs:disable Squiz.PHP.DiscouragedFunctions.Discouraged
 
 class PMXI_SQLParser{
 

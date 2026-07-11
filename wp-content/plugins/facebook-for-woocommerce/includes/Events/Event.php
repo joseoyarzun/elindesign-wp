@@ -1,17 +1,16 @@
 <?php
-// phpcs:ignoreFile
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 namespace WooCommerce\Facebook\Events;
 
-defined( 'ABSPATH' ) or exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Event object.
@@ -22,7 +21,7 @@ class Event {
 
 
 	/**
-	 * @var array data specific to this event instance with the same structure as the event’s payload
+	 * @var array data specific to this event instance with the same structure as the event's payload
 	 *
 	 * @see https://developers.facebook.com/docs/marketing-api/server-side-api/payload-helper
 	 */
@@ -35,12 +34,14 @@ class Event {
 	 * @return array {
 	 *     @type string source 'woocommerce'
 	 *     @type string version WooCommerce's version
-	 *     @type string pluginVersion Facebook for WooCommerce's version
+	 *     @type string pluginVersion Meta for WooCommerce's version
 	 * }
 	 */
 	public static function get_version_info() {
+		$source  = 'woocommerce';
+		$source .= self::get_agent_flags();
 		return array(
-			'source'        => 'woocommerce',
+			'source'        => $source,
 			'version'       => WC()->version,
 			'pluginVersion' => facebook_for_woocommerce()->get_version(),
 		);
@@ -94,6 +95,10 @@ class Event {
 				'user_data'        => array(),
 			)
 		);
+
+		if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
+			$this->data['referrer_url'] = wc_clean( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
+		}
 
 		$this->prepare_user_data( $this->data['user_data'] );
 	}
@@ -160,6 +165,7 @@ class Event {
 	 *
 	 * @return string
 	 */
+// phpcs:disable
 	protected function generate_event_id() {
 		try {
 			$data = random_bytes( 16 );
@@ -189,6 +195,7 @@ class Event {
 			);
 		}
 	}
+// phpcs:enable
 
 
 	/**
@@ -236,13 +243,20 @@ class Event {
 	 *
 	 * @return string
 	 */
-	protected function get_client_user_agent() {
+	public function get_client_user_agent() {
 		return ! empty( $_SERVER['HTTP_USER_AGENT'] ) ? wc_clean( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 	}
 
 
 	/**
 	 * Gets the click ID from the cookie or the query parameter.
+	 * In order, rely on:
+	 * 1. If an _fbc cookie is set
+	 * 2. If we have stored fbc in the session
+	 * 3. The FBC result from param builder
+	 * 4. Construct our own FBC
+	 *
+	 * The resulting value is stored in the session for future requests.
 	 *
 	 * @see https://developers.facebook.com/docs/marketing-api/server-side-api/parameters/fbp-and-fbc#fbp-and-fbc-parameters
 	 *
@@ -251,30 +265,67 @@ class Event {
 	 * @return string
 	 */
 	protected function get_click_id() {
-		$click_id = '';
-		if ( ! empty( $_COOKIE['_fbc'] ) ) {
-			$click_id = wc_clean( wp_unslash( $_COOKIE['_fbc'] ) );
-		} elseif ( ! empty( $_REQUEST['fbclid'] ) ) {
-			// generate the click ID based on the query parameter
-			$version         = 'fb';
-			$subdomain_index = 1;
-			$creation_time   = time();
-			$fbclid          = wc_clean( wp_unslash( $_REQUEST['fbclid'] ) );
-			$click_id        = "{$version}.{$subdomain_index}.{$creation_time}.{$fbclid}";
+		$fbc = \WC_Facebookcommerce_EventsTracker::get_fbc();
+
+		if ( empty( $fbc ) ) {
+			$cookie_fbc = ! empty( $_COOKIE['_fbc'] )
+				? sanitize_text_field( wp_unslash( $_COOKIE['_fbc'] ) )
+				: null;
+
+			$request_fbclid = isset( $_GET['fbclid'] ) // phpcs:ignore WordPress.Security.NonceVerification
+				? sanitize_text_field( wp_unslash( $_GET['fbclid'] ) ) // phpcs:ignore WordPress.Security.NonceVerification
+				: null;
+
+			if ( $request_fbclid && ( empty( $cookie_fbc ) || self::has_fbclid_changed( $cookie_fbc, $request_fbclid ) ) ) {
+				$creation_time = time();
+				$fbc           = "fb.1.{$creation_time}.{$request_fbclid}";
+			}
+
+			if ( empty( $fbc ) && ! empty( $cookie_fbc ) ) {
+				$fbc = $cookie_fbc;
+			}
+
+			if ( empty( $fbc ) && isset( $_SESSION['_fbc'] ) ) {
+				$fbc = sanitize_text_field( $_SESSION['_fbc'] );
+			}
 		}
-		return $click_id;
+
+		if ( ! empty( $fbc ) && ! FacebookSignalsState::is_held() ) {
+			$_SESSION['_fbc'] = $fbc;
+		}
+
+		// Return null instead of empty string
+		return ! empty( $fbc ) ? $fbc : null;
 	}
 
 
 	/**
 	 * Gets the browser ID from the cookie.
+	 * In order, rely on:
+	 * 1. If an _fbp cookie is set
+	 * 2. If we have stored fbp in the session
+	 * 3. The FBP result from param builder
+	 *
+	 * The resulting value is stored in the session for future requests.
 	 *
 	 * @since 2.0.0
 	 *
 	 * @return string
 	 */
 	protected function get_browser_id() {
-		return ! empty( $_COOKIE['_fbp'] ) ? wc_clean( wp_unslash( $_COOKIE['_fbp'] ) ) : '';
+		$fbp = \WC_Facebookcommerce_EventsTracker::get_fbp();
+		if ( empty( $fbp ) ) {
+			if ( ! empty( $_COOKIE['_fbp'] ) ) {
+				$fbp = wc_clean( wp_unslash( $_COOKIE['_fbp'] ) );
+			} elseif ( ! empty( $_SESSION['_fbp'] ) ) {
+				$fbp = $_SESSION['_fbp']; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			}
+		}
+		if ( ! empty( $fbp ) && ! FacebookSignalsState::is_held() ) {
+			$_SESSION['_fbp'] = $fbp;
+		}
+		// Return null instead of empty string
+		return ! empty( $fbp ) ? $fbp : null;
 	}
 
 
@@ -335,5 +386,47 @@ class Event {
 	 */
 	public function get_custom_data() {
 		return ! empty( $this->data['custom_data'] ) ? $this->data['custom_data'] : array();
+	}
+
+
+	/**
+	 * Gets the postfix flags for the agent string.
+	 *
+	 * @since 3.5.5
+	 *
+	 * @return string
+	 */
+	private static function get_agent_flags() {
+		$postfix = '';
+		if ( function_exists( 'get_option' ) && false !== get_option( 'wc_facebook_svr_flags' ) ) {
+			$flags   = get_option( 'wc_facebook_svr_flags' );
+			$postfix = "_{$flags}";
+		}
+		return $postfix;
+	}
+
+	/**
+	 * Checks whether the fbclid in the current request differs from
+	 * the one stored in the existing _fbc cookie.
+	 *
+	 * @param string      $cookie_fbc     The current _fbc cookie value
+	 *                                    (format: fb.{subdomain}.{timestamp}.{fbclid}).
+	 * @param string|null $request_fbclid The fbclid from the current request,
+	 *                                    or null if not present.
+	 *
+	 * @return bool True if fbclid has changed, false otherwise.
+	 */
+	private static function has_fbclid_changed( $cookie_fbc, $request_fbclid ) {
+		if ( null === $request_fbclid ) {
+			return false;
+		}
+
+		$parts = explode( '.', $cookie_fbc );
+		if ( count( $parts ) < 4 ) {
+			return true;
+		}
+
+		$cookie_fbclid = implode( '.', array_slice( $parts, 3 ) );
+		return $cookie_fbclid !== $request_fbclid;
 	}
 }

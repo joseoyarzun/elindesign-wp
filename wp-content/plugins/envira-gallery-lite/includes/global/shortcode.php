@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Envira_Gallery_Shortcode {
 
+
 	/**
 	 * Holds the class object.
 	 *
@@ -275,33 +276,42 @@ class Envira_Gallery_Shortcode {
 		$gallery = apply_filters( 'envira_gallery_output_start', $gallery, $this->gallery_data );
 
 		// Build out the gallery HTML.
-		$gallery    .= '<div id="envira-gallery-wrap-' . sanitize_html_class( $this->gallery_data['id'] ) . '" class="' . $this->get_gallery_classes( $this->gallery_data ) . '" itemscope itemtype="https://schema.org/ImageGallery">';
-			$gallery = apply_filters( 'envira_gallery_output_before_container', $gallery, $this->gallery_data );
+		$gallery .= '<div id="envira-gallery-wrap-' . sanitize_html_class( $this->gallery_data['id'] ) . '" class="' . $this->get_gallery_classes( $this->gallery_data ) . '" itemscope itemtype="https://schema.org/ImageGallery">';
+		$gallery  = apply_filters( 'envira_gallery_output_before_container', $gallery, $this->gallery_data );
 
 		// Description.
 		if ( isset( $this->gallery_data['config']['description_position'] ) && 'above' === $this->gallery_data['config']['description_position'] ) {
 			$gallery = $this->description( $gallery, $this->gallery_data );
 		}
 
-			$opacity_insert = false;
+		$opacity_insert = false;
 		if ( $this->get_config( 'columns', $this->gallery_data ) === 0 ) {
 			$opacity_insert = ' style="opacity: 0.0" ';
 		}
 
-			// add justified CSS?
-			$extra_css               = 'envira-gallery-justified-public';
-			$row_height              = false;
-			$justified_gallery_theme = false;
+		// add justified CSS?
+		$extra_css               = 'envira-gallery-justified-public';
+		$row_height              = false;
+		$justified_gallery_theme = false;
 		if ( $this->get_config( 'columns', $this->gallery_data ) > 0 ) {
 			$extra_css = false;
 		} else {
 			$row_height              = $this->get_config( 'justified_row_height', $this->gallery_data );
 			$justified_gallery_theme = $this->get_config( 'justified_gallery_theme', $this->gallery_data );
+
+			// Sanitize row height - ensure it's a positive integer
+			$row_height = absint( $row_height );
+			if ( $row_height <= 0 ) {
+				$row_height = $this->common->get_config_default( 'justified_row_height' ); // Default to 150
+			}
+
+			// Sanitize justified gallery theme - ensure it's a valid theme
+			$justified_gallery_theme = $this->sanitize_justified_gallery_theme( $justified_gallery_theme );
 		}
 
-			$gallery .= '<div' . $opacity_insert . ' data-row-height="' . $row_height . '" data-gallery-theme="' . $justified_gallery_theme . '" id="envira-gallery-' . sanitize_html_class( $this->gallery_data['id'] ) . '" class="envira-gallery-public ' . $extra_css . ' envira-gallery-' . sanitize_html_class( $this->get_config( 'columns', $this->gallery_data ) ) . '-columns envira-clear' . ( $this->get_config( 'isotope', $this->gallery_data ) ? ' enviratope' : '' ) . ( $this->get_config( 'css_animations', $this->gallery_data ) ? ' envira-gallery-css-animations' : '' ) . '" data-envira-columns="' . $this->get_config( 'columns', $this->gallery_data ) . '">';
+		$gallery .= '<div' . $opacity_insert . ' data-row-height="' . esc_attr( $row_height ) . '" data-gallery-theme="' . esc_attr( $justified_gallery_theme ) . '" id="envira-gallery-' . sanitize_html_class( $this->gallery_data['id'] ) . '" class="envira-gallery-public ' . $extra_css . ' envira-gallery-' . sanitize_html_class( $this->get_config( 'columns', $this->gallery_data ) ) . '-columns envira-clear' . ( $this->get_config( 'isotope', $this->gallery_data ) ? ' enviratope' : '' ) . ( $this->get_config( 'css_animations', $this->gallery_data ) ? ' envira-gallery-css-animations' : '' ) . '" data-envira-columns="' . esc_attr( $this->get_config( 'columns', $this->gallery_data ) ) . '">';
 
-				// Start image loop.
+		// Start image loop.
 		foreach ( $data['gallery'] as $id => $item ) {
 
 			// Add the gallery item to the markup.
@@ -309,17 +319,16 @@ class Envira_Gallery_Shortcode {
 
 			// Increment the iterator.
 			++$i;
-
 		}
-				// End image loop.
+		// End image loop.
 
-			$gallery .= '</div>';
-			// Description.
+		$gallery .= '</div>';
+		// Description.
 		if ( isset( $this->gallery_data['config']['description_position'] ) && 'below' === $this->gallery_data['config']['description_position'] ) {
 			$gallery = $this->description( $gallery, $this->gallery_data );
 		}
 
-			$gallery = apply_filters( 'envira_gallery_output_after_container', $gallery, $this->gallery_data );
+		$gallery = apply_filters( 'envira_gallery_output_after_container', $gallery, $this->gallery_data );
 
 		$gallery .= '</div>';
 		$gallery  = apply_filters( 'envira_gallery_output_end', $gallery, $this->gallery_data );
@@ -430,9 +439,8 @@ class Envira_Gallery_Shortcode {
 		$output  = apply_filters( 'envira_gallery_output_dynamic_position', $output, $id, $item, $data, $i, 'bottom-right' );
 		$output .= '</div>';
 
-		// Title.
-		$title = str_replace( '<', '&lt;', $item['title'] ); // not sure why this was not encoded.
-		$title = wp_strip_all_tags( htmlspecialchars( $title ) );
+		$title = esc_html( wp_strip_all_tags( htmlspecialchars( $item['title'], ENT_QUOTES, 'UTF-8' ) ) );
+		$title = htmlentities( $title, ENT_QUOTES, 'UTF-8' );
 
 		// Caption.
 		// Lite doesn't support captions, so we fallback to the title.
@@ -505,8 +513,7 @@ class Envira_Gallery_Shortcode {
 
 			// Automatic.
 
-			$output_item = '<img id="envira-gallery-image-' . sanitize_html_class( $id ) . '" class="envira-gallery-image envira-gallery-image-' . $i . $gallery_theme . ' ' . $envira_lazy_load . '" data-envira-index="' . $i . '" src="' . esc_url( $output_src ) . '"' . ( $this->get_config( 'dimensions', $data ) ? ' width="' . $this->get_config( 'crop_width', $data ) . '" height="' . $this->get_config( 'crop_height', $data ) . '"' : '' ) . ' data-envira-src="' . esc_url( $output_src ) . '" data-envira-gallery-id="' . $data['id'] . '" data-envira-item-id="' . $id . '" data-envira-caption="' . $title . '" alt="' . esc_attr( $item['alt'] ) . '" title="' . wp_strip_all_tags( htmlspecialchars( $item['title'] ) ) . '" ' . apply_filters( 'envira_gallery_output_image_attr', '', $id, $item, $data, $i ) . ' itemprop="thumbnailUrl" data-envira-srcset="' . esc_url( $output_src ) . ' 400w,' . esc_url( $output_src ) . ' 2x" data-envira-width="' . $output_width . '" data-envira-height="' . $output_height . '" srcset="' . ( ( $envira_lazy_load ) ? 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' : esc_url( $image_src_retina ) . ' 2x' ) . '" data-safe-src="' . ( ( $envira_lazy_load ) ? 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' : esc_url( $output_src ) ) . '" />';
-
+			$output_item = '<img id="envira-gallery-image-' . sanitize_html_class( $id ) . '" class="envira-gallery-image envira-gallery-image-' . $i . $gallery_theme . ' ' . $envira_lazy_load . '" data-envira-index="' . $i . '" src="' . esc_url( $output_src ) . '"' . ( $this->get_config( 'dimensions', $data ) ? ' width="' . $this->get_config( 'crop_width', $data ) . '" height="' . $this->get_config( 'crop_height', $data ) . '"' : '' ) . ' data-envira-src="' . esc_url( $output_src ) . '" data-envira-gallery-id="' . $data['id'] . '" data-envira-item-id="' . $id . '" data-envira-caption="' . $caption . '" alt="' . esc_attr( $item['alt'] ) . '" title="' . wp_strip_all_tags( htmlspecialchars( $item['title'] ) ) . '" ' . apply_filters( 'envira_gallery_output_image_attr', '', $id, $item, $data, $i ) . ' itemprop="thumbnailUrl" data-envira-srcset="' . esc_url( $output_src ) . ' 400w,' . esc_url( $output_src ) . ' 2x" data-envira-width="' . $output_width . '" data-envira-height="' . $output_height . '" srcset="' . ( ( $envira_lazy_load ) ? 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' : esc_url( $image_src_retina ) . ' 2x' ) . '" data-safe-src="' . ( ( $envira_lazy_load ) ? 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' : esc_url( $output_src ) ) . '" />';
 		} else {
 
 			// Legacy.
@@ -522,7 +529,6 @@ class Envira_Gallery_Shortcode {
 					$padding_bottom = 100;
 				}
 				$output_item .= '<div class="envira-lazy" data-test-width="' . $output_width . '" data-test-height="' . $output_height . '" style="padding-bottom:' . $padding_bottom . '%;">';
-
 			}
 
 			$output_item .= '<img id="envira-gallery-image-' . sanitize_html_class( $id ) . '" class="envira-gallery-image envira-gallery-image-' . $i . $gallery_theme . '" data-envira-index="' . $i . '" src="' . esc_url( $output_src ) . '"' . ( $this->get_config( 'dimensions', $data ) ? ' width="' . $this->get_config( 'crop_width', $data ) . '" height="' . $this->get_config( 'crop_height', $data ) . '"' : '' ) . ' data-envira-src="' . esc_url( $output_src ) . '" data-envira-gallery-id="' . $data['id'] . '" data-envira-item-id="' . $id . '" data-envira-caption="' . $caption . '" alt="' . esc_attr( $item['alt'] ) . '" title="' . wp_strip_all_tags( htmlspecialchars( $title ) ) . '" ' . apply_filters( 'envira_gallery_output_image_attr', '', $id, $item, $data, $i ) . ' itemprop="thumbnailUrl" data-envira-srcset="' . esc_url( $output_src ) . ' 400w,' . esc_url( $output_src ) . ' 2x" srcset="' . ( ( $envira_lazy_load ) ? 'data:image/gif;base64,R0lGODlhAQABAIAAAP///////yH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' : esc_url( $image_src_retina ) . ' 2x' ) . '" />';
@@ -530,22 +536,21 @@ class Envira_Gallery_Shortcode {
 			if ( $envira_lazy_load ) {
 
 				$output_item .= '</div>';
-
 			}
 		}
 
-				$output_item = apply_filters( 'envira_gallery_output_image', $output_item, $id, $item, $data, $i );
+		$output_item = apply_filters( 'envira_gallery_output_image', $output_item, $id, $item, $data, $i );
 
-				// Add image to output.
-				$output .= $output_item;
-				$output  = apply_filters( 'envira_gallery_output_after_image', $output, $id, $item, $data, $i );
+		// Add image to output.
+		$output .= $output_item;
+		$output  = apply_filters( 'envira_gallery_output_after_image', $output, $id, $item, $data, $i );
 
 		if ( $create_link ) {
 			$output .= '</a>';
 		}
 
-			$output  = apply_filters( 'envira_gallery_output_after_link', $output, $id, $item, $data, $i );
-			$output .= '</div>';
+		$output  = apply_filters( 'envira_gallery_output_after_link', $output, $id, $item, $data, $i );
+		$output .= '</div>';
 
 		$output .= '</div>';
 		$output  = apply_filters( 'envira_gallery_output_single_item', $output, $id, $item, $data, $i );
@@ -658,10 +663,10 @@ class Envira_Gallery_Shortcode {
 		// Sort images based on method.
 		switch ( $sorting_method ) {
 			/**
-			* Random.
-			* - Again, by design, to ensure backward compat when upgrading from 1.3.7.x or older.
-			* where we had a 'random' key = 0 or 1. Sorting was introduced in 1.3.8.
-			*/
+			 * Random.
+			 * - Again, by design, to ensure backward compat when upgrading from 1.3.7.x or older.
+			 * where we had a 'random' key = 0 or 1. Sorting was introduced in 1.3.8.
+			 */
 			case '1':
 				// Shuffle keys.
 				$keys = array_keys( $data['gallery'] );
@@ -678,8 +683,8 @@ class Envira_Gallery_Shortcode {
 				break;
 
 			/**
-			* Image Meta.
-			*/
+			 * Image Meta.
+			 */
 			case 'src':
 			case 'title':
 			case 'caption':
@@ -709,8 +714,8 @@ class Envira_Gallery_Shortcode {
 				break;
 
 			/**
-			* Published Date.
-			*/
+			 * Published Date.
+			 */
 			case 'date':
 				// Get published date for each.
 				$keys = [];
@@ -742,20 +747,19 @@ class Envira_Gallery_Shortcode {
 				break;
 
 			/**
-			* None.
-			* - Do nothing.
-			*/
+			 * None.
+			 * - Do nothing.
+			 */
 			case '0':
 			case '':
 				break;
 
 			/**
-			* If developers have added their own sort options, let them run them here
-			*/
+			 * If developers have added their own sort options, let them run them here
+			 */
 			default:
 				$data = apply_filters( 'envira_gallery_sort_gallery', $data, $sorting_method, $gallery_id );
 				break;
-
 		}
 
 		return $data;
@@ -772,35 +776,37 @@ class Envira_Gallery_Shortcode {
 	 */
 	public function description( $gallery, $data ) {
 
-		$gallery    .= '<div class="envira-gallery-description envira-gallery-description-above" style="padding-bottom: ' . $this->get_config( 'margin', $data ) . 'px;">';
-			$gallery = apply_filters( 'envira_gallery_output_before_description', $gallery, $data );
+		$margin   = (int) $this->get_config( 'margin', $data );
+		$gallery .= '<div class="envira-gallery-description envira-gallery-description-above" style="padding-bottom: ' . $margin . 'px;">';
+		$gallery  = apply_filters( 'envira_gallery_output_before_description', $gallery, $data );
 
-			// Get description.
-			$description = $data['config']['description'];
+		// Get description via config helper and sanitize to prevent stored XSS.
+		$description_raw = (string) $this->get_config( 'description', $data );
+		$description     = wp_kses_post( $description_raw );
 
-			// If the WP_Embed class is available, use that to parse the content using registered oEmbed providers.
+		// If the WP_Embed class is available, use that to parse the content using registered oEmbed providers.
 		if ( isset( $GLOBALS['wp_embed'] ) ) {
 			$description = $GLOBALS['wp_embed']->autoembed( $description );
 		}
 
-			// Get the description and apply most of the filters that apply_filters( 'the_content' ) would use
-			// We don't use apply_filters( 'the_content' ) as this would result in a nested loop and a failure.
-			$description = wptexturize( $description );
-			$description = convert_smilies( $description );
-			$description = wpautop( $description );
-			$description = prepend_attachment( $description );
+		// Get the description and apply most of the filters that apply_filters( 'the_content' ) would use
+		// We don't use apply_filters( 'the_content' ) as this would result in a nested loop and a failure.
+		$description = wptexturize( $description );
+		$description = convert_smilies( $description );
+		$description = wpautop( $description );
+		$description = prepend_attachment( $description );
 
-			// Requires WordPress 4.4+.
+		// Requires WordPress 4.4+.
 		if ( function_exists( 'wp_make_content_images_responsive' ) ) {
 			$description = wp_filter_content_tags( $description );
 		}
 
-			// Append the description to the gallery output.
-			$gallery .= $description;
+		// Append the description to the gallery output.
+		$gallery .= $description;
 
-			// Filter the gallery HTML.
-			$gallery = apply_filters( 'envira_gallery_output_after_description', $gallery, $data );
-		$gallery    .= '</div>';
+		// Filter the gallery HTML.
+		$gallery  = apply_filters( 'envira_gallery_output_after_description', $gallery, $data );
+		$gallery .= '</div>';
 
 		return $gallery;
 	}
@@ -826,7 +832,7 @@ class Envira_Gallery_Shortcode {
 				envira_isotopes = [],
 				envira_isotopes_config = [];
 
-			jQuery(document).ready(function($){
+			jQuery(document).ready(function($) {
 
 				<?php
 				do_action( 'envira_gallery_api_start_global' );
@@ -843,20 +849,20 @@ class Envira_Gallery_Shortcode {
 					?>
 					var envira_container_<?php echo intval( $data['id'] ); ?> = '';
 
-				function envira_album_lazy_load_image( $id ) {
+					function envira_album_lazy_load_image($id) {
 
-					<?php if ( $this->get_config( 'lazy_loading', $data ) ) { ?>
+						<?php if ( $this->get_config( 'lazy_loading', $data ) ) { ?>
 
-				var responsivelyLazy = window.responsivelyLazy;
+							var responsivelyLazy = window.responsivelyLazy;
 
-					responsivelyLazy.run('#envira-gallery-'+ $id);
+							responsivelyLazy.run('#envira-gallery-' + $id);
 
-					<?php } else { ?>
-						/* to do: enable ENVIRA DEBUG to display this and other errors */
-						/* console.log ('load_images was pinged, but lazy load turned off'); */
-					<?php } ?>
+						<?php } else { ?>
+							/* to do: enable ENVIRA DEBUG to display this and other errors */
+							/* console.log ('load_images was pinged, but lazy load turned off'); */
+						<?php } ?>
 
-				}
+					}
 
 					<?php if ( intval( $this->get_config( 'columns', $data ) ) === 0 ) : ?>
 
@@ -871,7 +877,7 @@ class Envira_Gallery_Shortcode {
 						?>
 
 						$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').enviraJustifiedGallery({
-							rowHeight : <?php echo esc_js( $justified_row_height ); ?>,
+							rowHeight: <?php echo esc_js( $justified_row_height ); ?>,
 							maxRowHeight: -1,
 							waitThumbnailsLoad: true,
 							selector: '> div > div',
@@ -881,20 +887,20 @@ class Envira_Gallery_Shortcode {
 
 						});
 
-						$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').justifiedGallery().on('jg.complete', function (e) {
+						$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').justifiedGallery().on('jg.complete', function(e) {
 
 							envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
-							$(window).scroll(function(event){
+							$(window).scroll(function(event) {
 								envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
 							});
 
 						});
 
-						$( document ).on( "envira_pagination_ajax_load_completed", function() {
-							$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').justifiedGallery().on('jg.complete', function (e) {
+						$(document).on("envira_pagination_ajax_load_completed", function() {
+							$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').justifiedGallery().on('jg.complete', function(e) {
 
 								envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
-								$(window).scroll(function(event){
+								$(window).scroll(function(event) {
 									envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
 								});
 
@@ -903,54 +909,61 @@ class Envira_Gallery_Shortcode {
 
 						<?php if ( 'js-desaturate' === $gallery_theme || 'js-threshold' === $gallery_theme || 'js-blur' === $gallery_theme || 'js-vintage' === $gallery_theme ) : ?>
 
-						$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').on('jg.complete', function (e) {
-							if( navigator.userAgent.match(/msie/i) || $.browser.msie || navigator.appVersion.indexOf('Trident/') > 0 ) {
-								$('#envira-gallery-<?php echo intval( $data['id'] ); ?> img').each(function() {
-									var keep_id = $(this).attr('id');
-									$(this).attr('id', keep_id + '-effects' );
-									$(this).wrap('<div class="effect-wrapper" style="display:inline-block;width:' + this.width + 'px;height:' + this.height + 'px;">').clone().addClass('gotcolors').css({'position': 'absolute', 'opacity' : 0, 'z-index' : 1 }).attr('id', keep_id).insertBefore(this);
-									<?php
+							$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').on('jg.complete', function(e) {
+								if (navigator.userAgent.match(/msie/i) || $.browser.msie || navigator.appVersion.indexOf('Trident/') > 0) {
+									$('#envira-gallery-<?php echo intval( $data['id'] ); ?> img').each(function() {
+										var keep_id = $(this).attr('id');
+										$(this).attr('id', keep_id + '-effects');
+										$(this).wrap('<div class="effect-wrapper" style="display:inline-block;width:' + this.width + 'px;height:' + this.height + 'px;">').clone().addClass('gotcolors').css({
+											'position': 'absolute',
+											'opacity': 0,
+											'z-index': 1
+										}).attr('id', keep_id).insertBefore(this);
+										<?php
 
-									switch ( $gallery_theme ) {
-										case 'js-desaturate':
-											echo 'this.src = jg_effect_desaturate($(this).attr("src"));';
-											break;
-										case 'js-threshold':
-											echo 'this.src = jg_effect_threshold(this.src);';
-											break;
-										case 'js-blur':
-											echo 'this.src = jg_effect_blur(this.src);';
-											break;
-										case 'js-vintage':
-											echo 'jg_effect_vintage( this );';
-											break;
-									}
+										switch ( $gallery_theme ) {
+											case 'js-desaturate':
+												echo 'this.src = jg_effect_desaturate($(this).attr("src"));';
+												break;
+											case 'js-threshold':
+												echo 'this.src = jg_effect_threshold(this.src);';
+												break;
+											case 'js-blur':
+												echo 'this.src = jg_effect_blur(this.src);';
+												break;
+											case 'js-vintage':
+												echo 'jg_effect_vintage( this );';
+												break;
+										}
 
-									?>
-								});
-								$('#envira-gallery-<?php echo intval( $data['id'] ); ?> img').hover(
-									function() {
-										$(this).stop().animate({opacity: 1}, 200);
-									},
-									function() {
-										$(this).stop().animate({opacity: 0}, 200);
-									}
-								);
-							}
-							else {
+										?>
+									});
+									$('#envira-gallery-<?php echo intval( $data['id'] ); ?> img').hover(
+										function() {
+											$(this).stop().animate({
+												opacity: 1
+											}, 200);
+										},
+										function() {
+											$(this).stop().animate({
+												opacity: 0
+											}, 200);
+										}
+									);
+								} else {
 
-								$('#envira-gallery-<?php echo intval( $data['id'] ); ?> img').hover(
-									function() {
-										$(this).removeClass('envira-<?php echo esc_attr( $gallery_theme ); ?>');
-									},
-									function() {
-										$(this).addClass('envira-<?php echo esc_attr( $gallery_theme ); ?>');
-									}
-								);
-							}
+									$('#envira-gallery-<?php echo intval( $data['id'] ); ?> img').hover(
+										function() {
+											$(this).removeClass('envira-<?php echo esc_attr( $gallery_theme ); ?>');
+										},
+										function() {
+											$(this).addClass('envira-<?php echo esc_attr( $gallery_theme ); ?>');
+										}
+									);
+								}
 
 
-						});
+							});
 
 						<?php endif; ?>
 
@@ -966,33 +979,32 @@ class Envira_Gallery_Shortcode {
 						envira_isotopes_config['<?php echo intval( $data['id'] ); ?>'] = {
 							<?php do_action( 'envira_gallery_api_enviratope_config', $data ); ?>
 							itemSelector: '.envira-gallery-item',
-								masonry: {
-									columnWidth: '.envira-gallery-item'
-								}
+							masonry: {
+								columnWidth: '.envira-gallery-item'
+							}
 						};
 						<?php
 						// Initialize Isotope.
 						?>
-						envira_isotopes['<?php echo intval( $data['id'] ); ?>'] = envira_container_<?php echo intval( $data['id'] ); ?>
-																	= $('#envira-gallery-<?php echo intval( $data['id'] ); ?>').masonry(envira_isotopes_config['<?php echo intval( $data['id'] ); ?>']);
+						envira_isotopes['<?php echo intval( $data['id'] ); ?>'] = envira_container_<?php echo intval( $data['id'] ); ?> = $('#envira-gallery-<?php echo intval( $data['id'] ); ?>').masonry(envira_isotopes_config['<?php echo intval( $data['id'] ); ?>']);
 
-						$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').on( 'layoutComplete',
-						function( event, laidOutItems ) {
-							envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
-							$(window).scroll(function(event){
+						$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').on('layoutComplete',
+							function(event, laidOutItems) {
 								envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
-							});
-						}
-						);
-
-						$( document ).on( "envira_pagination_ajax_load_completed", function() {
-							$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').on( 'layoutComplete',
-							function( event, laidOutItems ) {
-								envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
-								$(window).scroll(function(event){
+								$(window).scroll(function(event) {
 									envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
 								});
 							}
+						);
+
+						$(document).on("envira_pagination_ajax_load_completed", function() {
+							$('#envira-gallery-<?php echo intval( $data['id'] ); ?>').on('layoutComplete',
+								function(event, laidOutItems) {
+									envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
+									$(window).scroll(function(event) {
+										envira_album_lazy_load_image(<?php echo intval( $data['id'] ); ?>);
+									});
+								}
 							);
 						});
 
@@ -1023,8 +1035,8 @@ class Envira_Gallery_Shortcode {
 						// Reduce to factor of 1.
 						$opacity = ( $opacity / 100 );
 						?>
-						envira_container_<?php echo intval( $data['id'] ); ?> = $('#envira-gallery-<?php echo intval( $data['id'] ); ?>').enviraImagesLoaded( function() {
-							$('.envira-gallery-item img').fadeTo( 'slow', <?php echo intval( $opacity ); ?> );
+						envira_container_<?php echo intval( $data['id'] ); ?> = $('#envira-gallery-<?php echo intval( $data['id'] ); ?>').enviraImagesLoaded(function() {
+							$('.envira-gallery-item img').fadeTo('slow', <?php echo intval( $opacity ); ?>);
 						});
 						<?php
 					}
@@ -1050,16 +1062,18 @@ class Envira_Gallery_Shortcode {
 							titlePosition: '<?php echo esc_js( $title_fb1 ); ?>',
 							// End options for Envira Lite with Fancybox 1.
 
-							<?php do_action( 'envira_gallery_api_config', $data ); // Depreciated. ?>
+							<?php
+							do_action( 'envira_gallery_api_config', $data ); // Depreciated.
+							?>
 							<?php do_action( 'envira_gallery_api_envirabox_config', $data ); ?>
 							<?php if ( ! $this->get_config( 'keyboard', $data ) ) : ?>
-							keys: 0,
+								keys: 0,
 							<?php endif; ?>
 							margin: <?php echo intval( apply_filters( 'envirabox_margin', 60, $data ) ); ?>,
-							arrows: <?php echo in_array( $this->get_config( 'lightbox_theme', $data ), [ 'base_dark' ], true ) ? 'true' : esc_attr( $this->get_config( 'arrows', $data ) ); ?>,
-							aspectRatio: <?php echo esc_js( apply_filters( 'envirabox_aspect', $this->get_config( 'aspect', $data ), $data ) ); ?>,
-							loop: <?php echo esc_js( apply_filters( 'envirabox_loop', $this->get_config( 'loop', $data ), $data ) ); ?>,
-							mouseWheel: <?php echo esc_js( apply_filters( 'mousewheel', $this->get_config( 'mousewheel', $data ), $data ) ); ?>,
+							arrows: <?php echo in_array( $this->get_config( 'lightbox_theme', $data ), [ 'base_dark' ], true ) ? wp_json_encode( true ) : wp_json_encode( filter_var( $this->get_config( 'arrows', $data ), FILTER_VALIDATE_BOOLEAN ) ); ?>,
+							aspectRatio: <?php echo wp_json_encode( (bool) apply_filters( 'envirabox_aspect', $this->get_config( 'aspect', $data ), $data ) ); ?>, // wp_json_encode((bool)) emits a bare true/false literal safe for unquoted JS context; esc_js() only protects quoted strings and cannot prevent property injection here.
+							loop: <?php echo wp_json_encode( (bool) apply_filters( 'envirabox_loop', $this->get_config( 'loop', $data ), $data ) ); ?>, // same as above — bare JS boolean literal, not a quoted string.
+							mouseWheel: <?php echo wp_json_encode( (bool) apply_filters( 'mousewheel', $this->get_config( 'mousewheel', $data ), $data ) ); ?>, // same as above — bare JS boolean literal, not a quoted string.
 							preload: 1,
 
 							<?php
@@ -1073,8 +1087,8 @@ class Envira_Gallery_Shortcode {
 							/* If open/close is standard, use openEffect, closeEffect */
 							if ( in_array( $lightbox_open_close_effect, $lightbox_standard_effects, true ) ) {
 								?>
-								openEffect: '<?php echo esc_attr( $lightbox_open_close_effect ); ?>',
-								closeEffect: '<?php echo esc_attr( $lightbox_open_close_effect ); ?>',
+								openEffect: '<?php echo esc_js( $lightbox_open_close_effect ); // esc_js(): value is inside a JS string; splitting echo across lines injects a literal newline → SyntaxError. ?>',
+								closeEffect: '<?php echo esc_js( $lightbox_open_close_effect ); ?>',
 								<?php
 							} else {
 
@@ -1092,8 +1106,8 @@ class Envira_Gallery_Shortcode {
 							/* If transition effect is standard, use nextEffect, prevEffect */
 							if ( in_array( $lightbox_transition_effect, $lightbox_standard_effects, true ) ) {
 								?>
-								nextEffect: '<?php echo esc_attr( $lightbox_transition_effect ); ?>',
-								prevEffect: '<?php echo esc_attr( $lightbox_transition_effect ); ?>',
+								nextEffect: '<?php echo esc_js( $lightbox_transition_effect ); // esc_js(): value is inside a JS string; splitting echo across lines injects a literal newline → SyntaxError. ?>',
+								prevEffect: '<?php echo esc_js( $lightbox_transition_effect ); ?>',
 								<?php
 							} else {
 
@@ -1107,13 +1121,13 @@ class Envira_Gallery_Shortcode {
 							}
 							?>
 							tpl: {
-								wrap     : '<?php echo $this->get_lightbox_template( $data ); // @codingStandardsIgnoreLine - Markup escapped via function ?>',
-								image    : '<img class="envirabox-image" src="{href}" alt="" data-envira-title="" data-envira-caption="" data-envira-index="" data-envira-data="" />',
-								iframe   : '<iframe id="envirabox-frame{rnd}" name="envirabox-frame{rnd}" class="envirabox-iframe" frameborder="0" vspace="0" hspace="0" allowtransparency="true" wekitallowfullscreen mozallowfullscreen allowfullscreen></iframe>',
-								error    : '<p class="envirabox-error"><?php echo esc_attr__( 'The requested content cannot be loaded.<br/>Please try again later.</p>', 'envira-gallery-lite' ); ?>',
-								closeBtn : '<a title="<?php echo esc_attr__( 'Close', 'envira-gallery-lite' ); ?>" class="envirabox-item envirabox-close" href="#"></a>',
-								next     : '<a title="<?php echo esc_attr__( 'Next', 'envira-gallery-lite' ); ?>" class="envirabox-nav envirabox-next envirabox-arrows-<?php echo esc_attr( $this->get_config( 'arrows_position', $data ) ); ?>" href="#"><span></span></a>',
-								prev     : '<a title="<?php echo esc_attr__( 'Previous', 'envira-gallery-lite' ); ?>" class="envirabox-nav envirabox-prev envirabox-arrows-<?php echo esc_attr( $this->get_config( 'arrows_position', $data ) ); ?>" href="#"><span></span></a>'
+								wrap: <?php echo wp_json_encode( $this->get_lightbox_template( $data ) ); // wp_json_encode() encodes newlines and quotes — safe to embed multi-line HTML in a JS string. ?>,
+								image: '<img class="envirabox-image" src="{href}" alt="" data-envira-title="" data-envira-caption="" data-envira-index="" data-envira-data="" />',
+								iframe: '<iframe id="envirabox-frame{rnd}" name="envirabox-frame{rnd}" class="envirabox-iframe" frameborder="0" vspace="0" hspace="0" allowtransparency="true" wekitallowfullscreen mozallowfullscreen allowfullscreen></iframe>',
+								error: '<p class="envirabox-error"><?php echo esc_attr__( 'The requested content cannot be loaded.<br/>Please try again later.</p>', 'envira-gallery-lite' ); ?>',
+								closeBtn: '<a title="<?php echo esc_attr__( 'Close', 'envira-gallery-lite' ); ?>" class="envirabox-item envirabox-close" href="#"></a>',
+								next: '<a title="<?php echo esc_attr__( 'Next', 'envira-gallery-lite' ); ?>" class="envirabox-nav envirabox-next envirabox-arrows-<?php echo esc_attr( $this->get_config( 'arrows_position', $data ) ); ?>" href="#"><span></span></a>',
+								prev: '<a title="<?php echo esc_attr__( 'Previous', 'envira-gallery-lite' ); ?>" class="envirabox-nav envirabox-prev envirabox-arrows-<?php echo esc_attr( $this->get_config( 'arrows_position', $data ) ); ?>" href="#"><span></span></a>'
 								<?php do_action( 'envira_gallery_api_templates', $data ); ?>
 							},
 							helpers: {
@@ -1124,57 +1138,67 @@ class Envira_Gallery_Shortcode {
 								if ( 'float_wrap' === $title_display ) {
 									$title_display = 'float';
 								}
+								// Validate against known enum; esc_attr() doesn't escape backslashes, enabling JS string injection.
+								if ( ! in_array( $title_display, [ 'float', 'inside', 'outside', 'over' ], true ) ) {
+									// Safe default matching the config default in common.php.
+									$title_display = 'float';
+								}
 								?>
 								title: {
 									<?php do_action( 'envira_gallery_api_title_config', $data ); ?>
-									type: '<?php echo esc_attr( $title_display ); ?>'
+									<?php
+									// esc_js() not esc_attr(): value is in a JS string literal; esc_attr() leaves backslashes unescaped.
+									?>
+									type: '<?php echo esc_js( $title_display ); ?>'
 								},
 								<?php if ( $this->get_config( 'thumbnails', $data ) ) : ?>
-								thumbs: {
-									width: <?php echo esc_attr( $this->get_config( 'thumbnails_width', $data ) ); ?>,
-									height: <?php echo esc_attr( $this->get_config( 'thumbnails_height', $data ) ); ?>,
-									source: function(current) {
-										if ( typeof current.element == 'undefined' ) {
-											return current.thumbnail;
-										} else {
-											return $(current.element).data('thumbnail');
+									thumbs: {
+										width: <?php echo absint( $this->get_config( 'thumbnails_width', $data ) ); ?>, // absint() produces a plain integer safe for an unquoted JS numeric context; esc_attr() encodes HTML entities but not commas/parentheses, allowing JS property injection.
+										height: <?php echo absint( $this->get_config( 'thumbnails_height', $data ) ); ?>, // same as above — bare JS integer, not an HTML attribute.
+										source: function(current) {
+											if (typeof current.element == 'undefined') {
+												return current.thumbnail;
+											} else {
+												return $(current.element).data('thumbnail');
+											}
+										},
+										<?php if ( in_array( $this->get_config( 'lightbox_theme', $data ), [ 'base_dark' ], true ) ) : ?>
+											dynamicMargin: true,
+										<?php endif; ?>
+										<?php
+										// Validate against known enum; esc_attr() doesn't escape backslashes, enabling JS string injection.
+										$thumbnails_position = $this->get_config( 'thumbnails_position', $data );
+										if ( ! in_array( $thumbnails_position, [ 'top', 'bottom' ], true ) ) {
+											// Safe default matching common.php config default.
+											$thumbnails_position = 'bottom';
 										}
+										?>
+										position: '<?php echo in_array( $this->get_config( 'lightbox_theme', $data ), [ 'base_dark' ], true ) ? 'bottom' : esc_js( $thumbnails_position ); // esc_js(): value is inside a JS string; splitting across lines injects a literal newline → SyntaxError. ?>'
 									},
-									<?php if ( in_array( $this->get_config( 'lightbox_theme', $data ), [ 'base_dark' ], true ) ) : ?>
-									dynamicMargin: true,
-									<?php endif; ?>
-									position: '
-									<?php
-									echo in_array( $this->get_config( 'lightbox_theme', $data ), [ 'base_dark' ], true )
-													? 'bottom'
-													: esc_attr( $this->get_config( 'thumbnails_position', $data ) );
-									?>
-													'
-								},
 								<?php endif; ?>
 								<?php if ( $this->get_config( 'toolbar', $data ) && ! in_array( $this->get_config( 'lightbox_theme', $data ), [ 'base_dark' ], true ) ) : ?>
-								buttons: {
-									tpl: '<?php echo $this->get_toolbar_template( $data ); // @codingStandardsIgnoreLine ?>',
-									position: '<?php echo esc_attr( $this->get_config( 'toolbar_position', $data ) ); ?>',
-									padding: '<?php echo ( ( 'bottom' === $this->get_config( 'toolbar_position', $data ) && $this->get_config( 'thumbnails', $data ) && $this->get_config( 'thumbnails_position', $data ) === 'bottom' ) ? true : false ); ?>'
-								},
+									buttons: {
+										tpl: <?php echo wp_json_encode( $this->get_toolbar_template( $data ) ); // wp_json_encode() encodes newlines and quotes — safe to embed multi-line HTML in a JS string. ?>,
+										position: '<?php echo esc_attr( $this->get_config( 'toolbar_position', $data ) ); ?>',
+										padding: '<?php echo ( ( 'bottom' === $this->get_config( 'toolbar_position', $data ) && $this->get_config( 'thumbnails', $data ) && $this->get_config( 'thumbnails_position', $data ) === 'bottom' ) ? true : false ); ?>'
+									},
 								<?php endif; ?>
 							},
 							<?php do_action( 'envira_gallery_api_config_callback', $data ); ?>
-							beforeLoad: function(){
+							beforeLoad: function() {
 
 								<?php
 
 								if ( ! $lightbox_images ) {
 
 									?>
-								this.title = $(this.element).attr('data-envira-caption');
+									this.title = $(this.element).attr('data-envira-caption');
 									<?php
 
 								} else {
 
 									?>
-								this.title = this.group[ this.index ].caption;
+									this.title = this.group[this.index].caption;
 									<?php
 
 								}
@@ -1183,18 +1207,18 @@ class Envira_Gallery_Shortcode {
 
 								<?php do_action( 'envira_gallery_api_before_load', $data ); ?>
 							},
-							afterLoad: function(){
+							afterLoad: function() {
 								$('envirabox-overlay-fixed').on({
-									'touchmove' : function(e){
+									'touchmove': function(e) {
 										e.preventDefault();
 									}
 								});
 
 								<?php do_action( 'envira_gallery_api_after_load', $data ); ?>
 							},
-							beforeShow: function(){
+							beforeShow: function() {
 								$(window).on({
-									'resize.envirabox' : function(){
+									'resize.envirabox': function() {
 										$.envirabox.update();
 									}
 								});
@@ -1204,15 +1228,15 @@ class Envira_Gallery_Shortcode {
 								// the image in the DOM or (if $lightbox_images defined) the image.
 								// from $lightbox_images.
 								?>
-								if ( typeof this.element === 'undefined' ) {
+								if (typeof this.element === 'undefined') {
 									<?php
 									// Using $lightbox_images.
 									?>
-									var gallery_id = this.group[ this.index ].gallery_id;
-									var gallery_item_id = this.group[ this.index ].id;
-									var alt = this.group[ this.index ].alt;
-									var title = this.group[ this.index ].title;
-									var caption = this.group[ this.index ].caption;
+									var gallery_id = this.group[this.index].gallery_id;
+									var gallery_item_id = this.group[this.index].id;
+									var alt = this.group[this.index].alt;
+									var title = this.group[this.index].title;
+									var caption = this.group[this.index].caption;
 									var index = this.index;
 								} else {
 									<?php
@@ -1232,24 +1256,24 @@ class Envira_Gallery_Shortcode {
 								// Set alt, data-envira-title, data-envira-caption and data-envira-index attributes on Lightbox image.
 								?>
 								this.inner.find('img').attr('alt', alt)
-													.attr('data-envira-gallery-id', gallery_id)
-													.attr('data-envira-item-id', gallery_item_id)
-													.attr('data-envira-title', title)
-													.attr('data-envira-caption', caption)
-													.attr('data-envira-index', index);
+									.attr('data-envira-gallery-id', gallery_id)
+									.attr('data-envira-item-id', gallery_item_id)
+									.attr('data-envira-title', title)
+									.attr('data-envira-caption', caption)
+									.attr('data-envira-index', index);
 
 								<?php
 								// Set retina image srcset if specified.
 								?>
-								if ( typeof retina_image !== 'undefined' && retina_image !== '' ) {
+								if (typeof retina_image !== 'undefined' && retina_image !== '') {
 									this.inner.find('img').attr('srcset', retina_image + ' 2x');
 								}
 
 								<?php do_action( 'envira_gallery_api_before_show', $data ); ?>
 							},
-							onStart: function(){
-																$('#envirabox-wrap, #envirabox-wrap #envirabox-left, #envirabox-wrap #envirabox-right').swipe( {
-									excludedElements:"label, button, input, select, textarea, .noSwipe",
+							onStart: function() {
+								$('#envirabox-wrap, #envirabox-wrap #envirabox-left, #envirabox-wrap #envirabox-right').swipe({
+									excludedElements: "label, button, input, select, textarea, .noSwipe",
 									swipe: function(event, direction, distance, duration, fingerCount, fingerData) {
 										if (direction === 'left') {
 											$.envirabox.next(direction);
@@ -1259,15 +1283,15 @@ class Envira_Gallery_Shortcode {
 											$.envirabox.close();
 										}
 									}
-								} );
+								});
 								<?php
 
 								// If title helper = float_wrap, add a CSS class so we can disable word-wrap.
 								if ( $this->get_config( 'title_display', $data ) === 'float_wrap' ) {
 									?>
-									if ( typeof this.helpers.title !== 'undefined' ) {
-										if ( ! $( 'div.envirabox-title' ).hasClass( 'envirabox-title-text-wrap' ) ) {
-											$( 'div.envirabox-title' ).addClass( 'envirabox-title-text-wrap' );
+									if (typeof this.helpers.title !== 'undefined') {
+										if (!$('div.envirabox-title').hasClass('envirabox-title-text-wrap')) {
+											$('div.envirabox-title').addClass('envirabox-title-text-wrap');
 										}
 									}
 									<?php
@@ -1276,40 +1300,40 @@ class Envira_Gallery_Shortcode {
 								do_action( 'envira_gallery_api_after_show', $data );
 								?>
 							},
-							beforeClose: function(){
+							beforeClose: function() {
 								<?php do_action( 'envira_gallery_api_before_close', $data ); ?>
 							},
-							afterClose: function(){
+							afterClose: function() {
 								$(window).off('resize.envirabox');
 								<?php do_action( 'envira_gallery_api_after_close', $data ); ?>
 							},
-							onUpdate: function(){
+							onUpdate: function() {
 								<?php
 								if ( $this->get_config( 'toolbar', $data ) ) :
 									?>
-								var envira_buttons_<?php echo intval( $data['id'] ); ?> = $('#envirabox-buttons li').map(function(){
-									return $(this).width();
-								}).get(),
-									envira_buttons_total_<?php echo intval( $data['id'] ); ?> = 0;
-								$.each(envira_buttons_<?php echo intval( $data['id'] ); ?>, function(i, val){
-									envira_buttons_total_<?php echo intval( $data['id'] ); ?> += parseInt(val, 10);
-								});
+									var envira_buttons_<?php echo intval( $data['id'] ); ?> = $('#envirabox-buttons li').map(function() {
+											return $(this).width();
+										}).get(),
+										envira_buttons_total_<?php echo intval( $data['id'] ); ?> = 0;
+									$.each(envira_buttons_<?php echo intval( $data['id'] ); ?>, function(i, val) {
+										envira_buttons_total_<?php echo intval( $data['id'] ); ?> += parseInt(val, 10);
+									});
 
-								envira_buttons_total_<?php echo intval( $data['id'] ); ?> += 1;
+									envira_buttons_total_<?php echo intval( $data['id'] ); ?> += 1;
 
-								$('#envirabox-buttons ul').width(envira_buttons_total_<?php echo intval( $data['id'] ); ?>);
-								$('#envirabox-buttons').width(envira_buttons_total_<?php echo intval( $data['id'] ); ?>).css('left', ($(window).width() - envira_buttons_total_<?php echo intval( $data['id'] ); ?>)/2);
+									$('#envirabox-buttons ul').width(envira_buttons_total_<?php echo intval( $data['id'] ); ?>);
+									$('#envirabox-buttons').width(envira_buttons_total_<?php echo intval( $data['id'] ); ?>).css('left', ($(window).width() - envira_buttons_total_<?php echo intval( $data['id'] ); ?>) / 2);
 								<?php endif; ?>
 
 								<?php do_action( 'envira_gallery_api_on_update', $data ); ?>
 							},
-							onCancel: function(){
+							onCancel: function() {
 								<?php do_action( 'envira_gallery_api_on_cancel', $data ); ?>
 							},
-							onPlayStart: function(){
+							onPlayStart: function() {
 								<?php do_action( 'envira_gallery_api_on_play_start', $data ); ?>
 							},
-							onPlayEnd: function(){
+							onPlayEnd: function() {
 								<?php do_action( 'envira_gallery_api_on_play_end', $data ); ?>
 							}
 						};
@@ -1318,7 +1342,7 @@ class Envira_Gallery_Shortcode {
 						if ( ! $lightbox_images ) {
 							// No lightbox images specified, so use images from DOM.
 							?>
-							envira_galleries['<?php echo intval( $data['id'] ); ?>'] = $('.envira-gallery-<?php echo intval( $data['id'] ); ?>').envirabox( envira_gallery_options );
+							envira_galleries['<?php echo intval( $data['id'] ); ?>'] = $('.envira-gallery-<?php echo intval( $data['id'] ); ?>').envirabox(envira_gallery_options);
 							<?php
 
 						} else {
@@ -1334,14 +1358,34 @@ class Envira_Gallery_Shortcode {
 								if ( empty( $image_id ) ) {
 									continue;
 								}
+
+								$title = wp_strip_all_tags( htmlspecialchars( $image['title'], ENT_QUOTES, 'UTF-8' ) );
+								$title = htmlentities( $title, ENT_QUOTES, 'UTF-8' );
+
 								?>
 								envira_gallery_images[<?php echo intval( $data['id'] ); ?>].push({
-									href: '<?php echo esc_url( $image['src'] ); ?>',
+									href: 
+									<?php
+									echo wp_json_encode( esc_url_raw( $image['src'] ) );
+									?>
+												,
 									gallery_id: <?php echo intval( $data['id'] ); ?>,
 									id: <?php echo intval( $image_id ); ?>,
-									alt: '<?php echo esc_attr( addslashes( str_replace( "\n", '<br />', $image['alt'] ) ) ); ?>',
-									caption: '<?php echo esc_attr( addslashes( str_replace( "\n", '<br />', $image['caption'] ) ) ); ?>',
-									title: '<?php echo esc_attr( addslashes( str_replace( "\n", '<br />', $image['title'] ) ) ); ?>',
+									alt: '
+									<?php
+									echo esc_js( str_replace( '"', ' ', $image['alt'] ) ); // esc_js() not esc_attr(): value is inside a JS string literal; esc_js() handles backslash and quote escaping correctly for this context.
+									?>
+												',
+									caption: '
+									<?php
+									echo esc_js( wp_strip_all_tags( $image['title'] ) ); // esc_js() not esc_html(): strips tags then escapes for JS string context; esc_html() produces HTML entities incorrect outside HTML context.
+									?>
+														',
+									title: '
+									<?php
+									echo esc_js( wp_strip_all_tags( $image['title'] ) ); // esc_js() not esc_html(): same reason as caption.
+									?>
+													',
 									index: <?php echo intval( $count ); ?>,
 									thumbnail: '<?php echo ( isset( $image['thumb'] ) ? esc_js( $image['thumb'] ) : '' ); ?>'
 									<?php do_action( 'envira_gallery_api_lightbox_image_attributes', $image, $image_id, $lightbox_images, $data ); ?>
@@ -1352,26 +1396,28 @@ class Envira_Gallery_Shortcode {
 
 							// Open envirabox when an image is clicked, telling envirabox which images are available to it.
 							?>
-							envira_galleries['<?php echo intval( $data['id'] ); ?>'] = $('.envira-gallery-<?php echo intval( $data['id'] ); ?>').envirabox( envira_gallery_options, envira_gallery_images[<?php echo intval( $data['id'] ); ?>] );
+							envira_galleries['<?php echo intval( $data['id'] ); ?>'] = $('.envira-gallery-<?php echo intval( $data['id'] ); ?>').envirabox(envira_gallery_options, envira_gallery_images[<?php echo intval( $data['id'] ); ?>]);
 							$('#envira-gallery-wrap-<?php echo intval( $data['id'] ); ?>').on('click', 'a.envira-gallery-link', function(e) {
 								e.preventDefault();
 								e.stopPropagation();
 								$.envirabox.close();
-								if ( $('#envira-gallery-wrap-<?php echo intval( $data['id'] ); ?> div.envira-pagination').length > 0 ) { /* this exists, perhaps pagination doesn't display nav because it's only one page? */
-									var envirabox_page = ( $('#envira-gallery-wrap-<?php echo intval( $data['id'] ); ?> div.envira-pagination').data('page') - 1 );
+								if ($('#envira-gallery-wrap-<?php echo intval( $data['id'] ); ?> div.envira-pagination').length > 0) {
+									/* this exists, perhaps pagination doesn't display nav because it's only one page? */
+									var envirabox_page = ($('#envira-gallery-wrap-<?php echo intval( $data['id'] ); ?> div.envira-pagination').data('page') - 1);
 								} else {
 									var envirabox_page = 0;
 								}
 
-								if ( $('#envira-gallery-wrap-<?php echo intval( $data['id'] ); ?> div.envira-pagination').length > 0 ) { /* this exists, perhaps pagination doesn't display nav because it's only one page? */
+								if ($('#envira-gallery-wrap-<?php echo intval( $data['id'] ); ?> div.envira-pagination').length > 0) {
+									/* this exists, perhaps pagination doesn't display nav because it's only one page? */
 									var envirabox_per_page = $('#envira-gallery-wrap-<?php echo intval( $data['id'] ); ?> div.envira-pagination').data('per-page');
 								} else {
 									var envirabox_per_page = $('.envira-gallery-image').length;
 								}
 
-								var envirabox_index = ( Number($('img', $(this)).data('envira-index')) - 1 );
+								var envirabox_index = (Number($('img', $(this)).data('envira-index')) - 1);
 								envira_gallery_options.index = ((envirabox_page * envirabox_per_page) + envirabox_index);
-								envira_galleries['<?php echo intval( $data['id'] ); ?>'] = $.envirabox( envira_gallery_images[<?php echo intval( $data['id'] ); ?>], envira_gallery_options );
+								envira_galleries['<?php echo intval( $data['id'] ); ?>'] = $.envirabox(envira_gallery_images[<?php echo intval( $data['id'] ); ?>], envira_gallery_options);
 							});
 							<?php
 						}
@@ -1393,7 +1439,7 @@ class Envira_Gallery_Shortcode {
 			if ( defined( 'SCRIPT_DEBUG' ) && ! SCRIPT_DEBUG ) {
 
 				// Minify before outputting to improve page load time.
-				echo $this->minify( ob_get_clean() ); // @codingStandardsIgnoreLine
+				echo $this->minify(ob_get_clean()); // @codingStandardsIgnoreLine
 
 			} else {
 
@@ -1473,7 +1519,7 @@ class Envira_Gallery_Shortcode {
 
 		// If we have custom classes defined for this gallery, output them now.
 		foreach ( (array) $this->get_config( 'classes', $data ) as $class ) {
-			$classes[] = $class;
+			$classes[] = sanitize_html_class( wp_unslash( $class ) );
 		}
 
 		// If the gallery has RTL support, add a class for it.
@@ -1612,17 +1658,13 @@ class Envira_Gallery_Shortcode {
 					// Get the requested WordPress defined image size.
 					$src = wp_get_attachment_image_src( $id, $image_size );
 				}
+			} elseif ( ! $retina ) {
+
+				$isize = $this->find_clostest_size( $data ) !== '' ? $this->find_clostest_size( $data ) : 'full';
+				$isize = ( 'full' === $image_size ) ? 'full' : $isize;
+				$src   = apply_filters( 'envira_gallery_retina_image_src', wp_get_attachment_image_src( $id, $isize ), $id, $item, $data, $this->is_mobile );
 			} else {
-
-				if ( ! $retina ) {
-
-					$isize = $this->find_clostest_size( $data ) !== '' ? $this->find_clostest_size( $data ) : 'full';
-					$isize = ( 'full' === $image_size ) ? 'full' : $isize;
-					$src   = apply_filters( 'envira_gallery_retina_image_src', wp_get_attachment_image_src( $id, $isize ), $id, $item, $data, $this->is_mobile );
-
-				} else {
-					$src = apply_filters( 'envira_gallery_retina_image_src', wp_get_attachment_image_src( $id, 'full' ), $id, $item, $data, $this->is_mobile );
-				}
+				$src = apply_filters( 'envira_gallery_retina_image_src', wp_get_attachment_image_src( $id, 'full' ), $id, $item, $data, $this->is_mobile );
 			}
 
 		endif;
@@ -1691,7 +1733,6 @@ class Envira_Gallery_Shortcode {
 					$args['height'] = $size['height'];
 				}
 				break;
-
 			}
 		}
 
@@ -1706,7 +1747,7 @@ class Envira_Gallery_Shortcode {
 				echo '<pre>Envira: Error occured resizing image (these messages are only displayed to logged in WordPress users):<br />';
 				echo 'Error: ' . esc_html( $resized_image->get_error_message() ) . '<br />';
 				echo 'Image: ' . esc_html( $image ) . '<br />';
-				echo 'Args: ' . var_export( $args, true ) . '</pre>'; // @codingStandardsIgnoreLine
+				echo 'Args: ' . var_export($args, true) . '</pre>'; // @codingStandardsIgnoreLine
 			}
 
 			// Return the non-cropped image as a fallback.
@@ -1786,19 +1827,16 @@ class Envira_Gallery_Shortcode {
 				if ( (bool) get_option( "{$_size}_crop" ) === true ) {
 
 					continue;
-
 				}
 				$sizes[ $_size ]['name']   = $_size;
 				$sizes[ $_size ]['width']  = get_option( "{$_size}_size_w" );
 				$sizes[ $_size ]['height'] = get_option( "{$_size}_size_h" );
 				$sizes[ $_size ]['crop']   = (bool) get_option( "{$_size}_crop" );
-
 			} elseif ( isset( $_wp_additional_image_sizes[ $_size ] ) ) {
 
 				if ( true === $_wp_additional_image_sizes[ $_size ]['crop'] ) {
 
 					continue;
-
 				}
 
 				$sizes[ $_size ] = [
@@ -1824,31 +1862,31 @@ class Envira_Gallery_Shortcode {
 	public function get_toolbar_template( $data ) {
 
 		// Build out the custom template based on options chosen.
-		$template         = '<div id="envirabox-buttons">';
-			$template    .= '<ul>';
-				$template = apply_filters( 'envira_gallery_toolbar_start', $template, $data );
+		$template  = '<div id="envirabox-buttons">';
+		$template .= '<ul>';
+		$template  = apply_filters( 'envira_gallery_toolbar_start', $template, $data );
 
-				// Prev.
-				$template .= '<li><a class="btnPrev" title="' . __( 'Previous', 'envira-gallery-lite' ) . '" href="javascript:;"></a></li>';
-				$template  = apply_filters( 'envira_gallery_toolbar_after_prev', $template, $data );
+		// Prev.
+		$template .= '<li><a class="btnPrev" title="' . __( 'Previous', 'envira-gallery-lite' ) . '" href="javascript:;"></a></li>';
+		$template  = apply_filters( 'envira_gallery_toolbar_after_prev', $template, $data );
 
-				// Next.
-				$template .= '<li><a class="btnNext" title="' . __( 'Next', 'envira-gallery-lite' ) . '" href="javascript:;"></a></li>';
-				$template  = apply_filters( 'envira_gallery_toolbar_after_next', $template, $data );
+		// Next.
+		$template .= '<li><a class="btnNext" title="' . __( 'Next', 'envira-gallery-lite' ) . '" href="javascript:;"></a></li>';
+		$template  = apply_filters( 'envira_gallery_toolbar_after_next', $template, $data );
 
-				// Title.
+		// Title.
 		if ( $this->get_config( 'toolbar_title', $data ) ) {
-			$template .= '<li id="envirabox-buttons-title"><span>' . $this->get_config( 'title', $data ) . '</span></li>';
+			$template .= '<li id="envirabox-buttons-title"><span>' . esc_js( $this->get_config( 'title', $data ) ) . '</span></li>'; // Fixed: esc_js() escapes single quotes and backslashes so the title cannot break out of the surrounding JS single-quoted string (Stored XSS).
 			$template  = apply_filters( 'envira_gallery_toolbar_after_title', $template, $data );
 		}
 
-				// Close.
-				$template .= '<li><a class="btnClose" title="' . __( 'Close', 'envira-gallery-lite' ) . '" href="javascript:;"></a></li>';
-				$template  = apply_filters( 'envira_gallery_toolbar_after_close', $template, $data );
+		// Close.
+		$template .= '<li><a class="btnClose" title="' . __( 'Close', 'envira-gallery-lite' ) . '" href="javascript:;"></a></li>';
+		$template  = apply_filters( 'envira_gallery_toolbar_after_close', $template, $data );
 
-				$template = apply_filters( 'envira_gallery_toolbar_end', $template, $data );
-			$template    .= '</ul>';
-		$template        .= '</div>';
+		$template  = apply_filters( 'envira_gallery_toolbar_end', $template, $data );
+		$template .= '</ul>';
+		$template .= '</div>';
 
 		// Return the template, filters applied and all.
 		return apply_filters( 'envira_gallery_toolbar', $template, $data );
@@ -1865,9 +1903,9 @@ class Envira_Gallery_Shortcode {
 	public function get_lightbox_template( $data ) {
 
 		// Build out the lightbox template.
-		$envirabox_wrap_css_classes = apply_filters( 'envirabox_wrap_css_classes', 'envirabox-wrap', $data );
+		$envirabox_wrap_css_classes = esc_js( apply_filters( 'envirabox_wrap_css_classes', 'envirabox-wrap', $data ) ); // Fixed: esc_js() escapes single quotes/backslashes in filter-supplied class values so they cannot break the outer JS single-quoted string (Stored XSS).
 
-		$envirabox_theme = apply_filters( 'envirabox_theme', 'envirabox-theme-' . $this->get_config( 'lightbox_theme', $data ), $data );
+		$envirabox_theme = esc_js( apply_filters( 'envirabox_theme', 'envirabox-theme-' . $this->get_config( 'lightbox_theme', $data ), $data ) ); // Fixed: esc_js() escapes single quotes/backslashes in filter-supplied theme class so it cannot break the outer JS single-quoted string (Stored XSS).
 
 		$template = '<div class="' . $envirabox_wrap_css_classes . '" tabIndex="-1"><div class="envirabox-skin ' . $envirabox_theme . '"><div class="envirabox-outer"><div class="envirabox-inner">';
 
@@ -1912,15 +1950,29 @@ class Envira_Gallery_Shortcode {
 	}
 
 	/**
+	 * Sanitizes the justified gallery theme parameter to prevent XSS.
+	 *
+	 * @since 1.12.4
+	 *
+	 * @param string $theme The theme value to sanitize.
+	 * @return string Sanitized theme value.
+	 */
+	public function sanitize_justified_gallery_theme( $theme ) {
+		// Delegate to the common class to ensure consistent sanitization logic across entry points.
+		return $this->common->sanitize_justified_gallery_theme( $theme );
+	}
+
+	/**
 	 * Helper method to minify a string of data.
 	 *
 	 * @since 1.0.4
 	 *
-	 * @param string  $string  String of data to minify.
+	 * @param string  $string_data String of data to minify.
 	 * @param boolean $strip_double_forward_slashes stirpe forward slashes.
+	 *
 	 * @return string $string Minified string of data.
 	 */
-	public function minify( $string, $strip_double_forward_slashes = true ) {
+	public function minify( $string_data, $strip_double_forward_slashes = true ) {
 
 		// Added a switch for stripping double forwardslashes.
 		// This can be disabled when using URLs in JS, to ensure http:// doesn't get removed.
@@ -1928,16 +1980,16 @@ class Envira_Gallery_Shortcode {
 		$strip_double_forward_slashes = apply_filters( 'envira_minify_strip_double_forward_slashes', $strip_double_forward_slashes );
 
 		if ( $strip_double_forward_slashes ) {
-			$clean = preg_replace( '/((?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:\/\/.*))/', '', $string );
+			$clean = preg_replace( '/((?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:\/\/.*))/', '', $string_data );
 		} else {
 			// Use less aggressive method.
-			$clean = preg_replace( '!/\*.*?\*/!s', '', $string );
+			$clean = preg_replace( '!/\*.*?\*/!s', '', $string_data );
 			$clean = preg_replace( '/\n\s*\n/', "\n", $clean );
 		}
 
 		$clean = str_replace( [ "\r\n", "\r", "\t", "\n", '  ', '    ', '     ' ], '', $clean );
 
-		return apply_filters( 'envira_gallery_minified_string', $clean, $string );
+		return apply_filters( 'envira_gallery_minified_string', $clean, $string_data );
 	}
 
 	/**
@@ -2047,7 +2099,6 @@ class Envira_Gallery_Shortcode {
 		if ( false === $p ) {
 
 			return false;
-
 		}
 
 		$extension = strtolower( trim( substr( $url, $p ) ) );
@@ -2057,7 +2108,6 @@ class Envira_Gallery_Shortcode {
 		if ( in_array( $extension, $img_extensions, true ) ) {
 
 			return true;
-
 		}
 
 		return false;

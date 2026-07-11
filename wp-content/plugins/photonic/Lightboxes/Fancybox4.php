@@ -2,7 +2,8 @@
 
 namespace Photonic_Plugin\Lightboxes;
 
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Components\Photo;
+use Photonic_Plugin\Platforms\Base;
 use Photonic_Plugin\Lightboxes\Features\Show_Videos_Inline;
 
 require_once 'Lightbox.php';
@@ -20,13 +21,16 @@ class Fancybox4 extends Lightbox {
 		$this->class = ['photonic-lb', 'photonic-fancybox', 'fancybox'];
 	}
 
-	public function get_photo_attributes($photo_data, $module) {
+	public function get_photo_attributes(array $photo_data, Base $module): array {
 		$out = parent::get_photo_attributes($photo_data, $module);
 		if (!empty($photo_data['video'])) {
-			$out .= ' data-type="html5video" ';
+			$out['data-type'] = 'html5video';
 		}
+
 		if (in_array($module->provider, ['google', 'flickr'], true)) {
-			return $out . (!empty($photo_data['video']) ? ' data-html5-href="' . $photo_data['video'] . '" ' : '');
+			if (!empty($photo_data['video'])) {
+				$out['data-html5-href'] = $photo_data['video'];
+			}
 		}
 		return $out;
 	}
@@ -34,7 +38,7 @@ class Fancybox4 extends Lightbox {
 	/**
 	 * {@inheritDoc}
 	 */
-	public function get_video_markup($photo, $module, $indent) {
+	public function get_video_markup(Photo $photo, Base $module, string $indent): string {
 		if (in_array($module->provider, ['flickr', 'google'], true)) {
 			return $this->get_inline_video_markup($photo, $module, $indent);
 		}
@@ -46,7 +50,7 @@ class Fancybox4 extends Lightbox {
 	/**
 	 * {@inheritDoc}
 	 */
-	public function get_grid_link($photo, $short_code, $module = null) {
+	public function get_grid_link(Photo $photo, array $short_code, Base $module): string {
 		if (!empty($photo->video) && in_array($module->provider, ['flickr', 'google'], true)) {
 			return $this->get_inline_video_grid_link($photo, $short_code, $module);
 		}

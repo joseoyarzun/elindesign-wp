@@ -161,10 +161,10 @@ class OMAPI_Blocks {
 
 		OMAPI_Utils::add_inline_script( $campaign_selector_handle, 'OMAPI', $this->get_data_for_js() );
 
-		$is_widgets_page = $pagenow === 'widgets.php';
+		$is_widgets_page = 'widgets.php' === $pagenow;
 
 		// Prevent enqueueing sidebar settings on widgets screen...
-		if ( ! $is_widgets_page ) {
+		if ( ! $is_widgets_page && ! is_customize_preview() ) {
 			wp_enqueue_script(
 				$this->base->plugin_slug . '-gutenberg-sidebar-settings',
 				$this->base->url . 'assets/dist/js/om-settings.min.js',
@@ -208,8 +208,8 @@ class OMAPI_Blocks {
 				'description'                     => esc_html__( 'Select and display one of your OptinMonster inline campaigns.', 'optin-monster-api' ),
 				'campaign_select'                 => esc_html__( 'Select Campaign...', 'optin-monster-api' ),
 				'campaign_select_display'         => esc_html__( 'Select and display your email marketing call-to-action campaigns from OptinMonster', 'optin-monster-api' ),
-				'create_new_popup'                => esc_html__( 'Create a New Popup Campaign', 'optin-monster-api' ),
-				'create_new_inline'               => esc_html__( 'Create a New Inline Campaign', 'optin-monster-api' ),
+				'create_new_popup'                => esc_html__( 'Create New Popup Campaign', 'optin-monster-api' ),
+				'create_new_inline'               => esc_html__( 'Create New Inline Campaign', 'optin-monster-api' ),
 				'block_settings'                  => esc_html__( 'OptinMonster Block Settings', 'optin-monster-api' ),
 				'settings'                        => esc_html__( 'OptinMonster Settings', 'optin-monster-api' ),
 				'campaign_selected'               => esc_html__( 'Campaign', 'optin-monster-api' ),
@@ -269,6 +269,7 @@ class OMAPI_Blocks {
 				'monsterlink'           => esc_url_raw( OPTINMONSTER_SHAREABLE_LINK ) . '/c/',
 				'wpVersion'             => $GLOBALS['wp_version'],
 				'customFieldsSupported' => post_type_supports( get_post_type( $post ), 'custom-fields' ),
+				'pluginUrl'             => esc_url_raw( plugin_dir_url( dirname( __FILE__ ) ) ),
 			);
 		}
 
@@ -355,8 +356,9 @@ class OMAPI_Blocks {
 	 * @return string
 	 */
 	public function get_output( $atts ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$context  = ! empty( $_REQUEST['context'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['context'] ) ) : '';
 		$is_rest  = defined( 'REST_REQUEST' ) && REST_REQUEST;
-		$context  = ! empty( $_REQUEST['context'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['context'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$is_gutes = $is_rest && 'edit' === $context;
 
 		// Our Guten-block handles the embed output manually.
@@ -364,11 +366,15 @@ class OMAPI_Blocks {
 			return;
 		}
 
+		// Unslash and sanitize the shortcode attributes.
+		$atts = array_map( 'sanitize_text_field', wp_unslash( $atts ) );
+
 		// Gutenberg block shortcodes default to following the rules.
-		// See assets/js/campaign-selector.js, attributes.followrules
+		// See assets/js/campaign-selector.js, attributes.followrules.
 		if ( ! isset( $atts['followrules'] ) ) {
 			$atts['followrules'] = true;
 		}
+		$atts['followrules'] = wp_validate_boolean( $atts['followrules'] );
 
 		$output = $this->base->shortcode->shortcode( $atts );
 

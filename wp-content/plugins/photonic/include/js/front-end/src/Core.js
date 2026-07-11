@@ -83,27 +83,19 @@ export class Core {
 	};
 
 	static waitForImages = async (selector) => {
+		let images = this.getImagesFromSelector(selector);
 		let imageUrlArray = [];
 		let anchorArray = [];
 		let setDimensions = false;
 
-		if (typeof selector === 'string') {
-			document.querySelectorAll(selector).forEach(selection => {
-				Array.from(selection.getElementsByTagName('img')).forEach(img => {
-					imageUrlArray.push(img.getAttribute('src'));
-					anchorArray.push(img.parentElement);
-				});
-			});
+		if (selector instanceof Element && selector.getAttribute('data-photonic-platform') === 'instagram') {
+			setDimensions = true;
 		}
-		else if (selector instanceof Element) {
-			if (selector.getAttribute('data-photonic-platform') === 'instagram') {
-				setDimensions = true;
-			}
-			Array.from(selector.getElementsByTagName('img')).forEach(img => {
-				imageUrlArray.push(img.getAttribute('src'));
-				anchorArray.push(img.parentElement);
-			});
-		}
+
+		images.forEach(img => {
+			imageUrlArray.push(img.getAttribute('src'));
+			anchorArray.push(img.parentElement);
+		});
 
 		const promiseArray = []; // create an array for promises
 		const imageArray = []; // array for the images
@@ -128,21 +120,102 @@ export class Core {
 		return imageArray;
 	};
 
+	static loadSingleImage = async(image) => {
+		const promiseArray = [];
+		let retImage = null;
+		promiseArray.push(new Promise(resolve => {
+			const img = new Image();
+			img.onload = () => {
+				resolve();
+			};
+
+			if (image.getAttribute('data-src') !== null) {
+				img.src = image.getAttribute('data-src');
+			}
+			else {
+				img.src = image.getAttribute('src'); // Leave the 'src' in just as a backup. E.g. Gallery header images
+			}
+
+			retImage = img;
+		}));
+
+		await Promise.all(promiseArray);
+		return retImage;
+	};
+
+	static watchForImages = (selector) => {
+		let images = this.getImagesFromSelector(selector);
+
+		const intersectionObserver = new IntersectionObserver((items, observer) => {
+			items.forEach((item) => {
+				if (item.isIntersecting || item.intersectionRatio > 0) {
+					const image = item.target;
+					image.closest('a').classList.add('photonic-image-loading');
+
+					this.loadSingleImage(image).then(() => {
+						if (image.getAttribute('data-src') !== null && image.getAttribute('data-src') !== '') {
+							image.src = image.getAttribute('data-src');
+							image.setAttribute('data-src', '');
+							image.setAttribute('data-loaded', 'true');
+						}
+
+						image.closest('a').classList.remove('photonic-image-loading');
+						Util.fadeIn(image);
+					});
+					observer.unobserve(image);
+				}
+			});
+		});
+
+		images.forEach((image) => {
+			intersectionObserver.observe(image);
+		});
+	};
+
+	static getImagesFromSelector = selector => {
+		let images = [];
+		if (typeof selector === 'string') {
+			document.querySelectorAll(selector).forEach(selection => {
+				images = Array.from(selection.getElementsByTagName('img'));
+			});
+		}
+		else if (selector instanceof Element) {
+			images = Array.from(selector.getElementsByTagName('img'));
+		}
+		else if (selector instanceof NodeList) {
+			selector.forEach((selection) => {
+				images.push(selection.querySelector('img'));
+			});
+		}
+		return images;
+	};
+
 	static standardizeTitleWidths = () => {
 		const self = this;
-		document.querySelectorAll('.photonic-standard-layout.title-display-below, .photonic-standard-layout.title-display-hover-slideup-show, .photonic-standard-layout.title-display-slideup-stick').forEach(grid => {
-			self.waitForImages(grid).then(() => {
-				grid.querySelectorAll('.photonic-thumb').forEach(item => {
-					let img = item.getElementsByTagName('img');
-					if (img != null) {
-						img = img[0];
-						let title = item.querySelector('.photonic-title-info');
-						if (title) {
-							title.style.width = img.width + 'px';
-						}
+
+		const setWidths = grid => {
+			grid.querySelectorAll('.photonic-thumb').forEach(item => {
+				let img = item.getElementsByTagName('img');
+				if (img != null) {
+					img = img[0];
+					let title = item.querySelector('.photonic-title-info');
+					if (title) {
+						title.style.width = img.width + 'px';
 					}
-				});
+				}
 			});
+		};
+
+		document.querySelectorAll('.photonic-standard-layout.title-display-below, .photonic-standard-layout.title-display-hover-slideup-show, .photonic-standard-layout.title-display-slideup-stick').forEach(grid => {
+			if (grid.classList.contains('sizes-present')) {
+				self.watchForImages(grid);
+				setWidths(grid);
+			}
+			else {
+				self.waitForImages(grid).then(() => {
+					setWidths(grid);
+				});
+			}
 		});
 	};
 
@@ -151,7 +224,10 @@ export class Core {
 		thumbs.forEach((thumb) => {
 			if (!thumb.parentNode.classList.contains('photonic-header-title')) {
 				const title = thumb.getAttribute('title');
+				// Not doing a Util.getText, which uses innerHTML, which is susceptible to XSS
 				thumb.setAttribute('title', Util.getText(title));
+				const dataTitle = thumb.getAttribute('data-title')
+				thumb.setAttribute('data-title', Util.HTMLSanitizer.SanitizeHTML(dataTitle));
 			}
 		});
 	};
@@ -164,11 +240,16 @@ export class Core {
 
 	static showRegularGrids = () => {
 		document.querySelectorAll('.photonic-standard-layout').forEach(grid => {
-			this.waitForImages(grid).then(() => {
-				grid.querySelectorAll('.photonic-level-1, .photonic-level-2').forEach(item => {
-					item.style.display = 'inline-block';
+			if (grid.classList.contains('sizes-present')) {
+				this.watchForImages(grid);
+			}
+			else {
+				this.waitForImages(grid).then(() => {
+					grid.querySelectorAll('.photonic-level-1, .photonic-level-2').forEach(item => {
+						item.style.display = 'inline-block';
+					});
 				});
-			});
+			}
 		});
 	};
 

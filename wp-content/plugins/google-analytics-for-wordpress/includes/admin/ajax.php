@@ -79,7 +79,7 @@ function monsterinsights_ajax_install_addon() {
 		ob_start();
 		if ( false === ( $creds = request_filesystem_credentials( $url, $method, false, false, null ) ) ) {
 			$form = ob_get_clean();
-			echo json_encode( array( 'form' => $form ) );
+			echo wp_json_encode( array( 'form' => $form ) );
 			wp_die();
 		}
 
@@ -88,7 +88,7 @@ function monsterinsights_ajax_install_addon() {
 			ob_start();
 			request_filesystem_credentials( $url, $method, true, false, null );
 			$form = ob_get_clean();
-			echo json_encode( array( 'form' => $form ) );
+			echo wp_json_encode( array( 'form' => $form ) );
 			wp_die();
 		}
 
@@ -103,13 +103,13 @@ function monsterinsights_ajax_install_addon() {
 		wp_cache_flush();
 		if ( $installer->plugin_info() ) {
 			$plugin_basename = $installer->plugin_info();
-			echo json_encode( array( 'plugin' => $plugin_basename ) );
+			echo wp_json_encode( array( 'plugin' => $plugin_basename ) );
 			wp_die();
 		}
 	}
 
 	// Send back a response.
-	echo json_encode( true );
+	echo wp_json_encode( true );
 	wp_die();
 
 }
@@ -148,11 +148,16 @@ function monsterinsights_ajax_activate_addon() {
 		}
 
 		if ( is_wp_error( $activate ) ) {
-			echo json_encode( array( 'error' => $activate->get_error_message() ) );
+			echo wp_json_encode( array( 'error' => $activate->get_error_message() ) );
 			wp_die();
 		}
 
 		do_action( 'monsterinsights_after_ajax_activate_addon', sanitize_text_field( $_POST['plugin'] ) );
+
+		// Flush report caches so the newly activated addon's data is fetched fresh.
+		monsterinsights_cache_flush_group( 'reports' );
+		monsterinsights_cache_flush_group( 'overview' );
+		monsterinsights_flag_flush_cache_registry();
 
 		// FunnelKit Stripe Woo Payment Gateway activation.
 		if ( 'funnelkit-stripe-woo-payment-gateway/funnelkit-stripe-woo-payment-gateway.php' === $plugin ) {
@@ -160,7 +165,7 @@ function monsterinsights_ajax_activate_addon() {
 		}
 	}
 
-	echo json_encode( true );
+	echo wp_json_encode( true );
 	wp_die();
 }
 
@@ -193,7 +198,7 @@ function monsterinsights_ajax_deactivate_addon() {
 
 	do_action( 'monsterinsights_after_ajax_deactivate_addon', sanitize_text_field( $_POST['plugin'] ) );
 
-	echo json_encode( true );
+	echo wp_json_encode( true );
 	wp_die();
 }
 
@@ -217,12 +222,12 @@ function monsterinsights_ajax_dismiss_notice() {
 		MonsterInsights()->notices->dismiss( $_POST['notice'] );
 
 		// Return true
-		echo json_encode( true );
+		echo wp_json_encode( true );
 		wp_die();
 	}
 
 	// If here, an error occurred
-	echo json_encode( false );
+	echo wp_json_encode( false );
 	wp_die();
 
 }
@@ -230,12 +235,12 @@ function monsterinsights_ajax_dismiss_notice() {
 add_action( 'wp_ajax_monsterinsights_ajax_dismiss_notice', 'monsterinsights_ajax_dismiss_notice' );
 
 /**
- * Dismiss SEMRush CTA
+ * Dismiss SEOBoost CTA
  *
  * @access public
  * @since 7.12.3
  */
-function monsterinsights_ajax_dismiss_semrush_cta() {
+function monsterinsights_ajax_dismiss_seoboost_cta() {
 	check_ajax_referer( 'mi-admin-nonce', 'nonce' );
 
 	if ( ! current_user_can( 'monsterinsights_save_settings' ) ) {
@@ -243,7 +248,7 @@ function monsterinsights_ajax_dismiss_semrush_cta() {
 	}
 
 	// Deactivate the notice
-	if ( update_option( 'monsterinsights_dismiss_semrush_cta', 'yes' ) ) {
+	if ( update_option( 'monsterinsights_dismiss_seoboost_cta', 'yes' ) ) {
 		// Return true
 		wp_send_json( array(
 			'dismissed' => 'yes',
@@ -258,7 +263,7 @@ function monsterinsights_ajax_dismiss_semrush_cta() {
 	wp_die();
 }
 
-add_action( 'wp_ajax_monsterinsights_vue_dismiss_semrush_cta', 'monsterinsights_ajax_dismiss_semrush_cta' );
+add_action( 'wp_ajax_monsterinsights_vue_dismiss_seoboost_cta', 'monsterinsights_ajax_dismiss_seoboost_cta' );
 
 
 /**
@@ -295,17 +300,17 @@ add_action( 'wp_ajax_monsterinsights_vue_dismiss_aiseo_cta', 'monsterinsights_vu
 /**
  * Get the sem rush cta dismiss status value
  */
-function monsterinsights_get_sem_rush_cta_status() {
+function monsterinsights_get_seo_boost_cta_status() {
 	check_ajax_referer( 'mi-admin-nonce', 'nonce' );
 
-	$dismissed_cta = get_option( 'monsterinsights_dismiss_semrush_cta', 'no' );
+	$dismissed_cta = get_option( 'monsterinsights_dismiss_seoboost_cta', 'no' );
 
 	wp_send_json( array(
 		'dismissed' => $dismissed_cta,
 	) );
 }
 
-add_action( 'wp_ajax_monsterinsights_get_sem_rush_cta_status', 'monsterinsights_get_sem_rush_cta_status' );
+add_action( 'wp_ajax_monsterinsights_get_seo_boost_cta_status', 'monsterinsights_get_seo_boost_cta_status' );
 
 /**
  * Checks if AISEO call-to-action is dismissed.
@@ -415,11 +420,11 @@ function monsterinsights_check_plugin_funnelkit_funnelkit_stripe_woo_gateway_con
 	$fkwcs_con_status = get_option('fkwcs_con_status');
 
 	if ( 'success' === $fkwcs_con_status ) {
-		echo json_encode( true );
+		echo wp_json_encode( true );
 		wp_die();
 	}
 
-	echo json_encode( false );
+	echo wp_json_encode( false );
 	wp_die();
 
 }
@@ -443,3 +448,143 @@ function monsterinsights_ajax_dismiss_wpconsent_notice() {
 	wp_send_json_success( array( 'dismissed' => true ) );
 }
 add_action( 'wp_ajax_monsterinsights_dismiss_wpconsent_notice', 'monsterinsights_ajax_dismiss_wpconsent_notice' );
+
+/**
+ * Generic cache backfill via AJAX.
+ *
+ * Stores data in the MonsterInsights cache system (object cache with DB fallback).
+ * Used by the useCachedFetch composable's backfill path after a direct Relay fetch.
+ *
+ * @since 9.11.0
+ *
+ * @global string $_POST['cache_group'] Cache group name (e.g., 'overview_report').
+ * @global string $_POST['cache_key']   Cache key identifier.
+ * @global string $_POST['data']        JSON-encoded data to cache.
+ * @global int    $_POST['ttl']         Optional. Cache TTL in seconds (default 3600).
+ * @global string $_POST['nonce']       Security nonce.
+ */
+function monsterinsights_ajax_backfill_cache() {
+	check_ajax_referer( 'mi-admin-nonce', 'nonce' );
+
+	if ( ! current_user_can( 'monsterinsights_view_dashboard' ) ) {
+		wp_send_json_error( array( 'message' => __( 'You do not have permission to perform this action.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	$allowed_groups = array( 'overview', 'custom_dashboard', 'custom_dimensions' );
+
+	$cache_group = ! empty( $_POST['cache_group'] ) ? sanitize_text_field( wp_unslash( $_POST['cache_group'] ) ) : '';
+	$cache_key   = ! empty( $_POST['cache_key'] ) ? sanitize_text_field( wp_unslash( $_POST['cache_key'] ) ) : '';
+
+	if ( empty( $cache_group ) || empty( $cache_key ) ) {
+		wp_send_json_error( array( 'message' => __( 'Missing required cache parameters.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	if ( ! in_array( $cache_group, $allowed_groups, true ) ) {
+		wp_send_json_error( array( 'message' => __( 'Invalid cache group.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	$raw_data = ! empty( $_POST['data'] ) ? wp_unslash( $_POST['data'] ) : '';
+	if ( strlen( $raw_data ) > 500000 ) {
+		wp_send_json_error( array( 'message' => __( 'Data payload too large.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	$data = ! empty( $raw_data ) ? json_decode( $raw_data, true ) : null;
+	$ttl  = ! empty( $_POST['ttl'] ) ? absint( $_POST['ttl'] ) : HOUR_IN_SECONDS;
+
+	if ( $data === null && $raw_data !== '' ) {
+		wp_send_json_error( array( 'message' => __( 'Invalid JSON in data parameter.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	if ( $data === null ) {
+		wp_send_json_error( array( 'message' => __( 'Missing required cache parameters.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	monsterinsights_cache_set( $cache_key, $data, $cache_group, $ttl );
+
+	wp_send_json_success();
+}
+add_action( 'wp_ajax_monsterinsights_backfill_cache', 'monsterinsights_ajax_backfill_cache' );
+
+/**
+ * Get cached data that was stored via backfill (monsterinsights_backfill_cache).
+ * Used by the useCachedFetch composable when the localStorage registry indicates
+ * the data is cached in WP.
+ *
+ * @since 9.11.0
+ *
+ * @global string $_POST['cache_group'] Cache group name (e.g., 'overview').
+ * @global string $_POST['cache_key']   Cache key identifier.
+ * @global string $_POST['nonce']       Security nonce.
+ */
+function monsterinsights_ajax_get_backfill_cache() {
+	check_ajax_referer( 'mi-admin-nonce', 'nonce' );
+
+	if ( ! current_user_can( 'monsterinsights_view_dashboard' ) ) {
+		wp_send_json_error( array( 'message' => __( 'You do not have permission to perform this action.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	$allowed_groups = array( 'overview', 'custom_dashboard', 'custom_dimensions' );
+
+	$cache_group = ! empty( $_POST['cache_group'] ) ? sanitize_text_field( wp_unslash( $_POST['cache_group'] ) ) : '';
+	$cache_key   = ! empty( $_POST['cache_key'] ) ? sanitize_text_field( wp_unslash( $_POST['cache_key'] ) ) : '';
+
+	if ( empty( $cache_group ) || empty( $cache_key ) ) {
+		wp_send_json_error( array( 'message' => __( 'Missing required cache parameters.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	if ( ! in_array( $cache_group, $allowed_groups, true ) ) {
+		wp_send_json_error( array( 'message' => __( 'Invalid cache group.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	// Extract additional parameters for sample data filtering
+	$extra_params = array();
+	if ( ! empty( $_POST['selected_metrics'] ) ) {
+		$metrics_raw = wp_unslash( $_POST['selected_metrics'] );
+		$extra_params['selected_metrics'] = is_string( $metrics_raw ) ? json_decode( $metrics_raw, true ) : $metrics_raw;
+	}
+	if ( ! empty( $_POST['active_tab'] ) ) {
+		$extra_params['active_tab'] = sanitize_text_field( wp_unslash( $_POST['active_tab'] ) );
+	}
+	if ( isset( $_POST['compare'] ) ) {
+		$extra_params['compare'] = filter_var( wp_unslash( $_POST['compare'] ), FILTER_VALIDATE_BOOLEAN );
+	}
+	if ( ! empty( $_POST['api_filters'] ) ) {
+		$api_filters_raw = wp_unslash( $_POST['api_filters'] );
+		if ( is_string( $api_filters_raw ) ) {
+			$decoded = json_decode( $api_filters_raw, true );
+			if ( is_array( $decoded ) ) {
+				$extra_params['api_filters'] = $decoded;
+			}
+		} elseif ( is_array( $api_filters_raw ) ) {
+			$extra_params['api_filters'] = $api_filters_raw;
+		}
+	}
+
+	/**
+	 * Filter to intercept backfill cache requests with sample data.
+	 *
+	 * When sample data mode is enabled via _monsterinsights-utils plugin,
+	 * this filter returns sample data instead of fetching from cache/API.
+	 *
+	 * @since 9.11.0
+	 *
+	 * @param mixed  $data         The cached data (null to continue normal flow).
+	 * @param string $cache_key    The cache key identifier.
+	 * @param string $cache_group  The cache group (e.g., 'overview').
+	 * @param array  $extra_params Additional parameters (selected_metrics, active_tab, compare, api_filters).
+	 */
+	$sample_data = apply_filters( 'monsterinsights_get_backfill_cache', null, $cache_key, $cache_group, $extra_params );
+
+	if ( null !== $sample_data ) {
+		wp_send_json_success( $sample_data );
+	}
+
+	$data = monsterinsights_cache_get( $cache_key, $cache_group );
+
+	if ( false === $data ) {
+		wp_send_json_error( array( 'message' => __( 'Cache miss.', 'google-analytics-for-wordpress' ) ) );
+	}
+
+	wp_send_json_success( $data );
+}
+add_action( 'wp_ajax_monsterinsights_get_backfill_cache', 'monsterinsights_ajax_get_backfill_cache' );

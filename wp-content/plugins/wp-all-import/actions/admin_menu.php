@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Register plugin specific admin menu
  */
@@ -11,16 +12,17 @@ function pmxi_admin_menu() {
 	if (current_user_can( PMXI_Plugin::$capabilities )) { // admin management options
 		
 		$wpai_menu = array(
-			array('pmxi-admin-import',  __('New Import', 'pmxi_plugin')),
-			array('pmxi-admin-manage' ,  __('Manage Imports', 'pmxi_plugin')),
-			array('pmxi-admin-settings',  __('Settings', 'pmxi_plugin')),
-			array('pmxi-admin-help',  __('Support', 'pmxi_plugin')),
-			array('pmxi-admin-history',  __('History', 'pmxi_plugin')),			
+			array('pmxi-admin-import',  __('New Import', 'wp-all-import')),
+			array('pmxi-admin-manage' ,  __('Manage Imports', 'wp-all-import')),
+			array('pmxi-admin-settings',  __('Settings', 'wp-all-import')),
+			array('pmxi-admin-help',  __('Support', 'wp-all-import')),
+			array('pmxi-admin-partners',  __('Partner Discounts', 'wp-all-import')),	
+			array('pmxi-admin-history',  __('History', 'wp-all-import')),		
 		);
 
 		$wpai_menu = apply_filters('pmxi_admin_menu', $wpai_menu);		
 
-		add_menu_page(__('WP All Import', 'wp_all_import_plugin'), __('All Import', 'wp_all_import_plugin'), PMXI_Plugin::$capabilities, 'pmxi-admin-home', array(PMXI_Plugin::getInstance(), 'adminDispatcher'), 'data:image/svg+xml;base64,' . $icon_base64, 112);
+		add_menu_page(__('WP All Import', 'wp-all-import'), __('All Import', 'wp-all-import'), PMXI_Plugin::$capabilities, 'pmxi-admin-home', array(PMXI_Plugin::getInstance(), 'adminDispatcher'), 'data:image/svg+xml;base64,' . $icon_base64, 112);
 		// workaround to rename 1st option to `Home`
 		$submenu['pmxi-admin-home'] = array();
 

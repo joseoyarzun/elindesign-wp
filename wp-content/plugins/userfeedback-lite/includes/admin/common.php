@@ -134,12 +134,67 @@ function userfeedback_admin_styles() {
 			array(),
 			userfeedback_get_asset_version()
 		);
+
+		wp_enqueue_style(
+			'userfeedback-icons-fontawesome',
+			plugins_url( '/assets/vue/icon-choices/css/fontawesome.min.css' , USERFEEDBACK_PLUGIN_FILE ),
+			array(),
+			userfeedback_get_asset_version()
+		);
+
+		wp_enqueue_style(
+			'userfeedback-icons-brands',
+			plugins_url( '/assets/vue/icon-choices/css/brands.min.css' , USERFEEDBACK_PLUGIN_FILE ),
+			array(),
+			userfeedback_get_asset_version()
+		);
+
+		wp_enqueue_style(
+			'userfeedback-icons-regular',
+			plugins_url( '/assets/vue/icon-choices/css/regular.min.css' , USERFEEDBACK_PLUGIN_FILE ),
+			array(),
+			userfeedback_get_asset_version()
+		);
+
+		wp_enqueue_style(
+			'userfeedback-icons-solid',
+			plugins_url( '/assets/vue/icon-choices/css/solid.min.css' , USERFEEDBACK_PLUGIN_FILE ),
+			array(),
+			userfeedback_get_asset_version()
+		);
+	}
+
+	if ( userfeedback_screen_is_email_survey() ) {
+		wp_enqueue_style(
+			'userfeedback-vue-email-surveys',
+			userfeedback_get_admin_asset_url( '/assets/vue/css/email-surveys.css' ),
+			array(),
+			userfeedback_get_asset_version()
+		);
+	}
+
+	if ( userfeedback_screen_is_post_ratings() ) {
+		wp_enqueue_style(
+			'userfeedback-vue-post-ratings',
+			userfeedback_get_admin_asset_url( '/assets/vue/css/post-ratings.css' ),
+			array(),
+			userfeedback_get_asset_version()
+		);
 	}
 
 	if ( userfeedback_screen_is_results() ) {
 		wp_enqueue_style(
 			'userfeedback-vue-results',
 			userfeedback_get_admin_asset_url( '/assets/vue/css/results.css' ),
+			array(),
+			userfeedback_get_asset_version()
+		);
+	}
+
+	if ( userfeedback_screen_is_heatmap() ) {
+		wp_enqueue_style(
+			'userfeedback-vue-heatmap',
+			userfeedback_get_admin_asset_url( '/assets/vue/css/heatmap-admin.css' ),
 			array(),
 			userfeedback_get_asset_version()
 		);
@@ -160,7 +215,16 @@ function userfeedback_admin_styles() {
 			userfeedback_get_asset_version()
 		);
 	}
-	
+
+	if ( userfeedback_screen_is_addons() ) {
+		wp_enqueue_style(
+			'userfeedback-vue-addons',
+			userfeedback_get_admin_asset_url( '/assets/vue/css/addons.css' ),
+			array(),
+			userfeedback_get_asset_version()
+		);
+	}
+
 	if ( userfeedback_screen_is_smtp() ) {
 		wp_enqueue_style(
 			'userfeedback-vue-smtp',
@@ -254,6 +318,8 @@ function userfeedback_admin_scripts() {
 			'userfeedback',
 			userfeedback_get_common_script_localization_object()
 		);
+
+		wp_enqueue_media();
 	}
 	// --------------------------------------------------
 
@@ -271,6 +337,63 @@ function userfeedback_admin_scripts() {
 		wp_enqueue_script( 'userfeedback-vue-results-script' );
 		wp_localize_script(
 			'userfeedback-vue-results-script',
+			'userfeedback',
+			userfeedback_get_common_script_localization_object()
+		);
+	}
+	// --------------------------------------------------
+	// --------------------------------------------------
+
+	// --------------------------------------------------
+	// --------------- Heatmap scripts ------------------
+	if ( userfeedback_screen_is_heatmap() && userfeedback_heatmap_preview() ) {
+		wp_register_script(
+			'userfeedback-vue-heatmap-preview-script',
+			userfeedback_get_admin_asset_url( '/assets/vue/js/heatmap-admin.js' ),
+			apply_filters( 'userfeedback_heatmap_script_dependencies', array() ),
+			userfeedback_get_asset_version(),
+			true
+		);
+		wp_enqueue_script( 'userfeedback-vue-heatmap-preview-script' );
+		wp_localize_script(
+			'userfeedback-vue-heatmap-preview-script',
+			'userfeedback',
+			userfeedback_get_common_script_localization_object()
+		);
+	}
+
+	// --------------------------------------------------
+	// --------------- Post Ratings Upsell scripts ------------------
+	if ( userfeedback_screen_is_post_ratings() && userfeedback_post_ratings_upsell() ) {
+		wp_register_script(
+			'userfeedback-vue-post-ratings-upsell-script',
+			userfeedback_get_admin_asset_url( '/assets/vue/js/post-ratings-upsell.js' ),
+			apply_filters( 'userfeedback_post_ratings_script_dependencies', array() ),
+			userfeedback_get_asset_version(),
+			true
+		);
+		wp_enqueue_script( 'userfeedback-vue-post-ratings-upsell-script' );
+		wp_localize_script(
+			'userfeedback-vue-post-ratings-upsell-script',
+			'userfeedback',
+			userfeedback_get_common_script_localization_object()
+		);
+	}
+	// --------------------------------------------------
+
+	// --------------------------------------------------
+	// --------------- Email Surveys Upsell scripts ------------------
+	if ( userfeedback_screen_is_email_survey() && userfeedback_email_survey_upsell() ) {
+		wp_register_script(
+			'userfeedback-vue-email-surveys-upsell-script',
+			userfeedback_get_admin_asset_url( '/assets/vue/js/email-surveys-upsell.js' ),
+			apply_filters( 'userfeedback_email_surveys_script_dependencies', array() ),
+			userfeedback_get_asset_version(),
+			true
+		);
+		wp_enqueue_script( 'userfeedback-vue-email-surveys-upsell-script' );
+		wp_localize_script(
+			'userfeedback-vue-email-surveys-upsell-script',
 			'userfeedback',
 			userfeedback_get_common_script_localization_object()
 		);
@@ -295,7 +418,26 @@ function userfeedback_admin_scripts() {
 			userfeedback_get_common_script_localization_object()
 		);
 	}
-	
+
+	// --------------------------------------------------
+	// -------------- Addons scripts ------------------
+	if ( userfeedback_screen_is_addons() ) {
+
+		wp_register_script(
+			'userfeedback-vue-addons-script',
+			userfeedback_get_admin_asset_url( '/assets/vue/js/addons.js' ),
+			apply_filters( 'userfeedback_addons_script_dependencies', array() ),
+			userfeedback_get_asset_version(),
+			true
+		);
+		wp_enqueue_script( 'userfeedback-vue-addons-script' );
+		wp_localize_script(
+			'userfeedback-vue-addons-script',
+			'userfeedback',
+			userfeedback_get_common_script_localization_object()
+		);
+	}
+
 	// --------------------------------------------------
 	// -------------- SMTP scripts ------------------
 	if ( userfeedback_screen_is_smtp() ) {
@@ -337,6 +479,21 @@ function userfeedback_admin_scripts() {
 }
 
 add_action( 'admin_enqueue_scripts', 'userfeedback_admin_scripts', 99 );
+add_action( 'admin_head', 'userfeedback_admin_menu_open_new_tab_script' );
+
+function userfeedback_admin_menu_open_new_tab_script()
+{
+    ?>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            var el = document.getElementById('suggest_feature_menu');
+            if (el && el.parentElement) {
+                el.parentElement.setAttribute('target', '_blank');
+            }
+        });
+    </script>
+    <?php
+}
 
 // ----------------------------------------------------
 // --------------------- Helpers ----------------------
@@ -346,6 +503,7 @@ function userfeedback_get_common_script_localization_object() {
 	return apply_filters(
 		'userfeedback_admin_script_localization',
 		array(
+			'base_url'                  => home_url(),
 			'ajax'                      => admin_url( 'admin-ajax.php' ),
 			'nonce'                     => wp_create_nonce( 'uf-admin-nonce' ),
 			'wp_rest_nonce'             => wp_create_nonce( 'wp_rest' ),
@@ -364,13 +522,25 @@ function userfeedback_get_common_script_localization_object() {
 			'roles'                     => userfeedback_get_roles(),
 			'roles_manage_options'      => userfeedback_get_manage_options_roles(),
 			'plugin_version'            => USERFEEDBACK_VERSION,
-			'translations'              => wp_get_jed_locale_data( 'userfeedback' ),
+			'translations'              => wp_get_jed_locale_data( 'userfeedback-lite' ),
 			'assets'                    => plugins_url( '/assets/vue', USERFEEDBACK_PLUGIN_FILE ),
+			'uf_assets'                 => plugins_url( '/assets', USERFEEDBACK_PLUGIN_FILE ),
 			'integrations'              => array(),
-			'addons'                    => userfeedback_get_parsed_addons(),
+			'addons'                    => ! userfeedback_is_pro_version() && ! userfeedback_screen_is_addons() ? array() : userfeedback_get_parsed_addons(),
 			'notices'                   => apply_filters( 'userfeedback_vue_notices', array() ),
 			'wp_notices'                => apply_filters( 'userfeedback_vue_wp_notices', array() ),
-			'widget_settings'           => userfeedback_get_frontend_widget_settings()
+			'widget_settings'           => userfeedback_get_frontend_widget_settings(),
+			'recommended_plugin_is_installed' => array_key_exists( 'duplicator/duplicator.php', get_plugins() ),
+			'recommended_plugin_is_activated' => is_plugin_active( 'duplicator/duplicator.php' ),
+			'recommended_plugin_install_url' => wp_nonce_url(
+				self_admin_url( 'update.php?action=install-plugin&plugin=duplicator' ),
+				'install-plugin_duplicator'
+			),
+			'recommended_plugin_activate_url' => wp_nonce_url(
+				self_admin_url( 'plugins.php?action=activate&plugin=duplicator/duplicator.php' ),
+				'activate-plugin_duplicator/duplicator.php'
+			),
+			'recommended_plugin_learn_more_url' => 'https://duplicator.com/',
 		)
 	);
 }
@@ -379,6 +549,10 @@ function userfeedback_get_common_script_localization_object() {
  * Get and save parsed addons if not present to use the data in localizations scripts.
  */
 function userfeedback_save_parsed_addons() {
+	if ( ! userfeedback_is_pro_version() ) {
+		return;
+	}
+
 	$saved_parsed_addons = get_option('userfeedback_parsed_addons', false);
 	if(!$saved_parsed_addons) {
 		$addons = userfeedback_get_parsed_addons();

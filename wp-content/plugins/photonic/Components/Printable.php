@@ -2,7 +2,7 @@
 namespace Photonic_Plugin\Components;
 
 use Photonic_Plugin\Layouts\Core_Layout;
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Platforms\Base;
 
 /**
  * Interface Printable
@@ -14,10 +14,10 @@ interface Printable {
 	/**
 	 * Generates and prints the markup for a Photonic component
 	 *
-	 * @param Core $module
+	 * @param Base $module
 	 * @param Core_Layout $layout
 	 * @param false $print
 	 * @return mixed
 	 */
-	public function html(Core $module, Core_Layout $layout, $print = false);
+	public function html(Base $module, Core_Layout $layout, $print = false): string;
 }

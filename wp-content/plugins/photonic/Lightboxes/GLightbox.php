@@ -2,6 +2,8 @@
 
 namespace Photonic_Plugin\Lightboxes;
 
+use Photonic_Plugin\Platforms\Base;
+
 require_once 'Lightbox.php';
 
 class GLightbox extends Lightbox {
@@ -10,16 +12,18 @@ class GLightbox extends Lightbox {
 		parent::__construct();
 	}
 
-	public function get_photo_attributes($photo_data, $module) {
+	public function get_photo_attributes(array $photo_data, Base $module): array {
 		$out = parent::get_photo_attributes($photo_data, $module);
 		if (empty($photo_data['video'])) {
-			return $out . ' data-type="image"';
+			$out['data-type'] = 'image';
 		}
 		elseif (in_array($module->provider, ['google', 'flickr'], true)) {
-			return $out . ' data-type="video" data-format="mp4" ';
+			$out['data-type'] = 'video';
+			$out['data-format'] = 'mp4';
 		}
 		else {
-			return $out . ' data-type="video"';
+			$out['data-type'] = 'video';
 		}
+		return $out;
 	}
 }

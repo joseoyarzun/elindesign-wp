@@ -5,7 +5,7 @@
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 namespace WooCommerce\Facebook\Utilities;
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class for adding diagnostic info to WooCommerce Tracker snapshot.
  *
- * See https://woo.com/usage-tracking/ for more information.
+ * See https://woocommerce.com/usage-tracking/ for more information.
  *
  * @since 2.3.4
  */
@@ -114,14 +114,18 @@ class Tracker {
 		$data['extensions']['facebook-for-woocommerce']['is-connected'] = wc_bool_to_string( $connection_is_happy );
 
 		/**
-		 * What features are enabled on this site?
+		 * Synchronization will always be permitted once we initiate the process of syncing all WooCommerce products.
 		 *
-		 * @since 2.3.4
+		 * @since 3.5.3
 		 */
-		$product_sync_enabled = facebook_for_woocommerce()->get_integration()->is_product_sync_enabled();
-		$data['extensions']['facebook-for-woocommerce']['product-sync-enabled'] = wc_bool_to_string( $product_sync_enabled );
-		$messenger_enabled = facebook_for_woocommerce()->get_integration()->is_messenger_enabled();
-		$data['extensions']['facebook-for-woocommerce']['messenger-enabled'] = wc_bool_to_string( $messenger_enabled );
+
+		$is_woo_all_products_enabled = facebook_for_woocommerce()->get_integration()->is_woo_all_products_enabled();
+		if ( ! $is_woo_all_products_enabled ) {
+			$product_sync_enabled = facebook_for_woocommerce()->get_integration()->is_product_sync_enabled();
+			$data['extensions']['facebook-for-woocommerce']['product-sync-enabled'] = wc_bool_to_string( $product_sync_enabled );
+		} else {
+			$data['extensions']['facebook-for-woocommerce']['product-sync-enabled'] = wc_bool_to_string( true );
+		}
 
 		/**
 		 * How long did the last feed generation take (or did it fail - 0)? This counts just the time when the batches have been generated.
@@ -177,6 +181,36 @@ class Tracker {
 		 * @since 2.6.6
 		 */
 		$data['extensions']['facebook-for-woocommerce']['new-feed-generator-enabled'] = wc_bool_to_string( facebook_for_woocommerce()->get_integration()->is_new_style_feed_generation_enabled() );
+
+		/**
+		 * Language override feed tracking (Phase 1 metrics).
+		 *
+		 * @since 3.6.0
+		 */
+		// 1. Language override feed enabled status
+		$language_feed_enabled = get_option( \WC_Facebookcommerce_Integration::OPTION_LANGUAGE_OVERRIDE_FEED_GENERATION_ENABLED, 'no' );
+		$data['extensions']['facebook-for-woocommerce']['language-override-feeds-enabled'] = wc_bool_to_string( 'yes' === $language_feed_enabled );
+
+		// 2. Active localization plugin + version
+		$integration = \WooCommerce\Facebook\Integrations\IntegrationRegistry::get_active_localization_integration();
+		$data['extensions']['facebook-for-woocommerce']['localization-plugin']         = $integration ? $integration->get_plugin_name() : 'none';
+		$data['extensions']['facebook-for-woocommerce']['localization-plugin-version'] = $integration ? $integration->get_plugin_version() : '';
+
+		// 3. Number of available languages
+		if ( $integration && method_exists( $integration, 'get_available_languages' ) ) {
+			try {
+				$feed_data = new \WooCommerce\Facebook\Feed\Localization\LanguageFeedData();
+				$languages = $feed_data->get_available_languages();
+				$data['extensions']['facebook-for-woocommerce']['language-feed-count'] = count( $languages );
+				$data['extensions']['facebook-for-woocommerce']['language-feed-codes'] = implode( ',', $languages );
+			} catch ( \Exception $e ) {
+				$data['extensions']['facebook-for-woocommerce']['language-feed-count'] = 0;
+				$data['extensions']['facebook-for-woocommerce']['language-feed-codes'] = '';
+			}
+		} else {
+			$data['extensions']['facebook-for-woocommerce']['language-feed-count'] = 0;
+			$data['extensions']['facebook-for-woocommerce']['language-feed-codes'] = '';
+		}
 
 		return $data;
 	}

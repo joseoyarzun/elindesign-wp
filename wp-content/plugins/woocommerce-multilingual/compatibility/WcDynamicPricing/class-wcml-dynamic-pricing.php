@@ -64,10 +64,10 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 	 */
 	public function is_object_in_translated_terms( $result, $product_id, $categories ) {
 		foreach ( $categories as &$cat_id ) {
-			$cat_id = apply_filters( 'translate_object_id', $cat_id, 'product_cat', true );
+			$cat_id = apply_filters( 'wpml_object_id', $cat_id, 'product_cat', true );
 		}
 
-		$product_id = apply_filters( 'translate_object_id', $product_id, 'product', true );
+		$product_id = apply_filters( 'wpml_object_id', $product_id, 'product', true );
 
 		return is_object_in_term( $product_id, 'product_cat', $categories );
 	}
@@ -82,7 +82,7 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 	 * @return bool|WP_Error
 	 */
 	public function woocommerce_dynamic_pricing_is_applied_to( $process_discounts, WC_Product $_product, $module_id, $dynamic_pricing, $cat_ids ) {
-		if ( ! $_product || ! $cat_ids || ! $this->has_requirements( $dynamic_pricing ) ) {
+		if ( ! $cat_ids || ! $this->has_requirements( $dynamic_pricing ) ) {
 			return $process_discounts;
 		}
 		$taxonomy   = $this->get_taxonomy( $dynamic_pricing );
@@ -96,13 +96,12 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 	}
 
 	/**
-	 * @param WC_Dynamic_Pricing_Simple_Base|WC_Dynamic_Pricing_Advanced_Base $dynamic_pricing
-	 *
-	 * @return string
+	 * @param WC_Dynamic_Pricing_Simple_Base|WC_Dynamic_Pricing_Advanced_Base|mixed $dynamic_pricing
 	 */
-	private function get_taxonomy( $dynamic_pricing ) {
+	private function get_taxonomy( $dynamic_pricing ): string {
 		$taxonomy = 'product_cat';
 		if ( $dynamic_pricing instanceof WC_Dynamic_Pricing_Simple_Taxonomy || $dynamic_pricing instanceof WC_Dynamic_Pricing_Advanced_Taxonomy ) {
+			/* @phpstan-ignore property.notFound */
 			$taxonomy = $dynamic_pricing->taxonomy;
 		}
 
@@ -172,23 +171,23 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 
 		return array_map(
 			function ( $cat_id ) use ( $taxonomy ) {
-					return apply_filters( 'translate_object_id', $cat_id, $taxonomy, true );
+					return apply_filters( 'wpml_object_id', $cat_id, $taxonomy, true );
 			},
 			$cat_ids
 		);
 	}
 
 	/**
-	 * @param array $rules
+	 * @param array|mixed $rules
 	 *
-	 * @return array
+	 * @return array|mixed
 	 */
 	public function translate_variations_in_rules( $rules ) {
 		if ( is_array( $rules ) ) {
 			foreach ( $rules as $r_key => $rule ) {
 				if ( isset( $rule['variation_rules']['args']['variations'] ) ) {
 					foreach ( $rule['variation_rules']['args']['variations'] as $i => $variation_id ) {
-						$rules[ $r_key ]['variation_rules']['args']['variations'][ $i ] = apply_filters( 'translate_object_id', $variation_id, 'product_variation', true );
+						$rules[ $r_key ]['variation_rules']['args']['variations'][ $i ] = apply_filters( 'wpml_object_id', $variation_id, 'product_variation', true );
 					}
 				}
 			}

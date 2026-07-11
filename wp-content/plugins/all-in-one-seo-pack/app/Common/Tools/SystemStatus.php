@@ -38,7 +38,7 @@ class SystemStatus {
 		$uploadsDir    = wp_upload_dir();
 		$version       = get_bloginfo( 'version' );
 		$updates       = get_site_transient( 'update_core' );
-		$updateVersion = ! empty( $updates->updates[0]->version ) ? $updates->updates[0]->version : null;
+		$updateVersion = ! empty( $updates->updates[0]->version ) ? $updates->updates[0]->version : '';
 		if ( version_compare( $version, $updateVersion, '<' ) ) {
 			$version .= ' (' . __( 'Latest version:', 'all-in-one-seo-pack' ) . ' ' . $updateVersion . ')';
 		}
@@ -64,7 +64,7 @@ class SystemStatus {
 				],
 				[
 					'header' => __( 'Timezone', 'all-in-one-seo-pack' ),
-					'value'  => aioseo()->helpers->getTimeZoneOffset()
+					'value'  => wp_timezone_string()
 				],
 				[
 					'header' => __( 'Home URL', 'all-in-one-seo-pack' ),
@@ -120,10 +120,6 @@ class SystemStatus {
 	public static function getDatabaseInfo() {
 		$dbInfo = aioseo()->core->db->getDatabaseInfo();
 		if ( empty( $dbInfo['tables'] ) ) {
-			return [];
-		}
-
-		if ( ! aioseo()->helpers->isDev() ) {
 			return [];
 		}
 
@@ -194,8 +190,24 @@ class SystemStatus {
 					'value'  => defined( 'WP_DEBUG_DISPLAY' ) ? ( WP_DEBUG_DISPLAY ? WP_DEBUG_DISPLAY : __( 'Disabled', 'all-in-one-seo-pack' ) ) : __( 'Not set', 'all-in-one-seo-pack' )
 				],
 				[
-					'header' => 'WPS_DEBUG',
-					'value'  => defined( 'WPS_DEBUG' ) ? ( WPS_DEBUG ? WPS_DEBUG : __( 'Disabled', 'all-in-one-seo-pack' ) ) : __( 'Not set', 'all-in-one-seo-pack' )
+					'header' => 'WP_POST_REVISIONS',
+					'value'  => defined( 'WP_POST_REVISIONS' ) ? WP_POST_REVISIONS : __( 'Not set', 'all-in-one-seo-pack' )
+				],
+				[
+					'header' => 'DISABLE_WP_CRON',
+					'value'  => defined( 'DISABLE_WP_CRON' ) ? DISABLE_WP_CRON : __( 'Not set', 'all-in-one-seo-pack' )
+				],
+				[
+					'header' => 'EMPTY_TRASH_DAYS',
+					'value'  => defined( 'EMPTY_TRASH_DAYS' ) ? EMPTY_TRASH_DAYS : __( 'Not set', 'all-in-one-seo-pack' )
+				],
+				[
+					'header' => 'AUTOSAVE_INTERVAL',
+					'value'  => defined( 'AUTOSAVE_INTERVAL' ) ? AUTOSAVE_INTERVAL : __( 'Not set', 'all-in-one-seo-pack' )
+				],
+				[
+					'header' => 'SCRIPT_DEBUG',
+					'value'  => defined( 'SCRIPT_DEBUG' ) ? SCRIPT_DEBUG : __( 'Not set', 'all-in-one-seo-pack' )
 				],
 				[
 					'header' => 'DB_CHARSET',
@@ -223,6 +235,13 @@ class SystemStatus {
 			$sqlMode = $mysqlInfo[0]->Value;
 		}
 
+		$dbServerInfo = method_exists( aioseo()->core->db->db, 'db_server_info' )
+			? aioseo()->core->db->db->db_server_info()
+			: ( function_exists( 'mysqli_get_server_info' )
+				? mysqli_get_server_info( aioseo()->core->db->db->dbh ) // phpcs:ignore WordPress.DB.RestrictedFunctions.mysql_mysqli_get_server_info
+				: ''
+		);
+
 		return [
 			'label'   => __( 'Server Info', 'all-in-one-seo-pack' ),
 			'results' => [
@@ -240,7 +259,7 @@ class SystemStatus {
 				],
 				[
 					'header' => __( 'Database Powered By', 'all-in-one-seo-pack' ),
-					'value'  => stripos( aioseo()->core->db->db->db_server_info(), 'mariadb' ) !== false ? __( 'MariaDB', 'all-in-one-seo-pack' ) : __( 'MySQL', 'all-in-one-seo-pack' )
+					'value'  => stripos( $dbServerInfo, 'mariadb' ) !== false ? 'MariaDB' : 'MySQL'
 				],
 				[
 					'header' => __( 'Database Version', 'all-in-one-seo-pack' ),

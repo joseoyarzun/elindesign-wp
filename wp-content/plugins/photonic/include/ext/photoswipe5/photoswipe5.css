@@ -11,7 +11,7 @@
 	--pswp-preloader-color-secondary: rgba(255, 255, 255, 0.9);
 
 	/* defined via js:
-	--pswp-transition-duration: 333ms; */
+    --pswp-transition-duration: 333ms; */
 
 	--pswp-icon-color: #fff;
 	--pswp-icon-color-secondary: #4f4f4f;
@@ -28,6 +28,10 @@
 
 .pswp {
 	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
 	z-index: var(--pswp-root-z-index);
 	display: none;
 	touch-action: none;
@@ -71,7 +75,6 @@
 	overflow: hidden;
 }
 
-.pswp,
 .pswp__scroll-wrap,
 .pswp__bg,
 .pswp__container,
@@ -84,10 +87,6 @@
 	left: 0;
 	width: 100%;
 	height: 100%;
-}
-
-.pswp {
-	position: fixed;
 }
 
 .pswp__img,
@@ -280,7 +279,7 @@ div.pswp__img--placeholder,
 .pswp__top-bar > * {
 	pointer-events: auto;
 	/* this makes transition significantly more smooth,
-	   even though inner elements are not animated */
+       even though inner elements are not animated */
 	will-change: opacity;
 }
 
@@ -407,7 +406,8 @@ div.pswp__img--placeholder,
 */
 .pswp__counter {
 	height: 30px;
-	margin: 15px 0 0 20px;
+	margin-top: 15px;
+	margin-inline-start: 20px;
 	font-size: 14px;
 	line-height: 30px;
 	color: var(--pswp-icon-color);

@@ -2,7 +2,7 @@
 namespace Photonic_Plugin\Layouts;
 
 use Photonic_Plugin\Components\Album_List;
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Platforms\Base;
 
 interface Level_Two_Gallery {
 	/**
@@ -11,9 +11,9 @@ interface Level_Two_Gallery {
 	 * exists in native WP and Instagram.
 	 *
 	 * @param Album_List $album_list
-	 * @param $short_code
-	 * @param $module Core
+	 * @param array $short_code
+	 * @param $module Base
 	 * @return string
 	 */
-	public function generate_level_2_gallery($album_list, $short_code, $module);
+	public function generate_level_2_gallery(Album_List $album_list, array $short_code, Base $module): string;
 }

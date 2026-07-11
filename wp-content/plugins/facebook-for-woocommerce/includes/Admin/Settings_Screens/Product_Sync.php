@@ -1,28 +1,34 @@
 <?php
-// phpcs:ignoreFile
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 namespace WooCommerce\Facebook\Admin\Settings_Screens;
 
-defined( 'ABSPATH' ) or exit;
+defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Facebook\Admin\Abstract_Settings_Screen;
 use WooCommerce\Facebook\Admin\Google_Product_Category_Field;
 use WooCommerce\Facebook\Commerce;
 use WooCommerce\Facebook\Products;
 use WooCommerce\Facebook\Products\Sync;
+use WooCommerce\Facebook\Framework\Api\Exception as ApiException;
+use WooCommerce\Facebook\Framework\Logger;
+
+// Include the localization trait
+require_once __DIR__ . '/Localization_Settings_Trait.php';
 
 /**
- * The Messenger settings screen object.
+ * The Product Sync settings screen object.
  */
 class Product_Sync extends Abstract_Settings_Screen {
+
+	use Localization_Settings_Trait;
 
 	/** @var string screen ID */
 	const ID = 'product_sync';
@@ -33,19 +39,30 @@ class Product_Sync extends Abstract_Settings_Screen {
 	/** @var string the get sync status action */
 	const ACTION_GET_SYNC_STATUS = 'wc_facebook_get_sync_status';
 
-
 	/**
 	 * Connection constructor.
 	 */
 	public function __construct() {
-		$this->id    = self::ID;
-		$this->label = __( 'Product sync', 'facebook-for-woocommerce' );
-		$this->title = __( 'Product sync', 'facebook-for-woocommerce' );
+		add_action( 'init', array( $this, 'initHook' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'woocommerce_admin_field_product_sync_title', array( $this, 'render_title' ) );
 		add_action( 'woocommerce_admin_field_product_sync_google_product_categories', array( $this, 'render_google_product_category_field' ) );
+		add_action( 'woocommerce_admin_field_product_sync_catalog_display', array( $this, 'render_catalog_display' ) );
+		// Only register this action once across all settings screens that use the trait
+		if ( ! has_action( 'woocommerce_admin_field_localization_plugin_status' ) ) {
+			add_action( 'woocommerce_admin_field_localization_plugin_status', array( $this, 'render_localization_plugin_status' ) );
+		}
 	}
 
+	/**
+	 * Initializes this settings page's properties.
+	 */
+	public function initHook(): void {
+		$this->id                = self::ID;
+		$this->label             = __( 'Product sync', 'facebook-for-woocommerce' );
+		$this->title             = __( 'Product sync', 'facebook-for-woocommerce' );
+		$this->documentation_url = 'https://woocommerce.com/document/facebook-for-woocommerce/#product-sync-settings';
+	}
 
 	/**
 	 * Enqueues the assets.
@@ -58,18 +75,20 @@ class Product_Sync extends Abstract_Settings_Screen {
 		if ( ! $this->is_current_screen_page() ) {
 			return;
 		}
-		wp_enqueue_script( 'wc-backbone-modal', null, array( 'backbone' ) );
+		wp_enqueue_script( 'wc-backbone-modal', null, array( 'backbone' ), \WC_Facebookcommerce::PLUGIN_VERSION, true );
 		wp_enqueue_script(
 			'facebook-for-woocommerce-modal',
 			facebook_for_woocommerce()->get_asset_build_dir_url() . '/admin/modal.js',
 			array( 'jquery', 'wc-backbone-modal', 'jquery-blockui' ),
-			\WC_Facebookcommerce::PLUGIN_VERSION
+			\WC_Facebookcommerce::PLUGIN_VERSION,
+			true
 		);
 		wp_enqueue_script(
 			'facebook-for-woocommerce-settings-sync',
 			facebook_for_woocommerce()->get_asset_build_dir_url() . '/admin/settings-sync.js',
 			array( 'jquery', 'wc-backbone-modal', 'jquery-blockui', 'jquery-tiptip', 'facebook-for-woocommerce-modal', 'wc-enhanced-select' ),
-			\WC_Facebookcommerce::PLUGIN_VERSION
+			\WC_Facebookcommerce::PLUGIN_VERSION,
+			true
 		);
 
 		/* translators: Placeholders: {count} number of remaining items */
@@ -87,9 +106,9 @@ class Product_Sync extends Abstract_Settings_Screen {
 				'excluded_category_ids'           => facebook_for_woocommerce()->get_integration()->get_excluded_product_category_ids(),
 				'excluded_tag_ids'                => facebook_for_woocommerce()->get_integration()->get_excluded_product_tag_ids(),
 				'i18n'                            => array(
-					/* translators: Placeholders %s - html code for a spinner icon */
 					'confirm_resync'                => esc_html__( 'Your products will now be resynced to Facebook, this may take some time.', 'facebook-for-woocommerce' ),
-					'confirm_sync'                  => esc_html__( "Facebook for WooCommerce automatically syncs your products on create/update. Are you sure you want to force product resync?\n\nThis will query all published products and may take some time. You only need to do this if your products are out of sync or some of your products did not sync.", 'facebook-for-woocommerce' ),
+					'confirm_sync'                  => esc_html__( "Meta for WooCommerce automatically syncs your products on create/update. Are you sure you want to force product resync?\n\nThis will query all published products and may take some time. You only need to do this if your products are out of sync or some of your products did not sync.", 'facebook-for-woocommerce' ),
+					/* translators: Placeholders %s - html code for a spinner icon */
 					'sync_in_progress'              => sprintf( esc_html__( 'Your products are syncing - you may safely leave this page %s', 'facebook-for-woocommerce' ), '<span class="spinner is-active"></span>' ),
 					'sync_remaining_items_singular' => sprintf( esc_html( translate_nooped_plural( $sync_remaining_items_string, 1 ) ), '<strong>', '</strong>', '<span class="spinner is-active"></span>' ),
 					'sync_remaining_items_plural'   => sprintf( esc_html( translate_nooped_plural( $sync_remaining_items_string, 2 ) ), '<strong>', '</strong>', '<span class="spinner is-active"></span>' ),
@@ -193,7 +212,7 @@ class Product_Sync extends Abstract_Settings_Screen {
 	 * @since 2.0.0
 	 */
 	public function save() {
-		$integration = facebook_for_woocommerce()->get_integration();
+		$integration              = facebook_for_woocommerce()->get_integration();
 		$previous_product_cat_ids = $integration->get_excluded_product_category_ids();
 		$previous_product_tag_ids = $integration->get_excluded_product_tag_ids();
 		parent::save();
@@ -237,8 +256,8 @@ class Product_Sync extends Abstract_Settings_Screen {
 	 *
 	 * @return array
 	 */
-	public function get_settings() {
-		$term_query = new \WP_Term_Query(
+	public function get_settings(): array {
+		$term_query         = new \WP_Term_Query(
 			array(
 				'taxonomy'   => 'product_cat',
 				'hide_empty' => false,
@@ -246,7 +265,7 @@ class Product_Sync extends Abstract_Settings_Screen {
 			)
 		);
 		$product_categories = $term_query->get_terms();
-		$term_query = new \WP_Term_Query(
+		$term_query         = new \WP_Term_Query(
 			array(
 				'taxonomy'     => 'product_tag',
 				'hide_empty'   => false,
@@ -254,18 +273,19 @@ class Product_Sync extends Abstract_Settings_Screen {
 				'fields'       => 'id=>name',
 			)
 		);
-		$product_tags = $term_query->get_terms();
-		return array(
+		$product_tags       = $term_query->get_terms();
+		$settings           = array(
 			array(
 				'type'  => 'product_sync_title',
 				'title' => __( 'Product sync', 'facebook-for-woocommerce' ),
 			),
 			array(
-				'id'      => \WC_Facebookcommerce_Integration::SETTING_ENABLE_PRODUCT_SYNC,
-				'title'   => __( 'Enable product sync', 'facebook-for-woocommerce' ),
-				'type'    => 'checkbox',
-				'label'   => ' ',
-				'default' => 'yes',
+				'id'       => \WC_Facebookcommerce_Integration::SETTING_ENABLE_PRODUCT_SYNC,
+				'title'    => __( 'Enable product sync', 'facebook-for-woocommerce' ),
+				'type'     => 'checkbox',
+				'label'    => ' ',
+				'default'  => 'yes',
+				'desc_tip' => __( 'Enable product syncing with Facebook.', 'facebook-for-woocommerce' ),
 			),
 
 			array(
@@ -274,7 +294,7 @@ class Product_Sync extends Abstract_Settings_Screen {
 				'type'              => 'multiselect',
 				'class'             => 'wc-enhanced-select product-sync-field',
 				'css'               => 'min-width: 300px;',
-				'desc_tip'          => __( 'Products in one or more of these categories will not sync to Facebook.', 'facebook-for-woocommerce' ),
+				'desc_tip'          => __( 'Products in any of these categories will not sync to Facebook.', 'facebook-for-woocommerce' ),
 				'default'           => array(),
 				'options'           => is_array( $product_categories ) ? $product_categories : array(),
 				'custom_attributes' => array(
@@ -288,7 +308,7 @@ class Product_Sync extends Abstract_Settings_Screen {
 				'type'              => 'multiselect',
 				'class'             => 'wc-enhanced-select product-sync-field',
 				'css'               => 'min-width: 300px;',
-				'desc_tip'          => __( 'Products with one or more of these tags will not sync to Facebook.', 'facebook-for-woocommerce' ),
+				'desc_tip'          => __( 'Products with any of these tags will not sync to Facebook.', 'facebook-for-woocommerce' ),
 				'default'           => array(),
 				'options'           => is_array( $product_tags ) ? $product_tags : array(),
 				'custom_attributes' => array(
@@ -297,26 +317,22 @@ class Product_Sync extends Abstract_Settings_Screen {
 			),
 
 			array(
-				'id'       => \WC_Facebookcommerce_Integration::SETTING_PRODUCT_DESCRIPTION_MODE,
-				'title'    => __( 'Product description sync', 'facebook-for-woocommerce' ),
-				'type'     => 'select',
-				'class'    => 'product-sync-field',
-				'desc_tip' => __( 'Choose which product description to display in the Facebook catalog.', 'facebook-for-woocommerce' ),
-				'default'  => \WC_Facebookcommerce_Integration::PRODUCT_DESCRIPTION_MODE_STANDARD,
-				'options'  => array(
-					\WC_Facebookcommerce_Integration::PRODUCT_DESCRIPTION_MODE_STANDARD => __( 'Standard description', 'facebook-for-woocommerce' ),
-					\WC_Facebookcommerce_Integration::PRODUCT_DESCRIPTION_MODE_SHORT    => __( 'Short description', 'facebook-for-woocommerce' ),
-				),
-			),
-			array(
 				'id'       => Commerce::OPTION_GOOGLE_PRODUCT_CATEGORY_ID,
 				'type'     => 'product_sync_google_product_categories',
 				'title'    => __( 'Default Google product category', 'facebook-for-woocommerce' ),
 				'desc_tip' => __( 'Choose a default Google product category for your products. Defaults can also be set for product categories. Products need at least two category levels defined for tax to be correctly applied.', 'facebook-for-woocommerce' ),
 			),
+			array(
+				'type'  => 'product_sync_catalog_display',
+				'title' => __( 'Catalog', 'facebook-for-woocommerce' ),
+			),
 			array( 'type' => 'sectionend' ),
 
 		);
+
+		// Append localization settings
+		$localization_settings = $this->get_localization_settings();
+		return array_merge( $settings, $localization_settings );
 	}
 
 	/**
@@ -340,6 +356,111 @@ class Product_Sync extends Abstract_Settings_Screen {
 			<td class="forminp forminp-<?php echo esc_attr( sanitize_title( $field['type'] ) ); ?>">
 				<?php $category_field->render( $field['id'] ); ?>
 				<input id="<?php echo esc_attr( $field['id'] ); ?>" type="hidden" name="<?php echo esc_attr( $field['id'] ); ?>" value="<?php echo esc_attr( $field['value'] ); ?>" />
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Renders the Catalog Display field markup.
+	 *
+	 * @internal
+	 *
+	 * @since 3.5.4
+	 *
+	 * @param array $field field data
+	 */
+	public function render_catalog_display( $field ) {
+		$catalog_item = $this->get_catalog_item_data();
+
+		// Only display if catalog ID exists
+		if ( empty( $catalog_item ) ) {
+			return;
+		}
+
+		$this->render_catalog_row( $catalog_item );
+	}
+
+	/**
+	 * Gets the catalog item data with API call and fallbacks.
+	 *
+	 * @return array|null Catalog item data or null if no catalog ID exists
+	 */
+	private function get_catalog_item_data() {
+		$integration = facebook_for_woocommerce()->get_integration();
+		$catalog_id  = $integration->get_product_catalog_id();
+
+		// Return null if no catalog ID exists
+		if ( empty( $catalog_id ) ) {
+			return null;
+		}
+
+		// Build catalog item similar to Connection screen
+		$catalog_item = array(
+			'label' => __( 'Catalog', 'facebook-for-woocommerce' ),
+			'value' => $catalog_id,
+			'url'   => "https://www.facebook.com/commerce/catalogs/{$catalog_id}/products/",
+		);
+
+		// Try to get the catalog name for display
+		try {
+			$response = facebook_for_woocommerce()->get_api()->get_catalog( $catalog_id );
+			$name     = $response->name ?? '';
+			if ( $name ) {
+				$catalog_item['value'] = $name;
+			} else {
+				// API succeeded but returned empty name - use store name fallback
+				$catalog_item['value'] = $this->get_catalog_fallback_name();
+			}
+		} catch ( ApiException $exception ) {
+			// Log the exception with additional information
+			$message = sprintf( 'Meta APIs thrown APIException while fetching the Catalog details for catalog %s: %s', $catalog_id, $exception->getMessage() );
+			Logger::log(
+				$message,
+				[],
+				array(
+					'should_send_log_to_meta'        => false,
+					'should_save_log_in_woocommerce' => true,
+					'woocommerce_log_level'          => \WC_Log_Levels::ERROR,
+				)
+			);
+
+			// Use store name as fallback
+			$catalog_item['value'] = $this->get_catalog_fallback_name();
+		}
+
+		return $catalog_item;
+	}
+
+	/**
+	 * Gets the fallback catalog name using store name.
+	 *
+	 * @return string Fallback catalog name
+	 */
+	private function get_catalog_fallback_name() {
+		$store_name = get_bloginfo( 'name' );
+		if ( ! empty( $store_name ) ) {
+			return sprintf( '%s Catalog', $store_name );
+		}
+		return __( 'Facebook Catalog', 'facebook-for-woocommerce' );
+	}
+
+	/**
+	 * Renders the catalog row HTML.
+	 *
+	 * @param array $catalog_item Catalog item data
+	 */
+	private function render_catalog_row( $catalog_item ) {
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<?php echo esc_html( $catalog_item['label'] ); ?>
+			</th>
+			<td class="forminp">
+				<a href="<?php echo esc_url( $catalog_item['url'] ); ?>" target="_blank">
+					<?php echo esc_html( $catalog_item['value'] ); ?>
+					<span class="dashicons dashicons-external" style="margin-left: 5px; vertical-align: middle; text-decoration: none;"></span>
+				</a>
 			</td>
 		</tr>
 		<?php

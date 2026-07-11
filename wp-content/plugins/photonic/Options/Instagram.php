@@ -5,9 +5,7 @@ namespace Photonic_Plugin\Options;
 use Photonic_Plugin\Core\Utilities;
 
 class Instagram extends Option_Tab {
-	private static $instance;
-
-	private function __construct() {
+	protected function __construct() {
 		$this->options = [
 			[
 				'name'     => 'Instagram settings',
@@ -71,12 +69,5 @@ class Instagram extends Option_Tab {
 				'options'  => $this->title_styles()
 			],*/
 		];
-	}
-
-	public static function get_instance() {
-		if (null === self::$instance) {
-			self::$instance = new Instagram();
-		}
-		return self::$instance;
 	}
 }

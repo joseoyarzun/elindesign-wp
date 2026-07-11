@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * First Response Notification class.
  *
@@ -35,13 +39,13 @@ class UserFeedback_Notification_First_Response extends UserFeedback_Notification
 			return null;
 		}
 
-		$this->title   = __( 'Congrats! You Collected User Feedback!', 'userfeedback' );
-		$this->content = __( 'Congrats! 🎉 Your first UserFeedback survey has a response! View it now.', 'userfeedback' );
+		$this->title   = __( 'Congrats! You Collected User Feedback!', 'userfeedback-lite' );
+		$this->content = __( 'Congrats! 🎉 Your first UserFeedback survey has a response! View it now.', 'userfeedback-lite' );
 
 		$survey_id = $first_response->survey_id;
 
 		$this->buttons[] = array(
-			'text' => __( 'View Responses', 'userfeedback' ),
+			'text' => __( 'View Responses', 'userfeedback-lite' ),
 			'url'  => userfeedback_get_screen_url( 'userfeedback_results', "survey/$survey_id/responses" ),
 		);
 

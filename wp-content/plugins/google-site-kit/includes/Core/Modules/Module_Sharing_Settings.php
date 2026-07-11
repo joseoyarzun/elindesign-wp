@@ -6,6 +6,8 @@
  * @copyright 2022 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Core\Modules;
@@ -54,7 +56,7 @@ class Module_Sharing_Settings extends Setting {
 	 * @return callable Callback method that filters or type casts invalid setting values.
 	 */
 	protected function get_sanitize_callback() {
-		return function( $option ) {
+		return function ( $option ) {
 			if ( ! is_array( $option ) ) {
 				return array();
 			}
@@ -88,7 +90,7 @@ class Module_Sharing_Settings extends Setting {
 	private function filter_shared_roles( array $shared_roles ) {
 		$filtered_shared_roles = array_filter(
 			$shared_roles,
-			function( $role_slug ) {
+			function ( $role_slug ) {
 				$role = get_role( $role_slug );
 
 				if ( empty( $role ) || ! $role->has_cap( 'edit_posts' ) ) {
@@ -260,5 +262,4 @@ class Module_Sharing_Settings extends Setting {
 
 		return $array1;
 	}
-
 }

@@ -1,9 +1,9 @@
 === Maintenance ===
 Contributors: WebFactory
-Tags: maintenance, maintenance mode, maintenance page, coming soon, coming soon page, under construction, under construction page, bunny fonts
+Tags: maintenance, maintenance mode, maintenance page, coming soon, coming soon page
 Requires at least: 4.0
-Tested up to: 6.4
-Stable tag: 4.08
+Tested up to: 7.0
+Stable tag: 4.21
 Requires PHP: 5.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -12,14 +12,15 @@ Great looking maintenance, coming soon & under construction pages. Put your site
 
 == Description ==
 
-Maintenance plugin allows the WordPress site administrator to close the website for maintenance, enable "503 Service temporarily unavailable”, set a temporary page with authorization, which can be edited via the plugin settings. Easy customize the good look on all devices. Add your logo, background image, select the desired color, add text. Maintenance uses Bunny Fonts for EU GDPR compliance.
+<a href="https://wpmaintenancemode.com/">WP Maintenance</a> plugin allows the WordPress site administrator to close the website for maintenance, enable "503 Service temporarily unavailable”, set a temporary page with authorization, which can be edited via the plugin settings. Easy customize the good look on all devices. Add your logo, background image, select the desired color, add text. Maintenance uses Bunny Fonts for EU GDPR compliance.
 
 Need **pre-made themes** and over 3 million free images to build maintenance, coming soon & landing pages faster? Have a look at <a href="https://wpmaintenancemode.com/">WP Maintenance PRO</a> plugin.
 
-If you're having problems with SSL or HTTPS try our free <a href="https://wordpress.org/plugins/wp-force-ssl/">WP Force SSL</a> plugin. It's a great plugin to enable SSL.
+Having problems with spam or bots? Try our free <a href="https://wordpress.org/plugins/advanced-google-recaptcha/">Advanced Google ReCaptcha</a> plugin. It's used on over 200,000 sites and provides great protection!
 
 <h3>Features</h3>
 <ul>
+<li>over <a href="https://wpmaintenancemode.com/#themes">200 themes in the PRO version</li>
 <li>retina ready HTML/CSS layout</li>
 <li>Full-screen background (<a target="_blank" href="https://github.com/srobbin/jquery-backstretch">Backstretch</a>)</li>
 <li>Blur background effect</li>
@@ -89,8 +90,57 @@ No, it will be display error on current maintenance page, without redirect to wp
 
 Please post the question on the <a href="http://wordpress.org/support/plugin/maintenance">support forum</a>.
 
+= How can I report security bugs? =
+
+You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team help validate, triage and handle any security vulnerabilities. [Report a security vulnerability.](https://patchstack.com/database/vdp/maintenance)
+
 
 == Changelog ==
+= v4.21 =
+- 2026/04/02
+- Minor fixes
+
+= v4.20 =
+- 2026/01/03
+- Fixed Bunny Fonts getting loaded even for system fonts
+
+= v4.19 =
+- 2025/11/19
+- WordPress 6.9 compatibility
+
+= v4.18 =
+- 2025/07/31
+- improved mobile resposiveness
+
+= v4.17 =
+- 2025/01/22
+- fixed Show some love option not saving
+
+= v4.16 =
+- 2025/01/10
+- updated Google Analytics code
+- added skip-lazy class to background image to fix Autoptimize compatibility
+
+= v4.15 =
+- 2024/10/22
+- fixed bug with some options not being saved
+
+= v4.14 =
+- 2024/10/17
+- excluded posts/pages not saving bug fix
+
+= v4.13 =
+- 2024/10/13
+- minor security fixes
+
+= v4.12 =
+- 2024/06/07
+- minor bug fixes
+
+= v4.09 =
+- 2024/06/03
+- added Weglot support
+
 = v4.08 =
 - 2023/08/31
 - fixed reset password URL changed if Maintenance is off

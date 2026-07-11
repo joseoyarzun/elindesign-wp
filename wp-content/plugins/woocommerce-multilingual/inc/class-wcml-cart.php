@@ -134,9 +134,9 @@ class WCML_Cart {
 	}
 
 	public function wcml_removed_cart_items_widget( $args = [] ) {
-
-		if ( ! empty( $this->woocommerce->session ) ) {
-			$removed_cart_items = new WCML_Removed_Cart_Items_UI( $args, $this->woocommerce_wpml, $this->sitepress, $this->woocommerce );
+		/** @phpstan-ignore-next-line instanceof.alwaysTrue */
+		if ( $this->woocommerce->session instanceof WC_Session ) {
+			$removed_cart_items = new WCML_Removed_Cart_Items_UI( $this->woocommerce_wpml, $this->sitepress, $this->woocommerce );
 			$preview            = $removed_cart_items->get_view();
 
 			if ( ! isset( $args['echo'] ) || $args['echo'] ) {
@@ -166,8 +166,8 @@ class WCML_Cart {
 				}
 				WC()->cart->remove_cart_item( $item_key );
 			}
-
-			if ( ! empty( $this->woocommerce->session ) ) {
+			/** @phpstan-ignore-next-line instanceof.alwaysTrue */
+			if ( $this->woocommerce->session instanceof WC_Session ) {
 				$this->woocommerce->session->set( 'wcml_removed_items', serialize( $removed_products ) );
 			}
 		}
@@ -184,9 +184,21 @@ class WCML_Cart {
 		$this->woocommerce->session->__unset( 'wcml_switched_type' );
 	}
 
+	/**
+	 * @param $exc
+	 * @param $current_currency
+	 * @param $new_currency
+	 * @param bool $return
+	 *
+	 * @return array|mixed|void
+	 */
 	public function cart_switching_currency( $exc, $current_currency, $new_currency, $return = false ) {
 
-		$cart_for_session = ! is_null( WC()->cart ) ? array_filter( WC()->cart->get_cart_contents() ) : false;
+		$cart_for_session = false;
+		/** @phpstan-ignore-next-line instanceof.alwaysTrue */
+		if ( WC()->cart instanceof WC_Cart ) {
+			$cart_for_session = array_filter( WC()->cart->get_cart_contents() );
+		}
 
 		if ( $this->woocommerce_wpml->settings['cart_sync']['currency_switch'] == WCML_CART_SYNC || empty( $cart_for_session ) ) {
 			return $exc;
@@ -205,11 +217,9 @@ class WCML_Cart {
 
 		if ( $return ) {
 			return [ 'prevent_switching' => $html ];
-		} else {
-			wp_send_json_success( [ 'prevent_switching' => $html ] );
 		}
 
-		return true;
+		wp_send_json_success( [ 'prevent_switching' => $html ] );
 	}
 
 	public function cart_alert( $dialog_title, $confirmation_message, $switch_to, $stay_in, $switch_to_value, $stay_in_value = false, $language_switch = false ) {
@@ -349,12 +359,12 @@ class WCML_Cart {
 		$new_cart_data    = [];
 
 		foreach ( $cart->cart_contents as $key => $cart_item ) {
-			$tr_product_id = apply_filters( 'translate_object_id', $cart_item['product_id'], 'product', false, $current_language );
+			$tr_product_id = apply_filters( 'wpml_object_id', $cart_item['product_id'], 'product', false, $current_language );
 			// translate custom attr labels in cart object.
 			// translate custom attr value in cart object.
 			$tr_variation_id = null;
 			if ( isset( $cart_item['variation'] ) && is_array( $cart_item['variation'] ) ) {
-				$tr_variation_id = apply_filters( 'translate_object_id', $cart_item['variation_id'], 'product_variation', false, $current_language );
+				$tr_variation_id = apply_filters( 'wpml_object_id', $cart_item['variation_id'], 'product_variation', false, $current_language );
 				foreach ( $cart_item['variation'] as $attr_key => $attribute ) {
 					$cart->cart_contents[ $key ]['variation'][ $attr_key ] = $this->get_cart_attribute_translation(
 						$attr_key,
@@ -370,8 +380,7 @@ class WCML_Cart {
 			if ( false !== $currency ) {
 				$cart->cart_contents[ $key ]['data']->price = get_post_meta( $cart_item['product_id'], '_price', 1 );
 			}
-
-			$display_as_translated = apply_filters( 'wpml_is_display_as_translated_post_type', false, 'product' );
+			$display_as_translated = $this->woocommerce_wpml->products->is_product_display_as_translated_post_type();
 			if ( $cart_item['product_id'] == $tr_product_id || ( $display_as_translated && ! $tr_product_id ) ) {
 				$new_cart_data[ $key ]              = apply_filters( 'wcml_cart_contents_not_changed', $cart->cart_contents[ $key ], $key, $current_language );
 				$new_cart_data[ $key ]['data_hash'] = $this->get_data_cart_hash( $cart_item );
@@ -424,7 +433,7 @@ class WCML_Cart {
 		$data_hash = '';
 
 		if ( function_exists( 'wc_get_cart_item_data_hash' ) ) {
-			$hash_product_object = wc_get_product( $cart_item['variation_id'] ? $cart_item['variation_id'] : $cart_item['product_id'] );
+			$hash_product_object = wc_get_product( $cart_item['variation_id'] ?: $cart_item['product_id'] );
 			if ( $hash_product_object ) {
 				$data_hash = wc_get_cart_item_data_hash( $hash_product_object );
 			}
@@ -445,7 +454,7 @@ class WCML_Cart {
 
 			$product_id       = $product->get_parent_id();
 			$product_language = $this->sitepress->get_language_for_element( $product_id, 'post_' . $item_data['type'] );
-			$tr_product_id    = apply_filters( 'translate_object_id', $product_id, 'product', false, $product_language );
+			$tr_product_id    = apply_filters( 'wpml_object_id', $product_id, 'product', false, $product_language );
 
 			foreach ( $item_data['attributes'] as $key => $name ) {
 				$item_data['attributes'][ $key ] = $this->get_cart_attribute_translation( $key, $name, $product->get_id(), $product_language, $product_id, $tr_product_id );
@@ -494,7 +503,7 @@ class WCML_Cart {
 			if ( taxonomy_exists( $taxonomy ) ) {
 				if ( $this->woocommerce_wpml->attributes->is_translatable_attribute( $taxonomy ) ) {
 					$term_id          = $this->woocommerce_wpml->terms->wcml_get_term_id_by_slug( $taxonomy, $attribute );
-					$trnsl_term_id    = apply_filters( 'translate_object_id', $term_id, $taxonomy, true, $current_language );
+					$trnsl_term_id    = apply_filters( 'wpml_object_id', $term_id, $taxonomy, true, $current_language );
 					$term             = $this->woocommerce_wpml->terms->wcml_get_term_by_id( $trnsl_term_id, $taxonomy );
 					$attr_translation = $term->slug;
 				}
@@ -581,7 +590,7 @@ class WCML_Cart {
 				$term_id = $this->woocommerce_wpml->terms->wcml_get_term_id_by_slug( 'product_shipping_class', $shipping_class );
 
 				if ( $term_id && ! is_wp_error( $term_id ) ) {
-					$translated_term_id = apply_filters( 'translate_object_id', $term_id, 'product_shipping_class', true );
+					$translated_term_id = apply_filters( 'wpml_object_id', $term_id, 'product_shipping_class', true );
 					if ( $translated_term_id != $term_id ) {
 						$term = $this->woocommerce_wpml->terms->wcml_get_term_by_id( $translated_term_id, 'product_shipping_class' );
 						unset( $rates[ $shipping_class ] );

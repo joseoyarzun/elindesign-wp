@@ -76,6 +76,9 @@ class Envira_Gallery_Table_Admin {
 		// Append data to various admin columns.
 		add_filter( 'manage_edit-envira_columns', [ &$this, 'envira_columns' ] );
 		add_action( 'manage_envira_posts_custom_column', [ &$this, 'envira_custom_columns' ], 10, 2 );
+
+		// Add custom empty state for galleries list.
+		add_action( 'admin_footer', [ $this, 'display_empty_state' ] );
 	}
 
 	/**
@@ -145,7 +148,6 @@ class Envira_Gallery_Table_Admin {
 
 		wp_register_script( $this->base->plugin_slug . '-table-script', plugins_url( 'assets/js/min/table-min.js', $this->base->file ), [ 'jquery' ], $this->base->version, true );
 		wp_enqueue_script( $this->base->plugin_slug . '-table-script' );
-
 		// Fire a hook to load in custom admin scripts.
 		do_action( 'envira_gallery_admin_scripts' );
 	}
@@ -388,18 +390,18 @@ class Envira_Gallery_Table_Admin {
 	 */
 	public function bulk_edit_save( $post_ID ) {
 
-		// Check we are performing a Bulk Edit.
-		if ( ! isset( $_REQUEST['bulk_edit'] ) ) {
+		// Check we are performing a Bulk Edit — presence-only check, no data used from this value.
+		if ( ! isset( $_REQUEST['bulk_edit'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- existence check only; nonce is verified on the very next guard below.
 			return;
 		}
 
-		// Bail out if we fail a security check.
-		if ( ! isset( $_REQUEST['envira-gallery'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_REQUEST['envira-gallery'] ) ), 'envira-gallery' ) ) {
+		// Verify nonce — do NOT sanitize before wp_verify_nonce; sanitize_key() lowercases and strips base64 chars (+/=) which corrupts the hash.
+		if ( ! isset( $_REQUEST['envira-gallery'] ) || ! wp_verify_nonce( wp_unslash( $_REQUEST['envira-gallery'] ), 'envira-gallery' ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonces must not be sanitized before wp_verify_nonce.
 			return;
 		}
 
-		// Check Post IDs have been submitted.
-		$post_ids = ( ! empty( $_REQUEST['post'] ) ) ? wp_unslash( $_REQUEST['post'] ) : array(); // @codingStandardsIgnoreLine
+		// Check Post IDs have been submitted — nonce verified above; return on failure so this line is only reached with a valid nonce.
+		$post_ids = ( ! empty( $_REQUEST['post'] ) ) ? wp_unslash( $_REQUEST['post'] ) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce verified via wp_verify_nonce() above. Post IDs are cast to absint() before use in get_post_meta().
 		if ( empty( $post_ids ) || ! is_array( $post_ids ) ) {
 			return;
 		}
@@ -415,8 +417,9 @@ class Envira_Gallery_Table_Admin {
 				continue;
 			}
 
-			// Update Settings, if they have values.
-			if ( ! empty( $_REQUEST['_envira_gallery']['columns'] ) && -1 !== sanitize_text_field( wp_unslash( $_REQUEST['_envira_gallery']['columns'] ) ) ) {
+			// Update Settings, if they have values. All $_REQUEST accesses below are covered by wp_verify_nonce() at the top of this function.
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nonce verified via wp_verify_nonce() above; function returns early on failure.
+			if ( ! empty( $_REQUEST['_envira_gallery']['columns'] ) && -1 !== sanitize_text_field( wp_unslash( $_REQUEST['_envira_gallery']['columns'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 				$settings['config']['columns'] = preg_replace( '#[^a-z0-9-_]#', '', sanitize_text_field( wp_unslash( $_REQUEST['_envira_gallery']['columns'] ) ) );
 			}
 			if ( ! empty( $_REQUEST['_envira_gallery']['gallery_theme'] ) && -1 !== sanitize_text_field( wp_unslash( $_REQUEST['_envira_gallery']['gallery_theme'] ) ) ) {
@@ -445,6 +448,66 @@ class Envira_Gallery_Table_Admin {
 			$this->metabox->flush_gallery_caches( $post_id, $settings['config']['slug'] );
 
 		}
+	}
+
+	/**
+	 * Display custom empty state when no galleries are found.
+	 *
+	 * @since 1.8.15
+	 *
+	 * @return void
+	 */
+	public function display_empty_state() {
+		// Get current screen.
+		$screen = get_current_screen();
+
+		// Bail if we're not on the Envira Post Type screen.
+		if ( 'envira' !== $screen->post_type ) {
+			return;
+		}
+
+		// Bail if we're not on a WP_List_Table.
+		if ( 'edit' !== $screen->base ) {
+			return;
+		}
+
+		// Check if there are any galleries.
+		$galleries = get_posts(
+			[
+				'post_type'        => 'envira',
+				'post_status'      => 'any',
+				'posts_per_page'   => 1,
+				'fields'           => 'ids',
+				'suppress_filters' => true,
+			]
+		);
+
+		// If galleries exist, don't show empty state.
+		if ( ! empty( $galleries ) ) {
+			return;
+		}
+
+		// Check if we're on the main galleries list page (not filtered or searched).
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Nonce is not required for display-only checks.
+		$search      = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
+		$post_status = isset( $_GET['post_status'] ) ? sanitize_text_field( wp_unslash( $_GET['post_status'] ) ) : '';
+		$month_value = isset( $_GET['m'] ) ? sanitize_text_field( wp_unslash( $_GET['m'] ) ) : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		if ( '' !== $search || '' !== $post_status || '' !== $month_value ) {
+			return;
+		}
+
+		// Output empty state in a hidden container, then move it to wpbody-content via JavaScript.
+		// The JavaScript is handled in assets/js/admin.js.
+		ob_start();
+		include ENVIRA_LITE_DIR . 'includes/admin/partials/empty-state.php';
+		$empty_state_content = ob_get_clean();
+
+		printf(
+			'<div id="envira-empty-state-container" style="display: none;">%s</div>',
+			$empty_state_content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Template partial handles escaping.
+		);
 	}
 
 	/**

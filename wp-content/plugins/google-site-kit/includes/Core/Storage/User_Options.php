@@ -65,7 +65,7 @@ final class User_Options implements User_Options_Interface {
 		}
 
 		if ( $this->context->is_network_mode() ) {
-			$value = get_user_meta( $user_id, $option );
+			$value = get_user_meta( $user_id, $option, false );
 			if ( empty( $value ) ) {
 				return false;
 			}
@@ -136,5 +136,4 @@ final class User_Options implements User_Options_Interface {
 
 		return $wpdb->get_blog_prefix() . $option;
 	}
-
 }

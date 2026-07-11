@@ -1,12 +1,11 @@
 <?php
 /**
  * @package   Google\Site_Kit
- * @copyright 2023 Google LLC
+ * @copyright 2026 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
  */
 
 return array(
-	'buildMode' => 'production',
-	'features' => array( 'adsenseSetupV2','enhancedMeasurement','gm3Components','keyMetrics' ),
+	'features' => array( 'googleTagGateway','gtagUserData','pdfGeneration','proactiveUserEngagement','setupFlowRefresh','setupFlowRefreshPhase4','siteGoals' ),
 );

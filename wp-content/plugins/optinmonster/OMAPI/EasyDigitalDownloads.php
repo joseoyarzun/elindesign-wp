@@ -202,7 +202,7 @@ class OMAPI_EasyDigitalDownloads extends OMAPI_Integrations_Base {
 				'shop'  => $data['url'],
 				'name'  => esc_html( get_bloginfo( 'name' ) ),
 			),
-			OMAPI_Api::getUrlArgs()
+			OMAPI_Api::get_url_args()
 		);
 
 		// Get the OptinMonster API credentials.
@@ -326,7 +326,7 @@ class OMAPI_EasyDigitalDownloads extends OMAPI_Integrations_Base {
 			return false;
 		}
 
-		// Finally, check if the public_key is still active in user
+		// Finally, check if the public_key is still active in user.
 		$user_id = EDD()->api->get_user( $key );
 
 		return ! empty( $user_id );

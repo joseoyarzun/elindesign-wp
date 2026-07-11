@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * No Created Surveys Notification class.
  *
@@ -20,11 +24,11 @@ class UserFeedback_Notification_No_Created_Surveys extends UserFeedback_Notifica
 	public $interval      = 5;
 
 	public function prepare() {
-		$this->title   = __( 'See What Your Visitors REALLY Think!', 'userfeedback' );
-		$this->content = __( 'See what your website visitors are thinking by creating a new UserFeedback survey. ', 'userfeedback' );
+		$this->title   = __( 'See What Your Visitors REALLY Think!', 'userfeedback-lite' );
+		$this->content = __( 'See what your website visitors are thinking by creating a new UserFeedback survey. ', 'userfeedback-lite' );
 
 		$this->buttons[] = array(
-			'text' => __( 'Create Survey', 'userfeedback' ),
+			'text' => __( 'Create Survey', 'userfeedback-lite' ),
 			'url'  => userfeedback_get_screen_url( 'userfeedback_surveys', 'new' ),
 		);
 

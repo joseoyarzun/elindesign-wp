@@ -152,6 +152,10 @@ class MonsterInsights_Install {
 				$this->v7150_upgrades();
 			}
 
+			if ( version_compare( $version, '10.2.1', '<' ) ) {
+				$this->v1021_upgrades();
+			}
+
 			// Do not use. See monsterinsights_after_install_routine comment below.
 			do_action( 'monsterinsights_after_existing_upgrade_routine', $version );
 			$version = get_option( 'monsterinsights_current_version', $version );
@@ -307,6 +311,8 @@ class MonsterInsights_Install {
 			'email_summaries'                          => 'on',
 			'summaries_html_template'                  => 'yes',
 			'summaries_email_addresses'                => $admin_email_array,
+			'summaries_show_blog_posts'                => 'yes',
+			'summaries_show_update_notices'            => 'yes',
 			'exception_alert_email_addresses'          => $admin_email_array,
 			'automatic_updates'                        => 'all',
 			'anonymous_data'                           => 0,
@@ -878,5 +884,18 @@ class MonsterInsights_Install {
 		if ( empty( $this->new_settings['gtagtracker_compatibility_mode'] ) ) {
 			$this->new_settings['gtagtracker_compatibility_mode'] = true;
 		}
+	}
+
+	/**
+	 * Upgrade routine for 10.2.1 — clean up legacy PAX (Google Ads) data.
+	 *
+	 * @return void
+	 * @since 10.2.1
+	 * @access public
+	 */
+	public function v1021_upgrades() {
+		monsterinsights_delete_option( 'monsterinsights_google_ads_settings' );
+		delete_transient( 'monsterinsights_google_ads_access_token_data' );
+		delete_site_transient( 'monsterinsights_google_ads_access_token_data' );
 	}
 }

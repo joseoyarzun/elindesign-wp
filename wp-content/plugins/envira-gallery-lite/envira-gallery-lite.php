@@ -1,11 +1,13 @@
 <?php
 /**
- * Plugin Name: Envira Gallery Lite
+ * Plugin Name: Envira Gallery - Image Photo Gallery, Albums, Video Gallery, Slideshows & More
  * Plugin URI:  http://enviragallery.com
- * Description: Envira Gallery is the best responsive WordPress gallery plugin. This is the Lite version.
+ * Description: Envira Gallery is a fast, easy and powerful gallery builder with lightbox, masonry and grid layouts, albums, videos, and responsive displays and more
  * Author:      Envira Gallery Team
  * Author URI:  http://enviragallery.com
- * Version:     1.8.7.1
+ * Version:     1.12.6
+ * Requires at least: 5.5
+ * Requires PHP: 7.0
  * Text Domain: envira-gallery-lite
  *
  * Envira Gallery is free software: you can redistribute it and/or modify
@@ -23,6 +25,8 @@
  *
  * @package envira gallery lite.
  */
+
+// phpcs:disable Universal.Files.SeparateFunctionsFromOO.Mixed
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -55,7 +59,8 @@ class Envira_Gallery_Lite {
 	 *
 	 * @var string
 	 */
-	public $version = '1.8.7.1';
+	public $version = '1.12.6';
+
 
 	/**
 	 * The name of the plugin.
@@ -131,21 +136,8 @@ class Envira_Gallery_Lite {
 		// Fire a hook before the class is setup.
 		do_action( 'envira_gallery_pre_init' );
 
-		// Load the plugin textdomain.
-		add_action( 'plugins_loaded', [ $this, 'load_plugin_textdomain' ] );
-
 		// Load the plugin formally.
 		add_action( 'init', [ $this, 'init' ], 0 );
-	}
-
-	/**
-	 * Loads the plugin textdomain for translation.
-	 *
-	 * @since 1.0.0
-	 */
-	public function load_plugin_textdomain() {
-
-		load_plugin_textdomain( 'envira-gallery-lite' );
 	}
 
 	/**
@@ -166,6 +158,9 @@ class Envira_Gallery_Lite {
 		// if a user activates Lite with Pro Addons.
 		do_action( 'envira_gallery_lite_init' );
 
+		// Redirect to wizard.
+		add_action( 'admin_init', [ $this, 'redirect_to_wizard' ], 9999 );
+
 		// Load global components.
 		$this->require_global();
 
@@ -173,6 +168,9 @@ class Envira_Gallery_Lite {
 		if ( is_admin() ) {
 			$this->require_admin();
 		}
+
+		// Check if we need to run a update routine.
+		$this->maybe_run_update();
 
 		// Add hook for when Envira has loaded.
 		// This hook is deliberately different from the Pro version, to prevent the entire site breaking
@@ -188,6 +186,8 @@ class Envira_Gallery_Lite {
 	public function require_admin() {
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/addons.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/common.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/admin/capabilities.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/admin/permissions.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/editor.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/media.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/media-view.php';
@@ -198,15 +198,24 @@ class Envira_Gallery_Lite {
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/review.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/settings.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/gutenberg.php';
-		require plugin_dir_path( __FILE__ ) . 'includes/admin/subscribe.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/welcome.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/Envira_Lite_Support.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/albums.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/admin/onboarding-wizard.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/admin/menu-nudge.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/admin/import-galleries.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/admin/Deactivation_Survey.php';
+
+		( new OnboardingWizard() )->hooks();
 
 		( new Envira_Albums_Preview() )->hooks();
 		( new Envira_Settings() )->hooks();
 		( new Envira_Welcome() )->hooks();
 		( new Envira_Lite_Support() )->hooks();
+		( new Menu_Nudge() )->hooks();
+		( new Envira_Importer_Preview() )->hooks();
+
+		$deactivation_survey = new Deactivation_Survey();
 	}
 
 	/**
@@ -241,11 +250,20 @@ class Envira_Gallery_Lite {
 		require plugin_dir_path( __FILE__ ) . 'includes/global/posttype.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/global/shortcode.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/global/rest.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/global/convert_gallery/Convert_Gallery_Common.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/global/convert_gallery/Convert_Gallery_Main.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/global/convert_gallery/Convert_Gallery_CLI.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/global/convert_gallery/Convert_Gallery_REST.php';
+		require plugin_dir_path( __FILE__ ) . 'includes/global/Envira_Tracking.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/ajax.php';
 		require plugin_dir_path( __FILE__ ) . 'includes/admin/notifications.php';
 
+		( new Envira_Tracking() )->hooks();
+
 		$this->notifications = new Envira_Notifications();
 		$this->notifications->hooks();
+
+		( new Convert_Gallery_Main() )->hooks();
 	}
 
 	/**
@@ -273,15 +291,19 @@ class Envira_Gallery_Lite {
 		return $gallery;
 	}
 
+	// phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
 	/**
 	 * Internal method that returns a gallery based on ID.
 	 *
 	 * @since 1.0.0
 	 *
+	 * @deprecated Should be removed in future versions.
+	 *
 	 * @param int $id     The gallery ID used to retrieve a gallery.
 	 * @return array|bool Array of gallery data or false if none found.
 	 */
-	public function _get_gallery( $id ) { // @codingStandardsIgnoreLine !!!TODO refactor to remove this
+	public function _get_gallery( $id ) {
+		// phpcs:enable PSR2.Methods.MethodDeclaration.Underscore
 
 		$meta = get_post_meta( $id, '_eg_gallery_data', true );
 
@@ -336,16 +358,19 @@ class Envira_Gallery_Lite {
 		return $gallery;
 	}
 
+	// phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
 	/**
 	 * Internal method that returns a gallery based on slug.
 	 *
 	 * @since 1.0.0
 	 *
+	 * @deprecated Should be removed in future versions.
+	 *
 	 * @param string $slug The gallery slug used to retrieve a gallery.
 	 * @return array|bool  Array of gallery data or false if none found.
 	 */
-	public function _get_gallery_by_slug( $slug ) { // @codingStandardsIgnoreLine !!!TODO refactor to remove this
-
+	public function _get_gallery_by_slug( $slug ) {
+		// phpcs:enable PSR2.Methods.MethodDeclaration.Underscore
 		// Get Envira CPT by slug.
 		$galleries = new WP_Query(
 			[
@@ -367,12 +392,12 @@ class Envira_Gallery_Lite {
 				'no_found_rows'  => true,
 				'cache_results'  => false,
 				'fields'         => 'ids',
-				'meta_query'     => array( // @codingStandardsIgnoreLine - Possible slow query
+				'meta_query'     => [
 					[
 						'key'   => '_eg_gallery_old_slug',
 						'value' => $slug,
 					],
-				),
+				],
 				'posts_per_page' => 1,
 			]
 		);
@@ -414,17 +439,20 @@ class Envira_Gallery_Lite {
 		return $galleries;
 	}
 
+	// phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
 	/**
 	 * Internal method that returns all galleries created on the site.
 	 *
 	 * @since 1.0.0
 	 *
+	 * @deprecated Should be removed in future versions.
+	 *
 	 * @param bool   $skip_empty    Skip Empty Galleries.
 	 * @param string $search_terms  Search for specified Galleries by Title.
 	 * @return mixed                        Array of gallery data or false if none found.
 	 */
-	public function _get_galleries( $skip_empty = true, $search_terms = '' ) { // @codingStandardsIgnoreLine !!!TODO refactor to remove this
-
+	public function _get_galleries( $skip_empty = true, $search_terms = '' ) {
+		// phpcs:enable PSR2.Methods.MethodDeclaration.Underscore
 		// Build WP_Query arguments.
 		$args = [
 			'post_type'      => 'envira',
@@ -432,12 +460,12 @@ class Envira_Gallery_Lite {
 			'posts_per_page' => 99,
 			'no_found_rows'  => true,
 			'fields'         => 'ids',
-			'meta_query'     => array( // @codingStandardsIgnoreLine - Possible slow query
+			'meta_query'     => [
 				[
 					'key'     => '_eg_gallery_data',
 					'compare' => 'EXISTS',
 				],
-			),
+			],
 		];
 
 		// If search terms exist, add a search parameter to the arguments.
@@ -521,6 +549,22 @@ class Envira_Gallery_Lite {
 	}
 
 	/**
+	 * Determine if there needs to be an update based on Envira Lite version.
+	 *
+	 * @since 1.8.9
+	 */
+	public function maybe_run_update() {
+
+		$version = get_option( 'envira_lite_version' );
+
+		if ( version_compare( $version, ENVIRA_LITE_VERSION, '<' ) ) {
+
+			update_option( 'envira_lite_version', ENVIRA_LITE_VERSION, 'no' );
+
+		}
+	}
+
+	/**
 	 * Returns the singleton instance of the class.
 	 *
 	 * @since 1.0.0
@@ -534,6 +578,35 @@ class Envira_Gallery_Lite {
 		}
 
 		return self::$instance;
+	}
+
+	/**
+	 * Redirect to the wizard on activation.
+	 *
+	 * @since 1.9.14.
+	 *
+	 * @return void
+	 */
+	public function redirect_to_wizard() {
+		if ( ! get_transient( '_envira_lite_activation_redirect' ) ) {
+			return;
+		}
+
+		delete_transient( '_envira_lite_activation_redirect' );
+
+		// Only do this for single site installs.
+		if ( isset( $_GET['activate-multi'] ) || is_network_admin() ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+
+		// Check if it is new install or not.
+		$envira_display_welcome = get_option( 'envira_lite_wizard' );
+
+		if ( ! $envira_display_welcome ) {
+			update_option( 'envira_lite_wizard', 'yes' );
+			wp_safe_redirect( admin_url( 'admin.php?page=envira-setup-wizard' ) );
+			exit;
+		}
 	}
 }
 
@@ -556,13 +629,23 @@ function envira_gallery_lite_activation_hook( $network_wide ) {
 		wp_die( sprintf( wp_kses_post( __( 'Sorry, but your version of WordPress does not meet Envira Gallery\'s required version of <strong>5.0</strong> to run properly. The plugin has been deactivated. <a href="%s">Click here to return to the Dashboard</a>.', 'envira-gallery-lite' ) ), esc_url( get_admin_url() ) ) );
 	}
 
+	if ( empty( get_option( 'envira_lite_version' ) ) && empty( get_option( 'envira_version' ) ) ) {
+		// Add transient to trigger redirect on the first activation.
+		set_transient( '_envira_lite_activation_redirect', 1, 120 );
+	}
+
+	$over_time = get_option( 'envira_over_time', [] );
+	if ( empty( $over_time['installed_lite'] ) ) {
+		$over_time['installed_lite'] = wp_date( 'U' );
+		update_option( 'envira_over_time', $over_time );
+	}
+
 	// Make sure Envira Pro plugin, if activated is deactivated.
 	deactivate_plugins( 'envira-gallery/envira-gallery.php' );
 }
 
 // Load the main plugin class.
 $envira_gallery_lite = Envira_Gallery_Lite::get_instance();
-
 
 if ( ! function_exists( 'envira_lite_mobile_detect' ) ) {
 
@@ -623,9 +706,9 @@ if ( ! function_exists( 'envira_gallery' ) ) {
 	 * @param int    $id          The ID of the gallery to load.
 	 * @param string $type        The type of field to query.
 	 * @param array  $args        Associative array of args to be passed.
-	 * @param bool   $return    Flag to echo or return the gallery HTML.
+	 * @param bool   $return_string    Flag to echo or return the gallery HTML.
 	 */
-	function envira_gallery( $id, $type = 'id', $args = [], $return = false ) {
+	function envira_gallery( $id, $type = 'id', $args = [], $return_string = false ) {
 
 		// If we have args, build them into a shortcode format.
 		$args_string = '';
@@ -639,7 +722,7 @@ if ( ! function_exists( 'envira_gallery' ) ) {
 		$shortcode = ! empty( $args_string ) ? '[envira-gallery ' . $type . '="' . $id . '"' . $args_string . ']' : '[envira-gallery ' . $type . '="' . $id . '"]';
 
 		// Return or echo the shortcode output.
-		if ( $return ) {
+		if ( $return_string ) {
 			return do_shortcode( $shortcode );
 		} else {
 			echo do_shortcode( $shortcode );

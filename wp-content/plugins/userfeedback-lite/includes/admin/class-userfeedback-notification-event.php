@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Notification Event class.
  *
@@ -154,7 +158,7 @@ abstract class UserFeedback_Notification_Event {
 	 * @return false|string
 	 */
 	public function get_formatted_date( $readable_time ) {
-		return date( 'm/d/Y g:i a', strtotime( $readable_time ) );
+		return gmdate( 'm/d/Y g:i a', strtotime( $readable_time ) );
 	}
 
 	/**

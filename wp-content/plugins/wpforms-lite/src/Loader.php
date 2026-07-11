@@ -125,7 +125,7 @@ class Loader {
 	}
 
 	/**
-	 * Populate Frontend related classes.
+	 * Populate Frontend-related classes.
 	 *
 	 * @since 1.8.1
 	 */
@@ -168,7 +168,7 @@ class Loader {
 	}
 
 	/**
-	 * Populate Admin related classes.
+	 * Populate Admin-related classes.
 	 *
 	 * @since 1.6.0
 	 */
@@ -280,6 +280,22 @@ class Loader {
 				'hook' => 'admin_init',
 			],
 			[
+				'name' => 'Admin\Pages\PrivacyCompliance',
+				'hook' => 'admin_init',
+			],
+			[
+				'name' => 'Admin\Pages\SugarCalendar',
+				'hook' => 'admin_init',
+			],
+			[
+				'name' => 'Admin\Pages\Duplicator',
+				'hook' => 'admin_init',
+			],
+			[
+				'name' => 'Admin\Pages\UncannyAutomator',
+				'hook' => 'admin_init',
+			],
+			[
 				'name' => 'Forms\Fields\Richtext\EntryViewContent',
 			],
 			[
@@ -300,6 +316,11 @@ class Loader {
 				'hook' => 'admin_init',
 			],
 			[
+				'name' => 'Admin\PluginsCategory',
+				'id'   => 'plugins_category',
+				'hook' => 'admin_init',
+			],
+			[
 				'name' => 'Admin\Splash\SplashScreen',
 				'id'   => 'splash_screen',
 				'hook' => 'admin_init',
@@ -313,6 +334,12 @@ class Loader {
 				'name' => 'Admin\Splash\SplashUpgrader',
 				'id'   => 'splash_upgrader',
 				'hook' => 'plugins_loaded',
+			],
+			[
+				'name' => 'Integrations\UsageTracking\AddonsDates',
+			],
+			[
+				'name' => 'Admin\Builder\PurgeEntries',
 			]
 		);
 	}
@@ -341,6 +368,8 @@ class Loader {
 	 * Populate Fields related classes.
 	 *
 	 * @since 1.8.2
+	 *
+	 * @noinspection ClassConstantCanBeUsedInspection
 	 */
 	private function populate_fields(): void {
 
@@ -441,6 +470,10 @@ class Loader {
 
 		$this->classes[] = [
 			'name' => 'Forms\Fields\Repeater\Field',
+		];
+
+		$this->classes[] = [
+			'name' => 'Forms\Fields\Camera\Field',
 			'hook' => 'init',
 		];
 
@@ -504,6 +537,12 @@ class Loader {
 			'name'        => 'Forms\Fields\Addons\NetPromoterScore\Field',
 			'addon_class' => 'WPFormsSurveys\Fields\NetPromoterScore\Field',
 			'addon_slug'  => 'surveys-polls',
+		];
+
+		$this->classes[] = [
+			'name'        => 'Forms\Fields\Addons\Map\Field',
+			'addon_class' => 'WPFormsGeolocation\Forms\Field',
+			'addon_slug'  => 'geolocation',
 		];
 	}
 
@@ -590,6 +629,15 @@ class Loader {
 				'hook' => 'init',
 			],
 			[
+				'name' => 'Admin\Entries\Import\Import',
+				'id'   => 'entries_import',
+				'hook' => 'init',
+			],
+			[
+				'name' => 'Admin\Entries\Import\Ajax',
+				'hook' => 'init',
+			],
+			[
 				'name' => 'Admin\Entries\DefaultScreen',
 				'hook' => 'admin_init',
 			]
@@ -644,6 +692,16 @@ class Loader {
 				'name' => 'Admin\Builder\ContextMenu',
 				'hook' => 'wpforms_builder_init',
 				'id'   => 'context_menu',
+			],
+			[
+				'name' => 'Admin\Builder\PreviewDropdown',
+				'hook' => 'wpforms_builder_init',
+				'id'   => 'preview_dropdown',
+			],
+			[
+				'name' => 'Admin\Builder\ImageUpload',
+				'hook' => 'wpforms_builder_init',
+				'id'   => 'image_upload',
 			],
 			[
 				'name' => 'Admin\Builder\Notifications\Advanced\Settings',
@@ -794,7 +852,7 @@ class Loader {
 	}
 
 	/**
-	 * Populate logger loaded classes.
+	 * Populate logger-loaded classes.
 	 *
 	 * @since 1.6.3
 	 */
@@ -809,7 +867,7 @@ class Loader {
 	}
 
 	/**
-	 * Populate education related classes.
+	 * Populate education-related classes.
 	 *
 	 * @since 1.6.6
 	 */
@@ -865,6 +923,10 @@ class Loader {
 				'name'     => 'Admin\Education\Pointers\Payment',
 				'hook'     => 'admin_init',
 				'priority' => 20,
+			],
+			[
+				'name' => 'Education\ActiveLayer\InstallTracker',
+				'id'   => 'activelayer_install_tracker',
 			]
 		);
 
@@ -879,11 +941,14 @@ class Loader {
 			'Builder\Payments',
 			'Builder\DidYouKnow',
 			'Builder\Geolocation',
+			'Builder\Quiz',
 			'Builder\Confirmations',
 			'Builder\Notifications',
+			'Builder\PDF',
 			'Admin\DidYouKnow',
 			'Admin\Settings\Integrations',
 			'Admin\Settings\Geolocation',
+			'Admin\Settings\Gdpr',
 			'Admin\NoticeBar',
 			'Admin\Entries\Geolocation',
 			'Admin\Entries\UserJourney',

@@ -25,7 +25,7 @@ class OMAPI_Utils {
 	 *
 	 * @since  1.3.6
 	 *
-	 * @param  string $type Type to check
+	 * @param  string $type Type to check.
 	 *
 	 * @return boolean
 	 */
@@ -33,6 +33,17 @@ class OMAPI_Utils {
 		return 'post' === $type || 'inline' === $type;
 	}
 
+	/**
+	 * Check if an item is in field.
+	 *
+	 * @since 2.16.17
+	 *
+	 * @param mixed  $item The item to check.
+	 * @param array  $fields The fields to check.
+	 * @param string $field The field to check.
+	 *
+	 * @return bool True if the item is in the field, false otherwise.
+	 */
 	public static function item_in_field( $item, $fields, $field ) {
 		return $item
 			&& is_array( $fields )
@@ -40,6 +51,16 @@ class OMAPI_Utils {
 			&& in_array( $item, (array) $fields[ $field ] );
 	}
 
+	/**
+	 * Check if a field is not empty and has values.
+	 *
+	 * @since 2.16.17
+	 *
+	 * @param array  $fields The fields to check.
+	 * @param string $field The field to check.
+	 *
+	 * @return bool True if the field is not empty and has values, false otherwise.
+	 */
 	public static function field_not_empty_array( $fields, $field ) {
 		if ( empty( $fields[ $field ] ) ) {
 			return false;
@@ -55,10 +76,27 @@ class OMAPI_Utils {
 	 * WordPress utility functions.
 	 */
 
+	/**
+	 * Check if the current page is the front page, home page, or search page.
+	 *
+	 * @since 2.16.17
+	 *
+	 * @return bool True if the current page is the front page, home page, or search page, false otherwise.
+	 */
 	public static function is_front_or_search() {
 		return is_front_page() || is_home() || is_search();
 	}
 
+	/**
+	 * Check if a term archive is enabled.
+	 *
+	 * @since 2.16.17
+	 *
+	 * @param int    $term_id The term ID.
+	 * @param string $taxonomy The taxonomy.
+	 *
+	 * @return bool True if the term archive is enabled, false otherwise.
+	 */
 	public static function is_term_archive( $term_id, $taxonomy ) {
 		if ( ! $term_id ) {
 			return false;
@@ -101,17 +139,15 @@ class OMAPI_Utils {
 	 * A back-compatible parse_url helper.
 	 *
 	 * @since 2.3.0
+	 * @deprecated 2.16.3 Use `wp_parse_url`.
 	 *
 	 * @param  string $url URL to parse.
 	 *
 	 * @return array       The URL parts.
 	 */
 	public static function parse_url( $url ) {
-		// NOTE: Error suppression is used as prior to PHP 5.3.3, an
-		// E_WARNING would be generated when URL parsing failed.
-		return function_exists( 'wp_parse_url' )
-			? wp_parse_url( $url )
-			: parse_url( $url ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url
+		_deprecated_function( __METHOD__, '2.17.0', 'wp_parse_url' );
+		return wp_parse_url( $url );
 	}
 
 	/**
@@ -144,9 +180,9 @@ class OMAPI_Utils {
 	 * @return bool True on success, false on failure.
 	 */
 	public static function add_inline_script( $handle, $object_name, $data, $position = 'before' ) {
-		$data   = apply_filters( 'om_add_inline_script', $data, $handle, $position, $object_name );
+		$data   = apply_filters( 'om_add_inline_script', $data, $handle, $position, $object_name ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 		$output = self::build_inline_data( $object_name, $data );
-		$output = apply_filters( 'om_add_inline_script_output', $output, $data, $handle, $position, $object_name );
+		$output = apply_filters( 'om_add_inline_script_output', $output, $data, $handle, $position, $object_name ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 
 		return wp_add_inline_script( $handle, $output, $position );
 	}
@@ -196,6 +232,45 @@ class OMAPI_Utils {
 	public static function date_within( DateTime $compare, $start, $end ) {
 		return ! self::date_before( $compare, $start )
 			&& $compare < DateTime::createFromFormat( 'Y-m-d H:i:s', $end, $compare->getTimezone() );
+	}
+
+	/**
+	 * Get the domains for each language when WPML is enabled.
+	 *
+	 * @since 2.16.19
+	 *
+	 * @return array $language_switcher The array of language code and domains.
+	 */
+	public static function get_wpml_language_domains() {
+		if ( ! self::is_wpml_active() ) {
+			return array();
+		}
+
+		global $sitepress;
+
+		// Get the language switcher settings.
+		$language_switcher = $sitepress->get_setting( 'language_domains', array() );
+
+		return $language_switcher;
+	}
+
+	/**
+	 * Check if WPML is enabled.
+	 *
+	 * If "A different domain per language" is selected for "Language URL format",
+	 * only then we are considering WPML is active. For language_negotiation_type setting:
+	 *     1 = Different languages in directories;
+	 *     2 = A different domain per language;
+	 *     3 = Language name added as a parameter.
+	 *
+	 * @since 2.16.19
+	 *
+	 * @return bool True if WPML is active, false otherwise.
+	 */
+	public static function is_wpml_active() {
+		global $sitepress;
+
+		return defined( 'ICL_SITEPRESS_VERSION' ) && $sitepress && 2 === (int) $sitepress->get_setting( 'language_negotiation_type' );
 	}
 
 }

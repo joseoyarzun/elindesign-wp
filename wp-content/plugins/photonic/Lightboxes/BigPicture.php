@@ -2,6 +2,8 @@
 
 namespace Photonic_Plugin\Lightboxes;
 
+use Photonic_Plugin\Platforms\Base;
+
 require_once 'Lightbox.php';
 
 class BigPicture extends Lightbox {
@@ -10,11 +12,15 @@ class BigPicture extends Lightbox {
 		parent::__construct();
 	}
 
-	public function get_photo_attributes($photo_data, $module) {
+	public function get_photo_attributes(array $photo_data, Base $module): array {
 		$out = parent::get_photo_attributes($photo_data, $module);
 		if (!empty($photo_data['video'])) {
-			return $out . ' data-bp="' . ($photo_data['video']) . '" data-bp-type="video"';
+			$out['data-bp'] = $photo_data['video'];
+			$out['data-bp-type'] = 'video';
 		}
-		return $out . ' data-bp="' . (!empty($photo_data['image']) ? $photo_data['image'] : $photo_data['video']) . '" ';
+		else {
+			$out['data-bp'] = $photo_data['image'];
+		}
+		return $out;
 	}
 }

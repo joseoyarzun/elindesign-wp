@@ -10,7 +10,7 @@
  * Plugin Name:       CTX Feed
  * Plugin URI:        https://webappick.com/
  * Description:       Easily generate woocommerce product feed for any marketing channel like Google Shopping(Merchant), Facebook Remarketing, Bing, eBay & more. Support 100+ Merchants.
- * Version:           6.5.36
+ * Version:           6.6.37
  * Author:            WebAppick
  * Author URI:        https://webappick.com/
  * License:           GPL v2
@@ -20,13 +20,13 @@
  *
  * WP Requirement & Test
  * Requires at least: 4.4
- * Tested up to: 6.7
+ * Tested up to: 7.0
  * Requires PHP: 5.6
  * Requires Plugins: woocommerce
  *
  * WC Requirement & Test
  * WC requires at least: 3.3
- * WC tested up to: 9.0.0
+ * WC tested up to: 10.4
  */
 
 use CTXFeed\V5\API\RestController;
@@ -212,7 +212,6 @@ if ( ! function_exists( 'run_woo_feed' ) ) {
 	function run_woo_feed() {
 		$plugin = new Woo_Feed();
 		register_activation_hook( WOO_FEED_FREE_FILE, array( 'Woo_Feed_installer', 'install' ) );
-		register_shutdown_function( 'woo_feed_log_errors_at_shutdown' );
 		add_action( 'woo_feed_cleanup_logs', 'woo_feed_cleanup_logs' );
 		/**
 		 * Ensure Feed Plugin runs only if WooCommerce loaded (installed and activated)
@@ -222,10 +221,6 @@ if ( ! function_exists( 'run_woo_feed' ) ) {
 		add_action( 'plugins_loaded', array( $plugin, 'run' ), PHP_INT_MAX );
 		add_action( 'admin_notices', 'wooFeed_Admin_Notices' );
 
-        if( isset($_GET['page'] )  && preg_match( '/^webappick\W+/', $_GET['page'] )  ) {
-            add_action( 'admin_notices', 'woo_feed_cyber_monday_notice' );
-        }
-
         //HPOS compatibility
         if( is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
             add_action( 'before_woocommerce_init', function () {
@@ -234,13 +229,7 @@ if ( ! function_exists( 'run_woo_feed' ) ) {
                 }
             } );
         }
-
-		//WooFeedWebAppickAPI::getInstance();
-        add_action('init', function() {
-            // Instantiate classes or run initialization code here
-            WooFeedWebAppickAPI::getInstance();
-        });
-
+		WooFeedWebAppickAPI::getInstance();
 	}
 
 	run_woo_feed();
@@ -255,8 +244,21 @@ add_action('init', function(){
 
 });
 
-// Handle Ajax Actions
-require_once WOO_FEED_FREE_PATH . 'includes/action-handler.php';
+// Handle Ajax Actions - only load when needed (admin, cron, ajax, or REST requests)
+// Note: REST_REQUEST constant is not yet defined at plugin load time, so we detect REST via URL
+$is_rest_request = ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ||
+                   ( isset( $_SERVER['REQUEST_URI'] ) && strpos( $_SERVER['REQUEST_URI'], '/wp-json/' ) !== false ) ||
+                   ( isset( $_SERVER['REQUEST_URI'] ) && strpos( $_SERVER['REQUEST_URI'], 'rest_route=' ) !== false );
+
+if ( is_admin() || wp_doing_cron() || wp_doing_ajax() || $is_rest_request ) {
+	register_shutdown_function( 'woo_feed_log_errors_at_shutdown' );
+	require_once WOO_FEED_FREE_PATH . 'includes/action-handler.php';
+} else {
+	// Load MultiVendor frontend functionality separately (My Account page feed tab for vendors)
+	if ( CTXFeed\Compatibility\MultiVendor::woo_feed_is_multi_vendor() ) {
+		new CTXFeed\Compatibility\MultiVendor();
+	}
+}
 
 // ======================================================================================================================*
 //
@@ -275,7 +277,7 @@ if ( ! function_exists( 'woo_feed_make_batch_feed' ) ) {
 		check_ajax_referer( 'wpf_feed_nonce' );
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			woo_feed_log_debug_message( 'User doesnt have enough permission.' );
-			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ) );
+			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
 			die();
 		}
 		if ( ! isset( $_REQUEST['feed'] ) ) {
@@ -350,7 +352,7 @@ if ( ! function_exists( 'woo_feed_save_feed_file' ) ) {
 		check_ajax_referer( 'wpf_feed_nonce' );
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			woo_feed_log_debug_message( 'User doesnt have enough permission.' );
-			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ) );
+			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
 			die();
 		}
 		if ( ! isset( $_REQUEST['feed'] ) ) {
@@ -504,7 +506,7 @@ if ( ! function_exists( 'woo_feed_generate_batch_data' ) ) {
 	 * @return bool
 	 */
 	function woo_feed_generate_batch_data( $info, $feedSlug ) {
-		// parse rules.
+        // parse rules.
 		$info = woo_feed_parse_feed_rules( isset( $info['feedrules'] ) ? $info['feedrules'] : $info );
 
 		try {
@@ -591,6 +593,7 @@ if ( ! function_exists( 'woo_feed_generate_new_feed' ) ) {
 	}
 }
 if ( ! function_exists( 'woo_feed_manage_feed' ) ) {
+
 	/**
 	 * Manage Feeds
 	 */
@@ -677,7 +680,6 @@ if ( ! function_exists( 'woo_feed_manage_feed' ) ) {
 				wp_safe_redirect( add_query_arg( array( 'schedule_updated' => $update ), admin_url( 'admin.php?page=webappick-manage-feeds' ) ) );
 				die();
 			}
-			//require WOO_FEED_FREE_ADMIN_PATH . 'partials/woo-feed-manage-list.php';
 		}
 	}
 }
@@ -695,7 +697,7 @@ if ( ! function_exists( 'feed_merchant_view' ) ) {
 		check_ajax_referer( 'wpf_feed_nonce' );
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			woo_feed_log_debug_message( 'User doesnt have enough permission.' );
-			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ) );
+			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ) ,403);
 			die();
 		}
 		global $feedRules, $wooFeedDropDown, $merchant, $provider;
@@ -735,7 +737,7 @@ if ( ! function_exists( 'woo_feed_get_facebook_categories' ) ) {
 		check_ajax_referer( 'wpf_feed_nonce' );
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			woo_feed_log_debug_message( 'User doesnt have enough permission.' );
-			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ) );
+			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
 			wp_die();
 		}
 		$wooFeedDropDown = new Woo_Feed_Dropdown();
@@ -755,7 +757,7 @@ if ( ! function_exists( 'woo_feed_get_google_categories' ) ) {
 		check_ajax_referer( 'wpf_feed_nonce' );
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			woo_feed_log_debug_message( 'User doesnt have enough permission.' );
-			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ) );
+			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
 			wp_die();
 		}
 		$wooFeedDropDown = new Woo_Feed_Dropdown();
@@ -775,7 +777,7 @@ if ( ! function_exists( 'woo_feed_get_ssh2_status' ) ) {
 		check_ajax_referer( 'wpf_feed_nonce' );
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			woo_feed_log_debug_message( 'User doesnt have enough permission.' );
-			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ) );
+			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
 			wp_die();
 		}
 		if ( extension_loaded( 'ssh2' ) ) {
@@ -801,7 +803,7 @@ if ( ! function_exists( 'woo_feed_update_feed_status' ) ) {
 		check_ajax_referer( 'wpf_feed_nonce' );
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			woo_feed_log_debug_message( 'User doesnt have enough permission.' );
-			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ) );
+			wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
 			wp_die();
 		}
 
@@ -873,8 +875,6 @@ if ( ! function_exists( 'woo_feed_config_feed' ) ) {
 
 			woo_feed_save_options( $data );
 
-			// $currencyAPI = isset( $_POST['currency_api_code'] ) ? sanitize_text_field( $_POST['currency_api_code'] ) : '';
-			// update_option( 'woo_feed_currency_api_code', $currencyAPI, false );
 
 			if ( isset( $_POST['opt_in'] ) && 'on' === $_POST['opt_in'] ) {
 				WooFeedWebAppickAPI::getInstance()->trackerOptIn();
@@ -935,6 +935,12 @@ if ( ! class_exists( 'webappick_suggest_plugin' ) ) {
 
 		// add single plugin to list of favs
 		static function add_plugin_favs( $plugin_slug, $res ) {
+
+			// Ensure $res->plugins is an array and not empty
+			if ( ! isset( $res->plugins ) || ! is_array( $res->plugins ) ) {
+				$res->plugins = [];
+			}
+
 			if ( ! empty( $res->plugins ) && is_array( $res->plugins ) ) {
 				foreach ( $res->plugins as $plugin ) {
 					if ( is_object( $plugin ) && ! empty( $plugin->slug ) && $plugin->slug === $plugin_slug ) {
@@ -1000,4 +1006,5 @@ if ( !function_exists( 'init_rest_api' ) ) {
 }
 
 add_action( 'init', 'init_rest_api' );
+
 // End of file woo-feed.php

@@ -1,4 +1,6 @@
-<?php 
+<?php
+// phpcs:disable WordPress.WP.AlternativeFunctions, WordPress.PHP.IniSet, WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 class PMXI_CsvParser
 {
@@ -77,7 +79,8 @@ class PMXI_CsvParser
 
         PMXI_Plugin::$csv_path = $options['filename'];
         
-        $this->xpath = (!empty($options['xpath']) ? $options['xpath'] : ((!empty($_POST['xpath'])) ? sanitize_text_field($_POST['xpath']) : '/node'));
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $this->xpath = (!empty($options['xpath']) ? $options['xpath'] : ((!empty($_POST['xpath'])) ? sanitize_text_field(wp_unslash($_POST['xpath'])) : '/node'));
             
         if ( ! empty($options['delimiter']) ){
             $this->delimiter = $options['delimiter'];    
@@ -101,8 +104,10 @@ class PMXI_CsvParser
         }
         if (!empty($options['xml_path'])) $this->xml_path = $options['xml_path'];
 
+        // phpcs:ignore WordPress.PHP.IniSet.Risky,Squiz.PHP.DiscouragedFunctions.Discouraged
         @ini_set( "display_errors", 0);
-        @ini_set('auto_detect_line_endings', true);        
+        // phpcs:ignore WordPress.PHP.IniSet.Risky,Squiz.PHP.DiscouragedFunctions.Discouraged
+        @ini_set('auto_detect_line_endings', true);
         
         $file_params = self::analyse_file($options['filename'], 1);
 
@@ -964,8 +969,10 @@ class PMXI_CsvParser
         
         $import_id = 0;
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         if ( ! empty($_GET['id']) ) $import_id = intval($_GET['id']);
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         if ( ! empty($_GET['import_id']) ) $import_id = intval($_GET['import_id']);
 
         $create_new_headers = false;

@@ -27,7 +27,7 @@ class Activate {
 		}
 
 		// This needs to run on at least 1000 because we load the roles in the Access class on 999.
-		add_action( 'init', [ $this, 'init' ], 1000 );
+		add_action( 'admin_init', [ $this, 'init' ], 1000 );
 	}
 
 	/**
@@ -74,6 +74,7 @@ class Activate {
 		}
 
 		aioseo()->core->cache->clear();
+		wp_cache_flush();
 
 		$this->maybeRunSetupWizard();
 	}
@@ -87,6 +88,12 @@ class Activate {
 	 */
 	public function deactivate() {
 		aioseo()->access->removeCapabilities();
+
+		// Added cache clear because we changed the cache structure on version 4.9.1
+		// now we store as string and have a is_object column to differentiate between array and objects.
+		// This will prevent errors when deactivating the PRO plugin but keeping an old version of the LITE plugin.
+		aioseo()->core->cache->clear();
+		wp_cache_flush();
 	}
 
 	/**
@@ -110,7 +117,7 @@ class Activate {
 			return;
 		}
 
-		if ( isset( $_GET['activate-multi'] ) ) { // phpcs:ignore HM.Security.NonceVerification.Recommended
+		if ( isset( $_GET['activate-multi'] ) ) { // phpcs:ignore HM.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Recommended
 			return;
 		}
 
@@ -121,6 +128,8 @@ class Activate {
 	/**
 	 * Adds our capabilities to all roles on the next request and the installing user on the current request after upgrading to Pro.
 	 *
+
+
 	 *
 	 * @since 4.1.4.4
 	 *
@@ -136,7 +145,7 @@ class Activate {
 			? get_current_user_id() // If there is a logged in user, the user is switching from Lite to Pro via the Plugins menu.
 			: aioseo()->core->cache->get( 'connect_active_user' ); // If there is no logged in user, we're upgrading via AIOSEO Connect.
 
-		$user = get_userdata( $userId );
+		$user = aioseo()->helpers->getUserData( $userId );
 		if ( is_object( $user ) ) {
 			$capabilities = aioseo()->access->getCapabilityList();
 			foreach ( $capabilities as $capability ) {

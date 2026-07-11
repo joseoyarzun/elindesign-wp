@@ -39,7 +39,11 @@ class Ocean_Extra_Theme_Panel {
 		if ( ! $need_to_upgrade
 			|| '1' === get_option( 'owp_dismiss_sticky_notice' )
 			|| true === apply_filters( 'oceanwp_licence_tab_enable', false )
-			|| ! current_user_can( 'manage_options' ) ) {
+			|| ! current_user_can( 'manage_options' )
+			|| ! get_option( 'owp_onboarding_completed' )
+			|| ! get_option( 'oceanwp_plugin_notice_first_dismissed' )
+			|| ! get_option( 'oceanwp_plugin_notice_permanently_dismissed' )
+		) {
 			return;
 		}
 
@@ -67,7 +71,7 @@ class Ocean_Extra_Theme_Panel {
 					<?php
 					echo sprintf(
 						esc_html__( 'But you know what would make your website look stunning and leave your visitors in awe? The  %1$sOcean Core Extensions Bundle%2$s features.', 'ocean-extra' ),
-						'<a href="https://oceanwp.org/core-extensions-bundle/" target="_blank">',
+						'<a href="https://see.oceanwp.org/tnotice-oceanwp-upgrade" target="_blank">',
 						'</a>'
 					);
 					?>
@@ -83,7 +87,7 @@ class Ocean_Extra_Theme_Panel {
 								<li> <?php echo esc_html__('images and icons library,','ocean-extra' ); ?> </li>
 								<li> <?php echo esc_html__('and so much more.','ocean-extra' ); ?> </li>
 							</ul>
-						<p><a href="<?php echo esc_url('https://oceanwp.org/core-extensions-bundle/' ); ?>" class="btn button-primary" target="_blank"><span class="dashicons dashicons-external"></span><span><?php _e( 'Yes! I want the Upgrade', 'ocean-extra' ); ?></span></a></p>
+						<p><a href="<?php echo esc_url('https://see.oceanwp.org/tnotice-oceanwp-upgrade' ); ?>" class="btn button-primary" target="_blank"><span class="dashicons dashicons-external"></span><span><?php _e( 'Yes! I want the Upgrade', 'ocean-extra' ); ?></span></a></p>
 					</div>
 					<a href="<?php echo $dismiss; ?>" class="dismiss"><span class="dashicons dashicons-dismiss"></span></a>
 				</div>
@@ -147,34 +151,69 @@ class Ocean_Extra_Theme_Panel {
 	 */
 	private static function get_panels() {
 
-		$panels = array(
-			'oe_general_panel'        => array(
+		$theme = wp_get_theme();
+		$version = $theme->get( 'Version' );
+
+		if ( get_template_directory() == get_stylesheet_directory() ) {
+			$version  = $theme->get( 'Version' );
+		} else {
+			$parent = wp_get_theme()->parent();
+			// get parent version.
+			if ( ! empty( $parent) ) {
+				$version = $parent->Version;
+			}
+		}
+
+		$panels = array();
+
+		if ( version_compare( $version, '4.0.0', '>=' ) ) {
+			$panels['oe_styles_and_settings_panel'] = array(
+				'label' => esc_html__( 'Site Style & Settings Panel', 'ocean-extra' ),
+			);
+			$panels['oe_colors_panel'] = array(
+				'label' => esc_html__( 'Colors Panel', 'ocean-extra' ),
+			);
+			$panels['oe_site_page_settings_panel'] = array(
+				'label' => esc_html__( 'Site Page Settings Panel', 'ocean-extra' ),
+			);
+			$panels['oe_site_performance_panel'] = array(
+				'label' => esc_html__( 'Site Performance Panel', 'ocean-extra' ),
+			);
+			$panels['oe_seo_settings_panel'] = array(
+				'label' => esc_html__( 'SEO Panel', 'ocean-extra' ),
+			);
+		}
+
+		if ( version_compare( $version, '4.0.0', '<' ) ) {
+			$panels['oe_general_panel'] = array(
 				'label' => esc_html__( 'General Panel', 'ocean-extra' ),
-			),
-			'oe_typography_panel'     => array(
-				'label' => esc_html__( 'Typography Panel', 'ocean-extra' ),
-			),
-			'oe_topbar_panel'         => array(
-				'label' => esc_html__( 'Top Bar Panel', 'ocean-extra' ),
-			),
-			'oe_header_panel'         => array(
-				'label' => esc_html__( 'Header Panel', 'ocean-extra' ),
-			),
-			'oe_blog_panel'           => array(
-				'label' => esc_html__( 'Blog Panel', 'ocean-extra' ),
-			),
-			'oe_sidebar_panel'        => array(
-				'label' => esc_html__( 'Sidebar Panel', 'ocean-extra' ),
-			),
-			'oe_footer_widgets_panel' => array(
-				'label' => esc_html__( 'Footer Widgets Panel', 'ocean-extra' ),
-			),
-			'oe_footer_bottom_panel'  => array(
-				'label' => esc_html__( 'Footer Bottom Panel', 'ocean-extra' ),
-			),
-			'oe_custom_code_panel'    => array(
-				'label' => esc_html__( 'Custom CSS/JS Panel', 'ocean-extra' ),
-			),
+			);
+		}
+
+		// Panels that are included regardless of the theme version
+		$panels['oe_typography_panel'] = array(
+			'label' => esc_html__( 'Typography Panel', 'ocean-extra' ),
+		);
+		$panels['oe_topbar_panel'] = array(
+			'label' => esc_html__( 'Top Bar Panel', 'ocean-extra' ),
+		);
+		$panels['oe_header_panel'] = array(
+			'label' => esc_html__( 'Header Panel', 'ocean-extra' ),
+		);
+		$panels['oe_blog_panel'] = array(
+			'label' => esc_html__( 'Blog Panel', 'ocean-extra' ),
+		);
+		$panels['oe_sidebar_panel'] = array(
+			'label' => esc_html__( 'Sidebar Panel', 'ocean-extra' ),
+		);
+		$panels['oe_footer_widgets_panel'] = array(
+			'label' => esc_html__( 'Footer Widgets Panel', 'ocean-extra' ),
+		);
+		$panels['oe_footer_bottom_panel'] = array(
+			'label' => esc_html__( 'Footer Bottom Panel', 'ocean-extra' ),
+		);
+		$panels['oe_custom_code_panel'] = array(
+			'label' => esc_html__( 'Custom CSS/JS Panel', 'ocean-extra' ),
 		);
 
 		// Apply filters and return
@@ -262,7 +301,6 @@ class Ocean_Extra_Theme_Panel {
 		// Return
 		return apply_filters( 'oe_default_panels', $default );
 	}
-
 
 }
 

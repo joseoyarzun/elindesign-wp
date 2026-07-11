@@ -147,7 +147,7 @@ class Getting_Started extends Admin_Page {
 				<tr>
 					<th>
 						Flickr<br/>
-						<em><a href="http://www.flickr.com/services/api/misc.api_keys.html">API Key
+						<em><a href="https://www.flickr.com/services/api/misc.api_keys.html">API Key
 								Required</a></em><br/>
 						<em>See <a href="https://aquoid.com/plugins/photonic/flickr/#api-key">Instructions</a></em>
 					</th>
@@ -360,7 +360,7 @@ class Getting_Started extends Admin_Page {
 			],
 			'colorbox'      => [
 				'name'     => 'Colorbox',
-				'url'      => 'http://colorpowered.com/colorbox/',
+				'url'      => 'https://jacklmoore.com/colorbox/',
 				'size'     => '~10KB JS, 5KB CSS',
 				'supports' => ['autoStart', 'bundled', 'deepLinking', 'html5', 'socialSharing', 'touch', 'ytVimeo'],
 				'license'  => 'MIT',
@@ -417,7 +417,7 @@ class Getting_Started extends Admin_Page {
 			],
 			'lightGallery'  => [
 				'name'     => 'LightGallery',
-				'url'      => 'https://sachinchoolur.github.io/lightgallery.js/',
+				'url'      => 'https://lightgalleryjs.com/',
 				'size'     => '~52KB JS, 21KB CSS, ~26KB Fonts, + Additional Plugins',
 				'supports' => ['autoStart', 'bundled', 'deepLinking', 'html5', 'noJQ', 'socialSharing', 'thumbnails', 'touch', 'ytVimeo'],
 				'license'  => 'GPL v3',

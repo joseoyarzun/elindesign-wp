@@ -82,6 +82,7 @@ class PMXI_Helper {
 				if ($deep) {
 					$array[$key] = self::array_prepend($element,$string,$deep);
 				} else {
+					// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
 					trigger_error(__METHOD__ . ': array element', E_USER_WARNING);
 				}
 			} else {
@@ -134,6 +135,6 @@ class PMXI_Helper {
 			.'$#'
 			.$modifiers;
 		
-		return (boolean)preg_match($pattern, $string);
+		return (bool)preg_match($pattern, $string);
 	}
 }

@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 $base = plugin_dir_path( UserFeedback()->file );
 
 require_once $base . 'includes/admin/notifications/class-userfeedback-notification-external.php';

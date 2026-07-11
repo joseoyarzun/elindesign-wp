@@ -12,13 +12,13 @@ class WCML_Setup_Notice_UI extends WCML_Templates_Factory {
 				'prepare' => __( 'Make your store multilingual', 'woocommerce-multilingual' ),
 				'help'    => sprintf(
 					/* translators: %1$s and %2$s are opening and closing HTML strong tags */
-					esc_html__( 'Set up %1$sWooCommerce Multilingual & Multicurrency%2$s to translate your store and add more currencies.', 'woocommerce-multilingual' ),
+					esc_html__( 'Set up %1$sWPML Multilingual & Multicurrency for WooCommerce%2$s to translate your store and add more currencies.', 'woocommerce-multilingual' ),
 					'<strong>',
 					'</strong>'
 				),
 				'start'   => __( 'Start the Setup Wizard', 'woocommerce-multilingual' ),
 			],
-			'setup_url' => esc_url( admin_url( 'admin.php?page=wcml-setup' ) ),
+			'setup_url' => esc_url( \WCML\Utilities\AdminUrl::getSetup() ),
 		];
 
 		return $model;

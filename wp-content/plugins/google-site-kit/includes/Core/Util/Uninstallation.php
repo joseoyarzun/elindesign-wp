@@ -15,7 +15,14 @@ use Google\Site_Kit\Core\Storage\Options;
 use Google\Site_Kit\Core\Storage\Encrypted_Options;
 use Google\Site_Kit\Core\Authentication\Credentials;
 use Google\Site_Kit\Core\Authentication\Google_Proxy;
-use Exception;
+use Google\Site_Kit\Core\Authentication\Clients\OAuth_Client;
+use Google\Site_Kit\Core\Email_Reporting\Email_Reporting_Scheduler;
+use Google\Site_Kit\Core\Remote_Features\Remote_Features_Cron;
+use Google\Site_Kit\Core\Tags\Google_Tag_Gateway\Google_Tag_Gateway_Cron;
+use Google\Site_Kit\Modules\Analytics_4\Conversion_Reporting\Conversion_Reporting_Cron;
+use Google\Site_Kit\Modules\Analytics_4\Synchronize_AdSenseLinked;
+use Google\Site_Kit\Modules\Analytics_4\Synchronize_AdsLinked;
+use Google\Site_Kit\Modules\Analytics_4\Synchronize_Property;
 
 /**
  * Utility class for handling uninstallation of the plugin.
@@ -43,6 +50,27 @@ class Uninstallation {
 	private $options;
 
 	/**
+	 * List of scheduled events.
+	 *
+	 * @since 1.136.0
+	 * @var array
+	 */
+	const SCHEDULED_EVENTS = array(
+		Conversion_Reporting_Cron::CRON_ACTION,
+		Email_Reporting_Scheduler::ACTION_INITIATOR,
+		Email_Reporting_Scheduler::ACTION_WORKER,
+		Email_Reporting_Scheduler::ACTION_FALLBACK,
+		Email_Reporting_Scheduler::ACTION_MONITOR,
+		Email_Reporting_Scheduler::ACTION_CLEANUP,
+		OAuth_Client::CRON_REFRESH_PROFILE_DATA,
+		Remote_Features_Cron::CRON_ACTION,
+		Synchronize_AdSenseLinked::CRON_SYNCHRONIZE_ADSENSE_LINKED,
+		Synchronize_AdsLinked::CRON_SYNCHRONIZE_ADS_LINKED,
+		Synchronize_Property::CRON_SYNCHRONIZE_PROPERTY,
+		Google_Tag_Gateway_Cron::CRON_ACTION,
+	);
+
+	/**
 	 * Constructor.
 	 *
 	 * This class and its logic must be instantiated early in the WordPress
@@ -56,7 +84,7 @@ class Uninstallation {
 	 */
 	public function __construct(
 		Context $context,
-		Options $options = null
+		?Options $options = null
 	) {
 		$this->context = $context;
 		$this->options = $options ?: new Options( $this->context );
@@ -70,8 +98,23 @@ class Uninstallation {
 	public function register() {
 		add_action(
 			'googlesitekit_uninstallation',
-			function() {
+			function () {
 				$this->uninstall();
+				$this->clear_scheduled_events();
+			}
+		);
+
+		add_action(
+			'googlesitekit_deactivation',
+			function () {
+				$this->clear_scheduled_events();
+			}
+		);
+
+		add_action(
+			'googlesitekit_reset',
+			function () {
+				$this->clear_scheduled_events();
 			}
 		);
 	}
@@ -89,5 +132,44 @@ class Uninstallation {
 			$google_proxy = new Google_Proxy( $this->context );
 			$google_proxy->unregister_site( $credentials );
 		}
+	}
+
+	/**
+	 * Clears all scheduled events.
+	 *
+	 * @since 1.136.0
+	 */
+	private function clear_scheduled_events() {
+		foreach ( self::SCHEDULED_EVENTS as $event ) {
+			// Only clear scheduled events that are set, important in E2E
+			// testing.
+			if ( $this->is_event_scheduled( $event ) ) {
+				wp_unschedule_hook( $event );
+			}
+		}
+	}
+
+	/**
+	 * Determines if an event is scheduled for the given hook, regardless of arguments.
+	 *
+	 * @since 1.168.0
+	 *
+	 * @param string $hook The hook name.
+	 * @return bool True if an event is scheduled for the hook, false otherwise.
+	 */
+	private function is_event_scheduled( $hook ) {
+		$crons = _get_cron_array();
+
+		if ( ! is_array( $crons ) || empty( $crons ) ) {
+			return false;
+		}
+
+		foreach ( $crons as $events ) {
+			if ( isset( $events[ $hook ] ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

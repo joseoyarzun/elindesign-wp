@@ -4,18 +4,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 echo sprintf(
-	esc_html__( 'New Response to %s', 'userfeedback' ),
-	esc_html__($survey_title)
+	// translators: %s is the survey title.
+	esc_html__( 'New Response to %s', 'userfeedback-lite' ),
+	esc_html( $survey_title ) // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variable set by caller.
 );
 
 
 echo "\n\n";
 
-$notification_config_url = userfeedback_get_screen_url( 'userfeedback_surveys', "edit/$survey_id/notifications" );
+$notification_config_url = userfeedback_get_screen_url( 'userfeedback_surveys', "edit/$survey_id/notifications" ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variable set by caller.
 
 echo sprintf(
-	esc_html__( 'You are receiving this UserFeedback survey notification from %1$s. Adjust your settings here: %2$s.', 'userfeedback' ),
-	esc_html__(get_bloginfo( 'name' )),
+	// translators: %1$s is the site name, %2$s is the URL to notification settings.
+	esc_html__( 'You are receiving this UserFeedback survey notification from %1$s. Adjust your settings here: %2$s.', 'userfeedback-lite' ),
+	esc_html( get_bloginfo( 'name' ) ),
 	esc_url_raw($notification_config_url)
 );
 
@@ -23,7 +25,7 @@ echo "\n\n";
 
 echo "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
 
-foreach ( $answers as $answer ) {
+foreach ( $answers as $answer ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variable set by caller.
 	echo "\t" . esc_html( $answer['question_title'] ) . "\n\n";
 	echo "\t" . esc_html( $answer['value'] ) . "\n\n";
 	echo "\t--------\n\n";
@@ -31,7 +33,5 @@ foreach ( $answers as $answer ) {
 
 echo "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
 
-echo sprintf(
-	esc_html__(__( 'Sent from %s', 'userfeedback' )),
-	esc_url_raw(get_site_url())
-);
+// translators: %s is the site URL.
+echo esc_html( sprintf( __( 'Sent from %s', 'userfeedback-lite' ), esc_url_raw( get_site_url() ) ) );

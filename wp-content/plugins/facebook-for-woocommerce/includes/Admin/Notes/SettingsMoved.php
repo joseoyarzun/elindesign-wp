@@ -4,15 +4,15 @@
  *
  * Adds a note to merchant's inbox about Facebook Menu being moved to Marketing menu.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 namespace WooCommerce\Facebook\Admin\Notes;
 
 defined( 'ABSPATH' ) || exit;
 
-use \Automattic\WooCommerce\Admin\Notes\Note;
-use \Automattic\WooCommerce\Admin\Notes\NoteTraits;
+use Automattic\WooCommerce\Admin\Notes\Note;
+use Automattic\WooCommerce\Admin\Notes\NoteTraits;
 
 /**
  * SettingsMoved class.

@@ -1,5 +1,6 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) exit;
 function pmxi_wpmu_new_blog($blog_id, $user_id, $domain, $path, $site_id, $meta)
 {
 	// create/update required database tables
@@ -18,7 +19,7 @@ function pmxi_wpmu_new_blog($blog_id, $user_id, $domain, $path, $site_id, $meta)
 		// sync data between plugin tables and wordpress (mostly for the case when plugin is reactivated)
 			
 		$post = new PMXI_Post_Record();
-		$wpdb->query('DELETE FROM ' . $post->getTable() . ' WHERE post_id NOT IN (SELECT ID FROM ' . $wpdb->posts . ')');
+		$wpdb->query('DELETE FROM ' . $post->getTable() . ' WHERE post_id NOT IN (SELECT ID FROM ' . $wpdb->posts . ')'); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
         
         switch_to_blog($old_blog);
         return;	                 

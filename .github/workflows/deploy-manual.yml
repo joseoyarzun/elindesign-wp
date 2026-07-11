@@ -1,0 +1,76 @@
+name: Deploy WP Code (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run rsync in dry-run mode"
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          test -n "${{ secrets.DEPLOY_HOST }}" || (echo "Missing DEPLOY_HOST" && exit 1)
+          test -n "${{ secrets.DEPLOY_USER }}" || (echo "Missing DEPLOY_USER" && exit 1)
+          test -n "${{ secrets.DEPLOY_PATH }}" || (echo "Missing DEPLOY_PATH" && exit 1)
+          test -n "${{ secrets.DEPLOY_SSH_KEY }}" || (echo "Missing DEPLOY_SSH_KEY" && exit 1)
+
+      - name: Prepare SSH key
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p "${{ secrets.DEPLOY_PORT || '22' }}" "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Sync tracked code to server
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT="${{ secrets.DEPLOY_PORT || '22' }}"
+          HOST="${{ secrets.DEPLOY_HOST }}"
+          USER="${{ secrets.DEPLOY_USER }}"
+          REMOTE_PATH="${{ secrets.DEPLOY_PATH }}"
+
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            DRY='--dry-run'
+          else
+            DRY=''
+          fi
+
+          RSYNC_SSH="ssh -p ${PORT}"
+          RSYNC_FLAGS="-az --delete --omit-dir-times --no-perms --no-owner --no-group"
+
+          sync_if_exists() {
+            local src="$1"
+            if [[ -d "$src" ]]; then
+              echo "Syncing $src"
+              rsync ${RSYNC_FLAGS} ${DRY} -e "${RSYNC_SSH}" "$src" "${USER}@${HOST}:${REMOTE_PATH}/${src}"
+            fi
+          }
+
+          # Keep deployment scoped to code you own.
+          sync_if_exists "wp-content/mu-plugins/"
+          sync_if_exists "wp-content/themes/"
+          sync_if_exists "wp-content/plugins/woocommerce-scancoordesign/"
+          sync_if_exists "wp-content/plugins/woocommerce-sixwebsoft/"
+          sync_if_exists "wp-content/plugins/product-categories-bottom-description-woo-comerce/"
+
+      - name: Post-deploy cache cleanup (optional)
+        if: ${{ inputs.dry_run == false }}
+        shell: bash
+        run: |
+          PORT="${{ secrets.DEPLOY_PORT || '22' }}"
+          HOST="${{ secrets.DEPLOY_HOST }}"
+          USER="${{ secrets.DEPLOY_USER }}"
+          REMOTE_PATH="${{ secrets.DEPLOY_PATH }}"
+          ssh -p "${PORT}" "${USER}@${HOST}" "rm -rf ${REMOTE_PATH}/wp-content/cache/* || true"

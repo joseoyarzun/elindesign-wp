@@ -15,7 +15,7 @@ class Photonic {
 	public static $library;
 	public static $lightbox_replacements;
 	public static $safe_tags;
-	private $ajax;
+	public static $safe_title_tags;
 
 	public function __construct() {
 		// $start = microtime(true);
@@ -60,16 +60,17 @@ class Photonic {
 
 				// Custom data attributes
 				'div' => [
-					'data-photonic-platform' => true,
-					'data-photonic-query' => true,
+					'data-photonic' => true,
 					'data-photonic-gallery-columns' => true,
+					'data-photonic-query' => true,
+					'data-photonic-platform' => true,
 					'data-photonic-prompt' => true,
 
 					// Slideshow
 					'data-splide' => true,
 				],
 
-				'ul' => [
+/*				'ul' => [
 					// Slideshows
 					'data-photonic-columns' => true,
 					'data-photonic-controls' => true,
@@ -79,9 +80,12 @@ class Photonic {
 					'data-photonic-speed' => true,
 					'data-photonic-strip-style' => true,
 					'data-photonic-timeout' => true,
-				],
+				],*/
 
 				'img' => [
+					// Lazy loading
+					'data-src' => true,
+
 					// Tooltips
 					'data-photonic-tooltip' => true,
 				],
@@ -116,6 +120,7 @@ class Photonic {
 					'data-download-url' => true,
 					'data-video' => true,
 					'data-sub-html' => true,
+					'data-photonic-thumb' => true,
 
 					// Non-Photonic - PhotoSwipe5
 					'data-pswp-height' => true,
@@ -148,39 +153,40 @@ class Photonic {
 					'data-rel' => true,
 
 					// Photonic albums, common
-					'data-photonic-overlay-size' => true,
-					'data-photonic-overlay-video-size' => true,
-					'data-photonic-photo-count' => true,
-					'data-photonic-photo-more' => true,
-					'data-photonic-platform' => true,
-					'data-photonic-popup' => true,
-					'data-photonic-singular' => true,
 
 					// Albums, Google
-					'data-photonic-overlay-crop' => true,
-					'data-photonic-thumb-size' => true,
 
-					// Albums, SmugMug
+					// Photos, SmugMug
 					'data-photonic-buy' => true,
 
 					// Albums, Zenfolio
 					'data-photonic-realm' => true,
-				]
+				],
+
+				'figure' => [
+					// Layouts - Horizontal Masonry
+					'data-photonic-idx' => true,
+				],
 			],
 			wp_kses_allowed_html('post')
 		);
+
+		self::$safe_title_tags = [
+			'h4' => [],
+		];
 
 		require_once PHOTONIC_PATH . "/Options/Options.php";
 		add_action('admin_init', [Options::get_instance(), 'prepare_options'], 20); // Setting to 20 so that CPTs can be picked up - Utilities are loaded with a priority 10
 
 		$this->localized = false;
 		$this->provider_map = [
-			'flickr'    => 'Flickr',
-			'smug'      => 'SmugMug',
-			'smugmug'   => 'SmugMug',
-			'google'    => 'Google',
-			'zenfolio'  => 'Zenfolio',
-			'instagram' => 'Instagram',
+			'flickr'        => 'Flickr',
+			'smug'          => 'SmugMug',
+			'smugmug'       => 'SmugMug',
+			'google'        => 'Google',
+			'zenfolio'      => 'Zenfolio',
+			'instagram'     => 'Instagram',
+			'deviantart'    => 'DeviantArt'
 		];
 
 		add_action('admin_menu', [&$this, 'add_admin_menu']);
@@ -195,7 +201,7 @@ class Photonic {
 		foreach ($all_options as $key => $value) {
 			$mod_key = 'photonic_' . $key;
 			global ${$mod_key};
-			${$mod_key} = $value;
+			${$mod_key} = $value; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals
 		}
 
 		define('PHOTONIC_SSL_VERIFY', empty($photonic_ssl_verify_off));
@@ -245,7 +251,7 @@ class Photonic {
 		}
 
 		require_once PHOTONIC_PATH . "/Core/AJAX.php";
-		$this->ajax = AJAX::get_instance($this);
+		AJAX::get_instance($this);
 
 		/*
 		add_action('photonic_token_monitor', [&$this, 'monitor_token_validity']);
@@ -311,7 +317,7 @@ class Photonic {
 	 */
 	public function conditionally_add_scripts() {
 		global $photonic_slideshow_library, $photonic_custom_lightbox_js, $photonic_custom_lightbox, $photonic_always_load_scripts,
-			   $photonic_disable_photonic_lightbox_scripts, $photonic_disable_photonic_slider_scripts, $photonic_js_in_header, $photonic_js_type;
+			   $photonic_disable_photonic_lightbox_scripts, $photonic_disable_photonic_slider_scripts, $photonic_js_in_header;
 
 		$library_versions = [
 			'baguettebox'   => '1.11.1',
@@ -322,12 +328,12 @@ class Photonic {
 			'glightbox'     => '2022-03-12',
 			'imagelightbox' => '2018-08-17',
 			'lightcase'     => '2.5.0',
-			'lightgallery'  => '2.4.0',
+			'lightgallery'  => '2.7.1',
 			'photoswipe'    => '4.1.3',
-			'photoswipe5'   => '5.2.8',
+			'photoswipe5'   => '5.3.7',
 			'prettyphoto'   => '3.1.6',
 			'spotlight'     => '0.7.8',
-			'splide'        => '4.0.1',
+			'splide'        => '4.1.4',
 			'strip'         => '1.8.0',
 			'swipebox'      => '1.5.2',
 			'venobox'       => '2.0.4',
@@ -379,20 +385,7 @@ class Photonic {
 
 			if (empty($photonic_disable_photonic_lightbox_scripts)) {
 				if ('lightgallery' === self::$library) {
-					global $photonic_enable_lg_zoom, $photonic_enable_lg_thumbnail, $photonic_enable_lg_fullscreen, $photonic_enable_lg_autoplay;
-					$lightgallery_plugins = [];
-					if (!empty($photonic_enable_lg_autoplay)) {
-						$lightgallery_plugins[] = 'autoplay';
-					}
-					if (!empty($photonic_enable_lg_fullscreen)) {
-						$lightgallery_plugins[] = 'fullscreen';
-					}
-					if (!empty($photonic_enable_lg_thumbnail)) {
-						$lightgallery_plugins[] = 'thumbnail';
-					}
-					if (!empty($photonic_enable_lg_zoom)) {
-						$lightgallery_plugins[] = 'zoom';
-					}
+					$lightgallery_plugins = self::get_lightgallery_plugins();
 					if (!empty($lightgallery_plugins)) {
 						wp_enqueue_script('lightgallery', PHOTONIC_URL . 'include/ext/' . self::$library . '/' . self::$library . PHOTONIC_DEV_MODE . '.js', $lb_deps, $this->get_version(PHOTONIC_PATH . '/include/ext/' . self::$library . '/' . self::$library . PHOTONIC_DEV_MODE . '.js'), !($photonic_always_load_scripts && $photonic_js_in_header));
 						$photonic_dependencies[] = 'lightgallery';
@@ -423,18 +416,9 @@ class Photonic {
 			wp_enqueue_script($slideshow_library, PHOTONIC_URL . 'include/ext/' . $slideshow_library . '/' . $slideshow_library . PHOTONIC_DEV_MODE . '.js', $lb_deps, (empty($library_versions[$slideshow_library]) ? $this->get_version(PHOTONIC_PATH . "/include/ext/$slideshow_library/$slideshow_library" . PHOTONIC_DEV_MODE . ".js") : $library_versions[$slideshow_library]), !($photonic_always_load_scripts && $photonic_js_in_header));
 		}
 
-		// $photonic_js_type = 'raw';
 		$module = "include/js/front-end/out/photonic-" . $slideshow_library . PHOTONIC_DEV_MODE . '.js';
 
 		wp_enqueue_script('photonic', PHOTONIC_URL . $module, $photonic_dependencies, $this->get_version(PHOTONIC_PATH . "/" . $module), !($photonic_always_load_scripts && $photonic_js_in_header));
-
-		if ('raw' === $photonic_js_type) {
-			$proper_case = 'BaguetteBox';
-			$lower_case = strtolower($proper_case);
-			wp_enqueue_script('photonic-slider', PHOTONIC_URL . 'include/ext/splide/splide.min.js', [], $this->get_version(PHOTONIC_PATH . '/include/ext/splide/splide.min.js'), !($photonic_always_load_scripts && $photonic_js_in_header));
-			wp_enqueue_script('photonic-lightbox', PHOTONIC_URL . "include/ext/$lower_case/$lower_case" . PHOTONIC_DEV_MODE . ".js", $lb_deps, $this->get_version(PHOTONIC_PATH . "/include/ext/$lower_case/$lower_case" . PHOTONIC_DEV_MODE . ".js"), !($photonic_always_load_scripts && $photonic_js_in_header));
-			wp_enqueue_script('photonic', PHOTONIC_URL . "include/js/front-end/src/Entries/$proper_case.js", ['photonic-slider', 'photonic-lightbox'], $this->get_version(PHOTONIC_PATH . "/include/js/front-end/src/Entries/$proper_case.js"), !($photonic_always_load_scripts && $photonic_js_in_header));
-		}
 
 		$this->localize_variables_once();
 	}
@@ -478,15 +462,15 @@ class Photonic {
 
 		global $photonic_css_in_file;
 		$file = trailingslashit(PHOTONIC_UPLOAD_DIR) . 'custom-styles.css';
-		if (@file_exists($file) && !empty($photonic_css_in_file)) {
+		if (@file_exists($file) && !empty($photonic_css_in_file)) { // phpcs:ignore WordPress.PHP.NoSilencedErrors
 			wp_enqueue_style('photonic-custom', trailingslashit(PHOTONIC_UPLOAD_URL) . 'custom-styles.css', ['photonic'], $this->get_version($file));
 		}
 		else {
 			wp_add_inline_style('photonic', $this->generate_css());
 		}
 
-		if (class_exists('\FLBuilderModel') && \FLBuilderModel::is_builder_active()) {
-			$this->enqueue_widget_scripts();
+		if (class_exists('\FLBuilder')) {
+			$this->load_beaver();
 		}
 	}
 
@@ -538,11 +522,8 @@ class Photonic {
 	 * @param bool $header
 	 * @return string
 	 */
-	public function generate_css($header = true) {
-		global $photonic_flickr_collection_set_constrain_by_padding, $photonic_flickr_photos_constrain_by_padding, $photonic_flickr_galleries_constrain_by_padding;
-		global $photonic_smug_photos_constrain_by_padding, $photonic_smug_albums_album_constrain_by_padding, $photonic_instagram_photos_constrain_by_padding;
-		global $photonic_zenfolio_photos_constrain_by_padding, $photonic_zenfolio_sets_constrain_by_padding, $photonic_tile_spacing, $photonic_masonry_tile_spacing, $photonic_mosaic_tile_spacing, $photonic_masonry_min_width;
-		global $photonic_google_photos_constrain_by_padding;
+	public function generate_css($header = true): string {
+		global $photonic_tile_spacing, $photonic_masonry_tile_spacing, $photonic_mosaic_tile_spacing;
 
 		$css = '';
 		$saved_css = get_option('photonic_css');
@@ -563,20 +544,8 @@ class Photonic {
 				$front_end->get_border_css('photonic_flickr_set_popup_thumb_border') .
 				" }\n";
 
-			$css .= ".photonic-flickr-stream .photonic-pad-photosets { margin: " . esc_attr($photonic_flickr_collection_set_constrain_by_padding) . "px; }\n";
-			$css .= ".photonic-flickr-stream .photonic-pad-galleries { margin: " . esc_attr($photonic_flickr_galleries_constrain_by_padding) . "px; }\n";
-			$css .= ".photonic-flickr-stream .photonic-pad-photos { padding: 5px " . esc_attr($photonic_flickr_photos_constrain_by_padding) . "px; }\n";
-
-			$css .= ".photonic-google-stream .photonic-pad-photos { padding: 5px " . esc_attr($photonic_google_photos_constrain_by_padding) . "px; }\n";
-
-			$css .= ".photonic-zenfolio-stream .photonic-pad-photos { padding: 5px " . esc_attr($photonic_zenfolio_photos_constrain_by_padding) . "px; }\n";
-			$css .= ".photonic-zenfolio-stream .photonic-pad-photosets { margin: 5px " . esc_attr($photonic_zenfolio_sets_constrain_by_padding) . "px; }\n";
-
-			$css .= ".photonic-smug-stream .photonic-pad-albums { margin: " . esc_attr($photonic_smug_albums_album_constrain_by_padding) . "px; }\n";
-			$css .= ".photonic-smug-stream .photonic-pad-photos { padding: 5px " . esc_attr($photonic_smug_photos_constrain_by_padding) . "px; }\n";
-
 			$css .= ".photonic-random-layout .photonic-thumb { padding: " . esc_attr($photonic_tile_spacing) . "px}\n";
-			$css .= ".photonic-masonry-layout .photonic-thumb { padding: " . esc_attr($photonic_masonry_tile_spacing) . "px}\n";
+			$css .= ".photonic-masonry-layout .photonic-thumb, .photonic-masonry-horizontal-layout .photonic-thumb { padding: " . esc_attr($photonic_masonry_tile_spacing) . "px}\n";
 			$css .= ".photonic-mosaic-layout .photonic-thumb { padding: " . esc_attr($photonic_mosaic_tile_spacing) . "px}\n";
 		}
 
@@ -584,14 +553,14 @@ class Photonic {
 	}
 
 	public static function get_version($file) {
-		return date("Ymd-Gis", @filemtime($file));
+		return gmdate("Ymd-Gis", @filemtime($file)); // phpcs:ignore WordPress.PHP.NoSilencedErrors
 	}
 
-	public function admin_init() {
+	public function admin_init(): void {
 		require_once PHOTONIC_PATH . "/Admin/Admin.php";
 
-		if (!empty($_REQUEST['page']) &&
-			in_array($_REQUEST['page'], ['photonic-options-manager', 'photonic-options', 'photonic-helpers', 'photonic-getting-started', 'photonic-auth', 'photonic-shortcode-replace'], true)) {
+		if (!empty($_REQUEST['page']) && // phpcs:ignore WordPress.Security.NonceVerification
+			in_array($_REQUEST['page'], ['photonic-options-manager', 'photonic-options', 'photonic-helpers', 'photonic-getting-started', 'photonic-auth', 'photonic-shortcode-replace'], true)) { // phpcs:ignore WordPress.Security.NonceVerification
 			require_once PHOTONIC_PATH . "/Admin/Admin_Menu.php";
 			$this->admin_menu = new Admin_Menu(__FILE__, $this);
 		}
@@ -599,7 +568,7 @@ class Photonic {
 
 	public function add_extensions() {
 		require_once "Gallery.php";
-		require_once PHOTONIC_PATH . "/Modules/Core.php";
+		require_once PHOTONIC_PATH . "/Platforms/Base.php";
 		require_once PHOTONIC_PATH . '/Layouts/Core_Layout.php';
 	}
 
@@ -638,32 +607,19 @@ class Photonic {
 	}
 
 	/**
-	 * Adds Photonic attributes to the native WP galleries. This cannot be called in <code>Photonic_Plugin\Modules\Native</code> because
+	 * Adds Photonic attributes to the native WP galleries. This cannot be called in <code>Photonic_Plugin\Platforms\Native</code> because
 	 * that class is not initialised until a gallery of the native type is encountered
 	 *
-	 * @param $out
-	 * @param $pairs
-	 * @param $attributes
+	 * @param array $out
+	 * @param array $pairs Not used, but needed since this is for a standard gallery filter.
+	 * @param array $attributes
 	 * @return mixed
 	 */
-	public function native_gallery_attributes($out, $pairs, $attributes) {
-		global $photonic_wp_title_caption, $photonic_enable_popup, $photonic_thumbnail_style, $photonic_alternative_shortcode;
+	public function native_gallery_attributes(array $out, array $pairs, array $attributes): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+		global $photonic_wp_title_caption, $photonic_thumbnail_style, $photonic_alternative_shortcode;
 
-		$bypass = empty($photonic_enable_popup) || 'off' === $photonic_enable_popup;
 		$defaults = [
 			'layout'      => esc_attr($photonic_thumbnail_style ?: 'square'),
-			'more'        => '',
-			'display'     => 'local',
-			'panel'       => '',
-			'filter'      => '',
-			'filter_type' => 'include',
-			'fx'          => 'slide',    // Splide effects: fade and slide
-			'timeout'     => 4000,    // Time between slides in ms
-			'speed'       => 3000,    // Time for each transition
-			'pause'       => true,    // Pause on hover
-			'strip-style' => 'thumbs',
-			'controls'    => 'show',
-			'popup'       => $bypass ? 'hide' : 'show',
 
 			'custom_classes' => '',
 			'alignment'      => '',
@@ -671,11 +627,8 @@ class Photonic {
 			'caption'          => esc_attr($photonic_wp_title_caption),
 			'page'             => 1,
 			'count'            => -1,
-			'thumb_width'      => 75,
-			'thumb_height'     => 75,
 			'thumb_size'       => 'thumbnail',
 			'slide_size'       => 'large',
-			'slideshow_height' => 500,
 		];
 
 		$attributes = array_merge($defaults, $attributes);
@@ -693,7 +646,7 @@ class Photonic {
 	 * @param array $attr
 	 * @return string
 	 */
-	public function helper_shortcode($attr = []) {
+	public function helper_shortcode($attr = []): string {
 		if (empty($attr)) {
 			$attr = [];
 		}
@@ -709,10 +662,10 @@ class Photonic {
 	}
 
 	/**
-	 * @param $attr
-	 * @return array|bool|string
+	 * @param array $attr
+	 * @return string
 	 */
-	public function get_gallery_images($attr) {
+	public function get_gallery_images(array $attr): string {
 		require_once PHOTONIC_PATH . '/Core/Front_End.php';
 		return Front_End::get_instance()->get_gallery_images($attr);
 	}
@@ -750,8 +703,7 @@ class Photonic {
 				break;
 		}
 
-		$response = wp_remote_request($url, $curl_args);
-		return $response;
+		return wp_remote_request($url, $curl_args);
 	}
 
 	public function enable_translations() {
@@ -774,9 +726,9 @@ class Photonic {
 	 * Used for handling the front-end for Gutenberg blocks
 	 *
 	 * @param $attributes
-	 * @return array|bool|string
+	 * @return string
 	 */
-	public function render_block($attributes) {
+	public function render_block($attributes): string {
 		if (!empty($attributes['shortcode'])) {
 			$shortcode = (array) (json_decode($attributes['shortcode']));
 
@@ -810,8 +762,9 @@ class Photonic {
 	}
 
 	public function curl_timeout($handle) {
-		curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, PHOTONIC_CURL_TIMEOUT);
-		curl_setopt($handle, CURLOPT_TIMEOUT, PHOTONIC_CURL_TIMEOUT < 30 ? 30 : PHOTONIC_CURL_TIMEOUT);
+		// Forcing phpcs:ignore here, since the explicit purpose is to change cURL's timeout.
+		curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, PHOTONIC_CURL_TIMEOUT); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		curl_setopt($handle, CURLOPT_TIMEOUT, PHOTONIC_CURL_TIMEOUT < 30 ? 30 : PHOTONIC_CURL_TIMEOUT); // phpcs:ignore WordPress.WP.AlternativeFunctions
 	}
 
 	public static function log($element) {
@@ -820,13 +773,24 @@ class Photonic {
 		}
 	}
 
-	public static function doc_link($link) {
+	/**
+	 * @param $link
+	 * @return string
+	 */
+	public static function doc_link($link): string {
 		return ' ' . sprintf(esc_html__('See %1$shere%2$s for documentation.', 'photonic'), "<a href='$link'>", '</a>');
 	}
 
 	public function load_widget() {
 		require_once PHOTONIC_PATH . '/Add_Ons/WP/Widget.php';
 		register_widget("Photonic_Plugin\Add_Ons\WP\Widget");
+	}
+
+	public function load_beaver() {
+		require_once PHOTONIC_PATH . '/Add_Ons/Beaver/Beaver_Module.php';
+		if (class_exists('\FLBuilderModel') && \FLBuilderModel::is_builder_active()) {
+			$this->enqueue_widget_scripts();
+		}
 	}
 
 	public static function enqueue_widget_scripts() {
@@ -837,7 +801,8 @@ class Photonic {
 			'current_shortcode' => esc_html__('Current shortcode', 'photonic'),
 			'edit_message'      => esc_html__('Click on the icon to edit your gallery.', 'photonic'),
 		];
-		wp_enqueue_script('photonic-widget', PHOTONIC_URL . 'include/js/admin/widget.js', ['jquery'], self::get_version(PHOTONIC_PATH . '/include/js/admin/widget.js'), true);
+		wp_enqueue_script('photonic-native-ui', PHOTONIC_URL . 'include/js/admin/native-ui.js', ['shortcode', 'thickbox'], self::get_version(PHOTONIC_PATH . '/include/js/admin/native-ui.js'), false);
+		wp_enqueue_script('photonic-widget', PHOTONIC_URL . 'include/js/admin/widget.js', ['photonic-native-ui'], self::get_version(PHOTONIC_PATH . '/include/js/admin/widget.js'), true);
 		wp_localize_script('photonic-widget', 'Photonic_Widget_JS', $js_array);
 		wp_enqueue_style('photonic-widget', PHOTONIC_URL . 'include/css/admin/widget.css', [], self::get_version(PHOTONIC_PATH . '/include/css/admin/widget.css'));
 	}
@@ -854,5 +819,23 @@ class Photonic {
 		$styles[] = '--tile-min-height';
 		$styles[] = 'display';
 		return $styles;
+	}
+
+	public static function get_lightgallery_plugins(): array {
+		global $photonic_enable_lg_zoom, $photonic_enable_lg_thumbnail, $photonic_enable_lg_fullscreen, $photonic_enable_lg_autoplay;
+		$lightgallery_plugins = [];
+		if (!empty($photonic_enable_lg_autoplay)) {
+			$lightgallery_plugins[] = 'autoplay';
+		}
+		if (!empty($photonic_enable_lg_fullscreen)) {
+			$lightgallery_plugins[] = 'fullscreen';
+		}
+		if (!empty($photonic_enable_lg_thumbnail)) {
+			$lightgallery_plugins[] = 'thumbnail';
+		}
+		if (!empty($photonic_enable_lg_zoom)) {
+			$lightgallery_plugins[] = 'zoom';
+		}
+		return $lightgallery_plugins;
 	}
 }

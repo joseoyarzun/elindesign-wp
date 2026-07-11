@@ -2,10 +2,10 @@
 
 Contributors: urkekg, techwebux
 Donate link: https://urosevic.net/wordpress/donate/?donate_for=head-footer-code
-Tags: head, header, footer, body, scripts, wp_head, wp_footer, wp_body_open, head footer code, custom script
-Requires at least: 4.9
-Tested up to: 6.3
-Stable tag: 1.3.3
+Tags: head, body, footer, code, script
+Requires at least: 5.2
+Tested up to: 7.0
+Stable tag: 1.5.7
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -71,7 +71,7 @@ If you find **Head &amp; Footer Code** useful for your project, please [review p
 
 ### Features
 
-* **Multisite** and **PHP 8.2** compatible!
+* **Multisite** and **PHP 8.5** compatible!
 * Set site-wide custom content for:
   * head page section (before the `</head>`)
   * body section (after the `<body>`) - **Requires WordPress 5.2!**
@@ -90,7 +90,7 @@ If you find **Head &amp; Footer Code** useful for your project, please [review p
 * View on Posts/Pages/Custom Post Types listing if article has defined any article specific custom code
 * Site-wide section is located under **Tools** > **Head & Footer Code**
 * If you have set WP_DEBUG constant in `wp-config.php` to `true`, you'll see site-wide and article specific entries in page source code wrapped to comments.
-
+* [NEW] allow unprivileged user roles Editor and Author to manage article-specific code on single site and multisite (disabled by default)
 
 ### Data stored in database
 
@@ -99,13 +99,13 @@ Each post/page/custom post type specific HEAD, BODY and FOOTER code and behaviou
 Each category specific HEAD, BODY and FOOTER code and behaviour saves to taxonomy meta `_auhfc`.
 
 During the Uninstall process all these data has been deleted from the database.
-In case you wish to reinstall plugin, **DO NOT UNINSTALL IT** although **Deactivate**, then delete the directory `/wp-content/plugins-head-footer-code` and then reinstall plugin.
+In case you wish to reinstall plugin, **DO NOT UNINSTALL IT** although **Deactivate**, then delete the directory `/wp-content/plugins/head-footer-code` and then reinstall plugin.
 
 
 ### Permissions on Multisite WordPress
 
 1. Access to **Global**: only Super Admin and Administrator
-1. Access to **Article specific**: Super Admin, Administrator, Editor and Author
+1. Access to **Article specific**: Super Admin, Administrator; **optional**: Editor and Author
 1. Access to **Category specific**: only Super Admin and Administrator
 
 
@@ -160,9 +160,9 @@ if ( function_exists( 'wp_body_open' ) ) {
 }
 `
 
-### How can I report security bugs?
+### Where do I report security bugs found in this plugin?
 
-You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team help validate, triage and handle any security vulnerabilities. [Report a security vulnerability.](https://patchstack.com/database/vdp/head-footer-code)
+Please report security bugs found in the source code of the Head & Footer Code plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/head-footer-code). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
 
 
 ## Screenshots
@@ -173,19 +173,131 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 4. Example of custom code inserted to HEAD section (site-wide with appended article specific)
 5. Example of custom code inserted to BODY and FOOTER sections (site-wide with appended article specific)
 6. Category specific metabox
-7. Example of custom code inserted to HEAD section (site-wide with appended category specific)
-8. Example of custom code inserted to BODY and FOOTER section (site-wide with appended category specific)
-9. Example of **Head &amp; Footer Code** column on Pages listing, to identify which pages have set custom code, which one and what mode is selected
+7. Example of custom code inserted to HEAD, BODY and FOOTER section (site-wide with appended category specific)
+8. Example of **Head &amp; Footer Code** column on Pages listing, to identify which pages have set custom code, which one and what mode is selected
 
 
 ## Upgrade Notice
+
+### 1.5.0
+
+To improve security and prevent XSS, this release introduce filtering of all opening SCRIPT and STYLE tags, and remove all not allowed attributes from them (eg. `onload`, `onmouseover`, etc).
 
 ### 1.0.0
 
 Initial release of new plugin developed by Aleksandar Urosevic.
 
+### 1.4.0
+
+Introduced restriction for non-privileged roles (eg. Editor and Author) to access HFC on pages, posts and custom CPTs. If you wish to allow them manage article-specific HFC, make sure you enable that at the bottom of the global plugin settings page.
 
 ## Changelog
+
+### 1.5.7 (2026-04-01)
+* Improve: Allow Programmable Search Engine tags (PageMap, DataObject and Attribute)
+* Test: WordPress 7.0-RC2
+
+### 1.5.6 (2026-03-23)
+* Fix: update routine 10 infinite loop on sites with huge number of posts (10k+)
+* Test: WordPress 7.0-beta6
+
+### 1.5.5 (2026-03-11)
+* Fix: Remove `set_time_limit` from `update.php` to prevent fatal error on servers where it's disabled
+
+### 1.5.4 (2026-03-10)
+* New: Add dynamic support for all public taxonomies (eg, Tags, Product Categories)
+* Fix: There was no `Settings saved.` notification
+* Fix: Allow `id`, `dir`, `class` and `data-*` attribute for `script`, `style`, `link` and `iframe` tags.
+* Change: Move review CTA to the bottom of the Settings page
+* Change: Increased minimum requirements to WordPress 5.2 and PHP 5.6
+* Cleanup: Removed `wp_body_open` fallback (no longer needed with WP 5.2+ requirement)
+* Improve: Introduce `Plugin_Info` class for cleaner constant management
+* Optimize: Internal code refactoring for better maintainability and naming clarity
+
+### 1.5.3 (2026-03-07)
+* Fix: Allow `display` and `visibility` CSS properties for KSES
+* Fix: Category specific code was double escaped
+* Improve: DRY Front rendering
+* Improve: DRY plugin activation handling
+* Improve: Post grid custom code indicators
+* Improve: Resolve some PCP errors and warnings
+* Test: PHP 8.4.15, WordPress 6.9.1, Twenty Twenty-Five 1.4
+* Test: PHP 8.5.3, WordPress 7.0-beta3, Twenty Twenty-Five 1.4
+* Test: PHP 5.6.20, WordPress 5.2.23, Twenty Ninetin 1.4
+
+### 1.5.2 (2026-03-04)
+* Fix: Allow all W3C standard attributes for iframe
+* Test: WordPress 7.0-beta2
+
+### 1.5.1 (2026-02-23)
+* Fix: Code editor missing on categories
+* Cleanup: Remove debugging info
+* Update: Screenshots
+
+### 1.5.0 (2026-02-22)
+* Test: WordPress 7.0-beta1, Twenty Twenty-Five 1.4, PHP 8.5.3
+* Fix: Missing code editor when creating a new article
+* Fix: Incorrect use of <label for=FORM_ELEMENT>
+* Improve: Security (validate settings save data, better code filtering with included opening SCRIPT and STYLE tags)
+* Optimize: Code editor on articles
+* Optimize: Settings maintainability
+
+### 1.4.6 (2025-12-01)
+* Test: WordPress 6.9RC3, Twenty Twenty-Five 1.3, PHP 8.4.15
+
+### 1.4.5 (2025-06-13)
+* Fix: Compatibility with Jetpack > Writing > Composing > Compose using shortcode to embed media from popular sites
+* Fix: Automatic conversion of false to array is deprecated in update.php
+* Test: WordPress 6.8.1, Twenty Twenty-Five 1.2, Jetpack 14.7
+
+https://youtu.be/CXCWqNUQSF4
+
+### 1.4.4 (2025-05-31)
+* Fix: Relaxed filtering to allow <link> preloadans security/privacy attributes.
+
+### 1.4.3 (2025-04-30)
+* Fix: Relaxed filtering to allow <script> blocks with `<`, `>`, `=>` characters and `type="application/ld+json"` for structured data (rich snippets), following stricter sanitization introduced in 1.4.0.
+
+### 1.4.2 (2025-04-20)
+* Fix: meta tag broken by security introduced in 1.4.0
+
+### 1.4.1 (2025-04-13)
+* Fix: hreflang link broken by security introduced in 1.4.0
+
+### 1.4.0 (2025-04-12)
+* Test: WordPress 6.8-RC3, Twenty Twenty-Five 1.1, Twenty Twenty-Three 1.6, Astra 4.9.2 and PHP 8.3.17
+* Test: WordPress 4.9.26, Twenty Seventeen 1.7 and PHP 5.5.38
+* Unclutter Settings page
+* Improve: Security
+* Improve: Refactor and reorganise codebase
+  * auhfc_settings() -> Techwebux\Hfc\Main::settings()
+  * auhfc_is_homepage_blog_posts() -> Techwebux\Hfc\Common::is_homepage_blog_posts()
+  * auhfc_add_to_homepage_paged() -> Techwebux\Hfc\Common::add_to_homepage_paged()
+  * sanitize_html_classes() -> Techwebux\Hfc\Common::sanitize_html_classes()
+  * auhfc_allowed_code() -> Techwebux\Hfc\Common::allowed_html()
+  * auhfc_form_allowed_code() -> Techwebux\Hfc\Common::form_allowed_html()
+  * auhfc_html2code -> Techwebux\Hfc\Common::html2code()
+  * auhfc_get_meta() -> Techwebux\Hfc\Common::get_meta()
+  * auhfc_get_post_type() -> Techwebux\Hfc\Common::get_post_type()
+  * auhfc_print_sitewide() -> Techwebux\Hfc\Common::print_sitewide()
+  * auhfc_out() -> Techwebux\Hfc\Common::out()
+  * auhfc_head_note() -> Techwebux\Hfc\Settings::head_note()
+  * auhfc_body_note() -> Techwebux\Hfc\Settings::body_note()
+
+### 1.3.7 (2024-11-18)
+* Fix: Compatibility with WordPress 6.7
+
+### 1.3.6 (2024-10-12)
+* Improve: Optimize strings for easier translation
+
+### 1.3.5 (2024-07-06)
+* Tested: PHP 8.3.7 and WordPress 6.6 with Twenty Twenty-Four theme 1.1 (Single and Multisite)
+* Change: Move the `Settings` link on plugins listing to 1st position
+
+### 1.3.4 (2024-06-30)
+* Tested: PHP 8.3.7 and WordPress 6.5.5 with Twenty Twenty-Four theme 1.1 (Single and Multisite)
+* Change: PHP version lowered to 5.5
+* Fix: Activation on deprecated PHP or WordPress
 
 ### 1.3.3 (2023-07-21)
 * Tested: PHP 8.2.8 and WordPress 6.3-RC1 with Twenty Twenty-Three theme (Single and Multisite)

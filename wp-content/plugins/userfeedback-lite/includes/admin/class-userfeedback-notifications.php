@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Notifications class.
  *
@@ -183,7 +187,8 @@ class UserFeedback_Notifications {
 			return new WP_REST_Response(
 				array(
 					'success' => false,
-					'message' => sprintf( __( 'Class %s does not exist.', 'userfeedback' ), $class ),
+					// translators: %s is the class name.
+					'message' => sprintf( __( 'Class %s does not exist.', 'userfeedback-lite' ), $class ),
 				),
 				404
 			);
@@ -196,7 +201,8 @@ class UserFeedback_Notifications {
 			return new WP_REST_Response(
 				array(
 					'success' => false,
-					'message' => sprintf( __( 'Method %1$s does not exist in class %2$s', 'userfeedback' ), $method_name, $class ),
+					// translators: %1$s is the method name, %2$s is the class name.
+					'message' => sprintf( __( 'Method %1$s does not exist in class %2$s', 'userfeedback-lite' ), $method_name, $class ),
 				),
 				404
 			);

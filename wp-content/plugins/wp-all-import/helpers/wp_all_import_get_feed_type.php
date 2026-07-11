@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 if ( ! function_exists('wp_all_import_get_feed_type')){
 	function wp_all_import_get_feed_type($url){

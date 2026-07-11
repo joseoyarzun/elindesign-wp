@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Class SimpleXLSXGen
  * Export data to MS Excel. PHP XLSX generator
@@ -160,30 +164,36 @@ class SimpleXLSXGen {
 	}
 
 	public function __toString() {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- php://memory is an in-memory stream not supported by WP_Filesystem.
 		$fh = fopen( 'php://memory', 'wb' );
 		if ( ! $fh ) {
 			return '';
 		}
 
 		if ( ! $this->_write( $fh ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			fclose( $fh );
 			return '';
 		}
 		$size = ftell( $fh );
 		fseek( $fh, 0 );
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread
 		return (string) fread( $fh, $size );
 	}
 
 	public function saveAs( $filename ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Writing binary ZIP data; WP_Filesystem does not support binary write streams.
 		$fh = fopen( $filename, 'wb' );
 		if ( ! $fh ) {
 			return false;
 		}
 		if ( ! $this->_write( $fh ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			fclose( $fh );
 			return false;
 		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		fclose( $fh );
 
 		return true;
@@ -375,12 +385,14 @@ class SimpleXLSXGen {
 		$e['crc_32']  = crc32( $data );
 
 		// Convert date and time to DOS Format, and set then
+		// phpcs:disable WordPress.DateTime.RestrictedFunctions.date_date -- Third-party library; uses local time intentionally for ZIP file timestamps.
 		$lastmod_timeS = str_pad( decbin( date( 's' ) >= 32 ? date( 's' ) - 32 : date( 's' ) ), 5, '0', STR_PAD_LEFT );
 		$lastmod_timeM = str_pad( decbin( date( 'i' ) ), 6, '0', STR_PAD_LEFT );
 		$lastmod_timeH = str_pad( decbin( date( 'H' ) ), 5, '0', STR_PAD_LEFT );
 		$lastmod_dateD = str_pad( decbin( date( 'd' ) ), 5, '0', STR_PAD_LEFT );
 		$lastmod_dateM = str_pad( decbin( date( 'm' ) ), 4, '0', STR_PAD_LEFT );
 		$lastmod_dateY = str_pad( decbin( date( 'Y' ) - 1980 ), 7, '0', STR_PAD_LEFT );
+		// phpcs:enable WordPress.DateTime.RestrictedFunctions.date_date
 
 		// echo "ModTime: $lastmod_timeS-$lastmod_timeM-$lastmod_timeH (".date("s H H").")\n";
 		// echo "ModDate: $lastmod_dateD-$lastmod_dateM-$lastmod_dateY (".date("d m Y").")\n";
@@ -505,7 +517,7 @@ class SimpleXLSXGen {
 									);
 									$F                                    = self::F_HYPERLINK; // mailto hyperlink
 								}
-								$v = strip_tags( $v );
+								$v = wp_strip_all_tags( $v );
 							} // tags
 							$vl = mb_strlen( $v );
 							if ( $v === '0' || preg_match( '/^[-+]?[1-9]\d{0,14}$/', $v ) ) { // Integer as General

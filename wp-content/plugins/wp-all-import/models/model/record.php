@@ -12,7 +12,7 @@ class PMXI_Model_Record extends PMXI_Model {
 	public function __construct($data = array()) {
 		parent::__construct();
 		if (! is_array($data)) {
-			throw new Exception("Array expected as paramenter for " . get_class($this) . "::" . __METHOD__);
+			throw new Exception(esc_html("Array expected as paramenter for " . get_class($this) . "::" . __METHOD__));
 		}
 		$data and $this->set($data);
 	}
@@ -23,14 +23,15 @@ class PMXI_Model_Record extends PMXI_Model {
 	 */
 	public function getBy($field = NULL, $value = NULL) {
 		if (is_null($field)) {
-			throw new Exception("Field parameter is expected at " . get_class($this) . "::" . __METHOD__);
+			throw new Exception(esc_html("Field parameter is expected at " . get_class($this) . "::" . __METHOD__));
 		}
 		$sql = "SELECT * FROM $this->table WHERE " . $this->buildWhere($field, $value);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$result = $this->wpdb->get_row($sql, ARRAY_A);
 		if (is_array($result)) {
 			foreach ($result as $k => $v) {
 				if (is_serialized($v)) {
-					$result[$k] = unserialize($v);
+					$result[$k] = \pmxi_maybe_unserialize($v);
 				}
 			}
 			$this->exchangeArray($result);
@@ -75,7 +76,7 @@ class PMXI_Model_Record extends PMXI_Model {
 			}			
 			return $this;
 		} else {					
-			throw new Exception($this->wpdb->last_error);
+			throw new Exception(esc_html($this->wpdb->last_error));
 		}
 	}
 	/**
@@ -86,7 +87,7 @@ class PMXI_Model_Record extends PMXI_Model {
 		$record = $this->toArray(TRUE);				
 		$this->wpdb->update($this->table, $record, array_intersect_key($record, array_flip($this->primary)));				
 		if ($this->wpdb->last_error) {
-			throw new Exception($this->wpdb->last_error);
+			throw new Exception(esc_html($this->wpdb->last_error));
 		}		
 		return $this;
 	}
@@ -96,10 +97,11 @@ class PMXI_Model_Record extends PMXI_Model {
 	 * @return PMXI_Model_Record
 	 */
 	public function delete() {
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		if ($this->wpdb->query("DELETE FROM $this->table WHERE " . $this->buildWhere(array_intersect_key($this->toArray(TRUE), array_flip($this->primary))))) {
 			return $this;
 		} elseif ($this->wpdb->last_error) {
-			throw new Exception($this->wpdb->last_error);
+			throw new Exception(esc_html($this->wpdb->last_error));
 		}
 	}
 	/**
@@ -127,7 +129,7 @@ class PMXI_Model_Record extends PMXI_Model {
 	 */
 	public function set($field, $value = NULL) {
 		if (is_array($field) and ( ! is_null($value) or 0 == count($field))) {
-			throw new Exception(__CLASS__ . "::set method expects either not empty associative array as the only paramter or field name and it's value as two seperate parameters.");
+			throw new Exception(esc_html(__CLASS__ . "::set method expects either not empty associative array as the only paramter or field name and it's value as two seperate parameters."));
 		}
 		if (is_array($field)) {
 			$this->exchangeArray(array_merge($this->toArray(), $field));
@@ -145,7 +147,7 @@ class PMXI_Model_Record extends PMXI_Model {
 	 */
 	public function __get($field) {
 		if ( ! $this->offsetExists($field)) {
-			throw new Exception("Undefined field $field.");
+			throw new Exception(esc_html("Undefined field $field."));
 		}
 		return $this[$field];
 	}

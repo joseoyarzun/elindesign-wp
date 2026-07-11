@@ -78,8 +78,8 @@ class MulticurrencyHooks implements \IWPML_Action {
 	/**
 	 * Checks if meta data has a correct format.
 	 *
-	 * @param int   $index
-	 * @param array $meta
+	 * @param int|mixed $index
+	 * @param array     $meta
 	 *
 	 * @return bool
 	 */

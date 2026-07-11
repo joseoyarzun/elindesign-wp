@@ -27,19 +27,19 @@ class UriTemplate
     const TYPE_LIST = "2";
     const TYPE_SCALAR = "4";
     /**
-     * @var $operators array
+     * @var array $operators
      * These are valid at the start of a template block to
      * modify the way in which the variables inside are
      * processed.
      */
-    private $operators = array("+" => "reserved", "/" => "segments", "." => "dotprefix", "#" => "fragment", ";" => "semicolon", "?" => "form", "&" => "continuation");
+    private $operators = ["+" => "reserved", "/" => "segments", "." => "dotprefix", "#" => "fragment", ";" => "semicolon", "?" => "form", "&" => "continuation"];
     /**
-     * @var reserved array
+     * @var array<string>
      * These are the characters which should not be URL encoded in reserved
      * strings.
      */
-    private $reserved = array("=", ",", "!", "@", "|", ":", "/", "?", "#", "[", "]", '$', "&", "'", "(", ")", "*", "+", ";");
-    private $reservedEncoded = array("%3D", "%2C", "%21", "%40", "%7C", "%3A", "%2F", "%3F", "%23", "%5B", "%5D", "%24", "%26", "%27", "%28", "%29", "%2A", "%2B", "%3B");
+    private $reserved = ["=", ",", "!", "@", "|", ":", "/", "?", "#", "[", "]", '$', "&", "'", "(", ")", "*", "+", ";"];
+    private $reservedEncoded = ["%3D", "%2C", "%21", "%40", "%7C", "%3A", "%2F", "%3F", "%23", "%5B", "%5D", "%24", "%26", "%27", "%28", "%29", "%2A", "%2B", "%3B"];
     public function parse($string, array $parameters)
     {
         return $this->resolveNextSection($string, $parameters);
@@ -51,11 +51,11 @@ class UriTemplate
      */
     private function resolveNextSection($string, $parameters)
     {
-        $start = \strpos($string, "{");
+        $start = strpos($string, "{");
         if ($start === \false) {
             return $string;
         }
-        $end = \strpos($string, "}");
+        $end = strpos($string, "}");
         if ($end === \false) {
             return $string;
         }
@@ -65,12 +65,12 @@ class UriTemplate
     private function replace($string, $start, $end, $parameters)
     {
         // We know a data block will have {} round it, so we can strip that.
-        $data = \substr($string, $start + 1, $end - $start - 1);
+        $data = substr($string, $start + 1, $end - $start - 1);
         // If the first character is one of the reserved operators, it effects
         // the processing of the stream.
         if (isset($this->operators[$data[0]])) {
             $op = $this->operators[$data[0]];
-            $data = \substr($data, 1);
+            $data = substr($data, 1);
             $prefix = "";
             $prefix_on_missing = \false;
             switch ($op) {
@@ -120,18 +120,18 @@ class UriTemplate
             $data = $this->replaceVars($data, $parameters);
         }
         // This is chops out the {...} and replaces with the new section.
-        return \substr($string, 0, $start) . $data . \substr($string, $end + 1);
+        return substr($string, 0, $start) . $data . substr($string, $end + 1);
     }
     private function replaceVars($section, $parameters, $sep = ",", $combine = null, $reserved = \false, $tag_empty = \false, $combine_on_empty = \true)
     {
-        if (\strpos($section, ",") === \false) {
+        if (strpos($section, ",") === \false) {
             // If we only have a single value, we can immediately process.
             return $this->combine($section, $parameters, $sep, $combine, $reserved, $tag_empty, $combine_on_empty);
         } else {
             // If we have multiple values, we need to split and loop over them.
             // Each is treated individually, then glued together with the
             // separator character.
-            $vars = \explode(",", $section);
+            $vars = explode(",", $section);
             return $this->combineList(
                 $vars,
                 $sep,
@@ -151,13 +151,13 @@ class UriTemplate
         $skip_final_combine = \false;
         $value = \false;
         // Check for length restriction.
-        if (\strpos($key, ":") !== \false) {
-            list($key, $length) = \explode(":", $key);
+        if (strpos($key, ":") !== \false) {
+            list($key, $length) = explode(":", $key);
         }
         // Check for explode parameter.
-        if ($key[\strlen($key) - 1] == "*") {
+        if ($key[strlen($key) - 1] == "*") {
             $explode = \true;
-            $key = \substr($key, 0, -1);
+            $key = substr($key, 0, -1);
             $skip_final_combine = \true;
         }
         // Define the list separator.
@@ -169,7 +169,7 @@ class UriTemplate
                     $value = $this->getValue($parameters[$key], $length);
                     break;
                 case self::TYPE_LIST:
-                    $values = array();
+                    $values = [];
                     foreach ($parameters[$key] as $pkey => $pvalue) {
                         $pvalue = $this->getValue($pvalue, $length);
                         if ($combine && $explode) {
@@ -178,13 +178,13 @@ class UriTemplate
                             $values[$pkey] = $pvalue;
                         }
                     }
-                    $value = \implode($list_sep, $values);
+                    $value = implode($list_sep, $values);
                     if ($value == '') {
                         return '';
                     }
                     break;
                 case self::TYPE_MAP:
-                    $values = array();
+                    $values = [];
                     foreach ($parameters[$key] as $pkey => $pvalue) {
                         $pvalue = $this->getValue($pvalue, $length);
                         if ($explode) {
@@ -196,23 +196,21 @@ class UriTemplate
                             $values[] = $pvalue;
                         }
                     }
-                    $value = \implode($list_sep, $values);
+                    $value = implode($list_sep, $values);
                     if ($value == '') {
                         return \false;
                     }
                     break;
             }
+        } elseif ($tag_empty) {
+            // If we are just indicating empty values with their key name, return that.
+            return $key;
         } else {
-            if ($tag_empty) {
-                // If we are just indicating empty values with their key name, return that.
-                return $key;
-            } else {
-                // Otherwise we can skip this variable due to not being defined.
-                return \false;
-            }
+            // Otherwise we can skip this variable due to not being defined.
+            return \false;
         }
         if ($reserved) {
-            $value = \str_replace($this->reservedEncoded, $this->reserved, $value);
+            $value = str_replace($this->reservedEncoded, $this->reserved, $value);
         }
         // If we do not need to include the key name, we just return the raw
         // value.
@@ -227,9 +225,9 @@ class UriTemplate
      */
     private function getDataType($data)
     {
-        if (\is_array($data)) {
-            \reset($data);
-            if (\key($data) !== 0) {
+        if (is_array($data)) {
+            reset($data);
+            if (key($data) !== 0) {
                 return self::TYPE_MAP;
             }
             return self::TYPE_LIST;
@@ -242,7 +240,7 @@ class UriTemplate
      */
     private function combineList($vars, $sep, $parameters, $combine, $reserved, $tag_empty, $combine_on_empty)
     {
-        $ret = array();
+        $ret = [];
         foreach ($vars as $var) {
             $response = $this->combine($var, $parameters, $sep, $combine, $reserved, $tag_empty, $combine_on_empty);
             if ($response === \false) {
@@ -250,7 +248,7 @@ class UriTemplate
             }
             $ret[] = $response;
         }
-        return \implode($sep, $ret);
+        return implode($sep, $ret);
     }
     /**
      * Utility function to encode and trim values
@@ -258,9 +256,9 @@ class UriTemplate
     private function getValue($value, $length)
     {
         if ($length) {
-            $value = \substr($value, 0, $length);
+            $value = substr($value, 0, $length);
         }
-        $value = \rawurlencode($value);
+        $value = rawurlencode($value);
         return $value;
     }
 }

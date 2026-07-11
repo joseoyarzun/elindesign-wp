@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if (!class_exists('UserFeedback_Base')) {
 	abstract class UserFeedback_Base
 	{
@@ -20,7 +24,7 @@ if (!class_exists('UserFeedback_Base')) {
 		 * @access public
 		 * @var string $version Plugin version
 		 */
-		public $version = '1.0.12';
+		public $version = '1.11.2';
 
 		/**
 		 * Plugin file.
@@ -168,7 +172,8 @@ if (!class_exists('UserFeedback_Base')) {
 
 				// This does the version to version background upgrade routines and initial install
 				$uf_version = get_option('userfeedback_current_version', '0.0.0');
-				if (version_compare($uf_version, '1.0.0', '<')) {
+
+				if (version_compare($uf_version, '1.11.0', '<')) {
 					add_action('wp_loaded', array(self::$instance, 'install_and_upgrade'));
 				}
 
@@ -177,14 +182,8 @@ if (!class_exists('UserFeedback_Base')) {
 					add_action('plugins_loaded', array(self::$instance, 'fix_db_timestamp_column'), 15);
 				}
 
-				if (is_admin()) {
-					// new AM_Deactivation_Survey('UserFeedback', self::$instance->plugin_slug);
-				}
-
 				// Load the plugin textdomain.
-				add_action('plugins_loaded', array(self::$instance, 'load_plugin_textdomain'), 15);
-
-				
+				add_action('init', array(self::$instance, 'load_plugin_textdomain'), 15);
 
 				// Load admin only components.
 				if (is_admin() || (defined('DOING_CRON') && DOING_CRON)) {
@@ -252,10 +251,7 @@ if (!class_exists('UserFeedback_Base')) {
 		 */
 		public function load_plugin_textdomain()
 		{
-			$uf_locale = get_locale();
-			if (function_exists('get_user_locale')) {
-				$uf_locale = get_user_locale();
-			}
+			$uf_locale = get_user_locale();
 
 			// Load Translation files
 			// Traditional WordPress plugin locale filter.
@@ -273,7 +269,7 @@ if (!class_exists('UserFeedback_Base')) {
 
 			// Look in wp-content/plugins/userfeedback/languages/userfeedback-{lang}_{country}.mo
 			$uf_mofile4 = dirname(plugin_basename(USERFEEDBACK_PLUGIN_FILE)) . '/languages/';
-			$uf_mofile4 = apply_filters('monsterinsights_pro_languages_directory', $uf_mofile4);
+			$uf_mofile4 = apply_filters('userfeedback_languages_directory', $uf_mofile4);
 
 			if (file_exists($uf_mofile1)) {
 				load_textdomain('userfeedback', $uf_mofile1);
@@ -282,7 +278,7 @@ if (!class_exists('UserFeedback_Base')) {
 			} elseif (file_exists($uf_mofile3)) {
 				load_textdomain('userfeedback', $uf_mofile3);
 			} else {
-				load_plugin_textdomain('userfeedback', false, $uf_mofile4);
+				load_plugin_textdomain( 'userfeedback', false, $uf_mofile4 ); // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- Intentional fallback for custom language file directories.
 			}
 		}
 
@@ -335,6 +331,11 @@ if (!class_exists('UserFeedback_Base')) {
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-db.php';
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-survey.php';
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-response.php';
+			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-heatmap.php';
+			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-heatmap-recording.php';
+			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-post-rating.php';
+			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-email-survey.php';
+			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/db/class-userfeedback-email-survey-response.php';
 
 			// Survey templates helper
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/survey-templates/class-userfeedback-survey-templates.php';
@@ -348,6 +349,9 @@ if (!class_exists('UserFeedback_Base')) {
 
 			// Results
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-results.php';
+
+			// AI Summary
+			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-ai-survey-summary.php';
 
 			// Settings
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-settings.php';
@@ -374,7 +378,6 @@ if (!class_exists('UserFeedback_Base')) {
 			if (is_admin() || (defined('DOING_CRON') && DOING_CRON)) {
 
 				// Lite and Pro files
-				require_once USERFEEDBACK_PLUGIN_DIR . 'assets/lib/pandora/class-am-deactivation-survey.php';
 				require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-admin-notice.php';
 				require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/admin.php';
 				require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/ajax.php';
@@ -382,7 +385,7 @@ if (!class_exists('UserFeedback_Base')) {
 				// Emails
 				require_once USERFEEDBACK_PLUGIN_DIR . 'includes/emails/class-userfeedback-email-summaries.php';
 
-				if (isset($_GET['page']) && 'userfeedback_onboarding' === $_GET['page']) {
+				if ( isset( $_GET['page'] ) && 'userfeedback_onboarding' === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Checking URL parameter for conditional file loading only; no form data is processed here.
 					// Only load the Onboarding wizard if the required parameter is present.
 					require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-onboarding-wizard.php';
 				}
@@ -393,6 +396,19 @@ if (!class_exists('UserFeedback_Base')) {
 
 			if (is_admin()) {
 				require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-dashboard-widget.php';
+
+				require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-am-deactivation-survey.php';
+				add_action('admin_menu', function () {
+
+					new \UserFeedback_AM_Deactivation_Survey(
+						apply_filters(
+							'userfeedback_deactivation_survey_url',
+							'https://userfeedback.com/wp-json/am-deactivate-survey/v1/deactivation-data'
+						),
+						userfeedback_is_pro_version() ? 'UserFeedback Premium' : 'UserFeedback Lite',
+						userfeedback_is_pro_version() ? 'userfeedback-premium' : 'userfeedback-lite'
+					);
+				}, 100);
 			}
 
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/frontend/class-userfeedback-frontend.php';
@@ -404,12 +420,14 @@ if (!class_exists('UserFeedback_Base')) {
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-logic-type.php';
 
 			// Review
-			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-review.php';			
+			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-review.php';
 			// Auto-updates
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/licensing/autoupdate.php';
 			// Metaboxes
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/admin/class-userfeedback-metabox.php';
 			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/gutenberg/gutenberg.php';
+			// Task management
+			require_once USERFEEDBACK_PLUGIN_DIR . 'includes/class-userfeedback-task.php';
 		}
 
 		/**
@@ -508,7 +526,7 @@ if (!class_exists('UserFeedback_Base')) {
 		 */
 		public function __clone()
 		{
-			_doing_it_wrong(__FUNCTION__, esc_html__('Cheatin&#8217; huh?', 'userfeedback'), '1.0.0');
+			_doing_it_wrong(__FUNCTION__, esc_html__('Cheatin&#8217; huh?', 'userfeedback-lite'), '1.0.0');
 		}
 
 		/**
@@ -522,9 +540,19 @@ if (!class_exists('UserFeedback_Base')) {
 		 */
 		public function __wakeup()
 		{
-			_doing_it_wrong(__FUNCTION__, esc_html__('Cheatin&#8217; huh?', 'userfeedback'), '1.0.0');
+			_doing_it_wrong(__FUNCTION__, esc_html__('Cheatin&#8217; huh?', 'userfeedback-lite'), '1.0.0');
 		}
 
+		/**
+		 * Fix the db timestamp column.
+		 *
+		 * This function is used to fix the db timestamp column for users upgrading to version 1.0.5 or more. 
+		 * Not needed for a fresh install
+		 *
+		 * @return void
+		 * @since 1.0.5
+		 * @access public
+		 */
 		public function fix_db_timestamp_column()
 		{
 			global $wpdb;
@@ -538,6 +566,14 @@ if (!class_exists('UserFeedback_Base')) {
 			if ($timestamp_fixed) {
 				return;
 			}
+
+			// Check if table exists before attempting to describe/modify it (fixes multisite errors on subsites)
+			if ( ! UserFeedback_Survey::table_exists() ) {
+				// If table does not exist, this is a new installation. Hence, does not require to run this function. 
+				update_option('userfeedback_timestamp_fixed', true);
+				return;
+			}
+
 			// get table column details
 			$table_fields = $wpdb->get_results("DESCRIBE {$wpdb->prefix}userfeedback_surveys", ARRAY_A);
 
@@ -605,6 +641,15 @@ if (!function_exists('userfeedback_maybe_redirect_to_onboarding')) {
 	}
 }
 add_action('admin_init', 'userfeedback_maybe_redirect_to_onboarding', 9999);
+
+if (!function_exists('userfeedback_load_action_scheduler')) {
+	function userfeedback_load_action_scheduler() {
+		require_once plugin_dir_path(__FILE__) . 'includes/lib/action-scheduler/action-scheduler.php';
+	}
+}
+
+// Load Action Scheduler, it requires a special loading procedure.
+add_action('plugins_loaded', 'userfeedback_load_action_scheduler', -10);
 
 /**
  * Returns the UserFeedback combined object that you can use for both

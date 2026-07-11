@@ -17,11 +17,19 @@
  */
 namespace Google\Site_Kit_Dependencies\Google\Auth\Cache;
 
+use DateTime;
+use DateTimeInterface;
+use DateTimeZone;
 use Google\Site_Kit_Dependencies\Psr\Cache\CacheItemInterface;
+use TypeError;
 /**
  * A cache item.
+ *
+ * This class will be used by MemoryCacheItemPool and SysVCacheItemPool
+ * on PHP 7.4 and below. It is compatible with psr/cache 1.0 and 2.0 (PSR-6).
+ * @see TypedItem for compatiblity with psr/cache 3.0.
  */
-final class Item implements \Google\Site_Kit_Dependencies\Psr\Cache\CacheItemInterface
+final class Item implements CacheItemInterface
 {
     /**
      * @var string
@@ -32,7 +40,7 @@ final class Item implements \Google\Site_Kit_Dependencies\Psr\Cache\CacheItemInt
      */
     private $value;
     /**
-     * @var \DateTime|null
+     * @var DateTimeInterface|null
      */
     private $expiration;
     /**
@@ -91,16 +99,15 @@ final class Item implements \Google\Site_Kit_Dependencies\Psr\Cache\CacheItemInt
             $this->expiration = $expiration;
             return $this;
         }
-        $implementationMessage = \interface_exists('DateTimeInterface') ? 'implement interface DateTimeInterface' : 'be an instance of DateTime';
-        $error = \sprintf('Argument 1 passed to %s::expiresAt() must %s, %s given', \get_class($this), $implementationMessage, \gettype($expiration));
-        $this->handleError($error);
+        $error = sprintf('Argument 1 passed to %s::expiresAt() must implement interface DateTimeInterface, %s given', get_class($this), gettype($expiration));
+        throw new TypeError($error);
     }
     /**
      * {@inheritdoc}
      */
     public function expiresAfter($time)
     {
-        if (\is_int($time)) {
+        if (is_int($time)) {
             $this->expiration = $this->currentTime()->add(new \DateInterval("PT{$time}S"));
         } elseif ($time instanceof \DateInterval) {
             $this->expiration = $this->currentTime()->add($time);
@@ -108,23 +115,10 @@ final class Item implements \Google\Site_Kit_Dependencies\Psr\Cache\CacheItemInt
             $this->expiration = $time;
         } else {
             $message = 'Argument 1 passed to %s::expiresAfter() must be an ' . 'instance of DateInterval or of the type integer, %s given';
-            $error = \sprintf($message, \get_class($this), \gettype($time));
-            $this->handleError($error);
+            $error = sprintf($message, get_class($this), gettype($time));
+            throw new TypeError($error);
         }
         return $this;
-    }
-    /**
-     * Handles an error.
-     *
-     * @param string $error
-     * @throws \TypeError
-     */
-    private function handleError($error)
-    {
-        if (\class_exists('TypeError')) {
-            throw new \TypeError($error);
-        }
-        \trigger_error($error, \E_USER_ERROR);
     }
     /**
      * Determines if an expiration is valid based on the rules defined by PSR6.
@@ -137,19 +131,16 @@ final class Item implements \Google\Site_Kit_Dependencies\Psr\Cache\CacheItemInt
         if ($expiration === null) {
             return \true;
         }
-        // We test for two types here due to the fact the DateTimeInterface
-        // was not introduced until PHP 5.5. Checking for the DateTime type as
-        // well allows us to support 5.4.
-        if ($expiration instanceof \DateTimeInterface) {
-            return \true;
-        }
-        if ($expiration instanceof \DateTime) {
+        if ($expiration instanceof DateTimeInterface) {
             return \true;
         }
         return \false;
     }
+    /**
+     * @return DateTime
+     */
     protected function currentTime()
     {
-        return new \DateTime('now', new \DateTimeZone('UTC'));
+        return new DateTime('now', new DateTimeZone('UTC'));
     }
 }

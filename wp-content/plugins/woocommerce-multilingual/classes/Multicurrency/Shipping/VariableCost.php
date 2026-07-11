@@ -8,11 +8,9 @@ trait VariableCost {
 	/**
 	 * @see \WCML\Multicurrency\Shipping\ShippingMode::getFieldTitle
 	 *
-	 * @param string $currencyCode
-	 *
-	 * return string
+	 * @param string|mixed $currencyCode
 	 */
-	public function getFieldTitle( $currencyCode ) {
+	public function getFieldTitle( $currencyCode ): ?string {
 		/* translators: %s is a currency code */
 		return sprintf( esc_html_x( 'Cost in %s',
 			'The label for the field with shipping cost in additional currency. The currency symbol will be added in place of %s specifier.',
@@ -22,11 +20,9 @@ trait VariableCost {
 	/**
 	 * @see \WCML\Multicurrency\Shipping\ShippingMode::getFieldDescription
 	 *
-	 * @param string $currencyCode
-	 *
-	 * @return string
+	 * @param string|mixed $currencyCode
 	 */
-	public function getFieldDescription( $currencyCode ) {
+	public function getFieldDescription( $currencyCode ): ?string {
 		/* translators: %s is a currency code */
 		return sprintf( esc_html_x( 'The shipping cost if customer choose %s as a purchase currency.',
 			'The description for the field with shipping cost in additional currency. The currency symbol will be added in place of %s specifier.',
@@ -48,7 +44,7 @@ trait VariableCost {
 		return $this->replaceShippingClassId( $shippingClassKey ) . '_' . $currency;
 	}
 
-	private function getNoShippingClassCostKey( $currency ) {
+	private function getNoShippingClassCostKey( $currency ): string {
 		return 'no_class_cost_' . $currency;
 	}
 
@@ -106,7 +102,7 @@ trait VariableCost {
 	/**
 	 * @see \WCML\Multicurrency\Shipping\ShippingClassesMode::getNoShippingClassCostValue
 	 *
-	 * @param array|object $rate
+	 * @param array|object|\WC_Shipping_Flat_Rate $rate
 	 * @param string       $currency
 	 *
 	 * @return int "No shipping class" cost for given currency.
@@ -116,11 +112,19 @@ trait VariableCost {
 		return $this->getCostValueForName( $rate, $currency, $costName, 'no_class_cost' );
 	}
 
+	/**
+	 * @param \WC_Shipping_Flat_Rate $rate
+	 * @param string                 $currency
+	 * @param string                 $costName
+	 * @param string                 $rateField
+	 *
+	 * @return mixed
+	 */
 	private function getCostValueForName( $rate, $currency, $costName, $rateField ) {
 		if ( ! isset( $rate->$rateField ) ) {
-			$rate->$rateField = 0;
+			@$rate->$rateField = 0;
 		}
-		if ( isset( $rate->instance_id ) ) {
+		if ( ! empty( $rate->instance_id ) ) {
 			if ( $this->isManualPricingEnabled( $rate ) ) {
 				$rateSettings = $this->getWpOption( $this->getMethodId(), $rate->instance_id );
 				if ( ! empty( $rateSettings[ $costName ] ) ) {
@@ -164,6 +168,7 @@ trait VariableCost {
 	 * @return false|string Class ID or false if not found.
 	 */
 	private function getShippingClassTermId( $key ) {
+		/** @phpstan-ignore-next-line isset.offset */
 		if ( preg_match( '/^class_cost_(\d*)(_[A-Z]*)*$/', $key, $matches ) && isset( $matches[1] ) ) {
 			return $matches[1];
 		}
@@ -180,7 +185,7 @@ trait VariableCost {
 			$termTrid = apply_filters( 'wpml_element_trid', null, $termId, 'tax_product_shipping_class' );
 			$termTranslations = apply_filters( 'wpml_get_element_translations', null, $termTrid, 'tax_product_shipping_class' );
 			if ( is_array( $termTranslations ) ) {
-				foreach ( $termTranslations as $languageCode => $translation ) {
+				foreach ( $termTranslations as $translation ) {
 					if ( $translation->source_language_code === null ) {
 						$shippingClassKey = str_replace( $termId, $translation->element_id, $shippingClassKey );
 						break;

@@ -29,7 +29,7 @@ class Utilities {
 		return $output;
 	}
 
-	public static function title_caption_options($blank = false, $selection = false) {
+	public static function title_caption_options($blank = false, $selection = false, $alt = false) {
 		$ret = [
 			''           => esc_html__('Default from settings', 'photonic'),
 			'none'       => esc_html__('No title / caption / description', 'photonic'),
@@ -39,6 +39,17 @@ class Utilities {
 			'title-desc' => esc_html__('Use the photo title. If blank use the description / caption', 'photonic'),
 		];
 
+		if ($alt) {
+			$ret['alt'] = esc_html__('Always use the alt text, even if blank', 'photonic');
+			$ret['alt-title-desc'] = esc_html__('Use the alt text. If blank use the title. If blank use the description / caption', 'photonic');
+			$ret['alt-desc-title'] = esc_html__('Use the alt text. If blank use the description / caption. If blank use the title', 'photonic');
+
+			$ret['desc-title-alt'] = esc_html__('Use the photo description / caption. If blank use the title. If blank use the alt text', 'photonic');
+			$ret['desc-alt-title'] = esc_html__('Use the photo description / caption. If blank use the alt text. If blank use the title', 'photonic');
+
+			$ret['title-alt-desc'] = esc_html__('Use the photo title. If blank use the alt text. If blank use the description / caption', 'photonic');
+			$ret['title-desc-alt'] = esc_html__('Use the photo title. If blank use the description / caption. If blank use the alt text', 'photonic');
+		}
 		if (!$blank) {
 			unset($ret['']);
 		}

@@ -125,6 +125,72 @@ jQuery(window).ready(function($) {
     return false;
   });
 
+  jQuery('.install-wpcaptcha').on('click',function(e){
+    if (!confirm('The free Advanced Google reCAPTCHA plugin will be installed & activated from the official WordPress repository.')) {
+      return;
+    }
+
+    jQuery('body').append('<div style="width:550px;height:450px; position:fixed;top:10%;left:50%;margin-left:-275px; color:#444; background-color: #fbfbfb;border:1px solid #DDD; border-radius:4px;box-shadow: 0px 0px 0px 4000px rgba(0, 0, 0, 0.85);z-index: 9999999;"><iframe src="' + mtnc.wpcaptcha_install_url + '" style="width:100%;height:100%;border:none;" /></div>');
+    jQuery('#wpwrap').css('pointer-events', 'none');
+    e.preventDefault();
+    return false;
+  });
+
+  $('.toplevel_page_maintenance').on('click', '.open-weglot-upsell', function(e) {
+    e.preventDefault();
+
+    $(this).blur();
+
+    $('#weglot-upsell-dialog').dialog('open');
+
+    return false;
+  });
+
+  $('#weglot').on('click change', function(e) {
+    e.preventDefault();
+    $(this).prop("checked", false);
+
+    $('.open-weglot-upsell').first().trigger('click');
+
+    return false;
+  });
+
+  $('#weglot-upsell-dialog').dialog({'dialogClass': 'wp-dialog mtnc-dialog weglot-upsell-dialog',
+                              'modal': 1,
+                              'resizable': false,
+                              'title': 'Translate your maintenance page to any language',
+                              'zIndex': 9999,
+                              'width': 550,
+                              'height': 'auto',
+                              'show': 'fade',
+                              'hide': 'fade',
+                              'open': function(event, ui) {
+                                mtnc_fix_dialog_close(event, ui);
+                                $(this).siblings().find('span.ui-dialog-title').html(mtnc.weglot_dialog_upsell_title);
+                              },
+                              'close': function(event, ui) { },
+                              'autoOpen': false,
+                              'closeOnEscape': true
+  });
+  $(window).resize(function(e) {
+    $('#weglot-upsell-dialog').dialog("option", "position", {my: "center", at: "center", of: window});
+  });
+
+
+  jQuery('#install-weglot').on('click',function(e){
+    $('#weglot-upsell-dialog').dialog('close');
+    jQuery('body').append('<div style="width:550px;height:450px; position:fixed;top:10%;left:50%;margin-left:-275px; color:#444; background-color: #fbfbfb;border:1px solid #DDD; border-radius:4px;box-shadow: 0px 0px 0px 4000px rgba(0, 0, 0, 0.85);z-index: 9999999;"><iframe src="' + mtnc.weglot_install_url + '" style="width:100%;height:100%;border:none;" /></div>');
+    jQuery('#wpwrap').css('pointer-events', 'none');
+    e.preventDefault();
+    return false;
+  });
+
+  function mtnc_fix_dialog_close(event, ui) {
+    jQuery('.ui-widget-overlay').bind('click', function(){
+      jQuery('#' + event.target.id).dialog('close');
+    });
+  } // mtnc_fix_dialog_close
+
   wp.codeEditor.initialize(jQuery('#custom_css'), mtnc.cm_settings);
 
   var t = null,

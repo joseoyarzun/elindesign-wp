@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.WP.AlternativeFunctions,WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! function_exists('wp_all_import_get_gz')){
 
 	function wp_all_import_get_gz($filename, $use_include_path = 0, $targetDir = false, $headers = false) {					

@@ -5,13 +5,15 @@ namespace Photonic_Plugin\Options;
 use Photonic_Plugin\Core\Utilities;
 
 class Google extends Option_Tab {
-	private static $instance;
+	private $preface;
 
-	private function __construct() {
+	protected function __construct() {
+		$this->preface = "<section class='notice notice-error'><strong>API Shutdown</strong><p>Google is making a change to its APIs, which make them unusable for browsing on the web. This will prevent Photonic from working after <strong>31st March 2025</strong>. Please switch to a different platform to avoid disruption.</p></section>";
 		$this->options = [
 			[
 				'name'     => 'Google Photos settings',
 				'desc'     => 'Control settings for Google Photos',
+				'preface'  => $this->preface,
 				'category' => 'google-settings',
 				'type'     => 'section',
 			],
@@ -31,7 +33,6 @@ class Google extends Option_Tab {
 				'name'     => 'Google Client ID',
 				'desc'     => "Enter your Google Client ID. You can get / create one from Google's <a href='https://console.developers.google.com/apis/'>API Manager</a>.
 			The <a href='https://aquoid.com/plugins/photonic/google-photos/#api-key'>documentation page</a> can help you with further instructions.
-			If you have previously obtained a Client ID for Picasa you can use that here, provided you follow the additional instructions in the documentation.
 			<ol>
 				<li>Use the option for 'OAuth Client ID', and subsequently pick 'Web applications'.</li>
 				<li>Make sure that you add these as your Redirect URIs:
@@ -56,7 +57,7 @@ class Google extends Option_Tab {
 			],
 
 			[
-				'name'     => 'Refresh Token (for Back-end / Server-side Authentication)',
+				'name'     => 'Refresh Token',
 				'desc'     => "To access any content in Google Photos you need to get a token. To get your token go to
 			<em>Photonic &rarr; Authentication &rarr; Google Photos &rarr; Google Photos Refresh Token Getter</em>, and authenticate.",
 				'id'       => 'google_refresh_token',
@@ -101,24 +102,11 @@ class Google extends Option_Tab {
 				'type'     => 'checkbox'
 			],
 
-			[
-				'name'     => "Layout processing mode",
-				'desc'     => "When possible, Photonic tries to use CSS to build the advanced layouts (like Justified Grids). 
-					This has the advantage of being fast and can work well with lazy-loading and AJAX-based plugins, particularly if the loading mode (<em>Photonic &rarr; Settings &rarr; Generic Options &rarr; Advanced &rarr; Loading Mode</em>) is PHP. 
-					<br/><br/>The downside is that CSS-based rendering is occasionally incorrect, particularly if the source has incorrect sizes. 
-					If this is a frequent issue, you can default to a JS-generated layout (which is always more accurate). This can be managed individually for each gallery.
-					<br/><br/>Pick your default processor:",
-				'id'       => 'google_layout_engine',
-				'grouping' => 'google-settings',
-				'type'     => 'select',
-				'options'  => [
-					'css' => 'Use CSS unless overridden by a gallery individually',
-					'js'  => 'Use JS unless overridden by a gallery individually',
-				]
-			],
+			$this->get_layout_engine_options('google_layout_engine', 'google-settings'),
 
 			[
 				'name'     => "Photos (Main Page)",
+				'preface'  => $this->preface,
 				'desc'     => "Control settings for photos from Google Photos when displayed in your page",
 				'category' => 'google-photos',
 				'type'     => 'section',
@@ -147,23 +135,14 @@ class Google extends Option_Tab {
 				'grouping' => 'google-photos',
 				'type'     => 'select',
 				'options'  => [
-					'padding' => 'Fix the padding around the thumbnails',
+					'padding' => 'Automatically calculate thumbnails per row',
 					'count'   => 'Fix the number of thumbnails per row',
 				]
 			],
 
 			[
-				'name'     => "Constrain by padding",
-				'desc'     => " If you have constrained by padding above, enter the number of pixels here to pad the thumbs by",
-				'id'       => 'google_photos_constrain_by_padding',
-				'grouping' => 'google-photos',
-				'type'     => 'text',
-				'hint'     => "Enter the number of pixels here (don't enter 'px'). Non-integers will be ignored."
-			],
-
-			[
-				'name'     => "Constrain by number of thumbnails",
-				'desc'     => " If you have constrained by number of thumbnails per row above, enter the number of thumbnails",
+				'name'     => "Fixed number of thumbnails",
+				'desc'     => " If you have fixed the number of thumbnails per row above, enter the number of thumbnails",
 				'id'       => 'google_photos_constrain_by_count',
 				'grouping' => 'google-photos',
 				'type'     => 'select',
@@ -172,6 +151,7 @@ class Google extends Option_Tab {
 
 			[
 				'name'     => "Photos (Overlaid Popup Panel)",
+				'preface'  => $this->preface,
 				'desc'     => "Control settings for photos from Google Photos when displayed in a popup",
 				'category' => 'google-photos-pop',
 				'type'     => 'section',
@@ -193,12 +173,5 @@ class Google extends Option_Tab {
 				'options'  => $this->title_styles()
 			],
 		];
-	}
-
-	public static function get_instance() {
-		if (null === self::$instance) {
-			self::$instance = new Google();
-		}
-		return self::$instance;
 	}
 }

@@ -22,50 +22,39 @@ import './lib/responsivelyLazy.js';
 jQuery(document).ready(function ($) {
 	let envira_container;
 
-	$('body').on(
-		'click',
-		'div.envirabox-title a[href*="#"]:not([href="#"])',
-		function (e) {
-			if (
-				location.pathname.replace(/^\//, '') ==
-					this.pathname.replace(/^\//, '') &&
-				location.hostname == this.hostname
-			) {
-				$.envirabox.close();
-				return false;
-			}
-		},
-	);
+	$('body').on('click', 'div.envirabox-title a[href*="#"]:not([href="#"])', function (e) {
+		if (
+			location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') &&
+			location.hostname == this.hostname
+		) {
+			$.envirabox.close();
+			return false;
+		}
+	});
 
 	/* setup lazy load event */
 	$(document).on('envira_image_lazy_load_complete', function (event) {
-		if (
-			event !== undefined &&
-			event.image_id !== undefined &&
-			event.image_id !== null
-		) {
+		if (event !== undefined && event.image_id !== undefined && event.image_id !== null) {
 			// var envira_container = $('div.envira-gallery-public').find('img#' + event.image_id);
 
 			if (
-				$('#envira-gallery-wrap-' + event.gallery_id).find(
-					'#' + event.video_id + ' iframe',
-				).length > 0
+				$('#envira-gallery-wrap-' + event.gallery_id).find('#' + event.video_id + ' iframe')
+					.length > 0
 			) {
-				envira_container = $(
-					'#envira-gallery-wrap-' + event.gallery_id,
-				).find('#' + event.video_id + ' iframe');
+				envira_container = $('#envira-gallery-wrap-' + event.gallery_id).find(
+					'#' + event.video_id + ' iframe'
+				);
 			} else if (
-				$('#envira-gallery-wrap-' + event.gallery_id).find(
-					'#' + event.video_id + ' video',
-				).length > 0
+				$('#envira-gallery-wrap-' + event.gallery_id).find('#' + event.video_id + ' video').length >
+				0
 			) {
-				envira_container = $(
-					'#envira-gallery-wrap-' + event.gallery_id,
-				).find('#' + event.video_id + ' video');
+				envira_container = $('#envira-gallery-wrap-' + event.gallery_id).find(
+					'#' + event.video_id + ' video'
+				);
 			} else {
-				envira_container = $(
-					'#envira-gallery-wrap-' + event.gallery_id,
-				).find('img#' + event.image_id);
+				envira_container = $('#envira-gallery-wrap-' + event.gallery_id).find(
+					'img#' + event.image_id
+				);
 			}
 
 			if (
@@ -114,9 +103,7 @@ jQuery(document).ready(function ($) {
 					.find('.envira-lazy')
 					.data('envira-changed', 'true');
 
-				if (
-					window['envira_container_' + event.gallery_id] !== undefined
-				) {
+				if (window['envira_container_' + event.gallery_id] !== undefined) {
 					window['envira_container_' + event.gallery_id].on(
 						'layoutComplete',
 						function (event, laidOutItems) {
@@ -130,7 +117,7 @@ jQuery(document).ready(function ($) {
 								.find('span.envira-caption')
 								.delay(1000)
 								.css('visibility', 'visible');
-						},
+						}
 					);
 				}
 
@@ -339,14 +326,14 @@ function jg_effect_vintage(img) {
 	var options = {
 		onError: function () {
 			alert('ERROR');
-		},
+		}
 	};
 	var effect = {
 		vignette: 1,
 		sepia: true,
 		noise: 50,
 		desaturate: 0.2,
-		lighten: 0.1,
+		lighten: 0.1
 	};
 	new VintageJS(img, options, effect);
 }

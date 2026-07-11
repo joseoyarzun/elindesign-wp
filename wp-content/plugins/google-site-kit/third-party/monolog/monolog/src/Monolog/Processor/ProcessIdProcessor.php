@@ -1,5 +1,6 @@
 <?php
 
+declare (strict_types=1);
 /*
  * This file is part of the Monolog package.
  *
@@ -15,15 +16,14 @@ namespace Google\Site_Kit_Dependencies\Monolog\Processor;
  *
  * @author Andreas Hörnicke
  */
-class ProcessIdProcessor implements \Google\Site_Kit_Dependencies\Monolog\Processor\ProcessorInterface
+class ProcessIdProcessor implements ProcessorInterface
 {
     /**
-     * @param  array $record
-     * @return array
+     * {@inheritDoc}
      */
-    public function __invoke(array $record)
+    public function __invoke(array $record): array
     {
-        $record['extra']['process_id'] = \getmypid();
+        $record['extra']['process_id'] = getmypid();
         return $record;
     }
 }

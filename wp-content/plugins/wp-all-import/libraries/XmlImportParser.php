@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
 /**
  * @author Olexandr Zanichkovsky <olexandr.zanichkovsky@zophiatech.com>
  * @author Pavel Kulbakin <p.kulbakin@gmail.com>
@@ -56,7 +57,7 @@ class XmlImportParser {
 			try{ 
 				$this->xml = new SimpleXMLElement(mb_convert_encoding( $xml, 'UTF-8', 'ISO-8859-1' ));
 			} catch (Exception $e){ 
-				throw new XmlImportException($e->getMessage());
+				throw new XmlImportException(esc_html($e->getMessage()));
 			}
 		}			
 
@@ -79,7 +80,7 @@ class XmlImportParser {
 		
 		$rootNodes = $this->xml->xpath($this->rootNodeXPath);		
 		if ($rootNodes === false)
-		throw new XmlImportException('Invalid root node XPath \'' . $this->rootNodeXPath . '\' specified');
+		throw new XmlImportException(esc_html('Invalid root node XPath \'' . $this->rootNodeXPath . '\' specified'));
 	    		
 		for ($i = 0; $i < count($rootNodes); $i++) {
 			if (empty($records) or in_array($i + 1, $records)) {                

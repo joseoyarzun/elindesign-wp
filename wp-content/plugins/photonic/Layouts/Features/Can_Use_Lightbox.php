@@ -31,7 +31,7 @@ trait Can_Use_Lightbox {
 	/**
 	 * @return Lightbox
 	 */
-	public static function get_lightbox() {
+	public static function get_lightbox(): Lightbox {
 		$map = [
 			'baguettebox'   => 'BaguetteBox.php',
 			'bigpicture'    => 'BigPicture.php',

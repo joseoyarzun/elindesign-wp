@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
  * Find duplicates according to settings
@@ -15,6 +16,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                     $args = [
                         'hide_empty' => FALSE,
                         // also retrieve terms which are not used yet
+                        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
                         'meta_query' => [
                             [
                                 'key' => $custom_duplicate_name,
@@ -23,7 +25,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                             ]
                         ]
                     ];
-                    $terms = get_terms($articleData['taxonomy'], $args);
+                    $terms = get_terms(array_merge($args, ['taxonomy' => $articleData['taxonomy']]));
                     if (!empty($terms) && !is_wp_error($terms)) {
                         foreach ($terms as $term) {
                             $duplicate_ids[] = $term->term_id;
@@ -35,6 +37,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                     $args = [
                         'hide_empty' => FALSE,
                         // also retrieve terms which are not used yet
+                        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
                         'meta_query' => [
                             [
                                 'key' => $custom_duplicate_name,
@@ -60,6 +63,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                     if (trim($custom_duplicate_name) == '_sku' && function_exists('wp_all_import_get_product_id_by_sku')) {
                         $id = wp_all_import_get_product_id_by_sku(trim($custom_duplicate_value));
                     } else {
+                        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
                         $id = $wpdb->get_var(
                             $wpdb->prepare(
                                 "
@@ -67,7 +71,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                             FROM {$wpdb->posts} as posts
                             INNER JOIN {$wpdb->postmeta} AS lookup ON posts.ID = lookup.post_id
                             WHERE
-                            posts.post_type IN ( '" . implode("','", $post_types) . "' )                            
+                            posts.post_type IN ( '" . implode("','", $post_types) . "' )
                             AND lookup.meta_key = %s
                             AND lookup.meta_value = %s
                             LIMIT 1
@@ -76,6 +80,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                                 trim($custom_duplicate_value)
                             )
                         );
+                        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
                     }
 
                     if ($id) {
@@ -85,6 +90,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
             }
         } else {
 	        $args = [
+		        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 		        'meta_query' => [
 			        0 => [
 				        'key' => $custom_duplicate_name,
@@ -100,7 +106,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
 			        $duplicate_ids[] = $user->ID;
 		        }
 	        } else {
-		        $query = $wpdb->get_results($wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS " . $wpdb->users . ".ID FROM " . $wpdb->users . " INNER JOIN " . $wpdb->usermeta . " ON (" . $wpdb->users . ".ID = " . $wpdb->usermeta . ".user_id) WHERE 1=1 AND ( (" . $wpdb->usermeta . ".meta_key = '%s' AND " . $wpdb->usermeta . ".meta_value = '%s') ) GROUP BY " . $wpdb->users . ".ID ORDER BY " . $wpdb->users . ".ID ASC LIMIT 0, 20", $custom_duplicate_name, $custom_duplicate_value));
+		        $query = $wpdb->get_results($wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS " . $wpdb->users . ".ID FROM " . $wpdb->users . " INNER JOIN " . $wpdb->usermeta . " ON (" . $wpdb->users . ".ID = " . $wpdb->usermeta . ".user_id) WHERE 1=1 AND ( (" . $wpdb->usermeta . ".meta_key = %s AND " . $wpdb->usermeta . ".meta_value = %s) ) GROUP BY " . $wpdb->users . ".ID ORDER BY " . $wpdb->users . ".ID ASC LIMIT 0, 20", $custom_duplicate_name, $custom_duplicate_value)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		        if (!empty($query)) {
 			        foreach ($query as $p) {
 				        $duplicate_ids[] = $p->ID;
@@ -111,6 +117,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
         return $duplicate_ids;
     } elseif ('parent' == $duplicate_indicator) {
         $field = 'post_title'; // post_title or post_content
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
         return $wpdb->get_col($wpdb->prepare("
 			SELECT ID FROM " . $wpdb->posts . "
 			WHERE
@@ -124,6 +131,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
             (!empty($articleData['post_parent'])) ? $articleData['post_parent'] : 0,
             preg_replace('%[ \\t\\n]%', '', $articleData[$field])
         ));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
     } else {
         if (!empty($articleData['post_type'])) {
             switch ($articleData['post_type']) {
@@ -132,6 +140,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                     if (empty($indicator_value)) {
                         $indicator_value = $duplicate_indicator == 'title' ? $articleData['post_title'] : $articleData['slug'];
                     }
+                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
                     return $wpdb->get_col($wpdb->prepare("
             SELECT t.term_id FROM " . $wpdb->terms . " t
             INNER JOIN " . $wpdb->term_taxonomy . " tt ON (t.term_id = tt.term_id)
@@ -140,7 +149,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                 AND tt.taxonomy LIKE %s
                     AND (REPLACE(REPLACE(REPLACE(t." . $field . ", ' ', ''), '\\t', ''), '\\n', '') = %s
                         OR REPLACE(REPLACE(REPLACE(t." . $field . ", ' ', ''), '\\t', ''), '\\n', '') = %s
-                            OR REPLACE(REPLACE(REPLACE(t." . $field . ", ' ', ''), '\\t', ''), '\\n', '') = %s) 
+                            OR REPLACE(REPLACE(REPLACE(t." . $field . ", ' ', ''), '\\t', ''), '\\n', '') = %s)
             ",
                         isset($articleData['ID']) ? $articleData['ID'] : 0,
                         isset($articleData['taxonomy']) ? $articleData['taxonomy'] : '%',
@@ -148,21 +157,25 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                         preg_replace('%[ \\t\\n]%', '', htmlentities($indicator_value)),
                         preg_replace('%[ \\t\\n]%', '', $indicator_value)
                     ));
+                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
                     break;
                 case 'comments':
                     $field = 'comment_' . $duplicate_indicator; // post_title or post_content
+                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
                     return $wpdb->get_col($wpdb->prepare("
             SELECT comment_ID FROM " . $wpdb->comments . "
-            WHERE                
+            WHERE
                 AND comment_ID != %s
                 AND REPLACE(REPLACE(REPLACE($field, ' ', ''), '\\t', ''), '\\n', '') = %s
             ",
                         isset($articleData['ID']) ? $articleData['ID'] : 0,
                         preg_replace('%[ \\t\\n]%', '', $articleData[$field])
                     ));
+                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
                     break;
                 default:
                     $field = 'post_' . $duplicate_indicator; // post_title or post_content
+                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
                     return $wpdb->get_col($wpdb->prepare("
             SELECT ID FROM " . $wpdb->posts . "
             WHERE
@@ -174,6 +187,7 @@ function pmxi_findDuplicates($articleData, $custom_duplicate_name = '', $custom_
                         isset($articleData['ID']) ? $articleData['ID'] : 0,
                         preg_replace('%[ \\t\\n]%', '', $articleData[$field])
                     ));
+                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
                     break;
             }
         } else {

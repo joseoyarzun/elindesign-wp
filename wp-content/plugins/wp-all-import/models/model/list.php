@@ -78,13 +78,14 @@ class PMXI_Model_List extends PMXI_Model {
 			$sql = "SELECT SQL_CALC_FOUND_ROWS $this->what $sql LIMIT " . intval(($page - 1) * $perPage) . ", " . intval($perPage);
 		} else {
 			$sql = "SELECT $this->what $sql";
-		}		
+		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$result = $this->wpdb->get_results($sql, ARRAY_A);
 		if (is_array($result)) {
 			foreach ($result as $i => $row) {
 				foreach ($row as $k => $v) {
 					if (is_serialized($v)) {
-						$result[$i][$k] = unserialize($v);
+						$result[$i][$k] = \pmxi_maybe_unserialize($v);
 					}
 				}
 			}
@@ -113,6 +114,7 @@ class PMXI_Model_List extends PMXI_Model {
 		if ( ! is_null($field)) {
 			$sql .= " WHERE " . $this->buildWhere($field, $value);
 		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		return intval($this->wpdb->get_var($sql));
 	}
 	
@@ -133,7 +135,7 @@ class PMXI_Model_List extends PMXI_Model {
 	public function convertRecords($elementClass = NULL, $includeFields = NULL) {
 		! is_null($elementClass) or $elementClass = preg_replace('%List$%', 'Record', get_class($this));
 		if ( ! is_subclass_of($elementClass, PMXI_Plugin::PREFIX . 'Model_Record')) {
-			throw new Exception("Provideded class name $elementClass must be a subclass of " . PMXI_Plugin::PREFIX . 'Model_Record');
+			throw new Exception(esc_html("Provideded class name $elementClass must be a subclass of " . PMXI_Plugin::PREFIX . 'Model_Record'));
 		}
 		$records = $this->exchangeArray(array());
 		foreach ($records as $r) {

@@ -2,7 +2,7 @@
 
 namespace Photonic_Plugin\Lightboxes;
 
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Platforms\Base;
 
 require_once 'Lightbox.php';
 
@@ -14,16 +14,16 @@ class Strip extends Lightbox {
 
 	/**
 	 * @param $rel_id
-	 * @param Core $module
+	 * @param Base $module
 	 * @return array
 	 */
-	public function get_gallery_attributes($rel_id, $module) {
+	public function get_gallery_attributes($rel_id, Base $module): array {
 		global $photonic_lightbox_no_loop;
 		$specific = [
-			'data-strip-group' => ['lightbox-photonic-' . $module->provider . '-stream-' . (empty($rel_id) ? $module->gallery_index : $rel_id)]
+			'data-strip-group' => 'lightbox-photonic-' . $module->provider . '-stream-' . (empty($rel_id) ? $module->gallery_index : $rel_id)
 		];
 		if (!empty($photonic_lightbox_no_loop)) {
-			$specific['data-strip-group-options'] = ["loop: false"];
+			$specific['data-strip-group-options'] = "loop: false";
 		}
 
 		return [
@@ -33,8 +33,9 @@ class Strip extends Lightbox {
 		];
 	}
 
-	public function get_photo_attributes($photo_data, $module) {
+	public function get_photo_attributes(array $photo_data, Base $module): array {
 		$out = parent::get_photo_attributes($photo_data, $module);
-		return $out . ' data-strip-caption="' . $photo_data['title'] . '" ';
+		$out['data-strip-caption'] = esc_attr($photo_data['title']);
+		return $out;
 	}
 }

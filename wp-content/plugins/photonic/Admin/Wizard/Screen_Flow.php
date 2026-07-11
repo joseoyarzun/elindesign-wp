@@ -23,10 +23,10 @@ class Screen_Flow {
 	private $editor_shortcode_text;
 
 	public function __construct() {
-		if (wp_verify_nonce($_REQUEST['nonce'], 'photonic-wizard-' . get_current_user_id())) {
+		if (wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['nonce'] ?? '')), 'photonic-wizard-' . get_current_user_id())) {
 			if (isset($_REQUEST['shortcode'])) {
 				$this->input_shortcode = sanitize_text_field($_REQUEST['shortcode']);
-				$this->input_shortcode = base64_decode($this->input_shortcode);  // The in-flight shortcode is passed from screen to screen using the JS function `btoa`, in flow.js, which encodes it
+				$this->input_shortcode = base64_decode($this->input_shortcode);  // The in-flight shortcode is passed from screen to screen using the JS function `btoa`, in wizard.js, which encodes it
 				$this->input_shortcode = json_decode($this->input_shortcode);
 			}
 
@@ -37,11 +37,10 @@ class Screen_Flow {
 			if (!empty($this->input_shortcode) && !empty($this->input_shortcode->shortcode)) {
 				$this->editor_shortcode_text = esc_attr($this->input_shortcode->content);
 				$shortcode = $this->input_shortcode->shortcode;
-				$tag = $shortcode->tag;
 				$attrs = $shortcode->attrs;
 				$attrs = $attrs->named;
-				if ((!empty($attrs->type) && in_array($attrs->type, ['wp', 'flickr', 'smugmug', 'picasa', 'google', 'zenfolio', 'instagram'], true)) ||
-					(empty($attrs->type) && !empty($attrs->style)) && in_array($attrs->style, ['square', 'circle', 'random', 'masonry', 'mosaic', 'strip-above', 'strip-below', 'strip-right', 'no-strip'], true)) {
+				if ((!empty($attrs->type) && in_array($attrs->type, ['wp', 'flickr', 'smugmug', 'zenfolio', 'deviantart'], true)) ||
+					(empty($attrs->type) && !empty($attrs->style)) && in_array($attrs->style, ['square', 'circle', 'random', 'masonry', 'masonry-horizontal', 'mosaic', 'strip-above', 'strip-below', 'strip-right', 'no-strip'], true)) {
 					$this->editor_shortcode['provider'] = !empty($attrs->type) ? $attrs->type : 'wp';
 				}
 			}
@@ -49,17 +48,18 @@ class Screen_Flow {
 	}
 
 	public function render() {
-		if (wp_verify_nonce($_REQUEST['nonce'], 'photonic-wizard-' . get_current_user_id())) {
+		if (wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['nonce'] ?? '')), 'photonic-wizard-' . get_current_user_id())) {
 			?>
 		<div id="photonic-flow-wrapper" data-current-screen="1">
 			<form id="photonic-flow" data-photonic-submission="" data-photonic-submission-pending="">
-				<input type="hidden" name="post_id" value="<?php echo esc_attr($_REQUEST['post_id']); ?>"/>
+				<input type="hidden" name="post_id" value="<?php echo esc_attr(sanitize_text_field(wp_unslash($_REQUEST['post_id'] ?? 0))); ?>"/>
 				<input name="photonic-editor-shortcode" id="photonic-editor-shortcode" type="hidden"
 					   value="<?php echo !empty($this->editor_shortcode_text) ? esc_attr($this->editor_shortcode_text) : ''; ?>"/>
 				<input name="photonic-editor-shortcode-raw" id="photonic-editor-shortcode-raw" type="hidden"
 					   value="<?php echo !empty($_REQUEST['shortcode']) ? esc_attr($_REQUEST['shortcode']) : ''; ?>"/>
 				<input name="photonic-editor-json" id="photonic-editor-json" type="hidden" value=""/>
 				<input name="photonic-gutenberg-active" id="photonic-gutenberg-active" type="hidden" value=""/>
+
 				<div id="photonic-flow-provider" class="photonic-flow-screen photonic-gallery" data-screen="1">
 					<!-- Provider selection -->
 					<h1><?php esc_html_e('Choose Gallery Source', 'photonic'); ?></h1>
@@ -73,9 +73,10 @@ class Screen_Flow {
 							'wp'        => 'WordPress',
 							'flickr'    => 'Flickr',
 							'smugmug'   => 'SmugMug',
-							'google'    => 'Google Photos',
+							// 'google'    => 'Google Photos',
 							'zenfolio'  => 'Zenfolio',
-							'instagram' => 'Instagram',
+							// 'instagram' => 'Instagram',
+							// 'deviantart' => 'DeviantArt',
 						];
 						foreach ($providers as $provider => $desc) {
 							?>

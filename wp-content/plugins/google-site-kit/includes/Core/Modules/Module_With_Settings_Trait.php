@@ -6,6 +6,8 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Core\Modules;
@@ -14,6 +16,7 @@ namespace Google\Site_Kit\Core\Modules;
  * Trait for a module that includes a screen.
  *
  * @since 1.2.0
+ * @template TSettings of Module_Settings
  * @access private
  * @ignore
  */
@@ -24,7 +27,7 @@ trait Module_With_Settings_Trait {
 	 *
 	 * @since 1.2.0
 	 *
-	 * @var Module_Settings
+	 * @var TSettings
 	 */
 	protected $settings;
 
@@ -33,7 +36,7 @@ trait Module_With_Settings_Trait {
 	 *
 	 * @since 1.2.0
 	 *
-	 * @return Module_Settings
+	 * @return TSettings
 	 */
 	abstract protected function setup_settings();
 
@@ -42,7 +45,7 @@ trait Module_With_Settings_Trait {
 	 *
 	 * @since 1.2.0
 	 *
-	 * @return Module_Settings Module_Settings instance.
+	 * @return TSettings Module_Settings instance.
 	 */
 	public function get_settings() {
 		if ( ! $this->settings instanceof Module_Settings ) {

@@ -13,7 +13,7 @@ class AJAX {
 	 *
 	 * @param Photonic $photonic
 	 */
-	private function __construct($photonic) {
+	private function __construct(Photonic $photonic) {
 		$this->core = $photonic;
 
 		add_action('wp_ajax_photonic_display_level_2_contents', [&$this, 'display_level_2_contents']);
@@ -43,7 +43,7 @@ class AJAX {
 	 * @param Photonic $photonic
 	 * @return AJAX
 	 */
-	public static function get_instance($photonic): AJAX {
+	public static function get_instance(Photonic $photonic): AJAX {
 		if (null === self::$instance) {
 			self::$instance = new AJAX($photonic);
 		}
@@ -59,17 +59,17 @@ class AJAX {
 	 */
 	public function display_level_2_contents() {
 		// Cannot use a nonce here. Users often cache the gallery markup, which would cache the nonce. This would make it impossible to run this call after a certain amount of time.
-		$panel = sanitize_text_field($_POST['panel_id']);
+		$panel = sanitize_text_field(wp_unslash($_POST['panel_id'] ?? ''));
 		$components = explode('-', $panel);
 
 		if (count($components) <= 5) {
 			die();
 		}
 		$panel = implode('-', array_slice($components, 4, 10, true));
-		$query = sanitize_text_field($_POST['query']);
+		$query = sanitize_text_field($_POST['query'] ?? '');
 		$query = wp_parse_args($query);
 
-		$popup = sanitize_text_field($_POST['popup']);
+		$popup = sanitize_text_field(wp_unslash($_POST['popup'] ?? ''));
 		if (empty($popup)) {
 			$location = 'lightbox';
 		}
@@ -138,14 +138,19 @@ class AJAX {
 	 */
 	public function display_level_3_contents() {
 		// Cannot use a nonce here. Users often cache the gallery markup, which would cache the nonce. This would make it impossible to run this call after a certain amount of time.
-		$node = sanitize_text_field($_POST['node']);
+		$node = sanitize_text_field(wp_unslash($_POST['node'] ?? ''));
 		$components = explode('-', $node);
 
 		if (count($components) <= 3) {
 			die();
 		}
 
-		$args = ['display' => 'local', 'headers' => '', 'layout' => sanitize_text_field($_POST['layout']), 'stream' => sanitize_text_field($_POST['stream'])];
+		$args = [
+			'display' => 'local',
+			'headers' => '',
+			'layout' => sanitize_text_field($_POST['layout'] ?? null),
+			'stream' => sanitize_text_field(wp_unslash($_POST['stream'] ?? ''))
+		];
 
 		$provider = $components[0];
 		if ('flickr' === $provider) {
@@ -161,8 +166,8 @@ class AJAX {
 
 	public function load_more() {
 		// Cannot use a nonce here. Users often cache the gallery markup, which would cache the nonce. This would make it impossible to run this call after a certain amount of time.
-		$provider = sanitize_text_field($_POST['provider']);
-		$query = sanitize_text_field($_POST['query']);
+		$provider = sanitize_text_field(wp_unslash($_POST['provider'] ?? ''));
+		$query = sanitize_text_field($_POST['query'] ?? '');
 		$attr = wp_parse_args($query);
 
 		$attr['type'] = $provider;
@@ -193,8 +198,9 @@ class AJAX {
 		// $_POST['shortcode'] only contains the parameters of a URL, to be passed to photonic after being broken down. Sanitization functions are killing
 		// characters such as "@" (used in Flickr user ids) or its escaped form. So we use esc_url_raw.
 		// However, esc_url_raw needs a domain, so we prepend a random one, sanitize it, then pull out only the 'query' part from it.
-		$shortcode = esc_url_raw('http://randomurl.com?' . $_POST['shortcode']);
+		$shortcode = esc_url_raw('https://randomurl.com?' . ($_POST['shortcode'] ?? ''));
 		$shortcode_parse = wp_parse_url($shortcode);
+		$attr = [];
 		parse_str($shortcode_parse['query'], $attr);
 
 		$images = $this->core->get_gallery_images($attr);
@@ -205,12 +211,12 @@ class AJAX {
 
 	public function helper_shortcode_more() {
 		if (!empty($_POST['provider'])) {
-			$provider = sanitize_text_field($_POST['provider']);
+			$provider = sanitize_text_field(wp_unslash($_POST['provider']));
 			if (in_array($provider, ['google'], true)) {
 				$attr = ['type' => $provider];
 				if ('google' === $provider) {
-					$attr['nextPageToken'] = sanitize_text_field($_POST['nextPageToken']);
-					$attr['album_type'] = sanitize_text_field($_POST['access']);
+					$attr['nextPageToken'] = sanitize_text_field(wp_unslash($_POST['nextPageToken'] ?? ''));
+					$attr['album_type'] = sanitize_text_field(wp_unslash($_POST['access'] ?? ''));
 					$gallery = new Gallery($attr);
 					echo wp_kses($gallery->get_helper_contents(), Photonic::$safe_tags);
 				}
@@ -236,15 +242,16 @@ class AJAX {
 	 * Invoked via AJAX in the "Authentication" page, when the user clicks on "Save Token"
 	 */
 	public function save_token_in_options() {
+		// The $_POST[...] checks in the next line must NEVER be sanitized or un-escaped. The intent of this code is to verify that the source is who they claim to be. Sanitizing here will defeat the purpose of the security check.
 		if (isset($_POST['provider']) && isset($_POST['token']) && check_ajax_referer($_POST['provider'] . '-save-token-' . $_POST['token']) && current_user_can('edit_theme_options')) {
-			$provider = strtolower(sanitize_text_field($_POST['provider']));
-			$token = sanitize_text_field($_POST['token']);
-			$secret = sanitize_text_field($_POST['secret']);
+			$provider = strtolower(sanitize_text_field(wp_unslash($_POST['provider'])));
+			$token = sanitize_text_field(wp_unslash($_POST['token']));
+			$secret = sanitize_text_field(wp_unslash($_POST['secret'] ?? ''));
 			if (!empty($_POST['expires_in'])) {
-				$expires_in = sanitize_text_field($_POST['expires_in']);
+				$expires_in = sanitize_text_field(wp_unslash($_POST['expires_in']));
 			}
 
-			if (in_array($provider, ['flickr', 'smug', 'zenfolio', 'google', 'instagram'], true)) {
+			if (in_array($provider, ['flickr', 'smug', 'zenfolio', 'google', 'instagram', 'deviantart'], true)) {
 				$options = get_option('photonic_options');
 				if (empty($options)) {
 					$options = [];
@@ -255,13 +262,13 @@ class AJAX {
 					$options[$provider . '_token_secret'] = $secret;
 					$option_set = true;
 				}
-				elseif (in_array($provider, ['google'], true)) {
-					$options[$provider . '_refresh_token'] = $token;
+				elseif ('google' === $provider || 'deviantart' === $provider) {
+					$options[str_replace('-', '_', $provider) . '_refresh_token'] = $token;
 					$option_set = true;
 				}
-				elseif (in_array($provider, ['instagram'], true)) {
-					$client_id = sanitize_text_field($_POST['client_id']);
-					$user = sanitize_text_field($_POST['user']);
+				elseif ('instagram' === $provider) {
+					$client_id = sanitize_text_field(wp_unslash($_POST['client_id'] ?? ''));
+					$user = sanitize_text_field(wp_unslash($_POST['user'] ?? ''));
 
 					$options[$provider . '_access_token'] = $token;
 
@@ -304,7 +311,7 @@ class AJAX {
 		}
 	}
 
-	public function dismiss_warning() {
+	public function dismiss_warning(): void {
 		$user_id = get_current_user_id();
 		$response = [];
 		if (!empty($_POST['dismissible']) && check_ajax_referer('dismiss-warning-' . $user_id)) {

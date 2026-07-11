@@ -6,6 +6,8 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Core\Assets;
@@ -70,6 +72,8 @@ class Script extends Asset {
 
 		if ( $src ) {
 			$entry = Manifest::get( $this->handle );
+
+			list( $filename, $hash ) = array( null, null );
 
 			if ( is_array( $entry[0] ) ) {
 				// If the first entry item is an array, we can assume `$entry` is an array of entries in the format filename => hash.
@@ -171,5 +175,4 @@ JS;
 
 		wp_add_inline_script( $this->handle, $output, 'before' );
 	}
-
 }

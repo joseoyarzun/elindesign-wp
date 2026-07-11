@@ -240,6 +240,48 @@ if ( ! function_exists( 'wooFeed_Admin_Notices' ) ) {
 		}
 	}
 }
+
+if ( ! function_exists( 'woo_feed_summer_sale_notice' ) ) {
+    /**
+     * CTX Feed Black Friday Notice
+     *
+     * @since 4.4.35
+     * @author Nazrul Islam Nayan
+     */
+    function woo_feed_summer_sale_notice() {
+        $user_id = get_current_user_id();
+        if ( ! get_user_meta( $user_id, 'woo_feed_summer_sale_notice_2025_dismissed' ) ) {
+            ob_start();
+            ?>
+            <script type="text/javascript">
+                (function ($) {
+                    $(document).on('click', '.woo-feed-ctx-summer-sale-notice button.notice-dismiss', function (e) {
+                        e.preventDefault();
+                        let nonce = $('#woo_feed_to_ctx_feed_nonce').val();
+                        //woo feed black friday notice cancel callback
+                        wp.ajax.post('woo_feed_save_summer_sale_notice', {
+                            _wp_ajax_nonce: nonce,
+                            clicked: true,
+                        }).then(response => {
+                            console.log(response);
+                        }).fail(error => {
+                            console.log(error);
+                        });
+                    });
+                })(jQuery)
+            </script>
+            <a  target="_blank" href="https://webappick.com/plugin/woocommerce-product-feed-pro/?utm_source=summer_banner&utm_medium=banner&utm_campaign=summer_offer&utm_id=1"
+                class="notice woo-feed-ctx-summer-sale-notice is-dismissible"
+                style="background: url(<?php echo esc_url(WOO_FEED_PLUGIN_URL) . 'admin/images/ctx-feed-summer-sale-banner.png'; ?>) no-repeat top center;">
+                <input type="hidden" id="woo_feed_to_ctx_feed_nonce"
+                       value="<?php echo esc_attr(wp_create_nonce( 'woo-feed-to-ctx-feed-notice' )); ?>">
+            </a>
+            <?php
+            $image = ob_get_contents();
+        }
+    }
+}
+
 if ( ! function_exists( 'woo_feed_black_friday_notice' ) ) {
 	/**
 	 * CTX Feed Black Friday Notice
@@ -249,7 +291,7 @@ if ( ! function_exists( 'woo_feed_black_friday_notice' ) ) {
 	 */
 	function woo_feed_black_friday_notice() {
 		$user_id = get_current_user_id();
-		if ( ! get_user_meta( $user_id, 'woo_feed_black_friday_notice_2024_dismissed' ) ) {
+		if ( ! get_user_meta( $user_id, 'woo_feed_blackfriday_notice_2025_dismissed' ) ) {
 			ob_start();
 			?>
             <script type="text/javascript">
@@ -269,7 +311,7 @@ if ( ! function_exists( 'woo_feed_black_friday_notice' ) ) {
                     });
                 })(jQuery)
             </script>
-            <a  target="_blank" href="https://webappick.com/plugin/woocommerce-product-feed-pro/?utm_source=CTX+Feed&utm_medium=BFCM_Banner&utm_campaign=BFCM_24&utm_id=2024"
+            <a  target="_blank" href="https://webappick.com/plugin/woocommerce-product-feed-pro/?utm_source=black-friday-25&utm_medium=ORG&utm_campaign=black-friday-25&utm_id=25"
                 class="notice woo-feed-ctx-black-friday-notice is-dismissible"
                 style="background: url(<?php echo esc_url(WOO_FEED_PLUGIN_URL) . 'admin/images/ctx-feed-black-friday-banner-free.png'; ?>) no-repeat top center;">
                 <input type="hidden" id="woo_feed_to_ctx_feed_nonce"
@@ -281,47 +323,6 @@ if ( ! function_exists( 'woo_feed_black_friday_notice' ) ) {
 	}
 }
 
-
-if ( ! function_exists( 'woo_feed_cyber_monday_notice' ) ) {
-    /**
-     * CTX Feed Black Friday Notice
-     *
-     * @since 4.4.35
-     * @author Nazrul Islam Nayan
-     */
-    function woo_feed_cyber_monday_notice() {
-        $user_id = get_current_user_id();
-        if ( ! get_user_meta( $user_id, 'woo_feed_cyber_monday_notice_2024_dismissed' ) ) {
-            ob_start();
-            ?>
-            <script type="text/javascript">
-                (function ($) {
-                    $(document).on('click', '.woo-feed-ctx-cyber-monday-notice button.notice-dismiss', function (e) {
-                        e.preventDefault();
-                        let nonce = $('#woo_feed_to_ctx_feed_nonce').val();
-                        //woo feed black friday notice cancel callback
-                        wp.ajax.post('woo_feed_save_cyber_monday_notice', {
-                            _wp_ajax_nonce: nonce,
-                            clicked: true,
-                        }).then(response => {
-                            console.log(response);
-                        }).fail(error => {
-                            console.log(error);
-                        });
-                    });
-                })(jQuery)
-            </script>
-            <a  target="_blank" href="https://webappick.com/plugin/woocommerce-product-feed-pro/?utm_source=CTX+Feed+Plugin&utm_medium=cm_banner&utm_campaign=CM_24&utm_id=2024"
-                class="notice woo-feed-ctx-cyber-monday-notice is-dismissible"
-                style="background: url(<?php echo esc_url(WOO_FEED_PLUGIN_URL) . 'admin/images/ctx-feed-cyber-monday-banner-free.png'; ?>) no-repeat top center;">
-                <input type="hidden" id="woo_feed_to_ctx_feed_nonce"
-                       value="<?php echo esc_attr(wp_create_nonce( 'woo-feed-to-ctx-feed-notice' )); ?>">
-            </a>
-            <?php
-            $image = ob_get_contents();
-        }
-    }
-}
 
 if ( ! function_exists( 'woo_feed_halloween_notice_random' ) ) {
 	/**
@@ -351,7 +352,7 @@ if ( ! function_exists( 'woo_feed_halloween_notice' ) ) {
 	 */
 	function woo_feed_halloween_notice() {
 		$user_id = get_current_user_id();
-		if ( ! get_user_meta( $user_id, 'woo_feed_halloween_notice_2024_dismissed' ) ) {
+		if ( ! get_user_meta( $user_id, 'woo_feed_halloween_notice_2025_dismissed' ) ) {
 			ob_start();
 			?>
 			<script type="text/javascript">
@@ -372,9 +373,9 @@ if ( ! function_exists( 'woo_feed_halloween_notice' ) ) {
 					});
 				})(jQuery)
 			</script>
-			<a target="_blank" href="https://webappick.com/plugin/woocommerce-product-feed-pro/?utm_source=CTX+Feed&utm_medium=HW_Banner&utm_campaign=HW_24&utm_id=2024"
+			<a target="_blank" href="https://webappick.com/discount-deal/?utm_source=halloween_25&utm_medium=wp_free&utm_campaign=halloween_25"
 			   class="notice woo-feed-ctx-halloween-notice is-dismissible"
-			   style="background: url(<?php echo esc_url(WOO_FEED_PLUGIN_URL) . 'admin/images/woo_feed_halloween_notice.png'; ?>) no-repeat top center;">
+			   style="background: url(<?php echo esc_url(WOO_FEED_PLUGIN_URL) . 'admin/images/woo_feed_halloween_notice.gif'; ?>) no-repeat top center;">
 				<input type="hidden" id="woo_feed_to_ctx_feed_halloween_nonce"
 					   value="<?php echo esc_attr(wp_create_nonce( 'woo-feed-to-ctx-feed-halloween-nonce' )); ?>">
 			</a>
@@ -435,7 +436,7 @@ if ( ! function_exists( 'woo_feed_christmas_notice' ) ) {
 	 */
 	function woo_feed_christmas_notice() {
 		$user_id = get_current_user_id();
-		if ( ! get_user_meta( $user_id, 'woo_feed_christmas_notice_2023_dismissed' ) ) {
+		if ( ! get_user_meta( $user_id, 'woo_feed_christmas_notice_2025_dismissed' ) ) {
 			ob_start();
 			?>
 			<script type="text/javascript">
@@ -445,7 +446,7 @@ if ( ! function_exists( 'woo_feed_christmas_notice' ) ) {
 						let nonce = $('#woo_feed_to_ctx_feed_nonce').val();
 
 						//woo feed christmas notice cancel callback
-						wp.ajax.post('woo_feed_save_christmas_notice_2023', {
+						wp.ajax.post('woo_feed_save_christmas_notice', {
 							_wp_ajax_nonce: nonce,
 							clicked: true,
 						}).then(response => {
@@ -456,9 +457,9 @@ if ( ! function_exists( 'woo_feed_christmas_notice' ) ) {
 					});
 				})(jQuery)
 			</script>
-			<a  target="_blank" href="https://webappick.com/plugin/woocommerce-product-feed-pro/?utm_source=Christmass_23&utm_medium=Free_to_Pro&utm_campaign=Christmass23&utm_id=23"
+			<a  target="_blank" href="https://webappick.com/discount-deal/?utm_source=Floating-Holiday&utm_medium=free-to-pro&utm_campaign=H-Holiday&utm_id=1"
 				class="notice woo-feed-ctx-startup-notice is-dismissible"
-				style="background: url(<?php echo esc_url(WOO_FEED_PLUGIN_URL) . 'admin/images/christmas-web-banner-2023.png'; ?>) no-repeat top center;">
+				style="background: url(<?php echo esc_url(WOO_FEED_PLUGIN_URL) . 'admin/images/woo_feed_christmass_banner.png'; ?>) no-repeat top center;">
 				<input type="hidden" id="woo_feed_to_ctx_feed_nonce"
 					   value="<?php echo esc_attr(wp_create_nonce( 'woo-feed-to-ctx-feed-notice' )); ?>">
 			</a>
@@ -1026,6 +1027,13 @@ if ( ! function_exists( 'woo_feed_register_and_do_woo_feed_meta_boxes' ) ) {
 if ( ! function_exists( 'woo_feed_ajax_merchant_info' ) ) {
 	add_action( 'wp_ajax_woo_feed_get_merchant_info', 'woo_feed_ajax_merchant_info' );
 	function woo_feed_ajax_merchant_info() {
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
 		if ( isset( $_REQUEST['nonce'] ) && wp_verify_nonce(
 			sanitize_text_field( wp_unslash( $_REQUEST['nonce'] ) ),
 			'wpf_feed_nonce'
@@ -2941,6 +2949,7 @@ if ( ! function_exists( 'woo_feed_product_attribute_cache_remove_cb' ) ) {
 	 * This function is called when product attribute swicher click.
 	 */
 	function woo_feed_product_attribute_cache_remove_cb() {
+
 		$is_nonce_valid = isset( $_POST['nonce'] ) && wp_verify_nonce( sanitize_text_field( $_POST['nonce'] ), 'wpf_feed_nonce' );
 
 		if ( $is_nonce_valid ) {
@@ -2959,6 +2968,13 @@ if ( ! function_exists( 'woo_feed_custom_fields_status_change_cb' ) ) {
 	 * This AJAX callback function is called when custom fields on/off switched
 	 */
 	function woo_feed_custom_fields_status_change_cb() {
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
 		$is_nonce_valid = isset( $_POST['nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'wpf_feed_nonce' );
 
 		if ( $is_nonce_valid && isset(
@@ -3376,6 +3392,13 @@ if ( ! function_exists( 'woo_feed_clear_cache_data' ) ) {
 	 * @since 4.1.2
 	 */
 	function woo_feed_clear_cache_data() {
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
 		if ( isset( $_REQUEST['_ajax_clean_nonce'] ) ) {
 
             if ( isset( $_POST['type'] ) ) {
@@ -3570,6 +3593,42 @@ if ( ! function_exists( 'woo_feed_get_approved_reviews_data' ) ) {
 	}
 }
 
+if ( ! function_exists( 'woo_feed_save_summer_sale_notice' ) ) {
+    /**
+     * Update user meta to work ctx startup notice once.
+     *
+     * @param int _ajax_nonce nonce number.
+     *
+     * @since 4.3.31
+     * @author Nazrul Islam Nayan
+     */
+    function woo_feed_save_summer_sale_notice() {
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
+        if ( isset( $_REQUEST['_wp_ajax_nonce'] ) && wp_verify_nonce( wp_unslash( $_REQUEST['_wp_ajax_nonce'] ), 'woo-feed-to-ctx-feed-notice' ) ) { //phpcs:ignore
+            $user_id = get_current_user_id();
+            if ( isset( $_REQUEST['clicked'] ) ) {
+                $updated_user_meta = add_user_meta( $user_id, 'woo_feed_summer_sale_notice_2025_dismissed', 'true', true );
+
+                if ( $updated_user_meta ) {
+                    wp_send_json_success( esc_html__( 'User meta updated successfully.', 'woo-feed' ) );
+                } else {
+                    wp_send_json_error( esc_html__( 'Something is wrong.', 'woo-feed' ) );
+                }
+            }
+        } else {
+            wp_send_json_error( esc_html__( 'Invalid Request.', 'woo-feed' ) );
+        }
+        wp_die();
+    }
+}
+add_action( 'wp_ajax_woo_feed_save_summer_sale_notice', 'woo_feed_save_summer_sale_notice' );
+
 if ( ! function_exists( 'woo_feed_save_black_friday_notice' ) ) {
 	/**
 	 * Update user meta to work ctx startup notice once.
@@ -3580,10 +3639,17 @@ if ( ! function_exists( 'woo_feed_save_black_friday_notice' ) ) {
 	 * @author Nazrul Islam Nayan
 	 */
 	function woo_feed_save_black_friday_notice() {
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
 		if ( isset( $_REQUEST['_wp_ajax_nonce'] ) && wp_verify_nonce( wp_unslash( $_REQUEST['_wp_ajax_nonce'] ), 'woo-feed-to-ctx-feed-notice' ) ) { //phpcs:ignore
 			$user_id = get_current_user_id();
 			if ( isset( $_REQUEST['clicked'] ) ) {
-				$updated_user_meta = add_user_meta( $user_id, 'woo_feed_black_friday_notice_2024_dismissed', 'true', true );
+				$updated_user_meta = add_user_meta( $user_id, 'woo_feed_blackfriday_notice_2025_dismissed', 'true', true );
 
 				if ( $updated_user_meta ) {
 					wp_send_json_success( esc_html__( 'User meta updated successfully.', 'woo-feed' ) );
@@ -3599,34 +3665,6 @@ if ( ! function_exists( 'woo_feed_save_black_friday_notice' ) ) {
 }
 add_action( 'wp_ajax_woo_feed_save_black_friday_notice', 'woo_feed_save_black_friday_notice' );
 
-if ( ! function_exists( 'woo_feed_save_cyber_monday_notice' ) ) {
-    /**
-     * Update user meta to work ctx startup notice once.
-     *
-     * @param int _ajax_nonce nonce number.
-     *
-     * @since 4.3.31
-     * @author Nazrul Islam Nayan
-     */
-    function woo_feed_save_cyber_monday_notice() {
-        if ( isset( $_REQUEST['_wp_ajax_nonce'] ) && wp_verify_nonce( wp_unslash( $_REQUEST['_wp_ajax_nonce'] ), 'woo-feed-to-ctx-feed-notice' ) ) { //phpcs:ignore
-            $user_id = get_current_user_id();
-            if ( isset( $_REQUEST['clicked'] ) ) {
-                $updated_user_meta = add_user_meta( $user_id, 'woo_feed_cyber_monday_notice_2024_dismissed', 'true', true );
-
-                if ( $updated_user_meta ) {
-                    wp_send_json_success( esc_html__( 'User meta updated successfully.', 'woo-feed' ) );
-                } else {
-                    wp_send_json_error( esc_html__( 'Something is wrong.', 'woo-feed' ) );
-                }
-            }
-        } else {
-            wp_send_json_error( esc_html__( 'Invalid Request.', 'woo-feed' ) );
-        }
-        wp_die();
-    }
-}
-add_action( 'wp_ajax_woo_feed_save_cyber_monday_notice', 'woo_feed_save_cyber_monday_notice' );
 
 if ( ! function_exists( 'woo_feed_save_halloween_notice' ) ) {
 	/**
@@ -3638,10 +3676,17 @@ if ( ! function_exists( 'woo_feed_save_halloween_notice' ) ) {
 	 * @author Nashir Uddin
 	 */
 	function woo_feed_save_halloween_notice() {
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
 		if ( isset( $_REQUEST['_wp_ajax_nonce'] ) && wp_verify_nonce( wp_unslash( $_REQUEST['_wp_ajax_nonce'] ), 'woo-feed-to-ctx-feed-halloween-nonce' ) ) { //phpcs:ignore
 			$user_id = get_current_user_id();
 			if ( isset( $_REQUEST['clicked'] ) ) {
-				$updated_user_meta = add_user_meta( $user_id, 'woo_feed_halloween_notice_2024_dismissed', 'true', true );
+				$updated_user_meta = add_user_meta( $user_id, 'woo_feed_halloween_notice_2025_dismissed', 'true', true );
 
 				if ( $updated_user_meta ) {
 					wp_send_json_success( esc_html__( 'User meta updated successfully.', 'woo-feed' ) );
@@ -3658,7 +3703,7 @@ if ( ! function_exists( 'woo_feed_save_halloween_notice' ) ) {
 add_action( 'wp_ajax_woo_feed_save_halloween_notice', 'woo_feed_save_halloween_notice' );
 
 
-if ( ! function_exists( 'woo_feed_save_christmas_notice_2023' ) ) {
+if ( ! function_exists( 'woo_feed_save_christmas_notice' ) ) {
 	/**
 	 * Update user meta to work ctx startup notice once.
 	 *
@@ -3667,13 +3712,21 @@ if ( ! function_exists( 'woo_feed_save_christmas_notice_2023' ) ) {
 	 * @since 4.5.15
 	 * @author Md. Nashir Uddin
 	 */
-	function woo_feed_save_christmas_notice_2023() {
+	function woo_feed_save_christmas_notice() {
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
 		if ( isset( $_REQUEST['_wp_ajax_nonce'] ) && wp_verify_nonce( wp_unslash( $_REQUEST['_wp_ajax_nonce'] ), 'woo-feed-to-ctx-feed-notice' ) ) { //phpcs:ignore
 			$user_id = get_current_user_id();
 			if ( isset( $_REQUEST['clicked'] ) ) {
-				$updated_user_meta = add_user_meta( $user_id, 'woo_feed_christmas_notice_2023_dismissed', 'true', true );
+				$updated_user_meta = add_user_meta( $user_id, 'woo_feed_christmas_notice_2025_dismissed', 'true', true );
 
 				if ( $updated_user_meta ) {
+                    delete_user_meta( $user_id, 'woo_feed_christmas_notice_2024_dismissed', '' );
 					wp_send_json_success( esc_html__( 'User meta updated successfully.', 'woo-feed' ) );
 				} else {
 					wp_send_json_error( esc_html__( 'Something is wrong.', 'woo-feed' ) );
@@ -3685,7 +3738,7 @@ if ( ! function_exists( 'woo_feed_save_christmas_notice_2023' ) ) {
 		wp_die();
 	}
 }
-add_action( 'wp_ajax_woo_feed_save_christmas_notice_2023', 'woo_feed_save_christmas_notice_2023' );
+add_action( 'wp_ajax_woo_feed_save_christmas_notice', 'woo_feed_save_christmas_notice' );
 
 if ( ! function_exists( 'woo_feed_hide_promotion' ) ) {
 	/**
@@ -3696,18 +3749,24 @@ if ( ! function_exists( 'woo_feed_hide_promotion' ) ) {
 	 * @since 5.1.7
 	 */
 	function woo_feed_hide_promotion() {
-		if ( isset( $_REQUEST['_ajax_nonce'] ) ) {
-			$hide_promotion = update_option( 'woo_feed_hide_promotion', 1 );
-			$data           = array(
-				'msg' => 'Hide promotion updated successfully.',
-			);
-			if ( $hide_promotion ) {
-				wp_send_json_success( $data );
-			} else {
-				wp_send_json_error( esc_html__( 'Something is wrong.', 'woo-feed' ) );
-			}
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
+		// Verify nonce for security
+		check_ajax_referer( 'wpf_feed_nonce' );
+
+		$hide_promotion = update_option( 'woo_feed_hide_promotion', 1 );
+		$data           = array(
+			'msg' => 'Hide promotion updated successfully.',
+		);
+		if ( $hide_promotion ) {
+			wp_send_json_success( $data );
 		} else {
-			wp_send_json_error( esc_html__( 'Invalid Request.', 'woo-feed' ) );
+			wp_send_json_error( esc_html__( 'Something is wrong.', 'woo-feed' ) );
 		}
 		wp_die();
 	}
@@ -5099,6 +5158,13 @@ if ( ! function_exists( 'woo_feed_filter_count_cb' ) ) {
 	 * @return mixed array | error
 	 */
 	function woo_feed_filter_count_cb() {
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+            wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+            die();
+        }
+
 		$is_nonce_valid = isset( $_GET['nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'wpf_feed_nonce' );
 
 		if ( $is_nonce_valid ) {
@@ -6050,69 +6116,7 @@ if ( ! function_exists( 'get_woo_feed_attribute_highlighted' ) ) {
 		return ! empty( $val ) ? $val : false;
 	}
 }
-if ( ! function_exists( 'woo_feed_add_product_attribute_is_highlighted' ) ) {
-	function woo_feed_add_product_attribute_is_highlighted( $attribute, $i = 0 ) {
-		$value = get_woo_feed_attribute_highlighted( $attribute->get_name(), $i );
-		?>
-		<tr>
-			<td>
-				<div class="enable_highlighted">
-					<label>
-						<input type="hidden" name="attribute_highlighted[<?php echo esc_attr( $i ); ?>]" value="0" />
-						<input type="checkbox" class="checkbox" <?php checked( $value, true ); ?> name="attribute_highlighted[<?php echo esc_attr( $i ); ?>]" value="1" />
-						<?php esc_html_e( 'Highlight attribute', 'textdomain' ); ?>
-					</label>
-				</div>
-			</td>
-		</tr>
-		<?php
-	}
-}
-if ( ! function_exists( 'woo_feed_ajax_woocommerce_save_attributes' ) ) {
 
-	/**
-	 * Get Woo Feed Plugin WooCommerce Product attributes
-	 *
-	 * @author Md. Nashir Uddin
-	 * @since 4.7.1
-	 */
-
-	function woo_feed_ajax_woocommerce_save_attributes() {
-
-		check_ajax_referer( 'save-attributes', 'security' );
-
-		parse_str( $_POST['data'], $data );
-
-		if ( array_key_exists( 'attribute_highlighted', $data ) && is_array( $data['attribute_highlighted'] ) ) {
-
-			$type = 'woo_feed_attributes';
-			$product_attributes =array();
-			$product_attributes = get_option( 'woo_feed_product_attributes' );
-			if(empty($product_attributes) )
-				$product_attributes =array();
-
-			if ( empty( $product_attributes ) || $product_attributes != $data['attribute_names'] ) {
-				$status = 0;
-				if(is_array($data['attribute_names'] )) {
-					foreach ( $data['attribute_names'] as $attribute ) {
-						if ( in_array( $attribute, $product_attributes ) ) {
-							$status = 1;
-						} else {
-							$status = 0;
-							break;
-						}
-					}
-				}
-				if ( $status == 0 ) {
-					$notice_data = Woo_Feed_Notices::get_woo_feed_notice_data();
-					Woo_Feed_Notices::add_update_woo_feed_notice_data( $type, $notice_data );
-					$data_merge = array_merge( $product_attributes, $data['attribute_names'] );
-					update_option( 'woo_feed_product_attributes', array_unique( $data_merge ), 'no' );
-				}
-			}
-		}
-	}
-}
 
 if ( ! function_exists( 'woo_feed_publish_product' ) ) {
 
@@ -6220,7 +6224,212 @@ if ( ! function_exists( 'woo_feed_wcml_save_currency' ) ) {
 	}
 }
 
+if ( ! function_exists( 'woo_feed_plugin_installing' ) ) {
+    function woo_feed_plugin_installing()
+    {
+        // Handle AJAX request here
+        // For example, get data from request
+        check_ajax_referer('woo-feed-our-plugins-nonce', 'nonce');
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $response = array(
+                'status' => 401,
+                'result' => 'Unauthorized'
+            );
+            // Send JSON response
+            wp_send_json($response);
+
+            // Don't forget to exit
+            wp_die();
+        }
+
+        $plugin_slug = isset($_POST['data']) ? sanitize_text_field($_POST['data']) : '';
+
+        $result = woo_feed_install_and_activate_plugin($plugin_slug);
+
+        // Process data
+        // Example response
+        if ($result == 'failed') {
+            $response = array(
+                'status' => 403,
+                'result' => $result
+            );
+        } else {
+            $response = array(
+                'status' => 200,
+                'result' => $result
+            );
+        }
+
+        // Send JSON response
+        wp_send_json($response);
+
+        // Don't forget to exit
+        wp_die();
+    }
+}
+
+add_action('wp_ajax_woo_feed_plugin_installing', 'woo_feed_plugin_installing');
+
+if ( ! function_exists( 'woo_feed_install_and_activate_plugin' ) ) {
+    function woo_feed_install_and_activate_plugin($plugin_slug)
+    {
+        // Check for proper capabilities to install and activate plugins
+        if ( ! current_user_can( 'install_plugins' ) || ! current_user_can( 'activate_plugins' ) ) {
+            return "failed";
+        }
+
+        // Include necessary WordPress files
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+        require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+        require_once ABSPATH . 'wp-admin/includes/class-wp-ajax-upgrader-skin.php';
+
+        // Get plugin information from WordPress.org API
+        $api = plugins_api('plugin_information', array('slug' => $plugin_slug));
+
+        if (is_wp_error($api)) {
+            return "failed";
+        }
+
+        // Set up the Plugin Upgrader
+        $upgrader = new Plugin_Upgrader(new WP_Ajax_Upgrader_Skin());
+
+        // Install the plugin
+        $result = $upgrader->install($api->download_link);
+
+        if (is_wp_error($result)) {
+            return "failed";
+        }
+
+        if($plugin_slug=='webappick-pdf-invoice-for-woocommerce') {
+            $plugin_index = 'woo-invoice';
+        }else{
+            $plugin_index = $plugin_slug;
+        }
+
+        // Plugin main file path (assumes plugin directory matches slug)
+        $plugin_path = WP_PLUGIN_DIR . "/{$plugin_slug}/{$plugin_index}.php";
+
+        if (file_exists($plugin_path)) {
+            activate_plugin("{$plugin_slug}/{$plugin_index}.php");
+            return "activated";
+        } else {
+            return "installed";
+        }
+    }
+}
+
 #==== MERCHANT TEMPLATE OVERRIDE END ================#
+
+#==== ONBOARDING AJAX HANDLERS START ================#
+
+if ( ! function_exists( 'woo_feed_onboarding_install_plugin' ) ) {
+	/**
+	 * AJAX handler for installing plugins from onboarding wizard.
+	 *
+	 * @since 6.6.33
+	 */
+	function woo_feed_onboarding_install_plugin() {
+		// Verify nonce
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_feed_onboarding_nonce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'woo-feed' ) ) );
+		}
+
+		// Check capabilities
+		if ( ! current_user_can( 'install_plugins' ) || ! current_user_can( 'activate_plugins' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to install plugins.', 'woo-feed' ) ) );
+		}
+
+		// Get plugin slug
+		$plugin_slug = isset( $_POST['plugin_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_slug'] ) ) : '';
+
+		if ( empty( $plugin_slug ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid plugin slug.', 'woo-feed' ) ) );
+		}
+
+		// Allowed plugins for security
+		$allowed_plugins = array( 'disco', 'webappick-pdf-invoice-for-woocommerce' );
+		if ( ! in_array( $plugin_slug, $allowed_plugins, true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Plugin not allowed.', 'woo-feed' ) ) );
+		}
+
+		// Install and activate the plugin
+		$result = woo_feed_install_and_activate_plugin( $plugin_slug );
+
+		if ( 'failed' === $result ) {
+			wp_send_json_error( array( 'message' => __( 'Failed to install plugin.', 'woo-feed' ) ) );
+		}
+
+		wp_send_json_success( array(
+			'message' => __( 'Plugin installed and activated successfully.', 'woo-feed' ),
+			'status'  => $result,
+		) );
+	}
+}
+add_action( 'wp_ajax_woo_feed_onboarding_install_plugin', 'woo_feed_onboarding_install_plugin' );
+
+if ( ! function_exists( 'woo_feed_complete_onboarding' ) ) {
+	/**
+	 * AJAX handler for completing the onboarding wizard.
+	 *
+	 * @since 6.6.33
+	 */
+	function woo_feed_complete_onboarding() {
+		// Verify nonce
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_feed_onboarding_nonce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'woo-feed' ) ) );
+		}
+
+		// Check capabilities
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to complete onboarding.', 'woo-feed' ) ) );
+		}
+
+		// Mark onboarding as complete
+		delete_option( 'woo_feed_onboarding_pending' );
+
+		wp_send_json_success( array( 'message' => __( 'Onboarding completed.', 'woo-feed' ) ) );
+	}
+}
+add_action( 'wp_ajax_woo_feed_complete_onboarding', 'woo_feed_complete_onboarding' );
+
+if ( ! function_exists( 'woo_feed_calculate_rating' ) ) {
+    function woo_feed_calculate_rating($ratings)
+    {
+        $totalRatings = array_sum($ratings); // Sum of all ratings
+        if ($totalRatings == 0) {
+            return 0;
+        }
+
+        $weightedSum = (5 * $ratings[5]) + (4 * $ratings[4]) + (3 * $ratings[3]) + (2 * $ratings[2]) + (1 * $ratings[1]);
+        $averageRating = $weightedSum / $totalRatings;
+
+        return round($averageRating, 1); // Round to 2 decimal places
+    }
+}
+
+if ( ! function_exists( 'woo_feed_is_plugin_activated' ) ) {
+    function woo_feed_is_plugin_activated($plugin_slug)
+    {
+
+        if ($plugin_slug == 'webappick-pdf-invoice-for-woocommerce') {
+            $plugin_index = 'woo-invoice';
+        } else {
+            $plugin_index = $plugin_slug;
+        }
+
+        $plugin_path = $plugin_slug . '/' . $plugin_index . ".php";
+
+        if (is_plugin_active($plugin_path)) {
+            return true; // Plugin is acive
+        } else {
+            return false; // Plugin is not active
+        }
+    }
+}
+
+#==== ONBOARDING AJAX HANDLERS END ================#
 
 
 if( ! function_exists('get_plugin_file')){

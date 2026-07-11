@@ -1,13 +1,14 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) exit;
 function pmxi_wp_ajax_test_images(){
 
 	if ( ! check_ajax_referer( 'wp_all_import_secure', 'security', false )){
-		exit( json_encode(array('result' => array(), 'failed_msgs' => array(__('Security check', 'wp_all_import_plugin')))));
+		exit( json_encode(array('result' => array(), 'failed_msgs' => array(__('Security check', 'wp-all-import')))));
 	}
 
 	if ( ! current_user_can( PMXI_Plugin::$capabilities ) ){
-		exit( json_encode(array('result' => array(), 'failed_msgs' => array(__('Security check', 'wp_all_import_plugin')))));
+		exit( json_encode(array('result' => array(), 'failed_msgs' => array(__('Security check', 'wp-all-import')))));
 	}
 
 	$input = new PMXI_Input();
@@ -27,9 +28,11 @@ function pmxi_wp_ajax_test_images(){
 
 	$failed_msgs = array();
 
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable
 	if ( ! @is_writable($targetDir) )
 	{
-		$failed_msgs[] = sprintf(__('Uploads folder `%s` is not writable.', 'wp_all_import_plugin'), $targetDir);	
+		/* translators: see placeholders in the string below */
+		$failed_msgs[] = sprintf(__('Uploads folder `%s` is not writable.', 'wp-all-import'), $targetDir);	
 	}
 	else
 	{
@@ -43,28 +46,33 @@ function pmxi_wp_ajax_test_images(){
 					foreach ($post['imgs'] as $img) 
 					{
 						if ( preg_match('%^(http|https|ftp|ftps)%i', $img)){
-							$failed_msgs[] = sprintf(__('Use image name instead of URL `%s`.', 'wp_all_import_plugin'), esc_url($img));
+							/* translators: see placeholders in the string below */
+							$failed_msgs[] = sprintf(__('Use image name instead of URL `%s`.', 'wp-all-import'), esc_url($img));
 							continue;								
 						}
 						if ( @file_exists($imgs_basedir . $img) ){
 							if (@is_readable($imgs_basedir . $img)){
 								$success_images++;
 							} else{
-								$failed_msgs[] = sprintf(__('File `%s` isn\'t readable', 'wp_all_import_plugin'), preg_replace('%.*/wp-content%', '/wp-content', esc_attr($imgs_basedir . $img)));
+								/* translators: see placeholders in the string below */
+								$failed_msgs[] = sprintf(__('File `%s` isn\'t readable', 'wp-all-import'), preg_replace('%.*/wp-content%', '/wp-content', esc_attr($imgs_basedir . $img)));
 							}
 						} 					
 						else{
-							$failed_msgs[] = sprintf(__('File `%s` doesn\'t exist', 'wp_all_import_plugin'), preg_replace('%.*/wp-content%', '/wp-content', esc_attr($imgs_basedir . $img)));
+							/* translators: see placeholders in the string below */
+							$failed_msgs[] = sprintf(__('File `%s` doesn\'t exist', 'wp-all-import'), preg_replace('%.*/wp-content%', '/wp-content', esc_attr($imgs_basedir . $img)));
 						}
 					}			
 				}
 				if ((int)$success_images === 1)
 				{
-					$success_msg = sprintf(__('%d image was successfully retrieved from `%s`', 'wp_all_import_plugin'), intval($success_images), preg_replace('%.*/wp-content%', '/wp-content', esc_attr($wp_uploads['basedir']) . DIRECTORY_SEPARATOR . PMXI_Plugin::FILES_DIRECTORY));
+					/* translators: see placeholders in the string below */
+					$success_msg = sprintf(__('%1$d image was successfully retrieved from `%2$s`', 'wp-all-import'), intval($success_images), preg_replace('%.*/wp-content%', '/wp-content', esc_attr($wp_uploads['basedir']) . DIRECTORY_SEPARATOR . PMXI_Plugin::FILES_DIRECTORY));
 				}					
 				elseif ((int)$success_images > 1)
 				{
-					$success_msg = sprintf(__('%d images were successfully retrieved from `%s`', 'wp_all_import_plugin'), intval($success_images), preg_replace('%.*/wp-content%', '/wp-content', esc_attr($wp_uploads['basedir']) . DIRECTORY_SEPARATOR . PMXI_Plugin::FILES_DIRECTORY));
+					/* translators: see placeholders in the string below */
+					$success_msg = sprintf(__('%1$d images were successfully retrieved from `%2$s`', 'wp-all-import'), intval($success_images), preg_replace('%.*/wp-content%', '/wp-content', esc_attr($wp_uploads['basedir']) . DIRECTORY_SEPARATOR . PMXI_Plugin::FILES_DIRECTORY));
 				}					
 
 				break;
@@ -82,6 +90,7 @@ function pmxi_wp_ajax_test_images(){
 						$img_ext = pmxi_getExtensionFromStr($img);									
 						$default_extension = pmxi_getExtension($bn);																									
 
+						// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 						$image_name = apply_filters("wp_all_import_image_filename", urldecode(sanitize_file_name((($img_ext) ? str_replace("." . $default_extension, "", $bn) : $bn))) . (("" != $img_ext) ? '.' . $img_ext : ''));
 
 						$attch = wp_all_import_get_image_from_gallery($image_name, $targetDir);
@@ -92,18 +101,21 @@ function pmxi_wp_ajax_test_images(){
 						}
 						else
 						{
-							$failed_msgs[] = sprintf(__('Image `%s` not found in media library.', 'wp_all_import_plugin'), esc_attr($image_name));
+							/* translators: see placeholders in the string below */
+							$failed_msgs[] = sprintf(__('Image `%s` not found in media library.', 'wp-all-import'), esc_attr($image_name));
 						}
 					}
 				}
 
 				if ((int)$success_images === 1)
 				{
-					$success_msg = sprintf(__('%d image was successfully found in media gallery', 'wp_all_import_plugin'), intval($success_images));
+					/* translators: see placeholders in the string below */
+					$success_msg = sprintf(__('%d image was successfully found in media gallery', 'wp-all-import'), intval($success_images));
 				}					
 				elseif ((int)$success_images > 1)
 				{
-					$success_msg = sprintf(__('%d images were successfully found in media gallery', 'wp_all_import_plugin'), intval($success_images));
+					/* translators: see placeholders in the string below */
+					$success_msg = sprintf(__('%d images were successfully found in media gallery', 'wp-all-import'), intval($success_images));
 				}				
 
 				break;		
@@ -117,7 +129,8 @@ function pmxi_wp_ajax_test_images(){
 					foreach ($post['imgs'] as $img) 
 					{	
 						if ( ! preg_match('%^(http|https|ftp|ftps)%i', $img)){
-							$failed_msgs[] = sprintf(__('URL `%s` is not valid.', 'wp_all_import_plugin'), esc_url($img));
+							/* translators: see placeholders in the string below */
+							$failed_msgs[] = sprintf(__('URL `%s` is not valid.', 'wp-all-import'), esc_url($img));
 							continue;								
 						}
 						
@@ -132,24 +145,28 @@ function pmxi_wp_ajax_test_images(){
 						$get_ctx = stream_context_create(array('http' => array('timeout' => 5)));
 
 						if ( (is_wp_error($request) or $request === false) and ! @file_put_contents($image_filepath, @file_get_contents($img, false, $get_ctx))) {
-							$failed_msgs[] = (is_wp_error($request)) ? $request->get_error_message() : sprintf(__('File `%s` cannot be saved locally', 'wp_all_import_plugin'), esc_url($img));
+							/* translators: see placeholders in the string below */
+							$failed_msgs[] = (is_wp_error($request)) ? $request->get_error_message() : sprintf(__('File `%s` cannot be saved locally', 'wp-all-import'), esc_url($img));
 						} elseif( ! ($image_info = apply_filters('pmxi_getimagesize', @getimagesize($image_filepath), $image_filepath)) or ! in_array($image_info[2], wp_all_import_supported_image_types())) {
-							$failed_msgs[] = sprintf(__('File `%s` is not a valid image.', 'wp_all_import_plugin'), esc_url($img));
+							/* translators: see placeholders in the string below */
+							$failed_msgs[] = sprintf(__('File `%s` is not a valid image.', 'wp-all-import'), esc_url($img));
 						} else {
 							$success_images++;											
 						}						
-						@unlink($image_filepath);
+						wp_delete_file($image_filepath);
 					}
 				}
 				$time = time() - $start;
 
 				if ((int)$success_images === 1)
 				{
-					$success_msg = sprintf(__('%d image was successfully downloaded in %s seconds', 'wp_all_import_plugin'), intval($success_images), number_format($time, 2));
+					/* translators: see placeholders in the string below */
+					$success_msg = sprintf(__('%1$d image was successfully downloaded in %2$s seconds', 'wp-all-import'), intval($success_images), number_format($time, 2));
 				}					
 				elseif ((int)$success_images > 1)
 				{
-					$success_msg = sprintf(__('%d images were successfully downloaded in %s seconds', 'wp_all_import_plugin'), intval($success_images), number_format($time, 2));
+					/* translators: see placeholders in the string below */
+					$success_msg = sprintf(__('%1$d images were successfully downloaded in %2$s seconds', 'wp-all-import'), intval($success_images), number_format($time, 2));
 				}					
 
 				break;

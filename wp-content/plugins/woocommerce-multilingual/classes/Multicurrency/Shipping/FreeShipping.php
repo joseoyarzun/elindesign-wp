@@ -6,7 +6,10 @@ class FreeShipping implements ShippingMode {
 	use ShippingModeBase;
 	use DefaultConversion;
 
-	public function getFieldTitle( $currencyCode ) {
+	/**
+	 * @param string|mixed $currencyCode
+	 */
+	public function getFieldTitle( $currencyCode ): string {
 		if ( ! is_string( $currencyCode ) ) {
 			$currencyCode = '';
 		}
@@ -17,7 +20,10 @@ class FreeShipping implements ShippingMode {
 			'woocommerce-multilingual' ), $currencyCode );
 	}
 
-	public function getFieldDescription( $currencyCode ) {
+	/**
+	 * @param string|mixed $currencyCode
+	 */
+	public function getFieldDescription( $currencyCode ): ?string {
 		if ( ! is_string( $currencyCode ) ) {
 			$currencyCode = '';
 		}

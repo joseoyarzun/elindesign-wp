@@ -2,6 +2,9 @@
 
 namespace Photonic_Plugin\Lightboxes;
 
+use Photonic_Plugin\Components\Photo;
+use Photonic_Plugin\Platforms\Base;
+
 require_once 'Lightbox.php';
 
 class Thickbox extends Lightbox {
@@ -10,7 +13,7 @@ class Thickbox extends Lightbox {
 		parent::__construct();
 	}
 
-	public function get_lightbox_title($photo, $module, $title, $alt_title, $target) {
+	public function get_lightbox_title(Photo $photo, Base $module, $title, $alt_title, $target) {
 		return ($title ?: $alt_title);
 	}
 }

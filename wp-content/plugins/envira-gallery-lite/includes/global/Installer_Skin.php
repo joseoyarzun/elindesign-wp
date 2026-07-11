@@ -84,7 +84,7 @@ class Envira_Lite_Installer_Skin extends WP_Upgrader_Skin {
 	public function error( $errors ) {
 
 		if ( ! empty( $errors ) ) {
-			echo wp_json_encode( [ 'error' => __( 'There was an error installing the addon. Please try again.', 'envira-gallery' ) ] );
+			echo wp_json_encode( [ 'error' => __( 'There was an error installing the addon. Please try again.', 'envira-gallery-lite' ) ] );
 			die;
 		}
 	}
@@ -95,8 +95,8 @@ class Envira_Lite_Installer_Skin extends WP_Upgrader_Skin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $string The feedback string.
+	 * @param string $feedback The feedback string.
 	 * @param array  ...$args The args.
 	 */
-	public function feedback( $string, ...$args ) {}
+	public function feedback( $feedback, ...$args ) {}
 }

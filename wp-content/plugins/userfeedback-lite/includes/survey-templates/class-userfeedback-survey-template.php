@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 abstract class UserFeedback_Survey_Template {
 
 	/**
@@ -8,6 +12,10 @@ abstract class UserFeedback_Survey_Template {
 	 * @var string
 	 */
 	protected $template_key;
+
+	protected $categories = array();
+	
+	protected $tags = array();
 
 	/**
 	 * Is the template included in Pro only
@@ -33,6 +41,15 @@ abstract class UserFeedback_Survey_Template {
 	abstract public function get_name();
 
 	/**
+	 * Returns the feature image url
+	 *
+	 * @return string
+	 */
+	public function get_feature_image() {
+		return '';
+	}
+
+	/**
 	 * Returns the localized template description
 	 * Passes through a filter allowing for customization
 	 *
@@ -53,6 +70,9 @@ abstract class UserFeedback_Survey_Template {
 			'key'             => $key,
 			'name'            => $this->get_name(),
 			'description'     => $this->get_description(),
+			'categories'      => $this->categories,
+			'feature_image'   => $this->get_feature_image(),
+			'tags'			  => $this->tags,
 			'config'          => $config,
 			'is_available'    => ! $this->is_pro || ( userfeedback_is_pro_version() && userfeedback_is_licensed() ),
 			'required_addons' => $this->get_required_addons(),

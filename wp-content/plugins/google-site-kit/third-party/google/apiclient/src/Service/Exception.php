@@ -18,25 +18,25 @@
 namespace Google\Site_Kit_Dependencies\Google\Service;
 
 use Google\Site_Kit_Dependencies\Google\Exception as GoogleException;
-class Exception extends \Google\Site_Kit_Dependencies\Google\Exception
+class Exception extends GoogleException
 {
     /**
      * Optional list of errors returned in a JSON body of an HTTP error response.
      */
-    protected $errors = array();
+    protected $errors = [];
     /**
      * Override default constructor to add the ability to set $errors and a retry
      * map.
      *
      * @param string $message
      * @param int $code
-     * @param \Exception|null $previous
-     * @param [{string, string}] errors List of errors returned in an HTTP
-     * response.  Defaults to [].
+     * @param Exception|null $previous
+     * @param array<array<string,string>>|null $errors List of errors returned in an HTTP
+     * response or null.  Defaults to [].
      */
-    public function __construct($message, $code = 0, \Google\Site_Kit_Dependencies\Google\Service\Exception $previous = null, $errors = array())
+    public function __construct($message, $code = 0, ?Exception $previous = null, $errors = [])
     {
-        if (\version_compare(\PHP_VERSION, '5.3.0') >= 0) {
+        if (version_compare(\PHP_VERSION, '5.3.0') >= 0) {
             parent::__construct($message, $code, $previous);
         } else {
             parent::__construct($message, $code);
@@ -46,15 +46,17 @@ class Exception extends \Google\Site_Kit_Dependencies\Google\Exception
     /**
      * An example of the possible errors returned.
      *
-     * {
-     *   "domain": "global",
-     *   "reason": "authError",
-     *   "message": "Invalid Credentials",
-     *   "locationType": "header",
-     *   "location": "Authorization",
-     * }
+     * [
+     *   {
+     *     "domain": "global",
+     *     "reason": "authError",
+     *     "message": "Invalid Credentials",
+     *     "locationType": "header",
+     *     "location": "Authorization",
+     *   }
+     * ]
      *
-     * @return [{string, string}] List of errors return in an HTTP response or [].
+     * @return array<array<string,string>>|null List of errors returned in an HTTP response or null.
      */
     public function getErrors()
     {

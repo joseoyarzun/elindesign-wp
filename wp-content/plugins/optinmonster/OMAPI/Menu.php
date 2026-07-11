@@ -133,6 +133,10 @@ class OMAPI_Menu {
 	 * @since 1.0.0
 	 */
 	public function menu() {
+		if ( ! current_user_can( $this->base->access_capability( self::SLUG ) ) ) {
+			return;
+		}
+
 		$this->pages = new OMAPI_Pages();
 		$this->pages->setup();
 
@@ -159,6 +163,25 @@ class OMAPI_Menu {
 			array( $this->pages, 'render_app_loading_page' )
 		);
 
+		// Add BFCM menu item right after Dashboard if active.
+		$bfcm_item = $this->pages->should_show_bfcf_menu_item();
+		if ( $bfcm_item ) {
+			$menu_title = '<span class="om-menu-bfcm-highlight">🎁 ' . $bfcm_item['name'] . '</span>';
+			$hook = add_submenu_page(
+				self::SLUG,
+				$bfcm_item['name'],
+				$menu_title,
+				$this->base->access_capability( 'optin-monster-bfcm' ),
+				'optin-monster-bfcm',
+				'__return_null'
+			);
+			$this->hooks[] = $hook;
+			add_action( 'load-' . $hook, array( $this->pages, 'handle_redirect' ), 999 );
+
+			// Reorder menu to place BFCM right after Dashboard.
+			add_action( 'admin_menu', array( $this, 'reorder_bfcm_menu' ), 999 );
+		}
+
 		$this->hooks = array_merge( $this->hooks, $this->pages->register_submenu_pages( self::SLUG ) );
 
 		// Register our old api page and redirect to the new dashboard.
@@ -176,14 +199,16 @@ class OMAPI_Menu {
 
 		if ( $submenu ) {
 			// Register link under the "Dashboard" menu for "Marketing Education" which directs to the "University".
-			$submenu['index.php'][] = array(  // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			$submenu['index.php'][] = array(
 				esc_html__( 'Marketing Education', 'optin-monster-api' ),
 				$this->base->access_capability( self::SLUG ),
 				esc_url_raw( OMAPI_Urls::university() ),
 			);
 
 			// Register link under the appearance menu for "Popup Builder".
-			$submenu['themes.php'][] = array(  // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			$submenu['themes.php'][] = array(
 				esc_html__( 'Popup Builder', 'optin-monster-api' ),
 				$this->base->access_capability( self::SLUG ),
 				esc_url_raw( OMAPI_Urls::templates() ),
@@ -233,7 +258,8 @@ class OMAPI_Menu {
 		$icon = str_replace( 'fill="currentColor"', 'fill="' . $fill . '"', $icon );
 
 		if ( $return_encoded ) {
-			$icon = 'data:image/svg+xml;base64,' . base64_encode( $icon ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+			$icon = 'data:image/svg+xml;base64,' . base64_encode( $icon );
 		}
 
 		return $icon;
@@ -247,6 +273,10 @@ class OMAPI_Menu {
 	 * @return void
 	 */
 	public function after_menu_registration() {
+		if ( ! current_user_can( $this->base->access_capability( self::SLUG ) ) ) {
+			return;
+		}
+
 		global $submenu;
 
 		// Make sure the about page is still the last page.
@@ -254,14 +284,17 @@ class OMAPI_Menu {
 			$after  = array();
 			$at_end = array( 'optin-monster-about', 'optin-monster-upgrade', 'optin-monster-bfcm' );
 			foreach ( $submenu[ self::SLUG ] as $key => $menu ) {
-				if ( isset( $menu[2] ) && in_array( $menu[2], $at_end ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+				// phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+				if ( isset( $menu[2] ) && in_array( $menu[2], $at_end ) ) {
 					$after[] = $menu;
 					unset( $submenu[ self::SLUG ][ $key ] );
 				}
 			}
-			$submenu[ self::SLUG ] = array_values( $submenu[ self::SLUG ] ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			$submenu[ self::SLUG ] = array_values( $submenu[ self::SLUG ] );
 			foreach ( $after as $menu ) {
-				$submenu[ self::SLUG ][] = $menu; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+				// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+				$submenu[ self::SLUG ][] = $menu;
 			}
 		}
 
@@ -330,11 +363,57 @@ class OMAPI_Menu {
 					$label
 				);
 
+				// Maybe show the the BF item in the plugins description.
+				$pages = new OMAPI_Pages();
+				$bfcm_item = $pages->should_show_bfcf_menu_item();
+
+				if ( $bfcm_item ) {
+					$bflink = sprintf(
+						'<a class="om-plugin-bf-link" href="%s" style="font-weight: 700; color: #ff0000;">%s</a>',
+						esc_url( $bfcm_item['redirect'] ),
+						esc_html( $bfcm_item['alternate-name'] )
+					);
+					$links[] = $bflink;
+				}
+
 				array_splice( $links, 1, 0, array( $upgrade_link ) );
 			}
 		}
 
 		return $links;
+	}
+
+	/**
+	 * Reorders the submenu to place BFCM item right after Dashboard.
+	 *
+	 * @since 2.16.22
+	 *
+	 * @return void
+	 */
+	public function reorder_bfcm_menu() {
+		global $submenu;
+
+		if ( ! isset( $submenu[ self::SLUG ] ) ) {
+			return;
+		}
+
+		// Find the BFCM menu item.
+		$bfcm_item = null;
+		$bfcm_index = null;
+		foreach ( $submenu[ self::SLUG ] as $index => $item ) {
+			if ( isset( $item[2] ) && 'optin-monster-bfcm' === $item[2] ) {
+				$bfcm_item = $item;
+				$bfcm_index = $index;
+				break;
+			}
+		}
+
+		// If BFCM item found, remove it and reinsert at position 0 (top).
+		if ( null !== $bfcm_item && null !== $bfcm_index ) {
+			unset( $submenu[ self::SLUG ][ $bfcm_index ] );
+			// Insert at position 0 to make it the first menu item.
+			array_splice( $submenu[ self::SLUG ], 0, 0, array( $bfcm_item ) );
+		}
 	}
 
 	/**
@@ -355,7 +434,6 @@ class OMAPI_Menu {
 		}
 
 		return $classes;
-
 	}
 
 	/**
@@ -417,7 +495,6 @@ class OMAPI_Menu {
 
 		// Run a hook to load in custom styles.
 		do_action( 'optin_monster_api_admin_styles' );
-
 	}
 
 	/**

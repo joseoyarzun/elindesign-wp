@@ -5,9 +5,7 @@ namespace Photonic_Plugin\Options;
 use Photonic_Plugin\Core\Utilities;
 
 class Flickr extends Option_Tab {
-	private static $instance;
-
-	private function __construct() {
+	protected function __construct() {
 		$this->options = [
 			[
 				'name'     => "How To",
@@ -37,8 +35,8 @@ class Flickr extends Option_Tab {
 			[
 				'name'     => "Flickr API Key",
 				'desc'     => "To make use of the Flickr functionality you have to use your Flickr API Key.
-					You can <a href='http://www.flickr.com/services/api/misc.api_keys.html'>obtain a key online</a> if you don't have one.
-					Note that you are responsible for following all of the Flickr API's <a href='http://www.flickr.com/services/api/tos/'>Terms of Service</a>",
+					You can <a href='https://www.flickr.com/services/api/misc.api_keys.html'>obtain a key online</a> if you don't have one.
+					Note that you are responsible for following all of the Flickr API's <a href='https://www.flickr.com/services/api/tos/'>Terms of Service</a>",
 				'id'       => 'flickr_api_key',
 				'grouping' => 'flickr-settings',
 				'type'     => 'text'
@@ -47,15 +45,15 @@ class Flickr extends Option_Tab {
 			[
 				'name'     => "Flickr API Secret",
 				'desc'     => "To make use of authenticated Flickr functionality you have to use your Flickr API secret.
-					You can <a href='http://www.flickr.com/services/api/misc.api_keys.html'>obtain a key online</a> if you don't have one.
-					Note that you are responsible for following all of the Flickr API's <a href='http://www.flickr.com/services/api/tos/'>Terms of Service</a>",
+					You can <a href='https://www.flickr.com/services/api/misc.api_keys.html'>obtain a key online</a> if you don't have one.
+					Note that you are responsible for following all of the Flickr API's <a href='https://www.flickr.com/services/api/tos/'>Terms of Service</a>",
 				'id'       => 'flickr_api_secret',
 				'grouping' => 'flickr-settings',
 				'type'     => 'text'
 			],
 
 			[
-				'name'     => "Access Token (for Back-end / Server-side Authentication)",
+				'name'     => "Access Token",
 				'desc'     => "To get your token go to <em>Photonic &rarr; Authentication &rarr; Flickr</em>, and authenticate. Save the token you get here. <br/>If you have set
 			up a token, your users can see protected Flickr photos without a Flickr account. See <a href='https://aquoid.com/plugins/photonic/authentication/'>here</a> for more.",
 				'id'       => 'flickr_access_token',
@@ -64,7 +62,7 @@ class Flickr extends Option_Tab {
 			],
 
 			[
-				'name'     => "Access Token Secret (for Back-end / Server-side Authentication)",
+				'name'     => "Access Token Secret",
 				'desc'     => "To get your token secret go to <em>Photonic &rarr; Authentication &rarr; Flickr</em>, and authenticate. Save the token secret you get here. Your token secret works with the token set in the previous option. See <a href='https://aquoid.com/plugins/photonic/authentication/'>here</a> for more.",
 				'id'       => 'flickr_token_secret',
 				'grouping' => 'flickr-settings',
@@ -150,6 +148,11 @@ class Flickr extends Option_Tab {
 					'Mobile MP4'     => 'Mobile MP4',
 					'HD MP4'         => 'HD MP4',
 					'Video Original' => 'Video Original',
+					'Video Player'   => 'Video Player',
+					'1080p'          => '1080p',
+					'720p'           => '720p',
+					'360p'           => '360p',
+					'288p'           => '288p',
 				]
 			],
 
@@ -170,21 +173,7 @@ class Flickr extends Option_Tab {
 				'options'  => Utilities::title_caption_options()
 			],
 
-			[
-				'name'     => "Layout processing mode",
-				'desc'     => "When possible, Photonic tries to use CSS to build the advanced layouts (like Justified Grids). 
-					This has the advantage of being fast and can work well with lazy-loading and AJAX-based plugins, particularly if the loading mode (<em>Photonic &rarr; Settings &rarr; Generic Options &rarr; Advanced &rarr; Loading Mode</em>) is PHP. 
-					<br/><br/>The downside is that CSS-based rendering is occasionally incorrect, particularly if the source has incorrect sizes. 
-					If this is a frequent issue, you can default to a JS-generated layout (which is always more accurate). This can be managed individually for each gallery.
-					<br/><br/>Pick your default processor:",
-				'id'       => 'flickr_layout_engine',
-				'grouping' => 'flickr-settings',
-				'type'     => 'select',
-				'options'  => [
-					'css' => 'Use CSS unless overridden by a gallery individually',
-					'js'  => 'Use JS unless overridden by a gallery individually',
-				]
-			],
+			$this->get_layout_engine_options('flickr_layout_engine', 'flickr-settings'),
 
 			[
 				'name'     => "Collections",
@@ -276,23 +265,14 @@ class Flickr extends Option_Tab {
 				'grouping' => 'flickr-sets',
 				'type'     => 'select',
 				'options'  => [
-					'padding' => 'Fix the padding around the thumbnails',
+					'padding' => 'Automatically calculate thumbnails per row',
 					'count'   => 'Fix the number of thumbnails per row',
 				]
 			],
 
 			[
-				'name'     => "Constrain by padding",
-				'desc'     => " If you have constrained by padding above, enter the number of pixels here to pad the thumbs by",
-				'id'       => 'flickr_collection_set_constrain_by_padding',
-				'grouping' => 'flickr-sets',
-				'type'     => 'text',
-				'hint'     => "Enter the number of pixels here (don't enter 'px'). Non-integers will be ignored."
-			],
-
-			[
-				'name'     => "Constrain by number of thumbnails",
-				'desc'     => " If you have constrained by number of thumbnails per row above, enter the number of thumbnails",
+				'name'     => "Fixed number of thumbnails",
+				'desc'     => " If you have fixed the number of thumbnails per row above, enter the number of thumbnails",
 				'id'       => 'flickr_collection_set_constrain_by_count',
 				'grouping' => 'flickr-sets',
 				'type'     => 'select',
@@ -380,23 +360,14 @@ class Flickr extends Option_Tab {
 				'grouping' => 'flickr-galleries',
 				'type'     => 'select',
 				'options'  => [
-					'padding' => 'Fix the padding around the thumbnails',
+					'padding' => 'Automatically calculate thumbnails per row',
 					'count'   => 'Fix the number of thumbnails per row',
 				]
 			],
 
 			[
-				'name'     => "Constrain by padding",
-				'desc'     => " If you have constrained by padding above, enter the number of pixels here to pad the thumbs by",
-				'id'       => 'flickr_galleries_constrain_by_padding',
-				'grouping' => 'flickr-galleries',
-				'type'     => 'text',
-				'hint'     => "Enter the number of pixels here (don't enter 'px'). Non-integers will be ignored."
-			],
-
-			[
-				'name'     => "Constrain by number of thumbnails",
-				'desc'     => " If you have constrained by number of thumbnails per row above, enter the number of thumbnails",
+				'name'     => "Fixed number of thumbnails",
+				'desc'     => " If you have fixed the number of thumbnails per row above, enter the number of thumbnails",
 				'id'       => 'flickr_galleries_constrain_by_count',
 				'grouping' => 'flickr-galleries',
 				'type'     => 'select',
@@ -476,23 +447,14 @@ class Flickr extends Option_Tab {
 				'grouping' => 'flickr-photos',
 				'type'     => 'select',
 				'options'  => [
-					'padding' => 'Fix the padding around the thumbnails',
+					'padding' => 'Automatically calculate thumbnails per row',
 					'count'   => 'Fix the number of thumbnails per row',
 				]
 			],
 
 			[
-				'name'     => "Constrain by padding",
-				'desc'     => " If you have constrained by padding above, enter the number of pixels here to pad the thumbs by",
-				'id'       => 'flickr_photos_constrain_by_padding',
-				'grouping' => 'flickr-photos',
-				'type'     => 'text',
-				'hint'     => "Enter the number of pixels here (don't enter 'px'). Non-integers will be ignored."
-			],
-
-			[
-				'name'     => "Constrain by number of thumbnails",
-				'desc'     => " If you have constrained by number of thumbnails per row above, enter the number of thumbnails",
+				'name'     => "Fixed number of thumbnails",
+				'desc'     => " If you have fixed the number of thumbnails per row above, enter the number of thumbnails",
 				'id'       => 'flickr_photos_constrain_by_count',
 				'grouping' => 'flickr-photos',
 				'type'     => 'select',
@@ -522,12 +484,5 @@ class Flickr extends Option_Tab {
 				'options'  => $this->title_styles()
 			],
 		];
-	}
-
-	public static function get_instance() {
-		if (null === self::$instance) {
-			self::$instance = new Flickr();
-		}
-		return self::$instance;
 	}
 }

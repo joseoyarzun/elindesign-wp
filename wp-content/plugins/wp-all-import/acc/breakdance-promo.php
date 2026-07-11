@@ -2,16 +2,18 @@
 
 namespace WPAI\Breakdance;
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 function echoPromoCard() {
     $promoCardStyles = file_get_contents(__DIR__ . "/promo-card-styles.css");
     ?>
     <style>
-        <?php echo $promoCardStyles; ?>
+        <?php echo $promoCardStyles; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static CSS loaded from local trusted file. ?>
     </style>
     <div class='wpai-breakdance-promo-card'>
-        
+
         <div class='promo-breakdance-logo-wrapper'>
-            <a href='https://breakdance.com/' target='_blank'><img class='promo-breakdance-logo' width='120' src='<?php echo WP_ALL_IMPORT_ROOT_URL . '/acc/breakdance-logo-black.png'; ?>' /></a>
+            <a href='https://breakdance.com/' target='_blank'><img class='promo-breakdance-logo' width='120' src='<?php echo esc_url( WP_ALL_IMPORT_ROOT_URL . '/acc/breakdance-logo-black.png' ); ?>' /></a>
         </div>
 
         <div class='promo-heading'>The Ultimate Visual Website Builder for WordPress</div>

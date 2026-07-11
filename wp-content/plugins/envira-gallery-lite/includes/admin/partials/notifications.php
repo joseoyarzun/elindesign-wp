@@ -5,6 +5,10 @@
  * @package Envira Gallery Lite
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 $base = Envira_Gallery_Lite::get_instance();
 ?>
 

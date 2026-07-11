@@ -66,7 +66,7 @@ export class PhotonicFancybox3 extends Lightbox {
 			defaultType: 'image',
 			hash: false,
 			caption: function(instance, item) {
-				return $(this).data('title');
+				return Util.HTMLSanitizer.SanitizeHTML($(this).data('title'));
 			},
 			loop: Photonic_JS.lightbox_loop === '1',
 			buttons: self.buttons,

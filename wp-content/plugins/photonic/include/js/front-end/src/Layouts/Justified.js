@@ -139,6 +139,14 @@ export const JustifiedGrid = (resized, jsLoaded, selector, lightbox) => {
 		Core.showSpinner();
 	}
 
+	const setupTitles = () => {
+		Core.blankSlideupTitle();
+		Core.showSlideupTitle();
+		if (!resized && !jsLoaded) {
+			Core.hideLoading();
+		}
+	};
+
 	selection.forEach((container) => {
 		// If there are some nodes for which the sizes are missing, play safe and run this in JS mode.
 		// Otherwise render the gallery using CSS, and just display the images once they have downloaded.
@@ -192,24 +200,12 @@ export const JustifiedGrid = (resized, jsLoaded, selector, lightbox) => {
 				}
 
 				container.querySelectorAll('.photonic-thumb, .photonic-thumb img').forEach((thumb) => Util.fadeIn(thumb));
-
-				Core.blankSlideupTitle();
-				Core.showSlideupTitle();
-				if (!resized && !jsLoaded) {
-					Core.hideLoading();
-				}
+				setupTitles();
 			});
 		}
 		else {
-			Core.waitForImages(container).then(() => {
-				container.querySelectorAll('.photonic-thumb, .photonic-thumb img').forEach(thumb => Util.fadeIn(thumb));
-
-				Core.blankSlideupTitle();
-				Core.showSlideupTitle();
-				if (!resized && !jsLoaded) {
-					Core.hideLoading();
-				}
-			});
+			Core.watchForImages(container);
+			setupTitles();
 		}
 
 		if (lightbox && !resized) {

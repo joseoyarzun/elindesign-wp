@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Delete attachments linked to a specified post
  * @param int $parent_id Parent id of post to delete attachments for
@@ -31,6 +33,7 @@ function wp_delete_attachments($parent_id, $unlink = true, $type = 'images') {
 
 		$ids_string = implode( ',', $ids );
 		// unattach
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$result = $wpdb->query( "UPDATE $wpdb->posts SET post_parent = 0 WHERE post_type = 'attachment' AND ID IN ( $ids_string )" );
 
 		foreach ( $ids as $att_id ) {

@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Email Response Notifications main class.
  *
@@ -181,10 +185,10 @@ class UserFeedback_Email_Response_Notification {
 	public function get_email_subject() {
 
 		$site_url        = get_site_url();
-		$site_url_parsed = parse_url( $site_url );
+		$site_url_parsed = wp_parse_url( $site_url );
 
 		// Translators: The domain of the site is appended to the subject.
-		$subject = sprintf( __( 'New UserFeedback Response - %s', 'userfeedback' ), $this->survey->title );
+		$subject = sprintf( __( 'New UserFeedback Response - %s', 'userfeedback-lite' ), $this->survey->title );
 
 		return apply_filters( 'userfeedback_emails_new_response_subject', $subject, $this->survey, $this->response );
 	}
@@ -236,8 +240,9 @@ class UserFeedback_Email_Response_Notification {
 		$args['survey_id']     = $this->survey->id;
 		$args['survey_title']  = $this->survey->title;
 		$args['title']         = sprintf(
-			esc_html__( 'New Response to <b>%s</b>', 'userfeedback' ),
-			$this->survey->title
+			// translators: %s is the survey title.
+			__( 'New Response to <b>%s</b>', 'userfeedback-lite' ),
+			esc_html( $this->survey->title )
 		);
 
 		$survey_id               = $this->survey->id;
@@ -245,9 +250,10 @@ class UserFeedback_Email_Response_Notification {
 
 		$args['description'] =
 			sprintf(
-				esc_html__( 'You are receiving this UserFeedback survey notification from <b>%1$s</b>. <a href="%2$s">Adjust your settings here</a>.', 'userfeedback' ),
-				get_bloginfo( 'name' ),
-				$notification_config_url
+				// translators: %1$s is the site name, %2$s is the URL to notification settings.
+				__( 'You are receiving this UserFeedback survey notification from <b>%1$s</b>. <a href="%2$s">Adjust your settings here</a>.', 'userfeedback-lite' ),
+				esc_html( get_bloginfo( 'name' ) ),
+				esc_url( $notification_config_url )
 			);
 
 		$args['answers']          = $this->get_answers();
@@ -304,7 +310,8 @@ class UserFeedback_Email_Response_Notification {
 		$found_answer = $this->get_question_answer( $question->id );
 
 		$skipped_content = sprintf(
-			__( '%1$sSkipped%2$s', 'userfeedback' ),
+			// translators: %1$s is an opening HTML tag, %2$s is a closing HTML tag.
+			__( '%1$sSkipped%2$s', 'userfeedback-lite' ),
 			'<small><i>',
 			'</i></small>'
 		);
@@ -331,7 +338,8 @@ class UserFeedback_Email_Response_Notification {
 		} elseif ( $question->type === 'checkbox' ) {
 			$value = implode( ', ', $value );
 		} elseif ( $question->type === 'star-rating' ) {
-			$value = sprintf( __( '%s stars', 'userfeedback' ), $value );
+			// translators: %s is the number of stars.
+			$value = sprintf( __( '%s stars', 'userfeedback-lite' ), $value );
 		}
 
 		if ( ! empty( $found_answer->extra ) ) {

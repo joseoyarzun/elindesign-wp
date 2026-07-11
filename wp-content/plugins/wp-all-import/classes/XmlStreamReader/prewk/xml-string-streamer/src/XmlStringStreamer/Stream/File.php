@@ -1,4 +1,8 @@
-<?php namespace Prewk\XmlStringStreamer\Stream;
+<?php
+// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fread
+// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+namespace Prewk\XmlStringStreamer\Stream;
 
 use Prewk\XmlStringStreamer\StreamInterface;
 
@@ -14,14 +18,14 @@ class File implements StreamInterface
         if (is_string($mixed)) {
             // Treat as filename
             if (!file_exists($mixed)) {
-                throw new \Exception("File '$mixed' doesn't exist");
+                throw new \Exception(esc_html("File '$mixed' doesn't exist"));
             }
             $this->handle = fopen($mixed, "rb");
         } else if (get_resource_type($mixed) == "stream") {
             // Treat as file handle
             $this->handle = $mixed;
         } else {
-            throw new \Exception("First argument must be either a filename or a file handle");
+            throw new \Exception(esc_html("First argument must be either a filename or a file handle"));
         }
         
         if ($this->handle === false) {

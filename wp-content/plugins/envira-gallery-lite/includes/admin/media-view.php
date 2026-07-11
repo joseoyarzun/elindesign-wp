@@ -233,8 +233,8 @@ class Envira_Gallery_Media_View {
 		?>
 		<script type="text/html" id="tmpl-envira-meta-editor">
 			<div class="edit-media-header">
-				<button class="left dashicons"><span class="screen-reader-text"><?php esc_html_e( 'Edit previous media item' ); ?></span></button>
-				<button class="right dashicons"><span class="screen-reader-text"><?php esc_html_e( 'Edit next media item' ); ?></span></button>
+				<button class="left dashicons"><span class="screen-reader-text"><?php esc_html_e( 'Edit previous media item', 'envira-gallery-lite' ); ?></span></button>
+				<button class="right dashicons"><span class="screen-reader-text"><?php esc_html_e( 'Edit next media item', 'envira-gallery-lite' ); ?></span></button>
 			</div>
 			<div class="media-frame-title">
 				<h1><?php esc_html_e( 'Edit Metadata', 'envira-gallery-lite' ); ?></h1>

@@ -114,7 +114,7 @@ class Environment
      *                   (default to -1 which means that all optimizations are enabled;
      *                   set it to 0 to disable).
      */
-    public function __construct(\WPML\Core\Twig\Loader\LoaderInterface $loader = null, $options = [])
+    public function __construct(?\WPML\Core\Twig\Loader\LoaderInterface $loader = null, $options = [])
     {
         if (null !== $loader) {
             $this->setLoader($loader);

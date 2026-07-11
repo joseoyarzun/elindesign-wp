@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Query class.
  *
@@ -259,6 +263,7 @@ class UserFeedback_Query {
 		$where .= '(' . implode( ' AND ', $where_parts ) . ')';
 
 		if ( ! empty( $where ) ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $where contains only column name fragments and %s placeholders; values passed as $values array.
 			$this->where = $wpdb->prepare( $where, $values );
 		}
 
@@ -347,6 +352,7 @@ class UserFeedback_Query {
 	 */
 	public function run() {
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL is built by this query builder using $wpdb->prepare() in where(); table/column names are validated internally.
 		return $wpdb->get_results( $this->get_sql() );
 	}
 

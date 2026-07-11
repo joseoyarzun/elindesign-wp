@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Email Summaries main class.
  *
@@ -44,15 +49,11 @@ class UserFeedback_Email_Summaries {
 		$options['email_summaries']           = ! $disable_email_summaries;
 		$options['summaries_html_template']   = userfeedback_get_option( 'summaries_html_template' );
 		$options['summaries_carbon_copy']     = userfeedback_get_option( 'summaries_carbon_copy' );
-		$options['summaries_email_addresses'] = userfeedback_get_option( 'summaries_email_addresses' );
+		$options['summaries_email_addresses'] = userfeedback_get_option( 'notifications_recipients' );
 		$options['summaries_header_image']    = userfeedback_get_option( 'notifications_header_image' );
 
 		$this->email_options = $options;
 		$this->hooks();
-
-		if ( ! $disable_email_summaries && wp_next_scheduled( 'userfeedback_email_summaries_cron' ) ) {
-			wp_clear_scheduled_hook( 'userfeedback_email_summaries_cron' );
-		}
 
 		if ( ! $disable_email_summaries && ! wp_next_scheduled( 'userfeedback_email_summaries_cron' ) ) {
 			wp_schedule_event( $this->get_first_cron_date(), 'userfeedback_email_summaries_weekly', 'userfeedback_email_summaries_cron' );
@@ -74,7 +75,6 @@ class UserFeedback_Email_Summaries {
 			add_filter( 'cron_schedules', array( $this, 'add_weekly_cron_schedule' ) );
 			add_action( 'userfeedback_email_summaries_cron', array( $this, 'cron' ) );
 			add_action( 'wp_ajax_userfeedback_send_test_summary_email', array( $this, 'send_test_email' ) );
-			add_action( 'userfeedback_after_update_settings', array( $this, 'reset_email_summaries_options' ), 10, 2 );
 		}
 
 	}
@@ -91,21 +91,6 @@ class UserFeedback_Email_Summaries {
 			// This will load the required dependencies for the WordPress media uploader
 			wp_enqueue_media();
 		}
-	}
-
-	/**
-	 * Check if Email Summaries are enabled in settings.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return bool
-	 */
-	protected function is_enabled() {
-		if ( ! isset( $this->is_enabled ) ) {
-			$this->is_enabled = false;
-		}
-
-		return apply_filters( 'userfeedback_emails_summaries_is_enabled', $this->is_enabled );
 	}
 
 	/**
@@ -166,7 +151,7 @@ class UserFeedback_Email_Summaries {
 	public function get_header_image() {
 		// set default header image
 		$img = array(
-			'url' => plugins_url( 'assets/img/emails/userfeedback-logo.png', USERFEEDBACK_PLUGIN_FILE ),
+			'url' => plugins_url( 'assets/img/emails/userfeedback-logo-white.png', USERFEEDBACK_PLUGIN_FILE ),
 			'2x'  => '', // plugins_url( "assets/img/emails/logo-MonsterInsights@2x.png", USERFEEDBACK_PLUGIN_FILE ),
 		);
 
@@ -179,6 +164,23 @@ class UserFeedback_Email_Summaries {
 	}
 
 	/**
+	 * Get the email footer image.
+	 *
+	 * @since 1.10.0
+	 *
+	 * @return string The email from address.
+	 */
+	public function get_footer_image() {
+		// set default footer image
+		$img = array(
+			'url' => plugins_url( 'assets/img/emails/userfeedback-logo.png', USERFEEDBACK_PLUGIN_FILE ),
+			'2x'  => '', // plugins_url( "assets/img/emails/logo-MonsterInsights@2x.png", USERFEEDBACK_PLUGIN_FILE ),
+		);
+
+		return apply_filters( 'userfeedback_email_footer_image', $img );
+	}
+
+	/**
 	 * Get next cron occurrence date.
 	 *
 	 * @since 1.0.0
@@ -187,10 +189,10 @@ class UserFeedback_Email_Summaries {
 	 */
 	protected function get_first_cron_date() {
 		$schedule           = array();
-		$schedule['day']    = rand( 0, 1 );
-		$schedule['hour']   = rand( 0, 23 );
-		$schedule['minute'] = rand( 0, 59 );
-		$schedule['second'] = rand( 0, 59 );
+		$schedule['day']    = wp_rand( 0, 1 );
+		$schedule['hour']   = wp_rand( 0, 23 );
+		$schedule['minute'] = wp_rand( 0, 59 );
+		$schedule['second'] = wp_rand( 0, 59 );
 		$schedule['offset'] = ( $schedule['day'] * DAY_IN_SECONDS ) +
 							  ( $schedule['hour'] * HOUR_IN_SECONDS ) +
 							  ( $schedule['minute'] * MINUTE_IN_SECONDS ) +
@@ -226,7 +228,7 @@ class UserFeedback_Email_Summaries {
 	public function add_weekly_cron_schedule( $schedules ) {
 		$schedules['userfeedback_email_summaries_weekly'] = array(
 			'interval' => WEEK_IN_SECONDS,
-			'display'  => esc_html__( 'Weekly UserFeedback Email Summaries', 'userfeedback' ),
+			'display'  => esc_html__( 'Weekly UserFeedback Email Summaries', 'userfeedback-lite' ),
 		);
 
 		return $schedules;
@@ -240,11 +242,11 @@ class UserFeedback_Email_Summaries {
 	public function get_email_subject() {
 
 		$site_url        = get_site_url();
-		$site_url_parsed = parse_url( $site_url );// Can't use wp_parse_url as that was added in WP 4.4 and we still support 3.8.
+		$site_url_parsed = wp_parse_url( $site_url );
 		$site_url        = isset( $site_url_parsed['host'] ) ? $site_url_parsed['host'] : $site_url;
 
 		// Translators: The domain of the site is appended to the subject.
-		$subject = sprintf( __( 'UserFeedback Summary - %s', 'userfeedback' ), $site_url );
+		$subject = sprintf( __( 'UserFeedback Summary - %s', 'userfeedback-lite' ), $site_url );
 
 		return apply_filters( 'userfeedback_emails_summaries_cron_subject', $subject );
 	}
@@ -256,7 +258,7 @@ class UserFeedback_Email_Summaries {
 	 */
 	public function get_email_addresses() {
 		$emails          = array();
-		$email_addresses = $this->email_options['summaries_email_addresses'];
+		$email_addresses = explode( ',', $this->email_options[ 'summaries_email_addresses' ] );
 
 		if ( ! empty( $email_addresses ) && is_array( $email_addresses ) ) {
 			foreach ( $email_addresses as $email_address ) {
@@ -264,8 +266,6 @@ class UserFeedback_Email_Summaries {
 					$emails[] = $email_address;
 				}
 			}
-		} else {
-			$emails[] = get_option( 'admin_email' );
 		}
 
 		return apply_filters( 'userfeedback_email_addresses_to_send', $emails );
@@ -305,7 +305,10 @@ class UserFeedback_Email_Summaries {
 	 * @since 1.0.0
 	 */
 	public function cron() {
-		if ( ! $this->is_enabled() ) {
+
+        $disable_email_summaries = userfeedback_get_option( 'summaries_disabled' );
+
+		if ( $disable_email_summaries ) {
 			return;
 		}
 
@@ -385,13 +388,28 @@ class UserFeedback_Email_Summaries {
 
 		$args['body']['preview_title']    = $this->get_email_subject();
 		$args['body']['header_image']     = $this->get_header_image();
-		$args['body']['title']            = esc_html__( 'Hi there!', 'userfeedback' );
+		$args['body']['footer_image']     = $this->get_footer_image();
+		$args['body']['title']            = esc_html__( 'Hi there!', 'userfeedback-lite' );
+		$args['body']['blogs']            = $this->get_latest_blog_posts_from_feed();
 		$args['body']['description']      =
 			sprintf(
-				esc_html__( 'Below is the total number of survey responses for each active survey from the week of %s ', 'userfeedback' ),
-				date( 'F j, Y', strtotime( $start_date ) ) . ' - ' . date( 'F j, Y', strtotime( $end_date ) )
+				// translators: %s is the date range of the week (e.g. "January 1, 2024 - January 7, 2024").
+				esc_html__( 'Below is the total number of survey responses for each active survey from the week of %s ', 'userfeedback-lite' ),
+				wp_date( 'F j, Y', strtotime( $start_date ) ) . ' - ' . wp_date( 'F j, Y', strtotime( $end_date ) )
 			);
-		$args['body']['summaries']        = $this->get_summaries();
+
+        $summaries = $this->get_summaries();
+		$args['body']['summaries']        = $summaries;
+
+        if ( empty( $summaries ) ) {
+            $args['body']['description'] = sprintf(
+                // translators: %s is the date range of the week (e.g. "January 1, 2024 - January 7, 2024").
+                esc_html__( 'No responses were recorded in any of your UserFeedback surveys the week of %s ', 'userfeedback-lite' ),
+                wp_date( 'F j, Y', strtotime( $start_date ) ) . ' - ' . wp_date( 'F j, Y', strtotime( $end_date ) )
+            );
+        }
+
+		$args['body']['survey_results_url'] = admin_url( 'admin.php?page=userfeedback_results' );
 		$args['body']['settings_tab_url'] = esc_url( admin_url( 'admin.php?page=userfeedback_settings#/email' ) );
 
 		return apply_filters( 'userfeedback_email_summaries_template_args', $args );
@@ -403,7 +421,7 @@ class UserFeedback_Email_Summaries {
 	 * @since 1.0.0
 	 */
 	public function get_summaries_start_date() {
-		return date( 'Y-m-d', strtotime( '-1 day, last week' ) ); // sunday of last week
+		return wp_date( 'Y-m-d', strtotime( '-1 day, last week', current_datetime()->getTimestamp() ) ); // sunday of last week
 	}
 
 	/**
@@ -412,7 +430,7 @@ class UserFeedback_Email_Summaries {
 	 * @since 1.0.0
 	 */
 	public function get_summaries_end_date() {
-		return date( 'Y-m-d', strtotime( 'last saturday' ) ); // last saturday
+		return wp_date( 'Y-m-d', strtotime( 'last saturday', current_datetime()->getTimestamp() ) ); // last saturday
 	}
 
 	/**
@@ -448,31 +466,88 @@ class UserFeedback_Email_Summaries {
 			->group_by( 'survey_id' )
 			->get();
 
-		return array_map(
+        $surveys_with_count = array_map(
 			function( $result ) {
 				return array(
 					'name'      => $result->survey->title,
 					'responses' => $result->count,
+					'result_link' =>  admin_url( 'admin.php?page=userfeedback_results#/survey/' . $result->survey_id ),
 				);
 			},
 			$responses
 		);
+
+        usort( $surveys_with_count, function ($survey_a, $survey_b) {
+            if ($survey_a['responses'] == $survey_b['responses']) return 0;
+            return ($survey_a['responses'] > $survey_b['responses']) ? -1 : 1;
+        });
+
+        return $surveys_with_count;
 	}
 
-
 	/**
-	 * reset email summaries options
+	 * Get the latest blog posts from the UserFeedback RSS feed.
 	 *
-	 * @since 1.0.0
+	 * Fetches the RSS feed from userfeedback.com and extracts the titles and links
+	 * of the last 3 blog posts.
+	 *
+	 * @since 1.10.0
+	 * @access private
+	 *
+	 * @return array Array of the latest 3 blog posts with title and link, or empty array on failure.
 	 */
-	public function reset_email_summaries_options( $key, $value ) {
-		if ( isset( $key ) && $key === 'email_summaries' && isset( $value ) && $value === 'off' ) {
-			$default_email = array(
-				'email' => get_option( 'admin_email' ),
-			);
-			userfeedback_update_option( 'summaries_email_addresses', array( $default_email ) );
-			userfeedback_update_option( 'summaries_header_image', '' );
+	private function get_latest_blog_posts_from_feed() {
+		$source = 'https://userfeedback.com';
+
+		$rest_url = $source . '/wp-json/wp/v2/posts?per_page=3&_embed=wp:featuredmedia&_fields=title,excerpt,link,_embedded,_links'; // Fetch last 3 posts and embed media
+
+		$response = wp_remote_get( $rest_url );
+
+		if ( is_wp_error( $response ) ) {
+			return array(); // Return empty array on error
 		}
+
+		$body       = wp_remote_retrieve_body( $response );
+		$posts_data = json_decode( $body, true );
+		$posts      = array();
+
+		if ( empty( $posts_data ) || ! is_array( $posts_data ) ) {
+			return array();
+		}
+
+		foreach ( $posts_data as $post_item ) {
+			$featured_image_url = '';
+
+			if ( isset( $post_item['_embedded']['wp:featuredmedia'] ) && ! empty( $post_item['_embedded']['wp:featuredmedia'] ) ) {
+				$featured_media = $post_item['_embedded']['wp:featuredmedia'][0];
+
+				if ( isset( $featured_media['media_details']['sizes']['medium']['source_url'] ) ) {
+					$featured_image_url = $featured_media['media_details']['sizes']['medium']['source_url'];
+				}
+			}
+
+			if ( empty( $post_item['title']['rendered'] ) || empty( $post_item['link'] ) ) {
+				continue;
+			}
+
+			$new = array(
+				'title'            => esc_html( $post_item['title']['rendered'] ),
+				'link'             => esc_url( $post_item['link'] ),
+				'excerpt'          => ''
+			);
+			
+			if ( ! empty( $post_item['excerpt']['rendered'] ) ) {
+				$new['excerpt'] = esc_html( wp_trim_words( wp_strip_all_tags( $post_item['excerpt']['rendered'] ), 15, '...' ) );
+			}
+
+			if ( ! empty( $featured_image_url ) ) {
+				$new['featured_image'] = esc_url_raw( $featured_image_url );
+			}
+
+			$posts[] = $new;
+		}
+
+		return $posts;
 	}
 }
 

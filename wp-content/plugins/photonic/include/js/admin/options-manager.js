@@ -145,22 +145,6 @@ jQuery(document).ready(function($) {
 		photonicSetBackground(thisName.substring(0, thisName.indexOf('-')));
 	});
 
-	$('.photonic-padding-options input[type="text"], .photonic-padding-options select').change(function(event) {
-		var thisId = event.currentTarget.id;
-		thisId = thisId.substring(0, thisId.indexOf('-'));
-		var edges = ['top', 'right', 'bottom', 'left'];
-		var padding = '';
-		for (var x in edges) {
-			var edge = edges[x];
-			var thisName = thisId + '-' + edge;
-			padding += edge + '::';
-			padding += 'padding=' + $("#" + thisName + "-padding").val() + ';' +
-				'padding-type=' + $("#" + thisName + "-padding-type").val() + ';';
-			padding += '||';
-		}
-		$('#' + thisId).val(padding);
-	});
-
 	$('div.photonic-checklist input[type="checkbox"]').change(function() {
 		var $clicked = $(this);
 		var hidden = $clicked.attr('data-photonic-selection-for');

@@ -1,5 +1,11 @@
 {
     "require-dev": {
-        "wp-coding-standards/wpcs": "^2.3"
+        "wp-coding-standards/wpcs": "^2.3",
+        "php-stubs/woocommerce-stubs": "^10.4"
+    },
+      "config": {
+        "platform": {
+            "php": "7.4"
+        }
     }
 }

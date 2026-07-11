@@ -43,7 +43,6 @@ export class PhotonicLightcase extends Lightbox {
 		const self = this;
 
 		$(selector).each(function(i, current) {
-			const provider = $(current).attr('data-photonic-platform');
 			let lightbox_selector,
 				rel = $(current).find('a.photonic-lightcase');
 			if (rel.length > 0) {

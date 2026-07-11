@@ -2,8 +2,9 @@
 
 namespace Photonic_Plugin\Components;
 
+use Photonic_Plugin\Core\Photonic;
 use Photonic_Plugin\Layouts\Core_Layout;
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Platforms\Base;
 
 /**
  * Class Header
@@ -71,11 +72,11 @@ class Header implements Printable {
 	/**
 	 * {@inheritDoc} - a Header
 	 */
-	public function html(Core $module, Core_Layout $layout = null, $print = false) {
+	public function html(Base $module, Core_Layout $layout = null, $print = false): string {
 		$ret = $layout->generate_header_markup($this, $module);
 		if ($print) {
-			echo wp_kses_post($ret);
+			echo wp_kses($ret, Photonic::$safe_tags);
 		}
-		return wp_kses_post($ret);
+		return wp_kses($ret, Photonic::$safe_tags);
 	}
 }

@@ -46,7 +46,7 @@ export class PhotonicLightGallery extends Lightbox {
 			a.setAttribute('data-html5-href', a.getAttribute('href'));
 			a.setAttribute('href', '');
 			a.setAttribute('data-video', JSON.stringify(videoSrc));
-			a.setAttribute('data-sub-html', (a.getAttribute('title') ? a.getAttribute('title') : ''));
+			a.setAttribute('data-sub-html', (a.getAttribute('title') ? Util.getText(a.getAttribute('title')) : ''));
 
 			this.videoIndex++;
 		}
@@ -117,7 +117,13 @@ export class PhotonicLightGallery extends Lightbox {
 				download: Photonic_JS.lg_enable_download,
 				loop: Photonic_JS.lightbox_loop,
 				hideBarsDelay: Photonic_JS.lg_hide_bars_delay,
-				getCaptionFromTitleOrAlt: false
+				getCaptionFromTitleOrAlt: false,
+				exThumbImage: 'data-photonic-thumb',
+				mobileSettings: {
+					controls: Photonic_JS.lg_mobile_controls,
+					showCloseIcon: Photonic_JS.lg_mobile_close,
+					download: Photonic_JS.lg_mobile_download
+				}
 			};
 
 			let lgPlugins = [lgVideo];

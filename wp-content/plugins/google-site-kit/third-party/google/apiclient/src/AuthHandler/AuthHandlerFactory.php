@@ -17,34 +17,31 @@
  */
 namespace Google\Site_Kit_Dependencies\Google\AuthHandler;
 
-use Google\Site_Kit_Dependencies\GuzzleHttp\Client;
-use Google\Site_Kit_Dependencies\GuzzleHttp\ClientInterface;
 use Exception;
+use Google\Site_Kit_Dependencies\GuzzleHttp\ClientInterface;
 class AuthHandlerFactory
 {
     /**
      * Builds out a default http handler for the installed version of guzzle.
      *
-     * @return Guzzle5AuthHandler|Guzzle6AuthHandler|Guzzle7AuthHandler
+     * @return Guzzle6AuthHandler|Guzzle7AuthHandler
      * @throws Exception
      */
     public static function build($cache = null, array $cacheConfig = [])
     {
         $guzzleVersion = null;
-        if (\defined('\\Google\\Site_Kit_Dependencies\\GuzzleHttp\\ClientInterface::MAJOR_VERSION')) {
-            $guzzleVersion = \Google\Site_Kit_Dependencies\GuzzleHttp\ClientInterface::MAJOR_VERSION;
-        } elseif (\defined('\\Google\\Site_Kit_Dependencies\\GuzzleHttp\\ClientInterface::VERSION')) {
-            $guzzleVersion = (int) \substr(\Google\Site_Kit_Dependencies\GuzzleHttp\ClientInterface::VERSION, 0, 1);
+        if (defined('Google\Site_Kit_Dependencies\GuzzleHttp\ClientInterface::MAJOR_VERSION')) {
+            $guzzleVersion = ClientInterface::MAJOR_VERSION;
+        } elseif (defined('Google\Site_Kit_Dependencies\GuzzleHttp\ClientInterface::VERSION')) {
+            $guzzleVersion = (int) substr(ClientInterface::VERSION, 0, 1);
         }
         switch ($guzzleVersion) {
-            case 5:
-                return new \Google\Site_Kit_Dependencies\Google\AuthHandler\Guzzle5AuthHandler($cache, $cacheConfig);
             case 6:
-                return new \Google\Site_Kit_Dependencies\Google\AuthHandler\Guzzle6AuthHandler($cache, $cacheConfig);
+                return new Guzzle6AuthHandler($cache, $cacheConfig);
             case 7:
-                return new \Google\Site_Kit_Dependencies\Google\AuthHandler\Guzzle7AuthHandler($cache, $cacheConfig);
+                return new Guzzle7AuthHandler($cache, $cacheConfig);
             default:
-                throw new \Exception('Version not supported');
+                throw new Exception('Version not supported');
         }
     }
 }

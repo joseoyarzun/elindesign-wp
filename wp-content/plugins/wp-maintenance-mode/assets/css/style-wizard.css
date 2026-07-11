@@ -4,7 +4,8 @@
 .wpmm-wizard-fullscreen .wrap .notice,
 .wpmm-wizard-fullscreen .wrap .error,
 .wpmm-wizard-fullscreen .wrap .updated,
-.wpmm-wizard-fullscreen #wpfooter {
+.wpmm-wizard-fullscreen #wpfooter,
+.wpmm-wizard-fullscreen .rop-revive-network-admin-notice {
     display: none !important;
 }
 
@@ -79,6 +80,8 @@ h2.wpmm-title span img {
 
     letter-spacing: .04em;
     line-height: 1;
+    --checkbox-input-size: 20px;
+    --checkmark-size: calc(var(--checkbox-input-size) + 4px);
 }
 
 #wpmm-wizard-wrapper .slider-wrap {
@@ -104,6 +107,7 @@ h2.wpmm-title span img {
 .step.import-step {
     margin: min(10%, 65px) min(12%, 195px);
     width: 1090px;
+    outline: 0;
 }
 
 .import-step .header {
@@ -293,6 +297,19 @@ h2.wpmm-title span img {
     font-size: 18px;
 }
 
+.subscribe-step .opt-in-container {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.subscribe-step .opt-in-container svg.components-checkbox-control__checked {
+    top: 20%;
+}
+
+.subscribe-step .opt-in-container label {
+    text-align: left;
+}
 #email-input-wrap {
     position: relative;
     display: flex;
@@ -326,6 +343,7 @@ input.invalid:focus {
 
 .optimole-upsell-container {
     display: flex;
+    gap: 8px;
 }
 
 .optimole-upsell {
@@ -339,7 +357,7 @@ input.invalid:focus {
 }
 
 .optimole-upsell p.description {
-    margin-left: 35px;
+    margin-left: 30px;
     margin-top: 12px;
     font-size: 15px;
     max-width: 980px;
@@ -347,6 +365,11 @@ input.invalid:focus {
 
 #import-step-error {
     color: #d63638;
+}
+
+.wpmm-templates-radio.disabled {
+    opacity: .5;
+    pointer-events: none;
 }
 
 @keyframes abs-spin {

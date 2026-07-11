@@ -91,7 +91,7 @@
   },
   "BSD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -103,7 +103,7 @@
   },
   "BWP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -115,7 +115,7 @@
   },
   "BZD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -139,13 +139,13 @@
   },
   "CLP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 0
   },
   "CNY": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -157,18 +157,18 @@
   },
   "CRC": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
   "CUP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "CVE": {
-    "position":  "left",
+    "position": "left",
     "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
@@ -181,7 +181,7 @@
   },
   "DJF": {
     "position": "right_space",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 0
   },
@@ -193,7 +193,7 @@
   },
   "DOP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -217,31 +217,31 @@
   },
   "ETB": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
   "EUR": {
-    "position": "left",
-    "thousand_sep":  " ",
-    "decimal_sep": ".",
+    "position": "right_space",
+    "thousand_sep": ".",
+    "decimal_sep": ",",
     "num_decimals": 2
   },
   "FJD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "FKP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "GBP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -253,7 +253,7 @@
   },
   "GGP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -265,13 +265,13 @@
   },
   "GIP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "GMD": {
     "position": "right_space",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -283,25 +283,25 @@
   },
   "GTQ": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "GYD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "HKD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "HNL": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -325,7 +325,7 @@
   },
   "IDR": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -337,7 +337,7 @@
   },
   "IMP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -355,7 +355,7 @@
   },
   "IRT": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
@@ -367,13 +367,13 @@
   },
   "JEP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "JMD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -385,7 +385,7 @@
   },
   "JPY": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 0
   },
@@ -403,7 +403,7 @@
   },
   "KHR": {
     "position": "right",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
@@ -415,13 +415,13 @@
   },
   "KPW": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 0
   },
   "KRW": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 0
   },
@@ -433,7 +433,7 @@
   },
   "KYD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -445,7 +445,7 @@
   },
   "LAK": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 0
   },
@@ -463,13 +463,13 @@
   },
   "LRD": {
     "position": "right_space",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
   "LSL": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
@@ -517,7 +517,7 @@
   },
   "MOP": {
     "position": "right_space",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -541,13 +541,13 @@
   },
   "MWK": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "MXN": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -565,7 +565,7 @@
   },
   "NAD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -577,7 +577,7 @@
   },
   "NIO": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -595,7 +595,7 @@
   },
   "NZD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -607,7 +607,7 @@
   },
   "PAB": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -619,19 +619,19 @@
   },
   "PGK": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "PHP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "PKR": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
@@ -691,13 +691,13 @@
   },
   "SBD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "SCR": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
@@ -715,19 +715,19 @@
   },
   "SGD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "SHP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "SLL": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 0
   },
@@ -745,7 +745,7 @@
   },
   "SSP": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
@@ -763,13 +763,13 @@
   },
   "SZL": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
   "THB": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
@@ -781,7 +781,7 @@
   },
   "TMT": {
     "position": "right",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
@@ -799,19 +799,19 @@
   },
   "TRY": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "TTD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
   "TWD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -829,13 +829,13 @@
   },
   "UGX": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 0
   },
   "USD": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -853,7 +853,7 @@
   },
   "VES": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -871,7 +871,7 @@
   },
   "WST": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   },
@@ -901,13 +901,13 @@
   },
   "ZAR": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ",",
     "num_decimals": 2
   },
   "ZMW": {
     "position": "left",
-    "thousand_sep":  " ",
+    "thousand_sep": " ",
     "decimal_sep": ".",
     "num_decimals": 2
   }

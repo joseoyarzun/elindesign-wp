@@ -44,7 +44,6 @@ class UserFeedback_Install {
 	 * @return void
 	 */
 	public function init() {
-		;
 		// Get a copy of the current UF settings.
 		$this->new_settings = get_option( userfeedback_get_option_name() );
 
@@ -65,6 +64,8 @@ class UserFeedback_Install {
 		} else { // If existing install
 			// Future upgrades...
 
+			// Maybe upgrade current tables using dbDelta
+			$this->create_userfeedback_tables();
 			// -------------------------
 			// Do not use. See userfeedback_after_install_routine comment below.
 			do_action( 'userfeedback_after_existing_upgrade_routine', $version );
@@ -178,5 +179,10 @@ class UserFeedback_Install {
 	private function create_userfeedback_tables() {
 		( new UserFeedback_Survey() )->create_table();
 		( new UserFeedback_Response() )->create_table();
+		( new UserFeedback_Heatmap() )->create_table();
+		( new UserFeedback_Heatmap_Recording() )->create_table();
+		( new UserFeedback_Post_Rating() )->create_table();
+		( new UserFeedback_Email_Survey() )->create_table();
+		( new UserFeedback_Email_Response() )->create_table();
 	}
 }

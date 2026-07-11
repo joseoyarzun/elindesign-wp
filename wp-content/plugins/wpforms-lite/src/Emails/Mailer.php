@@ -36,7 +36,7 @@ class Mailer {
 	 *
 	 * @var string
 	 */
-	private $from_address;
+	private $from_address = '';
 
 	/**
 	 * From name.
@@ -115,10 +115,10 @@ class Mailer {
 	 *
 	 * @since 1.5.4
 	 *
-	 * @param string $key   Property name.
-	 * @param string $value Property value.
+	 * @param string       $key   Property name.
+	 * @param string|array $value Property value.
 	 */
-	public function __set( $key, $value ) {
+	public function __set( string $key, $value ) {
 
 		$this->$key = $value;
 	}
@@ -194,7 +194,7 @@ class Mailer {
 	}
 
 	/**
-	 * Get the email from name.
+	 * Get the email from the name.
 	 *
 	 * @since 1.5.4
 	 *
@@ -209,7 +209,7 @@ class Mailer {
 	}
 
 	/**
-	 * Get the email from address.
+	 * Get the email from the address.
 	 *
 	 * @since 1.5.4
 	 *
@@ -217,14 +217,15 @@ class Mailer {
 	 */
 	public function get_from_address() {
 
-		$this->from_address = $this->from_address ? $this->sanitize( $this->from_address, 'notification-from' ) : get_option( 'admin_email' );
+		$from_address = $this->sanitize( $this->from_address, 'notification-from' );
+		$from_address = $from_address ? $from_address : get_option( 'admin_email' );
 
 		// phpcs:ignore WPForms.Comments.PHPDocHooks.RequiredHookDocumentation
-		return apply_filters( 'wpforms_emails_mailer_get_from_address', $this->from_address, $this );
+		return apply_filters( 'wpforms_emails_mailer_get_from_address', $from_address, $this );
 	}
 
 	/**
-	 * Get the email reply to address.
+	 * Get the email reply to the address.
 	 *
 	 * @since 1.5.4
 	 *
@@ -341,7 +342,15 @@ class Mailer {
 			$this->message = $this->template->get();
 		}
 
-		return \apply_filters( 'wpforms_emails_mailer_get_message', $this->message, $this );
+		/**
+		 * Filters the email message.
+		 *
+		 * @since 1.5.4
+		 *
+		 * @param string $message Email message.
+		 * @param Mailer $this    Mailer instance.
+		 */
+		return apply_filters( 'wpforms_emails_mailer_get_message', $this->message, $this );
 	}
 
 	/**
@@ -352,11 +361,6 @@ class Mailer {
 	 * @return string The email headers.
 	 */
 	public function get_headers() {
-
-		if ( $this->headers ) {
-			// phpcs:ignore WPForms.Comments.PHPDocHooks.RequiredHookDocumentation
-			return apply_filters( 'wpforms_emails_mailer_get_headers', $this->headers, $this );
-		}
 
 		$this->headers = "From: {$this->get_from_name()} <{$this->get_from_address()}>\r\n";
 
@@ -372,7 +376,15 @@ class Mailer {
 
 		$this->headers .= "Content-Type: {$this->get_content_type()}; charset=utf-8\r\n";
 
-		return \apply_filters( 'wpforms_emails_mailer_get_headers', $this->headers, $this );
+		/**
+		 * Filters the email headers.
+		 *
+		 * @since 1.5.4
+		 *
+		 * @param string $headers Email headers.
+		 * @param Mailer $this    Mailer instance.
+		 */
+		return apply_filters( 'wpforms_emails_mailer_get_headers', $this->headers, $this );
 	}
 
 	/**
@@ -400,7 +412,7 @@ class Mailer {
 	}
 
 	/**
-	 * Set email address to send to.
+	 * Set an email address to send to.
 	 *
 	 * @since 1.5.4
 	 *
@@ -421,7 +433,7 @@ class Mailer {
 	}
 
 	/**
-	 * Set email subject.
+	 * Set an email subject.
 	 *
 	 * @since 1.5.4
 	 *
@@ -440,7 +452,7 @@ class Mailer {
 	}
 
 	/**
-	 * Set email message (body).
+	 * Set an email message (body).
 	 *
 	 * @since 1.5.4
 	 *
@@ -518,7 +530,7 @@ class Mailer {
 	 *
 	 * @param array $errors Errors to log.
 	 */
-	protected function log_errors( $errors ) {
+	protected function log_errors( $errors ): void {
 
 		if ( empty( $errors ) || ! is_array( $errors ) ) {
 			return;
@@ -587,7 +599,7 @@ class Mailer {
 	 *
 	 * @since 1.5.4
 	 */
-	public function send_before() { // phpcs:ignore WPForms.PHP.HooksMethod.InvalidPlaceForAddingHooks
+	public function send_before(): void { // phpcs:ignore WPForms.PHP.HooksMethod.InvalidPlaceForAddingHooks
 
 		// phpcs:ignore WPForms.Comments.PHPDocHooks.RequiredHookDocumentation
 		do_action( 'wpforms_emails_mailer_send_before', $this );
@@ -602,7 +614,7 @@ class Mailer {
 	 *
 	 * @since 1.5.4
 	 */
-	public function send_after() { // phpcs:ignore WPForms.PHP.HooksMethod.InvalidPlaceForAddingHooks
+	public function send_after(): void { // phpcs:ignore WPForms.PHP.HooksMethod.InvalidPlaceForAddingHooks
 
 		// phpcs:ignore WPForms.Comments.PHPDocHooks.RequiredHookDocumentation
 		do_action( 'wpforms_emails_mailer_send_after', $this );

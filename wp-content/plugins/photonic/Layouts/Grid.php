@@ -3,15 +3,20 @@
 namespace Photonic_Plugin\Layouts;
 
 use Photonic_Plugin\Components\Album_List;
+use Photonic_Plugin\Components\Grid_Anchor;
+use Photonic_Plugin\Components\Grid_Figure;
+use Photonic_Plugin\Components\Grid_Image;
 use Photonic_Plugin\Components\Pagination;
 use Photonic_Plugin\Components\Photo_List;
 use Photonic_Plugin\Layouts\Features\Can_Use_Lightbox;
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Platforms\Base;
 use Photonic_Plugin\Components\Album;
 use Photonic_Plugin\Components\Photo;
 
 require_once 'Level_One_Gallery.php';
 require_once 'Level_Two_Gallery.php';
+
+require_once PHOTONIC_PATH . '/Components/Grid_Image.php';
 
 require_once 'Features/Can_Use_Lightbox.php';
 
@@ -32,13 +37,14 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 	 * The code for the random layouts is handled in JS, but just the HTML markers for it are provided here.
 	 *
 	 * @param Photo_List $photo_list
-	 * @param $short_code
-	 * @param $module Core
+	 * @param array $short_code
+	 * @param $module Base
 	 * @return string
 	 */
-	public function generate_level_1_gallery($photo_list, $short_code, $module) {
-		global $photonic_tile_min_height;
+	public function generate_level_1_gallery(Photo_List $photo_list, array $short_code, Base $module): string {
 		$module->push_to_stack('Generate level 1 gallery');
+
+		$short_code = array_merge($this->common_parameters, $short_code);
 
 		$photos = $photo_list->photos;
 
@@ -46,62 +52,58 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 
 		$layout = $short_code['layout'];
 		$columns = sanitize_text_field(!empty($short_code['columns']) && ('random' !== $layout && 'mosaic' !== $layout) ? $short_code['columns'] : 'auto');
-		$display = sanitize_text_field(!empty($short_code['display']) ? $short_code['display'] : 'local');
 		$more = !empty($short_code['more']) ? sanitize_text_field($short_code['more']) : '';
 		$more = (empty($more) && !empty($short_code['photo_more'])) ? sanitize_text_field($short_code['photo_more']) : $more;
-		$panel = !empty($short_code['panel']) ? sanitize_text_field($short_code['panel']) : '';
-
 		$title_position = empty($short_code['title_position']) ? $photo_list->title_position : sanitize_text_field($short_code['title_position']);
 		$row_constraints = $photo_list->row_constraints;
-		$parent = $photo_list->parent;
 		$pagination = $photo_list->pagination;
 		$indent = $photo_list->indent;
 
-		list($container_id, $container_end) = $this->get_container_details($short_code, $module);
+		$display = sanitize_text_field(!empty($short_code['display']) ? $short_code['display'] : 'local');
+		$panel = !empty($short_code['panel']) ? sanitize_text_field($short_code['panel']) : '';
+		$parent = $photo_list->parent;
 
-		$non_standard = 'random' === $layout || 'masonry' === $layout || 'mosaic' === $layout;
+		list($container_start_id, $container_end_id) = $this->get_container_details($short_code, $module);
+		$non_standard = in_array($layout, ['random', 'masonry', 'masonry-horizontal', 'mosaic'], true);
+		$gallery_column_class = $this->get_gallery_column_class($non_standard, $columns, $row_constraints);
+		$effect = esc_attr($this->get_thumbnail_effect($short_code, $layout, $title_position));
 
-		$gallery_item_class = '';
-		if (absint($columns)) {
-			$gallery_item_class = 'photonic-gallery-' . esc_attr($columns) . 'c';
-		}
-		elseif ('padding' === $row_constraints['constraint-type']) {
-			$gallery_item_class = 'photonic-pad-photos';
-		}
-		elseif (!empty($row_constraints['count'])) {
-			$gallery_item_class = 'photonic-gallery-' . esc_attr($row_constraints['count']) . 'c';
-		}
-		$gallery_item_class .= ' photonic-level-1 photonic-thumb';
+		$gallery_figure_classes = ['photonic-level-1', 'photonic-thumb'];
 
-		$link_attributes = $lightbox->get_gallery_attributes($panel, $module); // Functions returns escaped values
-		$link_attributes_text = $this->get_text_from_link_attributes($link_attributes); // Functions returns escaped values
-
-		$effect = $this->get_thumbnail_effect($short_code, $layout, $title_position);
+		$lightbox_attributes  = $lightbox->get_gallery_attributes($panel, $module); // Function returns escaped values
+		$anchor_classes       = $lightbox_attributes['class'] ?: [];
+		$anchor_rel           = $lightbox_attributes['rel'] ?: [];
+		$anchor_lightbox_data = $lightbox_attributes['specific'] ?: [];
 
 		$ret = '';
-
-		list($pagination_data, $columns_data) = $this->get_gallery_data_attributes($short_code, $module, $pagination, $columns);
 
 		global $photonic_external_links_in_new_tab;
 		if (!empty($photonic_external_links_in_new_tab)) {
 			$target = " target='_blank' ";
+			$anchor_lightbox_data['target'] = '_blank';
 		}
 		else {
 			$target = '';
 		}
 
 		$counter = 0;
-		$thumbnail_class = " class='" . esc_attr($layout) . "' ";
 
 		$layout_engine = $this->get_layout_engine($module, $short_code);
 		$all_sizes_present = strtolower($layout_engine) === 'css';
 
+		$grid_figures = [];
+
 		/** @var Photo $photo */
-		foreach ($photos as $photo) {
+		foreach ($photos as $idx => $photo) {
 			$counter++;
 
-			$img_dim = '';
-			$item_dim = '';
+			$figure_data = [];
+			if ('masonry-horizontal' === $layout) {
+				$figure_data['data-photonic-idx'] = $idx;
+			}
+
+			$additional_image_data = [];
+			$styles = [];
 			if ($non_standard && 'local' === $display) {
 				$thumb = $photo->tile_image ?: $photo->main_image;
 				if (!empty($photo->tile_size)) {
@@ -119,35 +121,36 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 			}
 
 			if (!empty($inbuilt_sizes)) {
-				$img_dim = " width='{$inbuilt_sizes['w']}' height='{$inbuilt_sizes['h']}' ";
-				$item_dim = " style='--dw: {$inbuilt_sizes['w']}; --dh: {$inbuilt_sizes['h']}' ";
+				if ('random' === $layout) {
+					$styles['--dw'] = $inbuilt_sizes['w'];
+					$styles['--dh'] = $inbuilt_sizes['h'];
+				}
 			}
 			else {
 				$all_sizes_present = false;
 			}
 
-			$element_start = "$indent\t<figure class='$gallery_item_class' $item_dim>\n";
-
-			$ret .= $element_start;
 			$deep_value = 'gallery[photonic-' . $module->provider . '-' . $parent . '-' . ($panel ?: $module->gallery_index) . ']/' . ($photo->id ?: $counter) . '/';
-			$deep_link = ' data-photonic-deep="' . esc_attr($deep_value) . '" ';
-			$buy = '';
+			$additional_image_data['data-photonic-deep'] = esc_attr($deep_value);
+
 			if (!empty($photo->buy_link) && $module->show_buy_link) {
-				$buy = ' data-photonic-buy="' . esc_attr($photo->buy_link) . '" ';
+				$additional_image_data['data-photonic-buy'] = esc_url($photo->buy_link);
 			}
 
-			$title = wp_kses_post($photo->title);
+			$title       = wp_kses_post($photo->title);
 			$description = wp_kses_post($photo->description);
-			$alt = wp_kses_post($photo->alt_title);
+			$alt         = wp_kses_post($photo->alt_title);
 
-			if (!empty($short_code['caption']) && ('desc' === $short_code['caption'] || ('title-desc' === $short_code['caption'] && empty($title)) || ('desc-title' === $short_code['caption'] && !empty($description)))) {
-				$title = $description;
-			}
-			elseif (empty($short_code['caption']) || 'none' === $short_code['caption']) {
-				$title = '';
-			}
+			$titles = [
+				'title' => $title,
+				'desc'  => $description,
+				'alt'   => $alt,
+			];
+
+			$title = $this->get_title($title, $titles, $short_code);
 
 			$title_markup = $lightbox->get_lightbox_title($photo, $module, $title, $alt, $target);
+			$additional_image_data['data-title'] = $title_markup;
 
 			$shown_title = '';
 			if (in_array($title_position, ['below', 'hover-slideup-show', 'hover-slidedown-show', 'slideup-stick'], true) && !empty($title)) {
@@ -167,59 +170,68 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 				$photo_data['image'] = esc_url($photo->main_image);
 			}
 			$photo_data['id'] = $photo->id;
+			$photo_data['thumbnail'] = $thumb;
 
 			if (!empty($photo->main_size)) {
 				$photo_data['width'] = $photo->main_size['w'];
 				$photo_data['height'] = $photo->main_size['h'];
 			}
 
-			$lb_specific_data = $lightbox->get_photo_attributes($photo_data, $module);
-
-			if (!empty($photo->video)) {
-				$video_markup = $lightbox->get_video_markup($photo, $module, $indent);
-				$ret .= $video_markup;
-			}
+			$image_lightbox_data = $lightbox->get_photo_attributes($photo_data, $module);
 
 			if ('tooltip' === $title_position) {
-				$tooltip = 'data-photonic-tooltip="' . esc_attr($title) . '" ';
-			}
-			else {
-				$tooltip = '';
+				$additional_image_data['data-photonic-tooltip'] = esc_attr($title);
 			}
 
-			// CANNOT esc_url $lightbox->get_grid_link(...), since it sometimes returns a URL, and sometimes a "#" location. Instead, within get_grid_link there is either esc_attr or esc_url
-			$ret .= $indent . "\t\t" . '<a ' . $link_attributes_text . ' href="' . $lightbox->get_grid_link($photo, $short_code, $module) . '" title="' . ('none' !== $title_position ? esc_attr($title) : '') . '" data-title="' . $title_markup . '" ' . $tooltip . ' ' . $lb_specific_data . ' ' . $target . $deep_link . $buy . ">\n";
-			$ret .= $indent . "\t\t\t" . '<img alt="' . esc_attr($alt) . '" src="' . esc_url($thumb) . '" ' . $thumbnail_class . " loading='eager' $img_dim/>\n";
-			$ret .= $indent . "\t\t\t" . $shown_title . "\n";
-			$ret .= $indent . "\t\t</a>\n";
-			$ret .= $indent . "\t</figure>\n";
+			$grid_image             = new Grid_Image();
+			$grid_image->alt        = esc_attr($alt ?: wp_kses_post($photo->title)); // alt and title are the same for everything except WP galleries. This has been put in for cases where users don't specify an alt on WP galleries.
+			$grid_image->src        = $thumb;
+			$grid_image->classes    = [sanitize_html_class($layout)];
+			$grid_image->dimensions = $inbuilt_sizes ?? [];
+
+			$grid_anchor             = new Grid_Anchor();
+			$grid_anchor->href       = $lightbox->get_grid_link($photo, $short_code, $module); // CANNOT esc_url $lightbox->get_grid_link(...), since it sometimes returns a URL, and sometimes a "#" location. Instead, within get_grid_link there is either esc_attr or esc_url
+			$grid_anchor->classes    = $anchor_classes;
+			$grid_anchor->rel        = $anchor_rel;
+			$grid_anchor->data       = array_merge(
+				$anchor_lightbox_data,
+				$image_lightbox_data,
+				$additional_image_data
+			);
+			$grid_anchor->title      = 'none' !== $title_position ? esc_attr($title) : '';
+			$grid_anchor->figcaption = $shown_title;
+			$grid_anchor->image      = $grid_image;
+			$grid_anchor->indent     = $indent;
+
+			$grid_figure               = new Grid_Figure();
+			$grid_figure->classes      = $gallery_figure_classes;
+			$grid_figure->styles       = $styles;
+			$grid_figure->data         = $figure_data;
+			$grid_figure->video_markup = $lightbox->get_video_markup($photo, $module, $indent);
+			$grid_figure->anchor       = $grid_anchor;
+			$grid_figure->indent       = $indent;
+
+			$grid_figures[] = $grid_figure;
 		}
 
-		$ret = trim($ret);
-		if ('' !== $ret) {
-			if ("</figure>" !== substr($ret, -9) && 'show' === $short_code['popup'] && !$non_standard) {
-				$ret .= "\n$indent</figure><!-- last figure.photonic-pad-photos -->";
+		if (!empty($grid_figures)) {
+			$this->set_lazy_loading_attributes($all_sizes_present, $grid_figures);
+
+			$container_class_list = $this->get_common_gallery_classes(1, $title_position, $non_standard, $layout, $effect, $all_sizes_present, $gallery_column_class, $display);
+			$container_class_list[] = $lightbox->get_container_classes();
+
+			$data_query = $this->get_updated_data_query($short_code, $pagination);
+			$container_data_attributes = [
+				'data-photonic-platform' => esc_attr($module->provider),
+				'data-photonic-gallery-columns' => esc_attr($columns),
+				'data-photonic-query' => esc_attr($data_query),
+			];
+
+			if ('masonry-horizontal' === $layout) {
+				$container_data_attributes['data-photonic-max-idx'] = count($photos);
 			}
 
-			$gallery_class = "class='title-display-$title_position photonic-level-1-container " . ($non_standard ? 'photonic-' . $layout . '-layout' : 'photonic-standard-layout') . " photonic-thumbnail-effect-$effect " . ($all_sizes_present ? 'sizes-present' : 'sizes-missing') . " {$lightbox->get_container_classes()}'";
-			if ('modal' === $display) {
-				$gallery_class = "class='title-display-$title_position photonic-level-1-container modal-gallery {$lightbox->get_container_classes()}'";
-			}
-
-			if (!is_numeric($photonic_tile_min_height)) {
-				$photonic_tile_min_height = 200;
-			}
-			$photonic_tile_min_height = esc_attr($photonic_tile_min_height);
-
-			$start_with = "$indent<div $container_id $gallery_class $pagination_data $columns_data style='--tile-min-height: {$photonic_tile_min_height}px'>\n";
-
-			$ret = $start_with . $ret;
-			$ret .= "\n$indent</div> <!-- ./photonic-level-1-container -->\n";
-			$ret .= "<span id='$container_end'></span>";
-
-			if (!empty($pagination) && isset($pagination->end) && isset($pagination->total) && $pagination->total > $pagination->end) {
-				$ret .= !empty($more) ? "<a href='#' class='photonic-more-button photonic-more-dynamic'>$more</a>\n" : '';
-			}
+			$ret = $this->generate_container_markup($module, $pagination, $container_class_list, $container_data_attributes, $grid_figures, $container_start_id, $container_end_id, $more, 1, $indent);
 		}
 
 		$module->pop_from_stack();
@@ -232,50 +244,49 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 	 * exists in native WP and Instagram.
 	 *
 	 * @param Album_List $album_list
-	 * @param $short_code
-	 * @param $module Core
+	 * @param array $short_code
+	 * @param $module Base
 	 * @return string
 	 */
-	public function generate_level_2_gallery($album_list, $short_code, $module) {
-		global $photonic_tile_min_height;
-
+	public function generate_level_2_gallery(Album_List $album_list, array $short_code, Base $module): string {
 		$module->push_to_stack('Generate Level 2 Gallery');
+
+		$short_code = array_merge($this->common_parameters, $short_code);
 
 		$objects = $album_list->albums;
 
-		$row_constraints = $album_list->row_constraints;
-		$type = esc_attr($album_list->type);
-		$singular_type = esc_attr($album_list->singular_type);
+		$layout = esc_attr($short_code['layout'] ?? 'square');
+		$columns = $short_code['columns'];
+		$more = !empty($short_code['more']) ? esc_attr($short_code['more']) : '';
 		$title_position = esc_attr(empty($short_code['title_position']) ? $album_list->title_position : $short_code['title_position']);
-		$level_1_count_display = $album_list->level_1_count_display;
+		$row_constraints = $album_list->row_constraints;
+		$pagination = $album_list->pagination;
 		$indent = $album_list->indent;
+
+		$singular_type = esc_attr($album_list->singular_type);
+		$level_1_count_display = $album_list->level_1_count_display;
 		$provider = esc_attr($module->provider);
 
-		$columns = $short_code['columns'];
-		$layout = esc_attr($short_code['layout'] ?? 'square');
-		$popup = ' data-photonic-popup="' . esc_attr($short_code['popup']) . '"';
+		$gallery_data = array_merge(
+			[
+				'platform'  => $provider,
+				'singular'  => $singular_type,
+				'popup' => esc_attr($short_code['popup']),
+			],
+			$album_list->gallery_attributes
+		);
 
-		$non_standard = 'random' === $layout || 'masonry' === $layout || 'mosaic' === $layout;
+		list($container_start_id, $container_end_id) = $this->get_container_details($short_code, $module);
+		$non_standard = in_array($layout, ['random', 'masonry', 'masonry-horizontal', 'mosaic'], true);
+		$gallery_column_class = $this->get_gallery_column_class($non_standard, $columns, $row_constraints);
 		$effect = esc_attr($this->get_thumbnail_effect($short_code, $layout, $title_position));
 
-		list($container_id, $container_end) = $this->get_container_details($short_code, $module);
+		$gallery_figure_classes = ['photonic-level-2', 'photonic-thumb'];
 
-		$pagination = $album_list->pagination;
-		$more = !empty($short_code['more']) ? esc_attr($short_code['more']) : '';
-
-		list($pagination_data, $columns_data) = $this->get_gallery_data_attributes($short_code, $module, $pagination, $columns);
-
-		if ('auto' !== $columns) {
-			$gallery_item_class = 'photonic-gallery-' . $columns . 'c';
+		$gallery_anchor_classes = ['photonic-level-2-thumb'];
+		if ($album_list->album_opens_gallery) {
+			$gallery_anchor_classes[] = 'gallery-page';
 		}
-		elseif ('padding' === $row_constraints['constraint-type']) {
-			$gallery_item_class = 'photonic-pad-' . $type;
-		}
-		else {
-			$gallery_item_class = 'photonic-gallery-' . $row_constraints['count'] . 'c';
-		}
-
-		$gallery_item_class .= ' photonic-level-2 photonic-thumb';
 
 		$counter = 0;
 
@@ -283,126 +294,103 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 		$all_sizes_present = strtolower($layout_engine) === 'css';
 
 		$ret = '';
-		/** @var Album $object */
-		foreach ($objects as $object) {
-			$data_attributes = $object->data_attributes ?: [];
-			$data_attributes['platform'] = $provider;
-			$data_attributes['singular'] = $singular_type;
+		$grid_figures = [];
 
-			$data_array = [];
-			foreach ($data_attributes as $attr => $value) {
-				$data_array[] = 'data-photonic-' . $attr . '="' . $value . '"';
+		/** @var Album $object */
+		foreach ($objects as $idx => $object) {
+			$data_attributes = $object->data_attributes ?: [];
+			$styles = [];
+
+			$figure_data = [];
+			if ('masonry-horizontal' === $layout) {
+				$figure_data['data-photonic-idx'] = $idx;
 			}
-			$data_array = implode(' ', $data_array);
+
+			$anchor_data = [];
+			foreach ($data_attributes as $attr => $value) {
+				$anchor_data['data-photonic-' . $attr] = $value;
+			}
 
 			$id = empty($object->id) ? '' : $object->id . '-';
 			$id = esc_attr($id . $module->gallery_index);
-			$title = esc_attr($object->title);
+			$title = wp_kses_post($object->title);
 
-			$img_dim = '';
-			$item_dim = '';
+			$anchor_data['data-title'] = esc_attr($title);
+
+			if ('tooltip' === $title_position) {
+				$anchor_data['data-photonic-tooltip'] = esc_attr($title);
+			}
+
 			if ($non_standard && !empty($object->tile_image)) {
-				$img_src = esc_url($object->tile_image);
+				$img_src = $object->tile_image;
 				$inbuilt_sizes = $object->tile_size ?: [];
 			}
 			else {
-				$img_src = esc_url($object->thumbnail);
+				$img_src = $object->thumbnail;
 				$inbuilt_sizes = $object->thumb_size ?: [];
 			}
 
 			if (!empty($inbuilt_sizes)) {
-				$img_dim = " width='{$inbuilt_sizes['w']}' height='{$inbuilt_sizes['h']}' ";
-				$item_dim = " style='--dw: {$inbuilt_sizes['w']}; --dh: {$inbuilt_sizes['h']}' ";
+				if ('random' === $layout) {
+					$styles['--dw'] = $inbuilt_sizes['w'];
+					$styles['--dh'] = $inbuilt_sizes['h'];
+				}
 			}
 			else {
 				$all_sizes_present = false;
 			}
 
-			$image = "<img src='$img_src' alt='" . $title . "' class='$layout' $img_dim loading='eager'/>";
-			$additional_classes = !empty($object->classes) ? implode(' ', $object->classes) : '';
-			$realm_class = '';
-			if (!empty($object->classes)) {
-				foreach ($object->classes as $class) {
-					if (stripos($class, 'photonic-' . $provider . '-realm') !== false) {
-						$realm_class = esc_attr($class);
-					}
-				}
-			}
-			if ('tooltip' === $title_position) {
-				$tooltip = "data-photonic-tooltip='" . $title . "' ";
-			}
-			else {
-				$tooltip = '';
-			}
-
-			if (empty($object->gallery_url)) {
-				$anchor = "\n{$indent}\t\t<a href='" . esc_url($object->main_page) . "' class='photonic-level-2-thumb " . esc_attr($additional_classes) . "' id='photonic-{$provider}-$singular_type-thumb-$id' title='" . ('none' !== $title_position ? $title : '') . "' data-title='" . $title . "' $tooltip $data_array$popup>\n$indent\t\t\t" . $image;
-			}
-			else {
-				$anchor = "\n{$indent}\t\t<a href='" . esc_url($object->gallery_url) . "' class='photonic-level-2-thumb gallery-page " . esc_attr($additional_classes) . "' id='photonic-{$provider}-$singular_type-thumb-$id' title='" . ('none' !== $title_position ? $title : '') . "' data-title='" . $title . "' $tooltip $data_array$popup>\n$indent\t\t\t" . $image;
-			}
-			$text = '';
+			$shown_title = '';
 			if (in_array($title_position, ['below', 'hover-slideup-show', 'hover-slidedown-show', 'slideup-stick'], true)) {
-				$text = "\n{$indent}\t\t\t<figcaption class='photonic-title-info'>\n{$indent}\t\t\t\t<div class='photonic-$singular_type-title photonic-title'>" . wp_specialchars_decode(stripslashes(wp_filter_nohtml_kses($title)), ENT_QUOTES) . "";
+				$shown_title = "\n{$indent}\t\t\t<figcaption class='photonic-title-info'>\n{$indent}\t\t\t\t<div class='photonic-$singular_type-title photonic-title'>" . wp_specialchars_decode(stripslashes(wp_filter_nohtml_kses($title)), ENT_QUOTES) . "";
 				if (!$level_1_count_display && !empty($object->counter)) {
-					$text .= '<span class="photonic-title-photo-count photonic-' . $singular_type . '-photo-count">' . sprintf(esc_html__('%s photos', 'photonic'), $object->counter) . '</span>';
+					$shown_title .= '<span class="photonic-title-photo-count photonic-' . $singular_type . '-photo-count">' . sprintf(esc_html__('%s photos', 'photonic'), $object->counter) . '</span>';
 				}
-			}
-			if ('' !== $text) {
-				$text .= "</div>\n{$indent}\t\t\t</figcaption>";
+				$shown_title .= "</div>\n{$indent}\t\t\t</figcaption>";
 			}
 
-			$anchor .= $text . "\n{$indent}\t\t</a>";
-			$password_prompt = '';
-			if (!empty($object->passworded)) {
-				$prompt_title = esc_attr__('Protected Content', 'photonic');
-				$prompt_submit = esc_attr__('Access', 'photonic');
-				$prompt_text = esc_attr__('This album is password-protected. Please provide a valid password.', 'photonic');
+			$grid_image             = new Grid_Image();
+			$grid_image->alt        = esc_attr($title);
+			$grid_image->src        = esc_url($img_src);
+			$grid_image->classes    = [sanitize_html_class($layout)];
+			$grid_image->dimensions = $inbuilt_sizes ?? [];
 
-				$password_prompt = "
-							<div class='photonic-password-prompter $realm_class' id='photonic-{$provider}-$singular_type-prompter-$id' title='$prompt_title' data-photonic-prompt='password'>
-								<div class='photonic-password-prompter-content'>
-									<div class='photonic-prompt-head'>
-										<h3>
-											<span class='title'>$prompt_title</span>
-											<button class='close'>&times;</button>
-										</h3>
-									</div>
-									<div class='photonic-prompt-body'>
-										<p>$prompt_text</p>
-										<input type='password' name='photonic-{$provider}-password' />
-										<button class='photonic-{$provider}-submit photonic-password-submit confirm'>$prompt_submit</button>
-									</div>
-								</div>
-							</div>";
-			}
+			$grid_anchor             = new Grid_Anchor();
+			$grid_anchor->id         = "photonic-{$provider}-$singular_type-thumb-$id";
+			$grid_anchor->href       = esc_url($object->gallery_url ?? $object->main_page);
+			$grid_anchor->classes    = array_merge($gallery_anchor_classes, $object->classes);
+			$grid_anchor->data       = $anchor_data;
+			$grid_anchor->title      = 'none' !== $title_position ? esc_attr($title) : '';
+			$grid_anchor->figcaption = $shown_title;
+			$grid_anchor->image      = $grid_image;
+			$grid_anchor->indent     = $indent;
 
-			$ret .= "\n$indent\t<figure class='$gallery_item_class' id='photonic-{$provider}-$singular_type-$id' $item_dim>{$anchor}{$password_prompt}\n$indent\t</figure>";
+			$grid_figure                  = new Grid_Figure();
+			$grid_figure->id              = "photonic-{$provider}-$singular_type-$id";
+			$grid_figure->classes         = $gallery_figure_classes;
+			$grid_figure->styles          = $styles;
+			$grid_figure->data            = $figure_data;
+			$grid_figure->anchor          = $grid_anchor;
+			$grid_figure->indent          = $indent;
+			$grid_figure->prompter_markup = $this->get_password_prompter($object, $provider, $singular_type, $id);
+
+			$grid_figures[] = $grid_figure;
 			$counter++;
 		}
 
-		if ('' !== $ret) {
-			$gallery_class = "class='title-display-$title_position photonic-level-2-container " . ($non_standard ? 'photonic-' . $layout . '-layout' : 'photonic-standard-layout') . " photonic-thumbnail-effect-$effect " . ($all_sizes_present ? 'sizes-present' : 'sizes-missing') . "'";
+		if (!empty($grid_figures)) {
+			$this->set_lazy_loading_attributes($all_sizes_present, $grid_figures);
+			$gallery_class_list = $this->get_common_gallery_classes(2, $title_position, $non_standard, $layout, $effect, $all_sizes_present, $gallery_column_class);
 
-			if (!is_numeric($photonic_tile_min_height)) {
-				$photonic_tile_min_height = 200;
-			}
-			else {
-				$photonic_tile_min_height = esc_attr($photonic_tile_min_height);
-			}
-			$ret = "\n$indent<div $container_id $gallery_class $pagination_data $columns_data style='--tile-min-height: {$photonic_tile_min_height}px'>" .
-				$ret .
-				"\n$indent</div>\n";
-		}
-		else {
-			$ret = '';
-		}
+			$data_query = $this->get_updated_data_query($short_code, $pagination);
+			$container_data_attributes = [
+				'data-photonic-platform' => $provider,
+				'data-photonic-gallery-columns' => esc_attr($columns),
+				'data-photonic-query' => esc_attr($data_query),
+				'data-photonic' => esc_attr(wp_json_encode($gallery_data)),
+			];
 
-		if (!empty($ret)) {
-			$ret .= "<span id='$container_end'></span>";
-			if (!empty($pagination) && isset($pagination->end) && isset($pagination->total) && $pagination->total > $pagination->end) {
-				$ret .= !empty($more) ? "<a href='#' class='photonic-more-button photonic-more-dynamic'>" . esc_html($more) . "</a>\n" : '';
-			}
+			$ret = $this->generate_container_markup($module, $pagination, $gallery_class_list, $container_data_attributes, $grid_figures, $container_start_id, $container_end_id, $more, 2, $indent);
 		}
 
 		$module->pop_from_stack();
@@ -410,56 +398,28 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 	}
 
 	/**
-	 * @param $short_code
-	 * @param $module
+	 * @param array $short_code
+	 * @param Base $module
 	 * @return array
 	 */
-	private function get_container_details($short_code, $module) {
+	private function get_container_details(array $short_code, Base $module): array {
 		if ('modal' !== $short_code['display']) {
-			$container_id = "id='photonic-" . esc_attr($module->provider) . "-stream-" . esc_attr($module->gallery_index) . "-container'";
-			$container_end = "photonic-" . esc_attr($module->provider) . "-stream-" . esc_attr($module->gallery_index) . "-container-end";
+			$start_id = "photonic-" . esc_attr($module->provider) . "-stream-" . esc_attr($module->gallery_index) . "-container";
+			$end_id   = "photonic-" . esc_attr($module->provider) . "-stream-" . esc_attr($module->gallery_index) . "-container-end";
 		}
 		else {
-			$container_id = "id='photonic-" . esc_attr($module->provider) . "-panel-" . esc_attr(sanitize_text_field($short_code['panel'])) . "-container'";
-			$container_end = "photonic-" . esc_attr($module->provider) . "-panel-" . esc_attr(sanitize_text_field($short_code['panel'])) . "-container-end";
+			$start_id = "photonic-" . esc_attr($module->provider) . "-panel-" . esc_attr(sanitize_text_field($short_code['panel'])) . "-container";
+			$end_id   = "photonic-" . esc_attr($module->provider) . "-panel-" . esc_attr(sanitize_text_field($short_code['panel'])) . "-container-end";
 		}
-		return [$container_id, $container_end];
+		return [$start_id, $end_id];
 	}
 
 	/**
-	 * @param array $link_attributes
+	 * @param array      $short_code
+	 * @param Pagination $pagination
 	 * @return string
 	 */
-	private function get_text_from_link_attributes($link_attributes) {
-		$class = '';
-		$rel = '';
-		$specific = '';
-		if (!empty($link_attributes['class'])) {
-			$class = " class='" . esc_attr(implode(' ', array_values($link_attributes['class']))) . "' ";
-		}
-
-		if (!empty($link_attributes['rel'])) {
-			$rel = " rel='" . esc_attr(implode(' ', $link_attributes['rel'])) . "' ";
-		}
-
-		if (!empty($link_attributes['specific'])) {
-			foreach ($link_attributes['specific'] as $key => $val) {
-				$specific .= $key . '="' . esc_attr(implode(' ', $val)) . '" ';
-			}
-		}
-		return $class . $rel . $specific;
-	}
-
-	/**
-	 * @param $short_code
-	 * @param $module
-	 * @param Pagination $pagination
-	 * @param $columns
-	 * @return array
-	 */
-	private function get_gallery_data_attributes($short_code, $module, $pagination, $columns) {
-		$pagination_data = ' data-photonic-platform="' . $module->provider . '"';
-
+	private function get_updated_data_query(array $short_code, Pagination $pagination): string {
 		$to_be_glued = '';
 
 		if (!empty($short_code)) {
@@ -479,10 +439,7 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 			$to_be_glued = implode('&', $to_be_glued);
 			$to_be_glued = esc_attr($to_be_glued);
 		}
-
-		$pagination_data .= ' data-photonic-query="' . $to_be_glued . '"';
-		$columns_data = ' data-photonic-gallery-columns="' . $columns . '"';
-		return [$pagination_data, $columns_data];
+		return $to_be_glued;
 	}
 
 	/**
@@ -493,14 +450,14 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 	 * @param $title_position
 	 * @return string
 	 */
-	private function get_thumbnail_effect($short_code, $layout, $title_position) {
+	private function get_thumbnail_effect($short_code, $layout, $title_position): string {
 		if (!empty($short_code['thumbnail_effect'])) {
 			$effect = $short_code['thumbnail_effect'];
 		}
 		else {
 			global $photonic_standard_thumbnail_effect, $photonic_justified_thumbnail_effect, $photonic_mosaic_thumbnail_effect, $photonic_masonry_thumbnail_effect;
 			$effect = 'mosaic' === $layout ? $photonic_mosaic_thumbnail_effect :
-				('masonry' === $layout ? $photonic_masonry_thumbnail_effect :
+				(('masonry' === $layout || 'masonry-horizontal' === $layout)? $photonic_masonry_thumbnail_effect :
 					('random' === $layout ? $photonic_justified_thumbnail_effect :
 						$photonic_standard_thumbnail_effect));
 			$effect = esc_attr($effect);
@@ -519,14 +476,150 @@ class Grid extends Core_Layout implements Level_One_Gallery, Level_Two_Gallery {
 	}
 
 	/**
-	 * @param Core $module
+	 * Returns the layout engine to be used, i.e. js or css.
+	 *
+	 * @param Base $module
 	 * @param $short_code
 	 * @return string
 	 */
-	private function get_layout_engine(Core $module, $short_code) {
+	private function get_layout_engine(Base $module, $short_code): string {
 		$layout_engine = 'photonic_' . $module->provider . '_layout_engine';
 		global ${$layout_engine};
-		$layout_using = empty($short_code['layout_engine']) ? ${$layout_engine} : $short_code['layout_engine'];
-		return $layout_using;
+		return $short_code['layout_engine'] ?? ${$layout_engine};
+	}
+
+	/**
+	 * @param Album  $object
+	 * @param string $provider
+	 * @param string $singular_type
+	 * @param string $id
+	 * @return string
+	 */
+	private function get_password_prompter(Album $object, string $provider, string $singular_type, string $id): string {
+		$password_prompt = '';
+		if (!empty($object->passworded)) {
+			$password_prompt = "
+							<div class='photonic-password-prompter' id='photonic-{$provider}-$singular_type-prompter-$id' title='{$this->prompt_title}' data-photonic-prompt='password'>
+								<div class='photonic-password-prompter-content'>
+									<div class='photonic-prompt-head'>
+										<h3>
+											<span class='title'>{$this->prompt_title}</span>
+											<button class='close'>&times;</button>
+										</h3>
+									</div>
+									<div class='photonic-prompt-body'>
+										<p>{$this->prompt_text}</p>
+										<input type='password' name='photonic-{$provider}-password' />
+										<button class='photonic-{$provider}-submit photonic-password-submit confirm'>{$this->prompt_submit}</button>
+									</div>
+								</div>
+							</div>";
+		}
+		return $password_prompt;
+	}
+
+	/**
+	 * @param bool  $all_sizes_present
+	 * @param array $grid_figures
+	 */
+	private function set_lazy_loading_attributes(bool $all_sizes_present, array $grid_figures): void {
+		if ($all_sizes_present) {
+			foreach ($grid_figures as $figure) {
+				$figure->anchor->image->lazy_load = 'lazy';
+				$figure->anchor->image->src_attr  = 'data-src';
+			}
+		}
+		else {
+			foreach ($grid_figures as $figure) {
+				$figure->anchor->image->lazy_load = 'eager';
+				$figure->anchor->image->src_attr  = 'src';
+			}
+		}
+	}
+
+	private function get_common_gallery_classes($level, $title_position, $non_standard, $layout, $thumbnail_effect, $all_sizes_present, $gallery_column_class, $display = null): array {
+		$classes = [
+			'title-display-' . $title_position,
+			'photonic-level-' . $level . '-container',
+			$all_sizes_present ? 'sizes-present' : 'sizes-missing',
+			$gallery_column_class,
+		];
+
+		if ('modal' === $display) {
+			$classes[] = 'modal-gallery';
+		}
+		else {
+			$classes[] = $non_standard ? 'photonic-' . $layout . '-layout' : 'photonic-standard-layout';
+			$classes[] = 'photonic-thumbnail-effect-' . $thumbnail_effect;
+		}
+
+		return $classes;
+	}
+
+	/**
+	 * @param bool   $non_standard
+	 * @param string $columns
+	 * @param array  $row_constraints
+	 * @return string
+	 */
+	private function get_gallery_column_class(bool $non_standard, string $columns, array $row_constraints): string {
+		$gallery_column_class = '';
+		if (!$non_standard) {
+			if (absint($columns)) {
+				$gallery_column_class = 'photonic-gallery-' . esc_attr($columns) . 'c';
+			}
+			elseif ('padding' === $row_constraints['constraint-type']) {
+				$gallery_column_class = 'photonic-auto-padded';
+			}
+			elseif (!empty($row_constraints['count'])) {
+				$gallery_column_class = 'photonic-gallery-' . esc_attr($row_constraints['count']) . 'c';
+			}
+		}
+		return $gallery_column_class;
+	}
+
+	private function glue_data_attributes(array $map): string {
+		$data_pieces = [];
+		if (!empty($map)) {
+			$data_pieces = array_map(
+				function (string $key, string $value): string {
+					return $key . '="' . $value . '"';
+				},
+				array_keys($map),
+				array_values($map)
+			);
+		}
+		return implode(' ', $data_pieces);
+	}
+
+	private function generate_container_markup(Base $module, Pagination $pagination, array $container_class_list, array $container_data_attributes, array $grid_figures, string $start_id, string $end_id, string $more, int $level, string $indent): string {
+		$ret = '';
+		if (!empty($grid_figures)) {
+			$container_class = str_replace('  ', ' ', trim(implode(' ', $container_class_list)));
+
+			$style = '';
+			if (in_array('photonic-random-layout', $container_class_list, true)) {
+				global $photonic_tile_min_height;
+				if (!is_numeric($photonic_tile_min_height)) {
+					$photonic_tile_min_height = 200;
+				}
+				$photonic_tile_min_height = esc_attr($photonic_tile_min_height);
+				$style = "style='--tile-min-height: {$photonic_tile_min_height}px'";
+			}
+
+			$container_data_string = $this->glue_data_attributes($container_data_attributes);
+			$ret = "\n$indent<div id='" . esc_attr($start_id) . "' class='" . esc_attr($container_class) . "' $container_data_string $style>\n";
+			foreach ($grid_figures as $figure) {
+				$ret .= $figure->html($module, $this, false);
+			}
+
+			$ret .= "\n$indent</div> <!-- ./photonic-level-{$level}-container -->";
+			$ret .= "\n$indent<span id='$end_id'></span>";
+
+			if (!empty($pagination) && isset($pagination->end) && isset($pagination->total) && $pagination->total > $pagination->end) {
+				$ret .= !empty($more) ? "\n$indent<a href='#' class='photonic-more-button photonic-more-dynamic'>$more</a>\n" : '';
+			}
+		}
+		return $ret;
 	}
 }

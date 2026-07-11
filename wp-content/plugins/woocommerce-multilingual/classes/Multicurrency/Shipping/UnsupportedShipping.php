@@ -8,11 +8,14 @@ class UnsupportedShipping implements ShippingMode {
 		return null;
 	}
 
-	public function getFieldTitle( $currencyCode ) {
+	public function getFieldTitle( $currencyCode ): ?string {
 		return null;
 	}
 
-	public function getFieldDescription( $currencyCode ) {
+	/**
+	 * @param string|mixed $currencyCode
+	 */
+	public function getFieldDescription( $currencyCode ): ?string {
 		return null;
 	}
 

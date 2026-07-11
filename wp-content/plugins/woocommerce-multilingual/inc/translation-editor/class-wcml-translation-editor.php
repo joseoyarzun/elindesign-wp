@@ -1,6 +1,8 @@
 <?php
 
+use WCML\TranslationJob\Hooks;
 use WCML\Utilities\DB;
+use WCML\Utilities\SyncHash;
 
 use function WCML\functions\getSetting;
 
@@ -10,7 +12,7 @@ class WCML_Translation_Editor {
 	private $woocommerce_wpml;
 	/** @var SitePress */
 	private $sitepress;
-	/** @var  wpdb */
+	/** @var wpdb */
 	private $wpdb;
 
 	public function __construct( woocommerce_wpml $woocommerce_wpml, $sitepress, wpdb $wpdb ) {
@@ -49,11 +51,30 @@ class WCML_Translation_Editor {
 		add_action( 'wp_ajax_wcml_editor_auto_slug', [ $this, 'auto_generate_slug' ] );
 
 		add_filter( 'wpml_tm_show_page_builders_translation_editor_warning', [ $this, 'show_page_builders_translation_editor_warning' ], 10, 2 );
+		add_filter( 'wpml_translation_editor_save_job_data', [ $this, 'set_ctp_as_editor_for_this_product' ] );
+	}
+
+	/**
+	 * @param array $data
+	 *
+	 * @return array
+	 */
+	public function set_ctp_as_editor_for_this_product( $data ) {
+		if ( 'post_product' === $data['job_post_type'] ) {
+			/**
+			 * @param int $job_id
+			 */
+			add_action( 'wpml_save_job_fields_from_post', function ( $job_id ) {
+				wpml_tm_load_old_jobs_editor()->set( $job_id, 'wpml' );
+			} );
+		}
+
+		return $data;
 	}
 
 	public function fetch_translation_job_for_editor( $job, $job_details ) {
 
-		if ( $job_details['job_type'] === 'post_product' ) {
+		if ( 'post_product' === $job_details['job_type'] ) {
 			$job = new WCML_Editor_UI_Product_Job( $job_details, $this->woocommerce_wpml, $this->sitepress, $this->wpdb );
 		}
 
@@ -66,7 +87,7 @@ class WCML_Translation_Editor {
 
 		// See if it's a WooCommerce product.
 		$job = $iclTranslationManagement->get_translation_job( $job_data['job_id'] );
-		if ( $job && $job->original_post_type === 'post_product' ) {
+		if ( $job && Hooks::isProduct( $job ) ) {
 			$job_data['job_type'] = 'wc_product';
 			$job_data['job_id']   = $job->original_doc_id;
 		}
@@ -93,7 +114,7 @@ class WCML_Translation_Editor {
 				echo PHP_EOL . '// <![CDATA[' . PHP_EOL;
 				echo 'addLoadEvent(function(){' . PHP_EOL;
 				echo "jQuery('#product-type option').prop('selected', false);" . PHP_EOL;
-				echo "jQuery('#product-type option[value=\"" . $terms[0]->slug . "\"]').prop('selected', true);" . PHP_EOL;
+				echo "jQuery('#product-type option[value=\"" . esc_js( $terms[0]->slug ) . "\"]').prop('selected', true);" . PHP_EOL;
 				echo '});' . PHP_EOL;
 				echo PHP_EOL . '// ]]>' . PHP_EOL;
 				echo '</script>';
@@ -158,7 +179,7 @@ class WCML_Translation_Editor {
 		);
 
 		if ( ! $update ) {
-			$job_id = $iclTranslationManagement->add_translation_job( $rid, $user_id, $translation_package );
+			wpml_tm_add_translation_job( $rid, $user_id, $translation_package, [] );
 		}
 
 	}
@@ -262,12 +283,8 @@ class WCML_Translation_Editor {
 				foreach ( $variations as $variation ) {
 					$variation_id        = absint( $variation->ID );
 					$original_id         = $this->woocommerce_wpml->products->get_original_product_id( $variation_id );
-					$custom_product_sync = get_post_meta( $original_id, 'wcml_sync_files', true );
-					if ( $custom_product_sync && 'self' === $custom_product_sync ) {
-						$file_path_sync[ $variation_id ] = false;
-					} else {
-						$file_path_sync[ $variation_id ] = true;
-					}
+
+					$file_path_sync[ $variation_id ] = WCML_Downloadable_Products::isDownloadableFilesSetToUseSame( $original_id );
 				}
 			}
 
@@ -386,7 +403,7 @@ class WCML_Translation_Editor {
 				$suffix = 2;
 				do {
 
-					$alt_post_name   = _truncate_post_slug( $post_name, 200 - ( strlen( $suffix ) + 1 ) ) . "-$suffix";
+					$alt_post_name   = _truncate_post_slug( $post_name, 200 - ( strlen( (string) $suffix ) + 1 ) ) . "-$suffix";
 					$post_name_check = $wpdb->get_var( $wpdb->prepare( $check_sql, $alt_post_name, $lang ) );
 					$suffix++;
 

@@ -22,7 +22,7 @@
  *    selection has been retrieved. You should listen on the document
  *    object for the "enviraGalleryModalData" event, like this:
  *
- *    jQuery( document ).on( 'enviraGalleryModalData', function( e ) { 
+ *    jQuery( document ).on( 'enviraGalleryModalData', function( e ) {
  *        console.log( e.action );            // 'gallery' or 'album'
  *        console.log( e.multiple );          // Whether the user could select multiple Galleries / Albums (true|false)
  *        console.log( e.items );             // An array of Galleries or Albums
@@ -34,29 +34,31 @@
  *
  *    Please note that Envira Gallery 1.5.0 and Envira Albums 1.3.0 introduced
  *    support for selecting multiple Galleries / Albums in the Backbone modal.
- */ 
-jQuery( document ).ready( function( $ ) {
+ */
+jQuery(document).ready(function ($) {
+	// Open the "Add Gallery" / "Add Album" modal
+	$(document).on(
+		'click',
+		'a.envira-gallery-choose-gallery, a.envira-albums-choose-album, .envira-gallery-modal-trigger',
+		function (e) {
+			// Prevent default action
+			e.preventDefault();
 
-    // Open the "Add Gallery" / "Add Album" modal
-    $( document ).on( 'click', 'a.envira-gallery-choose-gallery, a.envira-albums-choose-album, .envira-gallery-modal-trigger', function( e ) {
+			// Get the action
+			var action = $(this).data('action');
 
-        // Prevent default action
-        e.preventDefault();
+			// Define the modal's view
+			EnviraGalleryModalWindow.content(
+				new EnviraGallerySelectionView({
+					action: action, // gallery|album
+					multiple: true, // Allow multiple Galleries / Albums to be selected
+					modal_title: envira_gallery_editor.modal_title,
+					insert_button_label: envira_gallery_editor.insert_button_label
+				})
+			);
 
-        // Get the action
-        var action = $( this ).data( 'action' );
-
-        // Define the modal's view
-        EnviraGalleryModalWindow.content( new EnviraGallerySelectionView( {
-            action:             action, // gallery|album
-            multiple:           true,   // Allow multiple Galleries / Albums to be selected
-            modal_title:        envira_gallery_editor.modal_title,
-            insert_button_label:envira_gallery_editor.insert_button_label
-        } ) );
-
-        // Open the modal window
-        EnviraGalleryModalWindow.open();
-
-    } );
-
-} );
+			// Open the modal window
+			EnviraGalleryModalWindow.open();
+		}
+	);
+});

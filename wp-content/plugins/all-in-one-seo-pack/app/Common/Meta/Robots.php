@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use AIOSEO\Plugin\Common\Integrations\BuddyPress as BuddyPressIntegration;
+
 /**
  * Handles the robots meta tag.
  *
@@ -100,6 +102,10 @@ class Robots {
 			$this->globalValues( [ 'archives', 'search' ] );
 
 			return $this->metaHelper();
+		}
+
+		if ( BuddyPressIntegration::isComponentPage() ) {
+			return aioseo()->standalone->buddyPress->component->getMeta( 'robots' );
 		}
 
 		if ( is_category() || is_tag() || is_tax() ) {
@@ -222,7 +228,12 @@ class Robots {
 	 */
 	public function term( $term = null ) {
 		$dynamicOptions = aioseo()->dynamicOptions->noConflict();
-		$term           = is_a( $term, 'WP_Term' ) ? $term : get_queried_object();
+		$term           = is_a( $term, 'WP_Term' ) ? $term : aioseo()->helpers->getTerm();
+
+		// Misbehaving themes/plugins can manipulate the loop and make archives return a post as the queried object.
+		if ( ! is_a( $term, 'WP_Term' ) ) {
+			return;
+		}
 
 		if ( $dynamicOptions->searchAppearance->taxonomies->has( $term->taxonomy ) ) {
 			$this->globalValues( [ 'taxonomies', $term->taxonomy ], true );
@@ -242,7 +253,7 @@ class Robots {
 	 */
 	private function archives() {
 		$dynamicOptions = aioseo()->dynamicOptions->noConflict();
-		$postType       = get_queried_object();
+		$postType       = aioseo()->helpers->getTerm();
 		if ( ! empty( $postType->name ) && $dynamicOptions->searchAppearance->archives->has( $postType->name ) ) {
 			$this->globalValues( [ 'archives', $postType->name ], true );
 		}
@@ -257,7 +268,7 @@ class Robots {
 	 * @param  boolean $isDynamicOption Whether this is for a dynamic option.
 	 * @return void
 	 */
-	protected function globalValues( $optionOrder = [], $isDynamicOption = false ) {
+	public function globalValues( $optionOrder = [], $isDynamicOption = false ) {
 		$robotsMeta = [];
 		if ( count( $optionOrder ) ) {
 			$options = $isDynamicOption
@@ -276,9 +287,13 @@ class Robots {
 				$this->attributes['noindex'] = 'noindex';
 			}
 
-			$robotsMeta = $options->advanced->robotsMeta->all();
-			if ( $robotsMeta['default'] ) {
+			if ( ! isset( $options->advanced->robotsMeta ) ) {
 				$robotsMeta = aioseo()->options->searchAppearance->advanced->globalRobotsMeta->all();
+			} else {
+				$robotsMeta = $options->advanced->robotsMeta->all();
+				if ( $robotsMeta['default'] ) {
+					$robotsMeta = aioseo()->options->searchAppearance->advanced->globalRobotsMeta->all();
+				}
 			}
 		} else {
 			$robotsMeta = aioseo()->options->searchAppearance->advanced->globalRobotsMeta->all();
@@ -310,7 +325,7 @@ class Robots {
 			$this->attributes['notranslate'] = 'notranslate';
 		}
 		$maxSnippet = $robotsMeta['maxSnippet'];
-		if ( ! $noSnippet && $maxSnippet && intval( $maxSnippet ) ) {
+		if ( ! $noSnippet && is_numeric( $maxSnippet ) ) {
 			$this->attributes['max-snippet'] = "max-snippet:$maxSnippet";
 		}
 		$maxImagePreview = $robotsMeta['maxImagePreview'];
@@ -319,7 +334,7 @@ class Robots {
 			$this->attributes['max-image-preview'] = "max-image-preview:$maxImagePreview";
 		}
 		$maxVideoPreview = $robotsMeta['maxVideoPreview'];
-		if ( $maxVideoPreview && intval( $maxVideoPreview ) ) {
+		if ( isset( $maxVideoPreview ) && is_numeric( $maxVideoPreview ) ) {
 			$this->attributes['max-video-preview'] = "max-video-preview:$maxVideoPreview";
 		}
 
@@ -357,13 +372,13 @@ class Robots {
 		if ( $metaData->robots_notranslate ) {
 			$this->attributes['notranslate'] = 'notranslate';
 		}
-		if ( ! $metaData->robots_nosnippet && $metaData->robots_max_snippet && intval( $metaData->robots_max_snippet ) ) {
+		if ( ! $metaData->robots_nosnippet && isset( $metaData->robots_max_snippet ) && is_numeric( $metaData->robots_max_snippet ) ) {
 			$this->attributes['max-snippet'] = "max-snippet:$metaData->robots_max_snippet";
 		}
 		if ( ! $metaData->robots_noimageindex && $metaData->robots_max_imagepreview && in_array( $metaData->robots_max_imagepreview, [ 'none', 'standard', 'large' ], true ) ) {
 			$this->attributes['max-image-preview'] = "max-image-preview:$metaData->robots_max_imagepreview";
 		}
-		if ( $metaData->robots_max_videopreview && intval( $metaData->robots_max_videopreview ) ) {
+		if ( isset( $metaData->robots_max_videopreview ) && is_numeric( $metaData->robots_max_videopreview ) ) {
 			$this->attributes['max-video-preview'] = "max-video-preview:$metaData->robots_max_videopreview";
 		}
 

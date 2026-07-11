@@ -1,3 +1,4 @@
+<?php if ( ! defined( 'ABSPATH' ) ) exit; // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals ?>
 <h2></h2> <!-- Do not remove -->
 
 <?php
@@ -5,8 +6,9 @@
 	if (!PMXI_Plugin::getInstance()->getOption('dismiss_manage_bottom')) {
 		?>
 		<div class="updated_bottom">
-			<?php printf(
-					__('<span><a href="https://wordpress.org/support/view/plugin-reviews/wp-all-import#postform" target="_blank">If our plugin helped you, please rate us on WordPress.org. It would really help us!</a><a href="https://wordpress.org/support/view/plugin-reviews/wp-all-import#postform" class="pmxi_stars" target="_blank"></a></span><a href="javascript:void(0);" id="dismiss_manage_bottom">dismiss</a>', 'wp_all_import_plugin')
+			<?php echo wp_kses(
+					__('<span><a href="https://wordpress.org/support/view/plugin-reviews/wp-all-import#postform" target="_blank">If our plugin helped you, please rate us on WordPress.org. It would really help us!</a><a href="https://wordpress.org/support/view/plugin-reviews/wp-all-import#postform" class="pmxi_stars" target="_blank"></a></span><a href="javascript:void(0);" id="dismiss_manage_bottom">dismiss</a>', 'wp-all-import'),
+					array('span' => array(), 'a' => array('href' => array(), 'target' => array(), 'class' => array(), 'id' => array()))
 			) ?>
 		</div>
 		<?php
@@ -17,7 +19,7 @@
 <div class="wpallimport-header" style="overflow:hidden; height: 70px; padding-top: 10px; margin-bottom: -15px;">
 	<div class="wpallimport-logo"></div>
 	<div class="wpallimport-title">
-		<h3><?php _e('Manage Imports', 'wp_all_import_plugin'); ?></h3>
+		<h3><?php esc_html_e('Manage Imports', 'wp-all-import'); ?></h3>
 	</div>
 </div>
 
@@ -28,20 +30,20 @@
 <form method="get">
 	<input type="hidden" name="page" value="<?php echo esc_attr($this->input->get('page')) ?>" />
 	<p class="search-box">
-		<label for="search-input" class="screen-reader-text"><?php _e('Search Imports', 'wp_all_import_plugin') ?>:</label>
+		<label for="search-input" class="screen-reader-text"><?php esc_html_e('Search Imports', 'wp-all-import') ?>:</label>
 		<input id="search-input" type="text" name="s" value="<?php echo esc_attr($s) ?>" />
-		<input type="submit" class="button" value="<?php _e('Search Imports', 'wp_all_import_plugin') ?>">
+		<input type="submit" class="button" value="<?php esc_html_e('Search Imports', 'wp-all-import') ?>">
 	</p>
 </form>
 
 <?php
 // define the columns to display, the syntax is 'internal name' => 'display name'
 $columns = array(
-	'id'		=> __('ID', 'wp_all_import_plugin'),
-	'name'		=> __('File', 'wp_all_import_plugin'),
+	'id'		=> __('ID', 'wp-all-import'),
+	'name'		=> __('File', 'wp-all-import'),
 	'actions'	=> '',
-	'summary'	=> __('Summary', 'wp_all_import_plugin'),
-	'info'		=> __('Info & Options', 'wp_all_import_plugin'),
+	'summary'	=> __('Summary', 'wp-all-import'),
+	'info'		=> __('Info & Options', 'wp-all-import'),
 );
 
 $columns = apply_filters('pmxi_manage_imports_columns', $columns);
@@ -54,21 +56,22 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 	<div class="tablenav">
 		<div class="alignleft actions">
 			<select name="bulk-action">
-				<option value="" selected="selected"><?php _e('Bulk Actions', 'wp_all_import_plugin') ?></option>
-				<option value="delete"><?php _e('Delete', 'wp_all_import_plugin') ?></option>
+				<option value="" selected="selected"><?php esc_html_e('Bulk Actions', 'wp-all-import') ?></option>
+				<option value="delete"><?php esc_html_e('Delete', 'wp-all-import') ?></option>
 			</select>
-			<input type="submit" value="<?php esc_attr_e('Apply', 'wp_all_import_plugin') ?>" name="doaction" id="doaction" class="button-secondary action" />
+			<input type="submit" value="<?php esc_attr_e('Apply', 'wp-all-import') ?>" name="doaction" id="doaction" class="button-secondary action" />
 		</div>
 
 		<?php if ($page_links): ?>
 			<div class="tablenav-pages">
-				<?php echo $page_links_html = sprintf(
-					'<span class="displaying-num">' . __('Displaying %s&#8211;%s of %s', 'wp_all_import_plugin') . '</span>%s',
-					number_format_i18n(($pagenum - 1) * $perPage + 1),
-					number_format_i18n(min($pagenum * $perPage, $list->total())),
-					number_format_i18n($list->total()),
+				<?php $page_links_html = sprintf(
+					/* translators: 1: from number, 2: to number, 3: total count, 4: page links HTML */
+					'<span class="displaying-num">' . esc_html__('Displaying %1$s&#8211;%2$s of %3$s', 'wp-all-import') . '</span>%s',
+					esc_html(number_format_i18n(($pagenum - 1) * $perPage + 1)),
+					esc_html(number_format_i18n(min($pagenum * $perPage, $list->total()))),
+					esc_html(number_format_i18n($list->total())),
 					wp_kses_post($page_links)
-				) ?>
+				); echo wp_kses_post($page_links_html); ?>
 			</div>
 		<?php endif ?>
 	</div>
@@ -110,7 +113,11 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 		<tbody id="the-pmxi-admin-import-list" class="list:pmxi-admin-imports">
 		<?php if ($list->isEmpty()): ?>
 			<tr>
-				<td colspan="<?php echo count($columns) + 1 ?>"><?php printf(__('No previous imports found. <a href="%s">Start a new import...</a>', 'wp_all_import_plugin'), esc_url(add_query_arg(array('page' => 'pmxi-admin-import'), admin_url('admin.php')))); ?></td>
+				<td colspan="<?php echo intval(count($columns) + 1) ?>"><?php echo wp_kses( sprintf(
+					/* translators: %s: URL to start a new import */
+					__('No previous imports found. <a href="%s">Start a new import...</a>', 'wp-all-import'),
+					esc_url(add_query_arg(array('page' => 'pmxi-admin-import'), admin_url('admin.php')))
+				), array('a' => array('href' => array())) ); ?></td>
 			</tr>
 		<?php else: ?>
 			<?php
@@ -138,7 +145,7 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 									<?php if ('0000-00-00 00:00:00' == $item['first_import']): ?>
 										<em>never</em>
 									<?php else: ?>
-										<?php echo get_date_from_gmt($item['first_import'], 'Y/m/d g:i a'); ?>
+										<?php echo esc_html(get_date_from_gmt($item['first_import'], 'Y/m/d g:i a')); ?>
 									<?php endif ?>
 								</td>
 								<?php
@@ -149,7 +156,7 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 									<?php if ('0000-00-00 00:00:00' == $item['registered_on']): ?>
 										<em>never</em>
 									<?php else: ?>
-										<?php echo get_date_from_gmt($item['registered_on'], 'Y/m/d g:i a'); ?>
+										<?php echo esc_html(get_date_from_gmt($item['registered_on'], 'Y/m/d g:i a')); ?>
 									<?php endif ?>
 								</td>
 								<?php
@@ -157,7 +164,7 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 							case 'name':
 								?>
 								<td>
-									<strong><?php echo esc_attr(apply_filters("pmxi_import_name", (!empty($item['friendly_name'])) ? $item['friendly_name'] : $item['name'], $item['id'])); ?></strong><br>
+									<strong><?php echo esc_html(apply_filters("pmxi_import_name", (!empty($item['friendly_name'])) ? $item['friendly_name'] : $item['name'], $item['id'])); ?></strong><br>
 
 									<?php if ($item['path']): ?>
 										<?php if ( in_array($item['type'], array('upload'))): ?>
@@ -173,12 +180,12 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 												}
 											}
 											?>
-											<em><a href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'feed', '_wpnonce' => wp_create_nonce( '_wpnonce-download_feed' )), $this->baseUrl)); ?>" class="wp_all_import_show_path" rel="<?php echo esc_attr($item['path']); ?>"><?php echo preg_replace('%.*wp-content/%', 'wp-content/', $path); ?></a></em>
+											<em><a href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'feed', '_wpnonce' => wp_create_nonce( '_wpnonce-download_feed' )), $this->baseUrl)); ?>" class="wp_all_import_show_path" rel="<?php echo esc_attr($item['path']); ?>"><?php echo esc_html(preg_replace('%.*wp-content/%', 'wp-content/', $path)); ?></a></em>
 										<?php elseif (in_array($item['type'], array('file'))):?>
 											<?php $item['path'] = wp_all_import_get_absolute_path($item['path']); ?>
-											<em><a href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'feed', '_wpnonce' => wp_create_nonce( '_wpnonce-download_feed' )), $this->baseUrl)); ?>" class="wp_all_import_show_path" rel="<?php echo esc_attr($item['path']); ?>"><?php echo preg_replace('%.*wp-content/%', 'wp-content/', $item['path']); ?></a></em>
+											<em><a href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'feed', '_wpnonce' => wp_create_nonce( '_wpnonce-download_feed' )), $this->baseUrl)); ?>" class="wp_all_import_show_path" rel="<?php echo esc_attr($item['path']); ?>"><?php echo esc_html(preg_replace('%.*wp-content/%', 'wp-content/', $item['path'])); ?></a></em>
 										<?php else: ?>
-										<em><?php echo esc_attr(str_replace("\\", '/', preg_replace('%^(\w+://[^:]+:)[^@]+@%', '$1*****@', $item['path']))); ?></em>
+										<em><?php echo esc_html(str_replace("\\", '/', preg_replace('%^(\w+://[^:]+:)[^@]+@%', '$1*****@', $item['path']))); ?></em>
 										<?php endif; ?>
 									<?php endif ?>
 									<div class="row-actions">
@@ -187,17 +194,17 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 											$import_actions = array(
 												'import_template' => array(
 													'url' => ( ! $item['processing'] and ! $item['executing'] ) ? esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'edit'), $this->baseUrl)) : '',
-													'title' => __('Edit Template', 'wp_all_import_plugin'),
+													'title' => __('Edit Template', 'wp-all-import'),
 													'class' => 'edit'
 												),
 												'import_settings' => array(
 													'url' => ( ! $item['processing'] and ! $item['executing'] ) ? esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'options'), $this->baseUrl)) : '',
-													'title' => __('Settings', 'wp_all_import_plugin'),
+													'title' => __('Settings', 'wp-all-import'),
 													'class' => 'edit'
 												),
 												'delete' => array(
 													'url' => esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'delete'), $this->baseUrl)),
-													'title' => __('Delete', 'wp_all_import_plugin'),
+													'title' => __('Delete', 'wp-all-import'),
 													'class' => 'delete'
 												),
 											);
@@ -232,55 +239,79 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 								<td>
 									<?php
 									if ($item['triggered'] and ! $item['processing']){
-										_e('triggered with cron', 'wp_all_import_plugin');
+										esc_html_e('triggered with cron', 'wp-all-import');
 										if ($item['last_activity'] != '0000-00-00 00:00:00'){
 											$diff = ceil((time() - strtotime($item['last_activity']))/60);
 											?>
 											<br>
 											<span <?php if ($diff >= 10) echo 'style="color:red;"';?>>
 											<?php
-												printf(__('last activity %s ago', 'wp_all_import_plugin'), human_time_diff(strtotime($item['last_activity']), time()));
+												printf(
+												/* translators: %s: human-readable time difference */
+												esc_html__('last activity %s ago', 'wp-all-import'),
+												esc_html(human_time_diff(strtotime($item['last_activity']), time()))
+											);
 											?>
 											</span>
 											<?php
 										}
 									}
 									elseif ($item['processing']){
-										_e('currently processing with cron', 'wp_all_import_plugin'); echo '<br/>';
-										printf('Records Processed %s', $item['imported']);
+										esc_html_e('currently processing with cron', 'wp-all-import'); echo '<br/>';
+										printf(
+											/* translators: %s: number of records processed */
+											esc_html__('Records Processed %s', 'wp-all-import'),
+											esc_html($item['imported'])
+										);
 										if ($item['last_activity'] != '0000-00-00 00:00:00'){
 											$diff = ceil((time() - strtotime($item['last_activity']))/60);
 											?>
 											<br>
 											<span <?php if ($diff >= 10) echo 'style="color:red;"';?>>
 											<?php
-												printf(__('last activity %s ago', 'wp_all_import_plugin'), human_time_diff(strtotime($item['last_activity']), time()));
+												printf(
+												/* translators: %s: human-readable time difference */
+												esc_html__('last activity %s ago', 'wp-all-import'),
+												esc_html(human_time_diff(strtotime($item['last_activity']), time()))
+											);
 											?>
 											</span>
 											<?php
 										}
 									}
 									elseif($item['executing']){
-										_e('Import currently in progress', 'wp_all_import_plugin');
+										esc_html_e('Import currently in progress', 'wp-all-import');
 										if ($item['last_activity'] != '0000-00-00 00:00:00'){
 											$diff = ceil((time() - strtotime($item['last_activity']))/60);
 											?>
 											<br>
 											<span <?php if ($diff >= 10) echo 'style="color:red;"';?>>
 											<?php
-												printf(__('last activity %s ago', 'wp_all_import_plugin'), human_time_diff(strtotime($item['last_activity']), time()));
+												printf(
+												/* translators: %s: human-readable time difference */
+												esc_html__('last activity %s ago', 'wp-all-import'),
+												esc_html(human_time_diff(strtotime($item['last_activity']), time()))
+											);
 											?>
 											</span>
 											<?php
 										}
 									}
 									elseif($item['canceled'] and $item['canceled_on'] != '0000-00-00 00:00:00'){
-										printf(__('Import Attempt at %s', 'wp_all_import_plugin'), get_date_from_gmt($item['canceled_on'], "m/d/Y g:i a")); echo '<br/>';
-										_e('Import canceled', 'wp_all_import_plugin');
+										printf(
+											/* translators: %s: date and time of import attempt */
+											esc_html__('Import Attempt at %s', 'wp-all-import'),
+											esc_html(get_date_from_gmt($item['canceled_on'], "m/d/Y g:i a"))
+										); echo '<br/>';
+										esc_html_e('Import canceled', 'wp-all-import');
 									}
 									elseif($item['failed'] and $item['failed_on'] != '0000-00-00 00:00:00'){
-										printf(__('Import Attempt at %s', 'wp_all_import_plugin'), get_date_from_gmt($item['failed_on'], "m/d/Y g:i a")); echo '<br/>';
-										_e('Import failed, please check logs', 'wp_all_import_plugin');
+										printf(
+											/* translators: %s: date and time of import attempt */
+											esc_html__('Import Attempt at %s', 'wp-all-import'),
+											esc_html(get_date_from_gmt($item['failed_on'], "m/d/Y g:i a"))
+										); echo '<br/>';
+										esc_html_e('Import failed, please check logs', 'wp-all-import');
 									}
 									else{
 										if (!empty($item['options']['custom_type'])){
@@ -290,16 +321,30 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 										else{
 											$cpt_name = '';
 										}
-										printf(__('Last run: %s', 'wp_all_import_plugin'), ($item['registered_on'] == '0000-00-00 00:00:00') ? __('never', 'wp_all_import_plugin') : get_date_from_gmt($item['registered_on'], "m/d/Y g:i a")); echo '<br/>';
-										printf(__('%d %s created', 'wp_all_import_plugin'), esc_attr($item['created']), esc_attr($cpt_name)); echo '<br/>';
-										printf(__('%d updated, %d skipped, %d deleted'), esc_attr($item['updated']), esc_attr($item['skipped']), esc_attr($item['deleted']));
-										//printf(__('%d records', 'wp_all_import_plugin'), $item['post_count']);
+										printf(
+											/* translators: %s: date and time of last run */
+											esc_html__('Last run: %s', 'wp-all-import'),
+											esc_html(($item['registered_on'] == '0000-00-00 00:00:00') ? __('never', 'wp-all-import') : get_date_from_gmt($item['registered_on'], "m/d/Y g:i a"))
+										); echo '<br/>';
+										printf(
+											/* translators: 1: number of posts created, 2: post type label */
+											esc_html__('%1$d %2$s created', 'wp-all-import'),
+											intval($item['created']),
+											esc_html($cpt_name)
+										); echo '<br/>';
+										printf(
+											/* translators: 1: updated count, 2: skipped count, 3: deleted count */
+											esc_html__('%1$d updated, %2$d skipped, %3$d deleted', 'wp-all-import'),
+											intval($item['updated']),
+											intval($item['skipped']),
+											intval($item['deleted'])
+										);
 									}
 
 									if ($item['settings_update_on'] != '0000-00-00 00:00:00' and $item['last_activity'] != '0000-00-00 00:00:00' and strtotime($item['settings_update_on']) > strtotime($item['last_activity'])){
 										echo '<br/>';
 										?>
-										<strong><?php _e('settings edited since last run', 'wp_all_import_plugin'); ?></strong>
+										<strong><?php esc_html_e('settings edited since last run', 'wp-all-import'); ?></strong>
 										<?php
 									}
 
@@ -310,10 +355,10 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 							case 'info':
 								?>
 								<td>
-									<a href="#" class="scheduling-disabled"><?php _e('Scheduling Options', 'wp_all_import_plugin'); ?></a>
-                                    <a href="#help" class="wpallimport-help" style="position: relative; top: -2px; margin-left: 0;"  title="<?php _e("To run this import on a schedule you must use the 'Download from URL' or 'Use existing file' option on the Import Settings page.", PMXI_Plugin::LANGUAGE_DOMAIN);?>">?</a>
+									<a href="#" class="scheduling-disabled"><?php esc_html_e('Scheduling Options', 'wp-all-import'); ?></a>
+                                    <a href="#help" class="wpallimport-help" style="position: relative; top: -2px; margin-left: 0;"  title="<?php esc_html_e("To run this import on a schedule you must use the 'Download from URL' or 'Use existing file' option on the Import Settings page.", 'wp-all-import');?>">?</a>
                                     <br/>
-									<a href="<?php echo esc_url(add_query_arg(array('page' => 'pmxi-admin-history', 'id' => $item['id']), remove_query_arg('pagenum', $this->baseUrl))); ?>"><?php _e('History Logs', 'wp_all_import_plugin'); ?></a>
+									<a href="<?php echo esc_url(add_query_arg(array('page' => 'pmxi-admin-history', 'id' => $item['id']), remove_query_arg('pagenum', $this->baseUrl))); ?>"><?php esc_html_e('History Logs', 'wp-all-import'); ?></a>
 								</td>
 								<?php
 								break;
@@ -321,11 +366,11 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 								?>
 								<td style="width: 130px;">
 									<?php if ( ! $item['processing'] and ! $item['executing'] ): ?>
-									<h2 style="float:left;"><a class="add-new-h2" href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'update'), remove_query_arg('pagenum', $this->baseUrl))); ?>"><?php _e('Run Import', 'wp_all_import_plugin'); ?></a></h2>
+									<h2 style="float:left;"><a class="add-new-h2" href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'update'), remove_query_arg('pagenum', $this->baseUrl))); ?>"><?php esc_html_e('Run Import', 'wp-all-import'); ?></a></h2>
 									<?php elseif ($item['processing']) : ?>
-									<h2 style="float:left;"><a class="add-new-h2" href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'cancel', '_wpnonce' => wp_create_nonce( '_wpnonce-cancel_import' )), remove_query_arg('pagenum', $this->baseUrl))); ?>"><?php _e('Cancel Cron', 'wp_all_import_plugin'); ?></a></h2>
+									<h2 style="float:left;"><a class="add-new-h2" href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'cancel', '_wpnonce' => wp_create_nonce( '_wpnonce-cancel_import' )), remove_query_arg('pagenum', $this->baseUrl))); ?>"><?php esc_html_e('Cancel Cron', 'wp-all-import'); ?></a></h2>
 									<?php elseif ($item['executing']) : ?>
-									<h2 style="float:left;"><a class="add-new-h2" href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'cancel', '_wpnonce' => wp_create_nonce( '_wpnonce-cancel_import' )), remove_query_arg('pagenum', $this->baseUrl))); ?>"><?php _e('Cancel', 'wp_all_import_plugin'); ?></a></h2>
+									<h2 style="float:left;"><a class="add-new-h2" href="<?php echo esc_url(add_query_arg(array('id' => $item['id'], 'action' => 'cancel', '_wpnonce' => wp_create_nonce( '_wpnonce-cancel_import' )), remove_query_arg('pagenum', $this->baseUrl))); ?>"><?php esc_html_e('Cancel', 'wp-all-import'); ?></a></h2>
 									<?php endif; ?>
 								</td>
 								<?php
@@ -352,21 +397,21 @@ $columns = apply_filters('pmxi_manage_imports_columns', $columns);
 
 		<div class="alignleft actions">
 			<select name="bulk-action2">
-				<option value="" selected="selected"><?php _e('Bulk Actions', 'wp_all_import_plugin') ?></option>
+				<option value="" selected="selected"><?php esc_html_e('Bulk Actions', 'wp-all-import') ?></option>
 				<?php if ( empty($type) or 'trash' != $type): ?>
-					<option value="delete"><?php _e('Delete', 'wp_all_import_plugin') ?></option>
+					<option value="delete"><?php esc_html_e('Delete', 'wp-all-import') ?></option>
 				<?php else: ?>
-					<option value="restore"><?php _e('Restore', 'wp_all_import_plugin')?></option>
-					<option value="delete"><?php _e('Delete Permanently', 'wp_all_import_plugin')?></option>
+					<option value="restore"><?php esc_html_e('Restore', 'wp-all-import')?></option>
+					<option value="delete"><?php esc_html_e('Delete Permanently', 'wp-all-import')?></option>
 				<?php endif ?>
 			</select>
-			<input type="submit" value="<?php esc_attr_e('Apply', 'wp_all_import_plugin') ?>" name="doaction2" id="doaction2" class="button-secondary action" />
+			<input type="submit" value="<?php esc_attr_e('Apply', 'wp-all-import') ?>" name="doaction2" id="doaction2" class="button-secondary action" />
 		</div>
 	</div>
 	<div class="clear"></div>
 
     <div class="wpallimport-display-columns wpallimport-margin-top-forty">
-		<?php echo apply_filters('wpallimport_footer', ''); ?>
+		<?php echo wp_kses_post( apply_filters('wpallimport_footer', '') ); ?>
     </div>
 
 </form>

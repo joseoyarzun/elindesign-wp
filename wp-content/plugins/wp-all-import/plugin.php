@@ -1,10 +1,16 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 /*
 Plugin Name: WP All Import
 Plugin URI: https://www.wpallimport.com/wordpress-xml-csv-import/?utm_source=import-plugin-free&utm_medium=wp-plugins-page&utm_campaign=upgrade-to-pro
 Description: The most powerful solution for importing XML and CSV files to WordPress. Create Posts and Pages with content from any XML or CSV file. A paid upgrade to WP All Import Pro is available for support and additional features.
-Version: 3.7.3
+Version: 4.1.0
 Author: Soflyy
+Requires PHP: 7.4
+Text Domain: wp-all-import
+Domain Path: /i18n/languages
+License: GPLv3
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 */
 
 /**
@@ -25,7 +31,7 @@ define('WP_ALL_IMPORT_ROOT_URL', rtrim(plugin_dir_url(__FILE__), '/'));
  */
 define('WP_ALL_IMPORT_PREFIX', 'pmxi_');
 
-define('PMXI_VERSION', '3.7.3');
+define('PMXI_VERSION', '4.1.0');
 
 define('PMXI_EDITION', 'free');
 
@@ -116,7 +122,7 @@ final class PMXI_Plugin {
      */
     public static $is_php_allowed = true;
 
-	public static $capabilities = 'install_plugins';
+	public static $capabilities = 'setup_network';
 
 	/**
 	 * WP All Import logs folder
@@ -148,7 +154,7 @@ final class PMXI_Plugin {
         /**
          *  Language domain key.
          */
-        const LANGUAGE_DOMAIN = 'wp_all_import_plugin';
+        const LANGUAGE_DOMAIN = 'wp-all-import';
 
 	/**
 	 * Return singletone instance
@@ -175,7 +181,7 @@ final class PMXI_Plugin {
 				return $info[$mtch[1]];
 			}
 		}
-		throw new Exception("Requested method " . get_class($this) . "::$method doesn't exist.");
+		throw new Exception(esc_html("Requested method " . get_class($this) . "::$method doesn't exist."));
 	}
 
 	/**
@@ -240,12 +246,15 @@ final class PMXI_Plugin {
 	 */
 	protected function __construct() {
 
-        if(!is_multisite() || defined('WPAI_WPAE_ALLOW_INSECURE_MULTISITE') && 1 === WPAI_WPAE_ALLOW_INSECURE_MULTISITE){
+        if(defined('WPAI_WPAE_ALLOW_INSECURE_MULTISITE') && 1 === WPAI_WPAE_ALLOW_INSECURE_MULTISITE){
             self::$capabilities = 'manage_options';
         }
 
+		require_once self::ROOT_DIR . '/addon-api/autoload.php';
+
 		// register autoloading method
 		spl_autoload_register(array($this, 'autoload'));
+        require_once 'vendor/autoload.php';
 
 		// require acc code
 		if (is_dir(self::ROOT_DIR . '/acc')) foreach (PMXI_Helper::safe_glob(self::ROOT_DIR . '/acc/*.php', PMXI_Helper::GLOB_RECURSE | PMXI_Helper::GLOB_PATH) as $filePath) {
@@ -336,21 +345,46 @@ final class PMXI_Plugin {
 
 			if ( !is_dir($dir)) wp_mkdir_p($dir);
 
-			if ( ! @file_exists($dir . DIRECTORY_SEPARATOR . 'index.php') ) @touch( $dir . DIRECTORY_SEPARATOR . 'index.php' );
+			if ( ! @file_exists($dir . DIRECTORY_SEPARATOR . 'index.php') ) @touch( $dir . DIRECTORY_SEPARATOR . 'index.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_touch
 
 		}
 	}
 
 	public function init(){
 		$this->load_plugin_textdomain();
-        self::$is_php_allowed = apply_filters('wp_all_import_is_php_allowed', TRUE);
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+        self::$is_php_allowed = apply_filters('wp_all_import_is_php_allowed', self::wpai_determine_php_allowed());
+	}
+
+	/**
+	 * Determine if PHP execution should be allowed based on WordPress security constants.
+	 *
+	 * Only restricts PHP execution when BOTH DISALLOW_FILE_EDIT and DISALLOW_FILE_MODS are set to true.
+	 * This is the only configuration that creates a true security boundary where the plugin would
+	 * grant NEW code execution capabilities that don't already exist.
+	 *
+	 * @return bool True if PHP execution is allowed, false otherwise.
+	 */
+	public static function wpai_determine_php_allowed() {
+		// Only restrict if BOTH security constants are set
+		// This is the only configuration that creates a true security boundary
+		if (defined('DISALLOW_FILE_EDIT') && DISALLOW_FILE_EDIT &&
+			defined('DISALLOW_FILE_MODS') && DISALLOW_FILE_MODS) {
+			return false;
+		}
+
+		// Otherwise allow - user has other code execution vectors anyway
+		// - If only DISALLOW_FILE_EDIT is set: admin can still install plugins (file manager, code snippets, etc.)
+		// - If only DISALLOW_FILE_MODS is set: admin can still edit theme/plugin files directly
+		// - If neither is set: admin has full code execution capabilities
+		return true;
 	}
 
 	public function plugin_row_meta($links, $file)
 	{
 		if ( $file == plugin_basename( __FILE__ ) ) {
 			$row_meta = array(
-				'pro'    => '<a href="http://www.wpallimport.com" target="_blank" title="' . esc_attr( __( 'WP All Import Pro Version', 'wp_all_import_plugin' ) ) . '">' . __( 'Pro Version', 'wp_all_import_plugin' ) . '</a>',
+				'pro'    => '<a href="http://www.wpallimport.com" target="_blank" title="' . esc_attr( __( 'WP All Import Pro Version', 'wp-all-import' ) ) . '">' . __( 'Pro Version', 'wp-all-import' ) . '</a>',
 			);
 
 			return array_merge( $links, $row_meta );
@@ -590,8 +624,8 @@ final class PMXI_Plugin {
 			$actionName = str_replace('-', '_', $action);
 			if (method_exists($controllerName, $actionName)) {
 
-				@ini_set("max_input_time", PMXI_Plugin::getInstance()->getOption('max_input_time'));
-				@ini_set("max_execution_time", PMXI_Plugin::getInstance()->getOption('max_execution_time'));
+				@ini_set("max_input_time", PMXI_Plugin::getInstance()->getOption('max_input_time')); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+				@ini_set("max_execution_time", str_replace('-1','0',PMXI_Plugin::getInstance()->getOption('max_execution_time'))); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
 
 				if ( ! get_current_user_id() or ! current_user_can( self::$capabilities )) {
 				    // This nonce is not valid.
@@ -603,7 +637,7 @@ final class PMXI_Plugin {
 							'id' => $controllerName,
 							'base' => $controllerName,
 							'action' => $actionName,
-							'is_ajax' => (isset($_SERVER["HTTP_ACCEPT"]) && strpos($_SERVER["HTTP_ACCEPT"], 'json')) !== false,
+							'is_ajax' => strpos(sanitize_text_field(wp_unslash($_SERVER["HTTP_ACCEPT"] ?? '')), 'json') !== false,
 							'is_network' => is_network_admin(),
 							'is_user' => is_user_admin(),
 						);
@@ -612,8 +646,11 @@ final class PMXI_Plugin {
 
 						$controller = new $controllerName();
 						if ( ! $controller instanceof PMXI_Controller_Admin) {
-							throw new Exception("Administration page `$page` matches to a wrong controller type.");
+							throw new Exception(esc_html("Administration page `$page` matches to a wrong controller type."));
 						}
+
+					    $reviewsUI = new \Wpai\Reviews\ReviewsUI();
+					    add_action('admin_notices', [$reviewsUI, 'render']);
 
 						if ($this->_admin_current_screen->is_ajax) { // ajax request
 							$controller->$action();
@@ -630,6 +667,7 @@ final class PMXI_Plugin {
 				}
 
 			} else { // redirect to dashboard if requested page and/or action don't exist
+				// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect
 				wp_redirect(admin_url()); die();
 			}
 		}
@@ -651,7 +689,7 @@ final class PMXI_Plugin {
 		$controllerName = self::PREFIX . preg_replace_callback('%(^|_).%', array($this, "replace_callback"), $tag);// capitalize first letters of class name parts and add prefix
 		$controller = new $controllerName();
 		if ( ! $controller instanceof PMXI_Controller) {
-			throw new Exception("Shortcode `$tag` matches to a wrong controller type.");
+			throw new Exception(esc_html("Shortcode `$tag` matches to a wrong controller type."));
 		}
 		ob_start();
 		$controller->index($args, $content);
@@ -672,7 +710,7 @@ final class PMXI_Plugin {
 			if ( ! is_null(self::$buffer)) {
 				echo '<div class="wrap">';
 
-                echo self::$buffer;
+                echo self::$buffer; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Buffer contains pre-rendered HTML from the controller.
 
 				do_action('pmxi_action_after');
 				echo '</div>';
@@ -682,7 +720,7 @@ final class PMXI_Plugin {
 				do_action('pmxi_action_after');
 				echo '</div>';
 			} else {
-				throw new Exception('There is no previousely buffered content to display.');
+				throw new Exception(esc_html('There is no previousely buffered content to display.'));
 			}
 		}
 
@@ -729,6 +767,36 @@ final class PMXI_Plugin {
 			}
 		}
 
+		if(strpos($className, '\\') !== false){
+
+			// project-specific namespace prefix
+			$prefix = 'Wpai\\';
+
+			// base directory for the namespace prefix
+			$base_dir = self::ROOT_DIR . '/src/';
+
+			// does the class use the namespace prefix?
+			$len = strlen($prefix);
+			if (strncmp($prefix, $className, $len) !== 0) {
+				// no, move to the next registered autoloader
+				return false;
+			}
+
+			// get the relative class name
+			$relative_class = substr($className, $len);
+
+			// replace the namespace prefix with the base directory, replace namespace
+			// separators with directory separators in the relative class name, append
+			// with .php
+			$file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+
+			// if the file exists, require it
+			if (file_exists($file)) {
+				require_once $file;
+                return true;
+			}
+		}
+
 		return FALSE;
 	}
 
@@ -738,13 +806,14 @@ final class PMXI_Plugin {
 	 * @return mixed
 	 */
 	public function getOption($option = NULL) {
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 		$options = apply_filters('wp_all_import_config_options', $this->options);
 		if (is_null($option)) {
 			return $options;
 		} else if (isset($options[$option])) {
 			return $options[$option];
 		} else {
-			throw new Exception("Specified option is not defined for the plugin");
+			throw new Exception(esc_html("Specified option is not defined for the plugin"));
 		}
 	}
 	/**
@@ -756,7 +825,7 @@ final class PMXI_Plugin {
 	public function updateOption($option, $value = NULL) {
 		is_null($value) or $option = array($option => $value);
 		if (array_diff_key($option, $this->options)) {
-			throw new Exception("Specified option is not defined for the plugin");
+			throw new Exception(esc_html("Specified option is not defined for the plugin"));
 		}
 		$this->options = $option + $this->options;
 		update_option(get_class($this) . '_Options', $this->options);
@@ -769,14 +838,9 @@ final class PMXI_Plugin {
 	 */
 	public function activation() {
 		// uncaught exception doesn't prevent plugin from being activated, therefore replace it with fatal error so it does
-		if (version_compare(phpversion(), '7.2'  , "<")){
-			$exception_handler = create_function('$e', 'trigger_error($e->getMessage(), E_USER_ERROR);');
-		}
-		else{
-			$exception_handler = function($e){
-				trigger_error($e->getMessage(), E_USER_ERROR);
-			};
-		}
+		$exception_handler = function($e){
+			trigger_error(esc_html($e->getMessage()), E_USER_ERROR); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error -- Fatal error raised from activation exception handler.
+		};
 		set_exception_handler($exception_handler);
 
 		// create plugin options
@@ -792,13 +856,14 @@ final class PMXI_Plugin {
 
 		if (function_exists('is_multisite') && is_multisite()) {
 	        // check if it is a network activation - if so, run the activation function for each blog id
-	        if (isset($_GET['networkwide']) && (intval($_GET['networkwide']) == 1)) {
+	        if (isset($_GET['networkwide']) && (intval($_GET['networkwide']) == 1)) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	            $old_blog = $wpdb->blogid;
 	            // Get all blog ids
-	            $blogids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+	            $blogids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	            foreach ($blogids as $blog_id) {
 	                switch_to_blog($blog_id);
 	                require self::ROOT_DIR . '/schema.php';
+	                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	                dbDelta($plugin_queries);
 
 					// sync data between plugin tables and wordpress (mostly for the case when plugin is reactivated)
@@ -807,7 +872,7 @@ final class PMXI_Plugin {
 					//$wpdb->query('DELETE FROM ' . $post->getTable() . ' WHERE post_id NOT IN (SELECT ID FROM ' . $wpdb->posts . ')');
                     $post = new PMXI_Post_Record();
                     $import = new PMXI_Import_Record();
-                    $imports_list = $wpdb->get_results('SELECT id FROM ' . $import->getTable() . '');
+                    $imports_list = $wpdb->get_results('SELECT id FROM ' . $import->getTable() . ''); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
                     if ( ! empty($imports_list) ) {
 
@@ -817,7 +882,7 @@ final class PMXI_Plugin {
                         foreach ($imports_list as $import_entry) {
                             $import_id = $import_entry->id;
                             $import = $import->getById($import_id);
-                            $import_options = maybe_unserialize($import->options);
+                            $import_options = \pmxi_maybe_unserialize($import->options);
                             $import_type = $import_options['custom_type'];
                             if ( in_array($import_type, array('import_users', 'shop_customer')) ) {
                                 $user_imports[] = $import_id;
@@ -828,13 +893,15 @@ final class PMXI_Plugin {
 
                         if ( ! empty($user_imports) ) {
                             $user_table = $wpdb->base_prefix . 'users';
+                            $user_imports = array_map('intval', $user_imports);
                             $user_query = 'DELETE FROM ' . $post->getTable() . ' WHERE import_id IN (' . implode(',', $user_imports) . ') AND post_id NOT IN (SELECT ID FROM ' . $user_table . ')';
-                            $wpdb->query($user_query);
+                            $wpdb->query($user_query); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
                         }
 
                         if ( ! empty($post_imports) ) {
+                            $post_imports = array_map('intval', $post_imports);
                             $post_query = 'DELETE FROM ' . $post->getTable() . ' WHERE import_id IN (' . implode(',', $post_imports) . ') AND post_id NOT IN (SELECT ID FROM ' . $wpdb->posts . ')';
-                            $wpdb->query($post_query);
+                            $wpdb->query($post_query); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
                         }
 
                     }
@@ -845,6 +912,7 @@ final class PMXI_Plugin {
 	        }
 	    }
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		dbDelta($plugin_queries);
 
 		// sync data between plugin tables and wordpress (mostly for the case when plugin is reactivated)
@@ -854,7 +922,7 @@ final class PMXI_Plugin {
 
         $post = new PMXI_Post_Record();
         $import = new PMXI_Import_Record();
-        $imports_list = $wpdb->get_results('SELECT id FROM ' . $import->getTable() . '');
+        $imports_list = $wpdb->get_results('SELECT id FROM ' . $import->getTable() . ''); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
         if ( ! empty($imports_list) ) {
 
@@ -864,7 +932,7 @@ final class PMXI_Plugin {
 				foreach ($imports_list as $import_entry) {
 					$import_id = $import_entry->id;
 					$import = $import->getById($import_id);
-					$import_options = maybe_unserialize($import->options);
+					$import_options = \pmxi_maybe_unserialize($import->options);
 					$import_type = $import_options['custom_type'];
 					if ( in_array($import_type, array('import_users', 'shop_customer')) ) {
 						$user_imports[] = $import_id;
@@ -875,13 +943,15 @@ final class PMXI_Plugin {
 
 				if ( ! empty($user_imports) ) {
 					$user_table = $wpdb->base_prefix . 'users';
+					$user_imports = array_map('intval', $user_imports);
 					$user_query = 'DELETE FROM ' . $post->getTable() . ' WHERE import_id IN (' . implode(',', $user_imports) . ') AND post_id NOT IN (SELECT ID FROM ' . $user_table . ')';
-					$wpdb->query($user_query);
+					$wpdb->query($user_query); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 				}
 
 				if ( ! empty($post_imports) ) {
+					$post_imports = array_map('intval', $post_imports);
 					$post_query = 'DELETE FROM ' . $post->getTable() . ' WHERE import_id IN (' . implode(',', $post_imports) . ') AND post_id NOT IN (SELECT ID FROM ' . $wpdb->posts . ')';
-					$wpdb->query($post_query);
+					$wpdb->query($post_query); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 				}
 
 			}
@@ -897,21 +967,21 @@ final class PMXI_Plugin {
 	 * @return void
 	 */
 	public function load_plugin_textdomain() {
-		$locale = apply_filters( 'plugin_locale', get_locale(), 'wp_all_import_plugin' );
-
-		load_plugin_textdomain( 'wp_all_import_plugin', false, dirname( plugin_basename( __FILE__ ) ) . "/i18n/languages" );
+		load_plugin_textdomain( 'wp-all-import', false, dirname( plugin_basename( __FILE__ ) ) . '/i18n/languages' );
 	}
 
 	public function fix_db_schema(){
 
 		$uploads = wp_upload_dir();
 
-		if ( ! is_dir($uploads['basedir'] . DIRECTORY_SEPARATOR . self::LOGS_DIRECTORY) or ! is_writable($uploads['basedir'] . DIRECTORY_SEPARATOR . self::LOGS_DIRECTORY)) {
-			die(sprintf(__('Uploads folder %s must be writable', 'wp_all_import_plugin'), esc_attr($uploads['basedir'] . DIRECTORY_SEPARATOR . self::LOGS_DIRECTORY)));
+		if ( ! is_dir($uploads['basedir'] . DIRECTORY_SEPARATOR . self::LOGS_DIRECTORY) or ! is_writable($uploads['basedir'] . DIRECTORY_SEPARATOR . self::LOGS_DIRECTORY)) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable
+			/* translators: %s: logs folder path */
+			die(sprintf(esc_html__('Uploads folder %s must be writable', 'wp-all-import'), esc_attr($uploads['basedir'] . DIRECTORY_SEPARATOR . self::LOGS_DIRECTORY)));
 		}
 
-		if ( ! is_dir($uploads['basedir'] . DIRECTORY_SEPARATOR . WP_ALL_IMPORT_UPLOADS_BASE_DIRECTORY) or ! is_writable($uploads['basedir'] . DIRECTORY_SEPARATOR . WP_ALL_IMPORT_UPLOADS_BASE_DIRECTORY)) {
-			die(sprintf(__('Uploads folder %s must be writable', 'wp_all_import_plugin'), esc_attr($uploads['basedir'] . DIRECTORY_SEPARATOR . WP_ALL_IMPORT_UPLOADS_BASE_DIRECTORY)));
+		if ( ! is_dir($uploads['basedir'] . DIRECTORY_SEPARATOR . WP_ALL_IMPORT_UPLOADS_BASE_DIRECTORY) or ! is_writable($uploads['basedir'] . DIRECTORY_SEPARATOR . WP_ALL_IMPORT_UPLOADS_BASE_DIRECTORY)) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable
+			/* translators: %s: uploads base folder path */
+			die(sprintf(esc_html__('Uploads folder %s must be writable', 'wp-all-import'), esc_attr($uploads['basedir'] . DIRECTORY_SEPARATOR . WP_ALL_IMPORT_UPLOADS_BASE_DIRECTORY)));
 		}
 
 		// create/update required database tables
@@ -921,33 +991,36 @@ final class PMXI_Plugin {
 
 		if (function_exists('is_multisite') && is_multisite()) {
 	        // check if it is a network activation - if so, run the activation function for each blog id
-	        if (isset($_GET['networkwide']) && (intval($_GET['networkwide']) == 1)) {
+	        if (isset($_GET['networkwide']) && (intval($_GET['networkwide']) == 1)) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	            $old_blog = $wpdb->blogid;
 	            // Get all blog ids
+	            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	            $blogids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
 	            foreach ($blogids as $blog_id) {
 	                switch_to_blog($blog_id);
 	                require self::ROOT_DIR . '/schema.php';
+	                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	                dbDelta($plugin_queries);
 
 					// sync data between plugin tables and wordpress (mostly for the case when plugin is reactivated)
 
 					$post = new PMXI_Post_Record();
-						$wpdb->query('DELETE FROM ' . $post->getTable() . ' WHERE post_id NOT IN (SELECT ID FROM ' . $wpdb->posts .') AND post_id NOT IN ( SELECT ID FROM ' . $wpdb->users . ') AND post_id NOT IN ( SELECT term_taxonomy_id FROM ' . $wpdb->term_taxonomy . ')');
+						$wpdb->query('DELETE FROM ' . $post->getTable() . ' WHERE post_id NOT IN (SELECT ID FROM ' . $wpdb->posts .') AND post_id NOT IN ( SELECT ID FROM ' . $wpdb->users . ') AND post_id NOT IN ( SELECT term_taxonomy_id FROM ' . $wpdb->term_taxonomy . ')'); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter
 	            }
 	            switch_to_blog($old_blog);
 	            return;
 	        }
 	    }
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		dbDelta($plugin_queries);
 
 		// do not execute ALTER TABLE queries if sql user doesn't have ALTER privileges
-		$grands = $wpdb->get_results("SELECT * FROM information_schema.user_privileges WHERE grantee LIKE \"'" . DB_USER . "'%\" AND PRIVILEGE_TYPE = 'ALTER' AND IS_GRANTABLE = 'YES';");
+		$grands = $wpdb->get_results("SELECT * FROM information_schema.user_privileges WHERE grantee LIKE \"'" . DB_USER . "'%\" AND PRIVILEGE_TYPE = 'ALTER' AND IS_GRANTABLE = 'YES';"); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
 		$table = $table = $this->getTablePrefix() . 'files';
 
-		$tablefields = $wpdb->get_results("DESCRIBE {$table};");
+		$tablefields = $wpdb->get_results("DESCRIBE {$table};"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 		// For every field in the table
 		foreach ($tablefields as $tablefield) {
 			if ('contents' == $tablefield->Field) {
@@ -958,7 +1031,7 @@ final class PMXI_Plugin {
 					}
 				}
 
-				if (!empty($grands)) $wpdb->query("ALTER TABLE {$table} DROP " . $tablefield->Field);
+				if (!empty($grands)) $wpdb->query("ALTER TABLE {$table} DROP " . $tablefield->Field); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 
 				break;
 			}
@@ -966,7 +1039,7 @@ final class PMXI_Plugin {
 
 		// alter images table
 		$table = $this->getTablePrefix() . 'images';
-		$tablefields = $wpdb->get_results("DESCRIBE {$table};");
+		$tablefields = $wpdb->get_results("DESCRIBE {$table};"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 		$fields_to_alter = array(
 			'image_url',
 			'image_filename'
@@ -986,10 +1059,10 @@ final class PMXI_Plugin {
 			foreach ($fields_to_alter as $field) {
 				switch ($field) {
 					case 'image_url':
-						$wpdb->query("ALTER TABLE {$table} ADD `image_url` VARCHAR(600) NOT NULL DEFAULT '';");
+						$wpdb->query("ALTER TABLE {$table} ADD `image_url` TEXT;"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 						break;
 					case 'image_filename':
-						$wpdb->query("ALTER TABLE {$table} ADD `image_filename` VARCHAR(600) NOT NULL DEFAULT '';");
+						$wpdb->query("ALTER TABLE {$table} ADD `image_filename` TEXT;"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 						break;
 					default:
 						# code...
@@ -999,7 +1072,7 @@ final class PMXI_Plugin {
 		}
 
 		$table = $this->getTablePrefix() . 'imports';
-		$tablefields = $wpdb->get_results("DESCRIBE {$table};");
+		$tablefields = $wpdb->get_results("DESCRIBE {$table};"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 		$fields_to_alter = array(
 			'parent_import_id',
 			'iteration',
@@ -1025,6 +1098,7 @@ final class PMXI_Plugin {
 
 			if (empty($grands)) return false;
 
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 			foreach ($fields_to_alter as $field) {
 				switch ($field) {
 					case 'parent_import_id':
@@ -1066,10 +1140,13 @@ final class PMXI_Plugin {
 						break;
 				}
 			}
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 		}
 
 		$table = $this->getTablePrefix() . 'posts';
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$tablefields = $wpdb->get_results("DESCRIBE {$table};");
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$iteration = false;
 		$specified = false;
 
@@ -1084,8 +1161,10 @@ final class PMXI_Plugin {
 			if (empty($grands)) {
 				?>
 				<div class="error"><p>
-					<?php printf(
-							__('<b>%s Plugin</b>: Current sql user %s doesn\'t have ALTER privileges', 'pmwi_plugin'),
+					<?php
+					printf(
+							/* translators: 1: plugin name, 2: SQL user */
+							esc_html__('<b>%1$s Plugin</b>: Current sql user %2$s doesn\'t have ALTER privileges', 'wp-all-import'),
 							esc_attr(self::getInstance()->getName()), esc_attr(DB_USER)
 					) ?>
 				</p></div>
@@ -1093,16 +1172,20 @@ final class PMXI_Plugin {
 				return false;
 			}
 
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 			$wpdb->query("ALTER TABLE {$table} ADD `iteration` BIGINT(20) NOT NULL DEFAULT 0;");
 
 			// Add indexing to pmxi_posts.post_id and pmxi_posts.import_id fields.
 			$wpdb->query("ALTER TABLE {$table} ADD INDEX `post_id`(`post_id`);");
 			$wpdb->query("ALTER TABLE {$table} ADD INDEX `import_id`(`import_id`)");
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 		}
 
 		if (!$specified and !empty($grands))
 		{
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 			$wpdb->query("ALTER TABLE {$table} ADD `specified` BOOL NOT NULL DEFAULT 0;");
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 		}
 
 		if ( ! empty($wpdb->charset))
@@ -1112,15 +1195,17 @@ final class PMXI_Plugin {
 
 		$table_prefix = $this->getTablePrefix();
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 		$wpdb->query("CREATE TABLE IF NOT EXISTS {$table_prefix}history (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 			import_id BIGINT(20) UNSIGNED NOT NULL,
-			type ENUM('manual','processing','trigger','continue','') NOT NULL DEFAULT '',	
-			time_run TEXT,	
-			date DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',		
+			type ENUM('manual','processing','trigger','continue','') NOT NULL DEFAULT '',
+			time_run TEXT,
+			date DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			summary TEXT,
 			PRIMARY KEY  (id)
 		) $charset_collate;");
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 
 		return true;
 	}
@@ -1376,7 +1461,11 @@ final class PMXI_Plugin {
                     'approved' => '',
                     'type' => '',
                     'date' => 'now'
-                )
+                ),
+
+                // Excel Alternative Processing
+                'use_alternative_excel_processing' => 0,
+
 			);
 		}
 
@@ -1401,7 +1490,7 @@ final class PMXI_Plugin {
          * @return bool
          */
         public static function is_ajax(){
-			return (isset($_SERVER["HTTP_ACCEPT"]) && strpos($_SERVER["HTTP_ACCEPT"], 'json')) !== false;
+			return strpos(sanitize_text_field(wp_unslash($_SERVER["HTTP_ACCEPT"] ?? '')), 'json') !== false;
 		}
 
     /**
@@ -1417,6 +1506,34 @@ final class PMXI_Plugin {
         }
         return $import_id;
     }
+
+	/**
+	 * @param $message
+	 */
+	public function showNoticeAndDisablePlugin($message){
+		$this->showNotice($message);
+		deactivate_plugins( str_replace('\\', '/', dirname(__FILE__)) . '/wp-all-import-pro.php');
+	}
+
+	/**
+	 * @param $message
+	 */
+	public function showNotice($message) {
+		$notice = new \Wpai\WordPress\AdminErrorNotice($message);
+		$notice->render();
+	}
+
+	/**
+	 * @param $message
+	 * @param $noticeId
+	 */
+	public function showDismissibleNotice($message, $noticeId) {
+		$notice = new \Wpai\WordPress\AdminDismissibleNotice($message, $noticeId);
+		if(!$notice->isDismissed()) {
+			$notice->render();
+		}
+	}
+
 
 }
 

@@ -49,6 +49,11 @@ if ( ! class_exists( 'WooFeedWebAppickAPI' ) ) {
 		 */
 		protected $updater = null;
 
+        /**
+         * var $is_add_extra
+         */
+        protected $is_add_extra = true;
+
 		/**
 		 * Initialize
 		 * @return WooFeedWebAppickAPI
@@ -110,42 +115,7 @@ if ( ! class_exists( 'WooFeedWebAppickAPI' ) ) {
 		 * @return void
 		 */
 		private function insightInit() {
-			global $wpdb;
-			$result = $wpdb->get_results( $wpdb->prepare("SELECT * FROM $wpdb->options WHERE option_name LIKE %s;", "wf_feed_%"), 'ARRAY_A' ); // phpcs:ignore
-			if ( ! is_array( $result ) ) {
-				$result = array();
-			}
-			$catCount = wp_count_terms(
-				array(
-					'taxonomy'   => 'product_cat',
-					'hide_empty' => false,
-					'parent'     => 0,
-				)
-			);
-			if ( is_wp_error( $catCount ) ) {
-				$catCount = 0;
-			}
-			/**
-			 * @TODO count products by type
-			 * @see wc_get_product_types();
-			 */
-			// update_option( 'woo_feed_review_notice', $value );
-			//				$notices = [ 'rp-wcdpd', 'wpml', 'rating', 'product_limit' ];
-			//
-			$hidden_notices = array();
-			foreach ( array( 'rp-wcdpd', 'wpml', 'rating', 'product_limit' ) as $which ) {
-				$hidden_notices[ $which ] = (int) get_option( sprintf( 'woo_feed_%s_notice_hidden', $which ), 0 );
-			}
-			$tracker_extra = array(
-				'products'        => $this->insights->get_post_count( 'product' ),
-				'variations'      => $this->insights->get_post_count( 'product_variation' ),
-				'batch_limit'     => get_option( 'woo_feed_per_batch' ),
-				'feed_configs'    => wp_json_encode( $result ),
-				'product_cat_num' => $catCount,
-				'review_notice'   => wp_json_encode( get_option( 'woo_feed_review_notice', array() ) ),
-				'hidden_notices'  => $hidden_notices,
-			);
-			$this->insights->add_extra( $tracker_extra );
+
 			$projectSlug = $this->client->getSlug();
 			add_filter( $projectSlug . '_what_tracked', array( $this, 'data_we_collect' ), 10, 1 );
 			add_filter(
@@ -284,6 +254,7 @@ if ( ! class_exists( 'WooFeedWebAppickAPI' ) ) {
 
 		public function premium_features() {
 			add_submenu_page( 'webappick-manage-feeds', esc_html__( 'Premium', 'woo-feed' ), '<span class="woo-feed-premium">' . esc_html__( 'Premium', 'woo-feed' ) . '</span>', 'manage_woocommerce', 'webappick-feed-pro-vs-free', array( $this, 'woo_feed_pro_vs_free' ) );
+            add_submenu_page( 'webappick-manage-feeds', esc_html__( 'Our Plugins', 'woo-feed' ), '<span class="woo-feed-our-plugin">' . esc_html__( 'Our Plugins', 'woo-feed' ) . '</span>', 'manage_woocommerce', 'webappick-feed-our-plugins', array( $this, 'woo_feed_our_plugins' ) );
 			add_action( 'admin_head', array( $this, 'remove_admin_notices' ), 9999 );
 		}
 
@@ -295,6 +266,15 @@ if ( ! class_exists( 'WooFeedWebAppickAPI' ) ) {
 			/** @define "WOO_FEED_FREE_ADMIN_PATH''./../../admin/" */ // phpcs:ignore
 			require WOO_FEED_FREE_ADMIN_PATH . 'partials/woo-feed-pro-vs-free.php';
 		}
+
+        /**
+         * Render Our Plugins Page
+         * @return void
+         */
+        public function woo_feed_our_plugins() {
+            /** @define "WOO_FEED_FREE_ADMIN_PATH''./../../admin/" */ // phpcs:ignore
+            require WOO_FEED_FREE_ADMIN_PATH . 'partials/woo-feed-our-plugins.php';
+        }
 
 		/**
 		 * Remove Admin Notice in pro features page.
@@ -349,6 +329,7 @@ if ( ! class_exists( 'WooFeedWebAppickAPI' ) ) {
 				?>
 				<div class="woo-feed-notice notice notice-info" style="line-height:1.5;" data-which="rating" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<form method="post">
+						<?php wp_nonce_field( 'woo_feed_pro_notice_nonce', '_wpnonce' ); ?>
 						<p>
 						<?php
 							printf(
@@ -448,6 +429,31 @@ if ( ! class_exists( 'WooFeedWebAppickAPI' ) ) {
 		 * Show Review request admin notice
 		 */
 		public function woo_feed_save_review_notice() {
+			// Check if there's any form submission or AJAX request to process
+			$has_form_data = isset( $_POST['woo_feed_review_notice_submit'] ) ||
+			                 isset( $_POST['woo_feed_review_notice_btn_given'] ) ||
+			                 isset( $_POST['woo_feed_review_notice_btn_never'] ) ||
+			                 isset( $_POST['woo_feed_review_notice_btn_done'] ) ||
+			                 isset( $_POST['woo_feed_review_notice_btn_later'] ) ||
+			                 isset( $_POST['notice'] ); // AJAX request
+
+			// If no data to process, return early
+			if ( ! $has_form_data ) {
+				return;
+			}
+
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+				wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ), 403 );
+				die();
+			}
+
+			// Verify nonce for security - handles both form (_wpnonce) and AJAX (_ajax_nonce) requests
+			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ?? $_POST['_ajax_nonce'] ?? '' ) ), 'woo_feed_pro_notice_nonce' ) ) {
+				wp_send_json_error( esc_html__( 'Security check failed.', 'woo-feed' ), 403 );
+				die();
+			}
+
 			$user_id = get_current_user_id();
 
 			$woo_feed_review_notice_submit    = isset( $_POST['woo_feed_review_notice_submit'] ) ? 1 : '';
@@ -491,6 +497,11 @@ if ( ! class_exists( 'WooFeedWebAppickAPI' ) ) {
 		 */
 		public function woo_feed_hide_notice() {
 			check_ajax_referer( 'woo_feed_pro_notice_nonce' );
+            if ( ! current_user_can( 'manage_woocommerce' ) ) {
+                woo_feed_log_debug_message( 'User doesnt have enough permission.' );
+                wp_send_json_error( esc_html__( 'Unauthorized Action.', 'woo-feed' ),403 );
+                die();
+            }
 			$notices = array( 'rp-wcdpd', 'wpml', 'rating', 'product_limit' );
 			if ( isset( $_REQUEST['which'] ) && ! empty( $_REQUEST['which'] ) && in_array( $_REQUEST['which'], $notices ) ) {
 				$which = sanitize_text_field( $_REQUEST['which'] ); //phpcs:ignore

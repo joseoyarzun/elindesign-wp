@@ -91,3 +91,36 @@ function monsterinsights_add_capabilities( $caps, $cap, $user_id, $args ) {
 }
 
 add_filter( 'map_meta_cap', 'monsterinsights_add_capabilities', 10, 4 );
+
+/**
+ * Get the list of settings that only users with manage_options can modify.
+ *
+ * These are access-control settings that, if modified by a delegated user,
+ * could lead to privilege escalation.
+ *
+ * @since 9.5.2
+ *
+ * @return array Array of admin-only setting keys.
+ */
+function monsterinsights_get_admin_only_settings() {
+	$settings = array(
+		'save_settings',
+		'view_reports',
+		'ignore_users',
+	);
+
+	return apply_filters( 'monsterinsights_admin_only_settings', $settings );
+}
+
+/**
+ * Check if a given setting key is an admin-only setting.
+ *
+ * @since 9.5.2
+ *
+ * @param string $setting The setting key to check.
+ *
+ * @return bool True if the setting is admin-only, false otherwise.
+ */
+function monsterinsights_is_admin_only_setting( $setting ) {
+	return in_array( $setting, monsterinsights_get_admin_only_settings(), true );
+}

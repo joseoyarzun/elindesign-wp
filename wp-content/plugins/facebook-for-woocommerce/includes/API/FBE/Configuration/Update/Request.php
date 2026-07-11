@@ -5,7 +5,7 @@
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 namespace WooCommerce\Facebook\API\FBE\Configuration\Update;
@@ -35,40 +35,20 @@ class Request extends Configuration\Request {
 		$this->data['fbe_external_business_id'] = $external_business_id;
 	}
 
-
 	/**
-	 * Sets the messenger configuration.
+	 * Sets the external client metadata for logging
 	 *
-	 * Only the enabled and domains values are able to accept updates right now.
+	 * @since 3.4.4
 	 *
-	 * @since 2.0.0
+	 * @param array $metadata map of metadata to include. Example: array ('version_id' => '0.0.0', 'is_multisite' => True)
 	 *
-	 * @param Configuration\Messenger $configuration messenger configuration object
+	 * @return void
 	 */
-	public function set_messenger_configuration( Configuration\Messenger $configuration ) {
-
-		$this->data['messenger_chat'] = array(
-			'enabled' => $configuration->is_enabled(),
-			'domains' => $configuration->get_domains(),
-		);
-	}
-
-	/**
-	 * Sets the plugin version for configuration update request.
-	 *
-	 * @since 3.0.10
-	 *
-	 * @param string $plugin_version current plugin version.
-	 */
-	public function set_plugin_version( string $plugin_version ) {
-
+	public function set_external_client_metadata( array $metadata ) {
 		$this->data['business_config'] = array(
-			'external_client' =>
-				array(
-					'version_id' => "$plugin_version",
-				),
+			'external_client' => $metadata,
 		);
+
+		is_multisite();
 	}
-
-
 }

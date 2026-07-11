@@ -5,17 +5,18 @@ namespace Photonic_Plugin\Core;
 use Photonic_Plugin\Layouts\Core_Layout;
 use Photonic_Plugin\Layouts\Grid;
 use Photonic_Plugin\Layouts\Slideshow;
-use Photonic_Plugin\Modules\Core;
-use Photonic_Plugin\Modules\Flickr;
-use Photonic_Plugin\Modules\Google_Photos;
-use Photonic_Plugin\Modules\Instagram;
-use Photonic_Plugin\Modules\Native;
-use Photonic_Plugin\Modules\SmugMug;
-use Photonic_Plugin\Modules\Zenfolio;
+use Photonic_Plugin\Platforms\Base;
+use Photonic_Plugin\Platforms\Flickr;
+use Photonic_Plugin\Platforms\Google_Photos;
+use Photonic_Plugin\Platforms\Instagram;
+use Photonic_Plugin\Platforms\Native;
+use Photonic_Plugin\Platforms\SmugMug;
+use Photonic_Plugin\Platforms\Zenfolio;
+use Photonic_Plugin\Platforms\DeviantArt;
 
 class Gallery {
 	private $attr;
-	/** @var Core */
+	/** @var Base */
 	private $module;
 
 	/** @var Core_Layout */
@@ -25,9 +26,9 @@ class Gallery {
 		$this->attr = $attr;
 		$type = $this->attr['type'];
 
-		$this->set_module($type);
+		$this->set_platform($type);
 
-		if ((!empty($attr['layout']) && in_array($type, ['flickr', 'smugmug', 'google', 'zenfolio', 'instagram'], true) && in_array($attr['layout'], ['strip-above', 'strip-below', 'strip-right', 'no-strip'], true)) ||
+		if ((!empty($attr['layout']) && in_array($type, ['flickr', 'smugmug', 'google', 'zenfolio', 'instagram', 'deviantart'], true) && in_array($attr['layout'], ['strip-above', 'strip-below', 'strip-right', 'no-strip'], true)) ||
 			(!empty($attr['style']) && in_array($type, ['default', 'wp'], true) && in_array($attr['style'], ['strip-above', 'strip-below', 'strip-right', 'no-strip'], true))) {
 			require_once PHOTONIC_PATH . '/Layouts/Slideshow.php';
 			$this->layout = Slideshow::get_instance();
@@ -38,29 +39,33 @@ class Gallery {
 		}
 	}
 
-	private function set_module($type) {
+	private function set_platform(?string $type) {
 		if ('flickr' === $type) {
-			require_once PHOTONIC_PATH . "/Modules/Flickr.php";
+			require_once PHOTONIC_PATH . "/Platforms/Flickr.php";
 			$this->module = Flickr::get_instance();
 		}
 		elseif ('smugmug' === $type || 'smug' === $type) {
-			require_once PHOTONIC_PATH . "/Modules/SmugMug.php";
+			require_once PHOTONIC_PATH . "/Platforms/SmugMug.php";
 			$this->module = SmugMug::get_instance();
 		}
 		elseif ('google' === $type) {
-			require_once PHOTONIC_PATH . "/Modules/Google_Photos.php";
+			require_once PHOTONIC_PATH . "/Platforms/Google_Photos.php";
 			$this->module = Google_Photos::get_instance();
 		}
 		elseif ('instagram' === $type) {
-			require_once PHOTONIC_PATH . "/Modules/Instagram.php";
+			require_once PHOTONIC_PATH . "/Platforms/Instagram.php";
 			$this->module = Instagram::get_instance();
 		}
 		elseif ('zenfolio' === $type) {
-			require_once PHOTONIC_PATH . "/Modules/Zenfolio.php";
+			require_once PHOTONIC_PATH . "/Platforms/Zenfolio.php";
 			$this->module = Zenfolio::get_instance();
 		}
+		elseif ('deviantart' === $type) {
+			require_once PHOTONIC_PATH . "/Platforms/DeviantArt.php";
+			$this->module = DeviantArt::get_instance();
+		}
 		else {
-			require_once PHOTONIC_PATH . "/Modules/Native.php";
+			require_once PHOTONIC_PATH . "/Platforms/Native.php";
 			$this->module = Native::get_instance();
 		}
 	}
@@ -74,8 +79,9 @@ class Gallery {
 	public function get_contents(): string {
 		$this->module->increment_gallery_index();
 		$contents = $this->module->get_gallery_images($this->attr);
+
+		$output = '';
 		if (is_array($contents)) {
-			$output = '';
 			foreach ($contents as $component) {
 				if (method_exists($component, 'html')) {
 					$output .= $component->html($this->module, $this->layout);
@@ -84,12 +90,18 @@ class Gallery {
 					$output .= $component;
 				}
 			}
+
+			// Special case --> when a native gallery is called with no <code>style</code> attribute, or if <code>style='default'</code>...
+			if (empty($output)) {
+				return '';
+			}
+
 			return $this->finalize_markup($output);
 		}
-		return $contents;
+		return $output;
 	}
 
-	public function get_helper_contents() {
+	public function get_helper_contents(): string {
 		return $this->module->execute_helper($this->attr);
 	}
 

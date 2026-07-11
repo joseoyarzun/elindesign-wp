@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 function userfeedback_check_logic( $symbol, $value, $compare_to ) {
 	switch ( $symbol ) {
 		case '=':

@@ -2,7 +2,7 @@
 
 namespace Photonic_Plugin\Core;
 
-use Photonic_Plugin\Modules\Instagram;
+use Photonic_Plugin\Platforms\Instagram;
 
 class Cron {
 	public function __construct() {
@@ -16,7 +16,7 @@ class Cron {
 
 			$module_body = '';
 			if (!empty($photonic_instagram_access_token)) {
-				require_once PHOTONIC_PATH . "/Modules/Instagram.php";
+				require_once PHOTONIC_PATH . "/Platforms/Instagram.php";
 				$module = Instagram::get_instance();
 				$soon = $module->is_token_expiring_soon(10);
 				if (!empty($soon)) {

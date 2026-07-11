@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * WooCommerce Notification class.
  *
@@ -19,12 +23,12 @@ class UserFeedback_Notification_WooCommerce extends UserFeedback_Notification_Ev
 	public $interval      = 5;
 
 	public function prepare() {
-		$this->title   = __( 'What\'s Stopping You From Making More Money?', 'userfeedback' );
+		$this->title   = __( 'What\'s Stopping You From Making More Money?', 'userfeedback-lite' );
 		$this->content =
-			__( 'Add a UserFeedback survey on your product pages and ask what is preventing your customer from purchasing.', 'userfeedback' );
+			__( 'Add a UserFeedback survey on your product pages and ask what is preventing your customer from purchasing.', 'userfeedback-lite' );
 
 		$this->buttons[] = array(
-			'text' => __( 'Create Survey', 'userfeedback' ),
+			'text' => __( 'Create Survey', 'userfeedback-lite' ),
 			'url'  => userfeedback_get_screen_url( 'userfeedback_surveys', 'new' ),
 		);
 

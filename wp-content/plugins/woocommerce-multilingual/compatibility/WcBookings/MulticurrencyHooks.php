@@ -344,8 +344,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 
 	/**
 	 * @param int $postId
-	 *
-	 * @return false|void
 	 */
 	public function save_custom_costs( $postId ) {
 		$nonce = filter_var( isset( $_POST['_wcml_custom_costs_nonce'] ) ? $_POST['_wcml_custom_costs_nonce'] : '', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
@@ -358,7 +356,7 @@ class MulticurrencyHooks implements \IWPML_Action {
 
 				$currencies = $this->woocommerce_wpml->multi_currency->get_currencies();
 				if ( empty( $currencies ) || 0 === $postId ) {
-					return false;
+					return;
 				}
 
 				$this->update_booking_costs( $currencies, $postId );
@@ -381,8 +379,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 				}
 
 				update_post_meta( $postId, '_price', '' );
-			} else {
-				return false;
 			}
 		}
 	}
@@ -703,11 +699,8 @@ class MulticurrencyHooks implements \IWPML_Action {
 
 		<?php
 
-		$wcml_booking_set_currency_nonce = wp_create_nonce( 'booking_set_currency' );
-
-		wc_enqueue_js(
-			"
-
+		$wcml_booking_set_currency_nonce  = esc_js( wp_create_nonce( 'booking_set_currency' ) );
+		$wcml_booking_set_currency_script = <<<JS
 		jQuery(document).on('change', '#dropdown_booking_currency', function(){
 		   jQuery.ajax({
 				url: ajaxurl,
@@ -715,7 +708,7 @@ class MulticurrencyHooks implements \IWPML_Action {
 				data: {
 					action: 'wcml_booking_set_currency',
 					currency: jQuery('#dropdown_booking_currency').val(),
-					wcml_nonce: '" . $wcml_booking_set_currency_nonce . "'
+					wcml_nonce: '$wcml_booking_set_currency_nonce'
 				},
 				success: function( response ){
 					if(typeof response.error !== 'undefined'){
@@ -726,8 +719,12 @@ class MulticurrencyHooks implements \IWPML_Action {
 				}
 			})
 		});
-	"
-		);
+JS;
+
+		$handle = 'wcml_booking_set_currency_dropdown';
+		wp_register_script( $handle, '', [ 'jquery' ], WCML_VERSION, true );
+		wp_enqueue_script( $handle );
+		wp_add_inline_script( $handle, $wcml_booking_set_currency_script );
 	}
 
 	public function set_booking_currency_ajax() {
@@ -827,7 +824,7 @@ class MulticurrencyHooks implements \IWPML_Action {
 
 				if ( get_post_type( $object_id ) == 'bookable_person' ) {
 
-					$original_id = apply_filters( 'translate_object_id', wp_get_post_parent_id( $object_id ), 'product', true, $this->woocommerce_wpml->products->get_original_product_language( wp_get_post_parent_id( $object_id ) ) );
+					$original_id = apply_filters( 'wpml_object_id', wp_get_post_parent_id( $object_id ), 'product', true, $this->woocommerce_wpml->products->get_original_product_language( wp_get_post_parent_id( $object_id ) ) );
 					$cost_status = get_post_meta( $original_id, Prices::CUSTOM_COSTS_STATUS_KEY, true );
 
 					$value = get_post_meta( $object_id, $meta_key . '_' . $currency, true );
@@ -881,7 +878,7 @@ class MulticurrencyHooks implements \IWPML_Action {
 
 						$res_costs = [];
 						foreach ( $costs['custom_costs'][ $currency ] as $resource_id => $cost ) {
-							$trns_resource_id               = apply_filters( 'translate_object_id', $resource_id, 'bookable_resource', true );
+							$trns_resource_id               = apply_filters( 'wpml_object_id', $resource_id, 'bookable_resource', true );
 							$res_costs[ $trns_resource_id ] = $cost;
 						}
 						$value = [ 0 => $res_costs ];

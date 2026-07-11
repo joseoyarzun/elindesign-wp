@@ -25,11 +25,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 function userfeedback_admin_menu() {
 
 	$menu_slug = 'userfeedback_surveys';
+	$new_indicator = '<span class="userfeedback-menu-new-indicator">&nbsp;' . __( 'NEW!', 'userfeedback-lite' ) . '</span>';
 
 	// Add main Menu Item
 	add_menu_page(
-		__( 'UserFeedback', 'userfeedback' ),
-		__( 'UserFeedback', 'userfeedback' ) . UserFeedback()->notifications->get_count_for_admin_sidebar(),
+		__( 'UserFeedback', 'userfeedback-lite' ),
+		__( 'UserFeedback', 'userfeedback-lite' ) . UserFeedback()->notifications->get_count_for_admin_sidebar(),
 		'userfeedback_create_edit_surveys',
 		$menu_slug,
 		'userfeedback_surveys_page',
@@ -40,8 +41,8 @@ function userfeedback_admin_menu() {
 	// Surveys
 	add_submenu_page(
 		$menu_slug,
-		__( 'Surveys', 'userfeedback' ),
-		__( 'Surveys', 'userfeedback' ),
+		__( 'Surveys', 'userfeedback-lite' ),
+		__( 'Surveys', 'userfeedback-lite' ),
 		'userfeedback_create_edit_surveys',
 		'userfeedback_surveys',
 		'userfeedback_surveys_page'
@@ -50,11 +51,41 @@ function userfeedback_admin_menu() {
 	// Results
 	add_submenu_page(
 		$menu_slug,
-		__( 'Results', 'userfeedback' ),
-		__( 'Results', 'userfeedback' ),
+		__( 'Results', 'userfeedback-lite' ),
+		__( 'Results', 'userfeedback-lite' ),
 		'userfeedback_view_results',
 		'userfeedback_results',
 		'userfeedback_results_page'
+	);
+	
+	// Post Ratings
+	add_submenu_page(
+		$menu_slug,
+		__( 'Post Ratings', 'userfeedback-lite' ),
+		__( 'Post Ratings', 'userfeedback-lite' ) . $new_indicator,
+		'manage_options',
+		'userfeedback_post_ratings',
+		'userfeedback_post_ratings_page'
+	);
+
+	// Email Surveys
+	add_submenu_page(
+		$menu_slug,
+		__( 'Email Surveys', 'userfeedback-lite' ),
+		__( 'Email Surveys', 'userfeedback-lite' ) . $new_indicator,
+		'manage_options',
+		'userfeedback_email_surveys',
+		'userfeedback_email_surveys_page'
+	);
+
+	//  Heatmaps
+	add_submenu_page(
+		$menu_slug,
+		__( 'Heatmaps', 'userfeedback-lite' ),
+		__( 'Heatmaps', 'userfeedback-lite' ) . $new_indicator,
+		'manage_options',
+		'userfeedback_heatmaps',
+		'userfeedback_heatmaps_page'
 	);
 
 	$settings_menu_slug = 'userfeedback_settings';
@@ -62,29 +93,30 @@ function userfeedback_admin_menu() {
 	// Settings
 	add_submenu_page(
 		$menu_slug,
-		__( 'Settings', 'userfeedback' ),
-		__( 'Settings', 'userfeedback' ),
+		__( 'Settings', 'userfeedback-lite' ),
+		__( 'Settings', 'userfeedback-lite' ),
 		'userfeedback_save_settings',
 		$settings_menu_slug,
 		'userfeedback_settings_page'
 	);
 
-	$settings_submenu_base = add_query_arg( 'page', $settings_menu_slug, admin_url( 'admin.php' ) );
-
 	// Addons
 	add_submenu_page(
 		$menu_slug,
-		__( 'Addons', 'userfeedback' ),
-		'<b style="color: ' . userfeedback_menu_highlight_color() . '">' . __( 'Addons', 'userfeedback' ) . '</b>',
-		'manage_options',
-		$settings_submenu_base . '#/addons'
+		__( 'Addons', 'userfeedback-lite' ),
+		'<b style="color: ' . userfeedback_menu_highlight_color() . '">' . __( 'Addons', 'userfeedback-lite' ) . '</b>',
+		'userfeedback_save_settings',
+		'userfeedback_addons',
+		'userfeedback_addons_page'
 	);
+
+	$settings_submenu_base = add_query_arg( 'page', $settings_menu_slug, admin_url( 'admin.php' ) );
 
 	//  Integrations
 	add_submenu_page(
 		$menu_slug,
-		__( 'Integrations', 'userfeedback' ),
-		'<span>' . __( 'Integrations', 'userfeedback' ) . '</span>',
+		__( 'Integrations', 'userfeedback-lite' ),
+		'<span>' . __( 'Integrations', 'userfeedback-lite' ) . '</span>',
 		'manage_options',
 		$settings_submenu_base . '#/integrations'
 	);
@@ -92,34 +124,107 @@ function userfeedback_admin_menu() {
 	// SMTP
 	add_submenu_page(
 		$menu_slug,
-		__( 'SMTP', 'userfeedback' ),
-		__( 'SMTP', 'userfeedback' ),
+		__( 'SMTP', 'userfeedback-lite' ),
+		__( 'SMTP', 'userfeedback-lite' ),
 		'manage_options',
 		'userfeedback_smtp',
 		'userfeedback_smtp_page'
 	);
-	
+
 	// About Us
 	add_submenu_page(
 		$menu_slug,
-		__( 'About Us', 'userfeedback' ),
-		__( 'About Us', 'userfeedback' ),
+		__( 'About Us', 'userfeedback-lite' ),
+		__( 'About Us', 'userfeedback-lite' ),
 		'manage_options',
 		$settings_submenu_base . '#/about'
+	);
+
+	// Growth Tools
+	add_submenu_page(
+		$menu_slug,
+		__( 'Growth Tools', 'userfeedback-lite' ),
+		__( 'Growth Tools', 'userfeedback-lite' ),
+		'manage_options',
+		$settings_submenu_base . '#/growth-tools'
+	);
+
+	// Suggest a Feature
+	add_submenu_page(
+		$menu_slug,
+		__( 'Suggest a Feature', 'userfeedback-lite' ),
+		'<span id="suggest_feature_menu">' . __( 'Suggest a Feature', 'userfeedback-lite' ) . '</span>',
+		'manage_options',
+		userfeedback_get_url( 'admin-menu', '', 'https://www.userfeedback.com/suggest-feature/' )
 	);
 
 	if ( ! userfeedback_is_pro_version() ) {
 		add_submenu_page(
 			$menu_slug,
-			__( 'Upgrade to Pro:', 'google-analytics-for-wordpress' ),
-			'<span class="userfeedback-upgrade-submenu"> ' . __( 'Upgrade to Pro', 'userfeedback' ) . '</span>',
+			__( 'Upgrade to Pro:', 'userfeedback-lite' ),
+			'<span class="userfeedback-upgrade-submenu"> ' . __( 'Upgrade to Pro', 'userfeedback-lite' ) . '</span>',
 			'userfeedback_save_settings',
 			userfeedback_get_upgrade_link( 'admin-menu', 'submenu', 'https://www.userfeedback.com/lite/' )
 		);
 	}
 
 }
-add_action( 'admin_menu', 'userfeedback_admin_menu' );
+
+/**
+ * Register admin bar menu items for UserFeedback.
+ *
+ * @since 1.3.0
+ *
+ * @param $admin_bar
+ * @return void
+ */
+function userfeedback_admin_bar_menu( $admin_bar ) {
+	$admin_bar->add_node([
+		'id' => 'userfeedback-admin-bar',
+		'title' => __( 'UserFeedback', 'userfeedback-lite' )
+	]);
+
+	$admin_bar->add_node([
+		'id'    => 'userfeedback-admin-bar-all-surveys',
+		'title' => __( 'All Surveys', 'userfeedback-lite' ),
+		'parent' => 'userfeedback-admin-bar',
+		'href'  => site_url( '/wp-admin/admin.php?page=userfeedback_surveys#/' )
+	]);
+
+	$admin_bar->add_node([
+		'id'    => 'userfeedback-admin-bar-responses',
+		'title' => __( 'Responses', 'userfeedback-lite' ),
+		'parent'=> 'userfeedback-admin-bar',
+		'href'  => site_url( '/wp-admin/admin.php?page=userfeedback_results#/' )
+	]);
+
+	$admin_bar->add_node([
+		'id'     => 'userfeedback-admin-bar-help',
+		'title'  => __( 'Help', 'userfeedback-lite' ),
+		'parent' => 'userfeedback-admin-bar',
+		'href'   => userfeedback_get_url( 'admin-menu', 'admin-bar', 'https://www.userfeedback.com/docs/' ),
+		'meta'   => [
+			'target' => '_blank'
+		]
+	]);
+
+	if ( ! userfeedback_is_pro_version() ) {
+		$admin_bar->add_node([
+			'id'     => 'userfeedback-admin-bar-upgrade-pro',
+			'title'  => __( 'Upgrade to Pro', 'userfeedback-lite' ),
+			'parent' => 'userfeedback-admin-bar',
+			'href'   => userfeedback_get_upgrade_link( 'admin-menu', 'admin-bar', 'https://www.userfeedback.com/lite/' ),
+			'meta'   => [
+				'target' => '_blank'
+			]
+		]);
+	}
+}
+
+if ( is_admin() ) {
+	add_action( 'admin_menu', 'userfeedback_admin_menu' );
+	add_action('admin_bar_menu', 'userfeedback_admin_bar_menu', 100);
+}
 
 // ----------------------------------------------------
 // ------------ Menu Callback functions ---------------
@@ -144,12 +249,48 @@ function userfeedback_results_page() {
 }
 
 /**
+ * Render UserFeedback Post Ratings page
+ *
+ * @return void
+ */
+function userfeedback_post_ratings_page() {
+	echo '<div id="userfeedback-post-ratings"></div>';
+}
+
+/**
+ * Render UserFeedback Email Surveys page
+ *
+ * @return void
+ */
+function userfeedback_email_surveys_page() {
+	echo '<div id="userfeedback-email-surveys"></div>';
+}
+
+/**
+ * Render UserFeedback Heatmap page
+ *
+ * @return void
+ */
+function userfeedback_heatmaps_page() {
+	echo '<div id="userfeedback-heatmap"></div>';
+}
+
+/**
  * Render UserFeedback Settings page
  *
  * @return void
  */
 function userfeedback_settings_page() {
 	echo '<div id="userfeedback-settings"></div>';
+}
+
+/**
+ * Render UserFeedback Addons page
+ *
+ * @return void
+ */
+function userfeedback_addons_page() {
+	echo '<div id="userfeedback-addons"></div>';
 }
 
 /**
@@ -181,24 +322,24 @@ add_action( 'admin_head', 'userfeedback_hide_admin_notices', 1 );
  */
 function userfeedback_add_action_links( $links ) {
 
-	$docs = '<a title="' . esc_attr__( 'UserFeedback Knowledge Base', 'google-analytics-for-wordpress' ) . '" target="_blank" rel="noopener" href="' . userfeedback_get_url( 'all-plugins', 'kb-link', 'https://www.userfeedback.com/docs/' ) . '">' . esc_html__( 'Documentation', 'userfeedback' ) . '</a>';
+	$docs = '<a title="' . esc_attr__( 'UserFeedback Knowledge Base', 'userfeedback-lite' ) . '" target="_blank" rel="noopener" href="' . userfeedback_get_url( 'all-plugins', 'kb-link', 'https://www.userfeedback.com/docs/' ) . '">' . esc_html__( 'Documentation', 'userfeedback-lite' ) . '</a>';
 	array_unshift( $links, $docs );
 
 	// If Lite, support goes to forum. If pro, it goes to our website
 	if ( userfeedback_is_pro_version() ) {
-		$support = '<a title="UserFeedback Pro Support" target="_blank" rel="noopener" href="' . userfeedback_get_url( 'all-plugins', 'pro-support-link', 'https://www.userfeedback.com/my-account/support/' ) . '">' . esc_html__( 'Support', 'userfeedback' ) . '</a>';
+		$support = '<a title="UserFeedback Pro Support" target="_blank" rel="noopener" href="' . userfeedback_get_url( 'all-plugins', 'pro-support-link', 'https://www.userfeedback.com/my-account/support/' ) . '">' . esc_html__( 'Support', 'userfeedback-lite' ) . '</a>';
 		array_unshift( $links, $support );
 	} else {
-		$support = '<a title="UserFeedback Lite Support" target="_blank" rel="noopener" href="' . userfeedback_get_url( 'all-plugins', 'lite-support-link', 'https://www.userfeedback.com/lite-support/' ) . '">' . esc_html__( 'Support', 'userfeedback' ) . '</a>';
+		$support = '<a title="UserFeedback Lite Support" target="_blank" rel="noopener" href="' . userfeedback_get_url( 'all-plugins', 'lite-support-link', 'https://www.userfeedback.com/lite-support/' ) . '">' . esc_html__( 'Support', 'userfeedback-lite' ) . '</a>';
 		array_unshift( $links, $support );
 	}
 
-	$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=userfeedback_settings' ) ) . '">' . esc_html__( 'Settings', 'userfeedback' ) . '</a>';
+	$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=userfeedback_settings' ) ) . '">' . esc_html__( 'Settings', 'userfeedback-lite' ) . '</a>';
 	array_unshift( $links, $settings_link );
 
 	// If lite, show a link where they can get pro from
 	if ( ! userfeedback_is_pro_version() ) {
-		$get_pro = '<a title="' . esc_attr__( 'Get UserFeedback Pro', 'userfeedback' ) . '" target="_blank" rel="noopener" href="' . userfeedback_get_upgrade_link( 'all-plugins', 'upgrade-link', 'https://www.userfeedback.com/lite/' ) . '" style="font-weight:700; color: #1da867;">' . esc_html__( 'Get UserFeedback Pro', 'userfeedback' ) . '</a>';
+		$get_pro = '<a title="' . esc_attr__( 'Get UserFeedback Pro', 'userfeedback-lite' ) . '" target="_blank" rel="noopener" href="' . userfeedback_get_upgrade_link( 'all-plugins', 'upgrade-link', 'https://www.userfeedback.com/lite/' ) . '" style="font-weight:700; color: #1da867;">' . esc_html__( 'Get UserFeedback Pro', 'userfeedback-lite' ) . '</a>';
 		array_unshift( $links, $get_pro );
 	}
 
@@ -230,16 +371,15 @@ add_filter( 'admin_body_class', 'userfeedback_add_admin_body_class', 10, 1 );
 function userfeedback_onboarding_first_launch()
 {
 	$surveys = UserFeedback_Survey::all();
-	if (userfeedback_screen_is_userfeedback() && isset($_GET['page']) && 'userfeedback_surveys' === $_GET['page'] && empty($surveys)) {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check of admin page param for first-launch redirect.
+	if (userfeedback_screen_is_userfeedback() && isset($_GET['page']) && 'userfeedback_surveys' === sanitize_key( wp_unslash( $_GET['page'] ) ) && empty($surveys)) {
 		$surveys_screen_first_visit = userfeedback_get_option('userfeedback_surveys_screen_first_visit', false);
 		$userfeedback_onboarding_step = userfeedback_get_option('userfeedback_onboarding_step', false);
 		if (!$surveys_screen_first_visit && !$userfeedback_onboarding_step) {
 			userfeedback_update_option('userfeedback_surveys_screen_first_visit', true);
-			wp_redirect(admin_url('admin.php?page=userfeedback_onboarding'));
-			die();
+			wp_safe_redirect(admin_url('admin.php?page=userfeedback_onboarding'));
+			exit();
 		}
 	}
 }
 add_action( 'current_screen', 'userfeedback_onboarding_first_launch', 1 );
-
-

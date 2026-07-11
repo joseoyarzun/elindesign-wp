@@ -6,6 +6,16 @@
 export const Tooltip = function (selector, tooltip_element) {
 	let tooltip, tooltipClass, elemEdges, tooltipElems;
 
+	// From https://locutus.io/php/strings/strip_tags/, or https://stackoverflow.com/questions/5601903/jquery-almost-equivalent-of-phps-strip-tags/46483672#46483672
+	function strip_tags(input, allowed) {
+		allowed = (((allowed || '') + '').toLowerCase().match(/<[a-z][a-z0-9]*>/g) || []).join('')
+		const tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi
+		const commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi
+		return input.replace(commentsAndPhpTags, '').replace(tags, function ($0, $1) {
+			return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
+		});
+	}
+
 	function create(tooltip, elm) {
 		const tooltipText = elm.getAttribute('data-photonic-tooltip');
 		if (tooltipText !== '') {

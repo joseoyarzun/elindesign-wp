@@ -51,6 +51,11 @@ class Flickr extends Source {
 				'Mobile MP4'     => esc_html__('Mobile MP4', 'photonic'),
 				'HD MP4'         => esc_html__('HD MP4', 'photonic'),
 				'Video Original' => esc_html__('Video Original', 'photonic'),
+				'Video Player'   => esc_html__('Video Player', 'photonic'),
+				'1080p'          => '1080p',
+				'720p'           => '720p',
+				'360p'           => '360p',
+				'288p'           => '288p',
 			],
 		];
 		$this->allowed_image_sizes['flickr']['thumb_size'][''] .= ' - ' . $this->allowed_image_sizes['flickr']['thumb_size'][$photonic_flickr_thumb_size];
@@ -307,7 +312,8 @@ class Flickr extends Source {
 
 	public function get_screen_5(): array {
 		global $photonic_flickr_media, $photonic_flickr_title_caption;
-		$output = [
+		// $output['slideshow'] = $this->get_slideshow_options();
+		return [
 			'flickr' => [
 				'L1'         => [
 					'sort'    => [
@@ -323,6 +329,7 @@ class Flickr extends Source {
 							'interestingness-asc'  => esc_html__('Interestingness, ascending', 'photonic'),
 							'relevance'            => esc_html__('Relevance', 'photonic'),
 						],
+						'conditions' => ['display_type' => ['multi-photo']],
 					],
 					'media'   => [
 						'desc'    => esc_html__('Media to Show', 'photonic'),
@@ -338,22 +345,7 @@ class Flickr extends Source {
 						'std'     => '',
 						'hint'    => sprintf($this->default_under, '<em>Photonic &rarr; Settings &rarr; Flickr &rarr; Flickr Settings &rarr; Photo titles and captions</em>'),
 					],
-					'headers' => [
-						'desc'       => esc_html__('Show Header', 'photonic'),
-						'type'       => 'select',
-						'options'    => [
-							''                        => $this->default_from_settings,
-							'none'                    => esc_html__('No header', 'photonic'),
-							'title'                   => esc_html__('Title only', 'photonic'),
-							'thumbnail'               => esc_html__('Thumbnail only', 'photonic'),
-							'counter'                 => esc_html__('Counts only', 'photonic'),
-							'title,counter'           => esc_html__('Title and counts', 'photonic'),
-							'thumbnail,counter'       => esc_html__('Thumbnail and counts', 'photonic'),
-							'thumbnail,title'         => esc_html__('Thumbnail and title', 'photonic'),
-							'thumbnail,title,counter' => esc_html__('Thumbnail, title and counts', 'photonic'),
-						],
-						'conditions' => ['display_type' => ['album-photo', 'gallery-photo']],
-					],
+					'headers' => $this->get_header_options(['display_type' => ['album-photo', 'gallery-photo']]),
 				],
 				'L2'         => [],
 				'L3'         => [
@@ -371,21 +363,7 @@ class Flickr extends Source {
 							'</a>'
 						),
 					],
-					'headers'             => [
-						'desc'    => esc_html__('Show Header', 'photonic'),
-						'type'    => 'select',
-						'options' => [
-							''                        => $this->default_from_settings,
-							'none'                    => esc_html__('No header', 'photonic'),
-							'title'                   => esc_html__('Title only', 'photonic'),
-							'thumbnail'               => esc_html__('Thumbnail only', 'photonic'),
-							'counter'                 => esc_html__('Counts only', 'photonic'),
-							'title,counter'           => esc_html__('Title and counts', 'photonic'),
-							'thumbnail,counter'       => esc_html__('Thumbnail and counts', 'photonic'),
-							'thumbnail,title'         => esc_html__('Thumbnail and title', 'photonic'),
-							'thumbnail,title,counter' => esc_html__('Thumbnail, title and counts', 'photonic'),
-						],
-					],
+					'headers'             => $this->get_header_options(),
 				],
 				'main_size'  => [
 					'desc'    => esc_html__('Main image size', 'photonic'),
@@ -403,8 +381,6 @@ class Flickr extends Source {
 				],
 			]
 		];
-		// $output['slideshow'] = $this->get_slideshow_options();
-		return $output;
 	}
 
 	public function get_square_size_options(): array {
@@ -443,8 +419,8 @@ class Flickr extends Source {
 		$login = '';
 
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
-			$group = sanitize_text_field($_POST['group']);
-			$login = sanitize_text_field($_POST['login']);
+			$group = sanitize_text_field(wp_unslash($_POST['group'] ?? ''));
+			$login = sanitize_text_field(wp_unslash($_POST['login'] ?? ''));
 		}
 
 		global $photonic_flickr_default_user, $photonic_flickr_api_key;
@@ -510,19 +486,24 @@ class Flickr extends Source {
 		if ('single-photo' === $display_type) {
 			$parameters['view'] = 'photo';
 			$parameters['method'] = 'flickr.photos.search';
+			$parameters['extras'] = 'url_q';
 			$parameters['per_page'] = 500;
 		}
 		elseif ('multi-photo' === $display_type) {
 			$parameters['view'] = 'photos';
 			$parameters['method'] = 'flickr.photos.search';
+			$parameters['extras'] = 'url_q';
 		}
 		elseif ('multi-album' === $display_type || 'album-photo' === $display_type) {
 			$parameters['view'] = 'photosets';
 			$parameters['method'] = 'flickr.photosets.getList';
+			$parameters['primary_photo_extras'] = 'url_q';
+			$parameters['per_page'] = 500;
 		}
 		elseif ('multi-gallery' === $display_type || 'gallery-photo' === $display_type) {
 			$parameters['view'] = 'galleries';
 			$parameters['method'] = 'flickr.galleries.getList';
+			$parameters['primary_photo_extras'] = 'url_q';
 			$parameters['per_page'] = 500;
 		}
 		elseif ('collection' === $display_type || 'collections' === $display_type) {
@@ -531,8 +512,8 @@ class Flickr extends Source {
 		}
 
 		global $photonic_flickr_access_token;
-		require_once PHOTONIC_PATH . '/Modules/Flickr.php';
-		$module = \Photonic_Plugin\Modules\Flickr::get_instance();
+		require_once PHOTONIC_PATH . '/Platforms/Flickr.php';
+		$module = \Photonic_Plugin\Platforms\Flickr::get_instance();
 		if (!empty($photonic_flickr_access_token)) {
 			$parameters = $module->sign_call('https://' . $this->api_base . '/services/rest/', 'GET', $parameters);
 		}
@@ -584,7 +565,7 @@ class Flickr extends Source {
 				if (!empty($flickr_object->videos)) {
 					$object['counters'][] = esc_html(sprintf(_n('%s video', '%s videos', $flickr_object->videos, 'photonic'), $flickr_object->videos));
 				}
-				$object['thumbnail'] = "https://farm" . $flickr_object->farm . ".staticflickr.com/" . $flickr_object->server . "/" . $flickr_object->primary . "_" . $flickr_object->secret . "_q.jpg";
+				$object['thumbnail'] = esc_url($flickr_object->primary_photo_extras->url_q ?? "https://farm" . $flickr_object->farm . ".staticflickr.com/" . $flickr_object->server . "/" . $flickr_object->primary . "_" . $flickr_object->secret . "_q.jpg");
 				$objects[] = $object;
 			}
 		}
@@ -603,7 +584,7 @@ class Flickr extends Source {
 				if (!empty($flickr_object->count_videos)) {
 					$object['counters'][] = esc_html(sprintf(_n('%s video', '%s videos', $flickr_object->count_videos, 'photonic'), $flickr_object->count_videos));
 				}
-				$object['thumbnail'] = "https://farm" . $flickr_object->primary_photo_farm . ".staticflickr.com/" . $flickr_object->primary_photo_server . "/" . $flickr_object->primary_photo_id . "_" . $flickr_object->primary_photo_secret . "_q.jpg";
+				$object['thumbnail'] = esc_url($flickr_object->primary_photo_extras->url_q ?? "https://farm" . $flickr_object->primary_photo_farm . ".staticflickr.com/" . $flickr_object->primary_photo_server . "/" . $flickr_object->primary_photo_id . "_" . $flickr_object->primary_photo_secret . "_q.jpg");
 				$objects[] = $object;
 			}
 		}
@@ -621,7 +602,7 @@ class Flickr extends Source {
 				$object = [];
 				$object['id'] = $flickr_object->id;
 				$object['title'] = esc_attr($flickr_object->title);
-				$object['thumbnail'] = 'https://farm' . $flickr_object->farm . '.staticflickr.com/' . $flickr_object->server . '/' . $flickr_object->id . '_' . $flickr_object->secret . '_q.jpg';
+				$object['thumbnail'] = esc_url($flickr_object->url_q ?? 'https://farm' . $flickr_object->farm . '.staticflickr.com/' . $flickr_object->server . '/' . $flickr_object->id . '_' . $flickr_object->secret . '_q.jpg');
 				$objects[] = $object;
 			}
 		}
@@ -663,18 +644,18 @@ class Flickr extends Source {
 		if (check_ajax_referer('photonic-wizard-next-' . get_current_user_id())) {
 			if ('single-photo' === $display_type) {
 				$short_code['view'] = 'photo';
-				$short_code['photo_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['photo_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('multi-photo' === $display_type) {
 				$short_code['view'] = 'photos';
 			}
 			elseif ('album-photo' === $display_type) {
 				$short_code['view'] = 'photosets';
-				$short_code['photoset_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['photoset_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('gallery-photo' === $display_type) {
 				$short_code['view'] = 'galleries';
-				$short_code['gallery_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['gallery_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('multi-album' === $display_type) {
 				$short_code['view'] = 'photosets';
@@ -687,7 +668,7 @@ class Flickr extends Source {
 			}
 			elseif ('collection' === $display_type) {
 				$short_code['view'] = 'collections';
-				$short_code['collection_id'] = sanitize_text_field($_POST['selected_data']);
+				$short_code['collection_id'] = sanitize_text_field(wp_unslash($_POST['selected_data'] ?? ''));
 			}
 			elseif ('collections' === $display_type) {
 				$short_code['view'] = 'collections';

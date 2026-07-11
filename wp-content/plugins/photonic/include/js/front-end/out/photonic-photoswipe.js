@@ -336,7 +336,7 @@ var Modal = function Modal(modal, options) {
     element.style.height = 'auto';
   }
 
-  var slideUp = function slideUp(element) {
+  var slideUp = element => {
     element.style.height = 0;
     element.style.display = 'none';
   };
@@ -555,7 +555,16 @@ exports.Tooltip = void 0;
  * License: MIT
  */
 var Tooltip = function Tooltip(selector, tooltip_element) {
-  var tooltip, tooltipClass, elemEdges, tooltipElems;
+  var tooltip, tooltipClass, elemEdges, tooltipElems; // From https://locutus.io/php/strings/strip_tags/, or https://stackoverflow.com/questions/5601903/jquery-almost-equivalent-of-phps-strip-tags/46483672#46483672
+
+  function strip_tags(input, allowed) {
+    allowed = (((allowed || '') + '').toLowerCase().match(/<[a-z][a-z0-9]*>/g) || []).join('');
+    var tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+    var commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
+    return input.replace(commentsAndPhpTags, '').replace(tags, function ($0, $1) {
+      return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : '';
+    });
+  }
 
   function create(tooltip, elm) {
     var tooltipText = elm.getAttribute('data-photonic-tooltip');
@@ -641,7 +650,7 @@ var Tooltip = function Tooltip(selector, tooltip_element) {
       document.body.appendChild(tooltip);
     }
 
-    tooltipElems.forEach(function (elm) {
+    tooltipElems.forEach(elm => {
       elm.removeEventListener('mouseenter', show);
       elm.removeEventListener('mouseleave', hide);
       elm.addEventListener('mouseenter', show, false);
@@ -695,25 +704,13 @@ exports.Core = Core;
 (0, _defineProperty2.default)(Core, "prompterList", []);
 (0, _defineProperty2.default)(Core, "lightbox", void 0);
 (0, _defineProperty2.default)(Core, "deep", location.hash);
-(0, _defineProperty2.default)(Core, "setLightbox", function (lb) {
-  return Core.lightbox = lb;
-});
-(0, _defineProperty2.default)(Core, "getLightbox", function () {
-  return Core.lightbox;
-});
-(0, _defineProperty2.default)(Core, "setDeep", function (d) {
-  return Core.deep = d;
-});
-(0, _defineProperty2.default)(Core, "getDeep", function () {
-  return Core.deep;
-});
-(0, _defineProperty2.default)(Core, "addToLightboxList", function (idx, lightbox) {
-  return Core.lightboxList[idx] = lightbox;
-});
-(0, _defineProperty2.default)(Core, "getLightboxList", function () {
-  return Core.lightboxList;
-});
-(0, _defineProperty2.default)(Core, "showSpinner", function () {
+(0, _defineProperty2.default)(Core, "setLightbox", lb => Core.lightbox = lb);
+(0, _defineProperty2.default)(Core, "getLightbox", () => Core.lightbox);
+(0, _defineProperty2.default)(Core, "setDeep", d => Core.deep = d);
+(0, _defineProperty2.default)(Core, "getDeep", () => Core.deep);
+(0, _defineProperty2.default)(Core, "addToLightboxList", (idx, lightbox) => Core.lightboxList[idx] = lightbox);
+(0, _defineProperty2.default)(Core, "getLightboxList", () => Core.lightboxList);
+(0, _defineProperty2.default)(Core, "showSpinner", () => {
   var loading = document.getElementsByClassName('photonic-loading');
 
   if (loading.length > 0) {
@@ -726,7 +723,7 @@ exports.Core = Core;
   loading.style.display = 'block';
   document.body.appendChild(loading);
 });
-(0, _defineProperty2.default)(Core, "hideLoading", function () {
+(0, _defineProperty2.default)(Core, "hideLoading", () => {
   var loading = document.getElementsByClassName('photonic-loading');
 
   if (loading.length > 0) {
@@ -734,14 +731,14 @@ exports.Core = Core;
     loading.style.display = 'none';
   }
 });
-(0, _defineProperty2.default)(Core, "initializePasswordPrompter", function (selector) {
+(0, _defineProperty2.default)(Core, "initializePasswordPrompter", selector => {
   var selectorNoHash = selector.replace(/^#+/g, '');
   var prompter = new _Prompter.Prompter(selectorNoHash);
   prompter.attach();
   Core.prompterList[selector] = prompter;
   prompter.show();
 });
-(0, _defineProperty2.default)(Core, "moveHTML5External", function () {
+(0, _defineProperty2.default)(Core, "moveHTML5External", () => {
   var videos = document.getElementById('photonic-html5-external-videos');
 
   if (!videos) {
@@ -762,14 +759,14 @@ exports.Core = Core;
     }
   }
 });
-(0, _defineProperty2.default)(Core, "blankSlideupTitle", function () {
-  document.querySelectorAll('.title-display-slideup-stick, .photonic-slideshow.title-display-slideup-stick').forEach(function (item) {
-    Array.from(item.getElementsByTagName('a')).forEach(function (a) {
+(0, _defineProperty2.default)(Core, "blankSlideupTitle", () => {
+  document.querySelectorAll('.title-display-slideup-stick, .photonic-slideshow.title-display-slideup-stick').forEach(item => {
+    Array.from(item.getElementsByTagName('a')).forEach(a => {
       a.setAttribute('title', '');
     });
   });
 });
-(0, _defineProperty2.default)(Core, "showSlideupTitle", function () {
+(0, _defineProperty2.default)(Core, "showSlideupTitle", () => {
   var titles = document.documentElement.querySelectorAll('.title-display-slideup-stick a .photonic-title');
   var len = titles.length;
 
@@ -779,37 +776,28 @@ exports.Core = Core;
 });
 (0, _defineProperty2.default)(Core, "waitForImages", /*#__PURE__*/function () {
   var _ref = (0, _asyncToGenerator2.default)(function* (selector) {
+    var images = Core.getImagesFromSelector(selector);
     var imageUrlArray = [];
     var anchorArray = [];
     var setDimensions = false;
 
-    if (typeof selector === 'string') {
-      document.querySelectorAll(selector).forEach(function (selection) {
-        Array.from(selection.getElementsByTagName('img')).forEach(function (img) {
-          imageUrlArray.push(img.getAttribute('src'));
-          anchorArray.push(img.parentElement);
-        });
-      });
-    } else if (selector instanceof Element) {
-      if (selector.getAttribute('data-photonic-platform') === 'instagram') {
-        setDimensions = true;
-      }
-
-      Array.from(selector.getElementsByTagName('img')).forEach(function (img) {
-        imageUrlArray.push(img.getAttribute('src'));
-        anchorArray.push(img.parentElement);
-      });
+    if (selector instanceof Element && selector.getAttribute('data-photonic-platform') === 'instagram') {
+      setDimensions = true;
     }
 
+    images.forEach(img => {
+      imageUrlArray.push(img.getAttribute('src'));
+      anchorArray.push(img.parentElement);
+    });
     var promiseArray = []; // create an array for promises
 
     var imageArray = []; // array for the images
 
     var _loop = function _loop(idx, imageUrl) {
-      promiseArray.push(new Promise(function (resolve) {
+      promiseArray.push(new Promise(resolve => {
         var img = new Image();
 
-        img.onload = function () {
+        img.onload = () => {
           if (setDimensions) {
             anchorArray[idx].setAttribute('data-pswp-width', img.naturalWidth);
             anchorArray[idx].setAttribute('data-pswp-height', img.naturalHeight);
@@ -836,49 +824,135 @@ exports.Core = Core;
     return _ref.apply(this, arguments);
   };
 }());
-(0, _defineProperty2.default)(Core, "standardizeTitleWidths", function () {
-  var self = Core;
-  document.querySelectorAll('.photonic-standard-layout.title-display-below, .photonic-standard-layout.title-display-hover-slideup-show, .photonic-standard-layout.title-display-slideup-stick').forEach(function (grid) {
-    self.waitForImages(grid).then(function () {
-      grid.querySelectorAll('.photonic-thumb').forEach(function (item) {
-        var img = item.getElementsByTagName('img');
+(0, _defineProperty2.default)(Core, "loadSingleImage", /*#__PURE__*/function () {
+  var _ref2 = (0, _asyncToGenerator2.default)(function* (image) {
+    var promiseArray = [];
+    var retImage = null;
+    promiseArray.push(new Promise(resolve => {
+      var img = new Image();
 
-        if (img != null) {
-          img = img[0];
-          var title = item.querySelector('.photonic-title-info');
+      img.onload = () => {
+        resolve();
+      };
 
-          if (title) {
-            title.style.width = img.width + 'px';
+      if (image.getAttribute('data-src') !== null) {
+        img.src = image.getAttribute('data-src');
+      } else {
+        img.src = image.getAttribute('src'); // Leave the 'src' in just as a backup. E.g. Gallery header images
+      }
+
+      retImage = img;
+    }));
+    yield Promise.all(promiseArray);
+    return retImage;
+  });
+
+  return function (_x2) {
+    return _ref2.apply(this, arguments);
+  };
+}());
+(0, _defineProperty2.default)(Core, "watchForImages", selector => {
+  var images = Core.getImagesFromSelector(selector);
+  var intersectionObserver = new IntersectionObserver((items, observer) => {
+    items.forEach(item => {
+      if (item.isIntersecting || item.intersectionRatio > 0) {
+        var image = item.target;
+        image.closest('a').classList.add('photonic-image-loading');
+        Core.loadSingleImage(image).then(() => {
+          if (image.getAttribute('data-src') !== null && image.getAttribute('data-src') !== '') {
+            image.src = image.getAttribute('data-src');
+            image.setAttribute('data-src', '');
+            image.setAttribute('data-loaded', 'true');
           }
-        }
-      });
+
+          image.closest('a').classList.remove('photonic-image-loading');
+          Util.fadeIn(image);
+        });
+        observer.unobserve(image);
+      }
     });
   });
+  images.forEach(image => {
+    intersectionObserver.observe(image);
+  });
 });
-(0, _defineProperty2.default)(Core, "sanitizeTitles", function () {
-  var thumbs = document.querySelectorAll('.photonic-stream a, a.photonic-level-2-thumb');
-  thumbs.forEach(function (thumb) {
-    if (!thumb.parentNode.classList.contains('photonic-header-title')) {
-      var title = thumb.getAttribute('title');
-      thumb.setAttribute('title', Util.getText(title));
+(0, _defineProperty2.default)(Core, "getImagesFromSelector", selector => {
+  var images = [];
+
+  if (typeof selector === 'string') {
+    document.querySelectorAll(selector).forEach(selection => {
+      images = Array.from(selection.getElementsByTagName('img'));
+    });
+  } else if (selector instanceof Element) {
+    images = Array.from(selector.getElementsByTagName('img'));
+  } else if (selector instanceof NodeList) {
+    selector.forEach(selection => {
+      images.push(selection.querySelector('img'));
+    });
+  }
+
+  return images;
+});
+(0, _defineProperty2.default)(Core, "standardizeTitleWidths", () => {
+  var self = Core;
+
+  var setWidths = grid => {
+    grid.querySelectorAll('.photonic-thumb').forEach(item => {
+      var img = item.getElementsByTagName('img');
+
+      if (img != null) {
+        img = img[0];
+        var title = item.querySelector('.photonic-title-info');
+
+        if (title) {
+          title.style.width = img.width + 'px';
+        }
+      }
+    });
+  };
+
+  document.querySelectorAll('.photonic-standard-layout.title-display-below, .photonic-standard-layout.title-display-hover-slideup-show, .photonic-standard-layout.title-display-slideup-stick').forEach(grid => {
+    if (grid.classList.contains('sizes-present')) {
+      self.watchForImages(grid);
+      setWidths(grid);
+    } else {
+      self.waitForImages(grid).then(() => {
+        setWidths(grid);
+      });
     }
   });
 });
-(0, _defineProperty2.default)(Core, "initializeTooltips", function () {
+(0, _defineProperty2.default)(Core, "sanitizeTitles", () => {
+  var thumbs = document.querySelectorAll('.photonic-stream a, a.photonic-level-2-thumb');
+  thumbs.forEach(thumb => {
+    if (!thumb.parentNode.classList.contains('photonic-header-title')) {
+      var title = thumb.getAttribute('title'); // Not doing a Util.getText, which uses innerHTML, which is susceptible to XSS
+
+      thumb.setAttribute('title', Util.getText(title));
+      var dataTitle = thumb.getAttribute('data-title');
+      thumb.setAttribute('data-title', Util.HTMLSanitizer.SanitizeHTML(dataTitle));
+    }
+  });
+});
+(0, _defineProperty2.default)(Core, "initializeTooltips", () => {
   if (document.querySelector('.title-display-tooltip a, .photonic-slideshow.title-display-tooltip img') != null) {
     (0, _Tooltip.Tooltip)('[data-photonic-tooltip]', '.photonic-tooltip-container');
   }
 });
-(0, _defineProperty2.default)(Core, "showRegularGrids", function () {
-  document.querySelectorAll('.photonic-standard-layout').forEach(function (grid) {
-    Core.waitForImages(grid).then(function () {
-      grid.querySelectorAll('.photonic-level-1, .photonic-level-2').forEach(function (item) {
-        item.style.display = 'inline-block';
+(0, _defineProperty2.default)(Core, "showRegularGrids", () => {
+  document.querySelectorAll('.photonic-standard-layout').forEach(grid => {
+    if (grid.classList.contains('sizes-present')) {
+      Core.watchForImages(grid);
+    } else {
+      Core.waitForImages(grid).then(() => {
+        grid.querySelectorAll('.photonic-level-1, .photonic-level-2').forEach(item => {
+          item.style.display = 'inline-block';
+        });
       });
-    });
+    }
   });
 });
-(0, _defineProperty2.default)(Core, "executeCommon", function () {
+(0, _defineProperty2.default)(Core, "executeCommon", () => {
   Core.moveHTML5External();
   Core.blankSlideupTitle();
   Core.standardizeTitleWidths();
@@ -920,7 +994,7 @@ var Util = _interopRequireWildcard(__webpack_require__(/*! ../Util.js */ "../inc
  *
  * License: GPL v3.0
  */
-var linearMin = function linearMin(arr) {
+var linearMin = arr => {
   var computed, result, x, _i, _len;
 
   for (_i = 0, _len = arr.length; _i < _len; _i++) {
@@ -938,7 +1012,7 @@ var linearMin = function linearMin(arr) {
   return result.value;
 };
 
-var linearPartition = function linearPartition(seq, k) {
+var linearPartition = (seq, k) => {
   var ans, i, j, m, n, solution, table, x, y, _i, _j, _k, _l;
 
   n = seq.length;
@@ -948,12 +1022,10 @@ var linearPartition = function linearPartition(seq, k) {
   }
 
   if (k > n) {
-    return seq.map(function (x) {
-      return [x];
-    });
+    return seq.map(x => [x]);
   }
 
-  table = function () {
+  table = (() => {
     var _i, _results;
 
     _results = [];
@@ -973,9 +1045,9 @@ var linearPartition = function linearPartition(seq, k) {
     }
 
     return _results;
-  }();
+  })();
 
-  solution = function () {
+  solution = (() => {
     var _i, _ref, _results;
 
     _results = [];
@@ -995,7 +1067,7 @@ var linearPartition = function linearPartition(seq, k) {
     }
 
     return _results;
-  }();
+  })();
 
   for (i = _i = 0; 0 <= n ? _i < n : _i > n; i = 0 <= n ? ++_i : --_i) {
     table[i][0] = seq[i] + (i ? table[i - 1][0] : 0);
@@ -1007,7 +1079,7 @@ var linearPartition = function linearPartition(seq, k) {
 
   for (i = _k = 1; 1 <= n ? _k < n : _k > n; i = 1 <= n ? ++_k : --_k) {
     for (j = _l = 1; 1 <= k ? _l < k : _l > k; j = 1 <= k ? ++_l : --_l) {
-      m = linearMin(function () {
+      m = linearMin((() => {
         var _m, _results;
 
         _results = [];
@@ -1017,7 +1089,7 @@ var linearPartition = function linearPartition(seq, k) {
         }
 
         return _results;
-      }());
+      })());
       table[i][j] = m[0];
       solution[i - 1][j - 1] = m[1];
     }
@@ -1028,7 +1100,7 @@ var linearPartition = function linearPartition(seq, k) {
   ans = [];
 
   while (k >= 0) {
-    ans = [function () {
+    ans = [(() => {
       var _m, _ref, _ref1, _results;
 
       _results = [];
@@ -1038,12 +1110,12 @@ var linearPartition = function linearPartition(seq, k) {
       }
 
       return _results;
-    }()].concat(ans);
+    })()].concat(ans);
     n = solution[n - 1][k];
     k = k - 1;
   }
 
-  return [function () {
+  return [(() => {
     var _m, _ref, _results;
 
     _results = [];
@@ -1053,7 +1125,7 @@ var linearPartition = function linearPartition(seq, k) {
     }
 
     return _results;
-  }()].concat(ans);
+  })()].concat(ans);
 };
 
 function part(seq, k) {
@@ -1069,7 +1141,7 @@ function part(seq, k) {
   }
 }
 
-var JustifiedGrid = function JustifiedGrid(resized, jsLoaded, selector, lightbox) {
+var JustifiedGrid = (resized, jsLoaded, selector, lightbox) => {
   if (console !== undefined && Photonic_JS.debug_on !== '0' && Photonic_JS.debug_on !== '') console.time('Justified Grid');
   var selection = document.querySelectorAll(selector);
 
@@ -1081,7 +1153,17 @@ var JustifiedGrid = function JustifiedGrid(resized, jsLoaded, selector, lightbox
     _Core.Core.showSpinner();
   }
 
-  selection.forEach(function (container) {
+  var setupTitles = () => {
+    _Core.Core.blankSlideupTitle();
+
+    _Core.Core.showSlideupTitle();
+
+    if (!resized && !jsLoaded) {
+      _Core.Core.hideLoading();
+    }
+  };
+
+  selection.forEach(container => {
     // If there are some nodes for which the sizes are missing, play safe and run this in JS mode.
     // Otherwise render the gallery using CSS, and just display the images once they have downloaded.
     if (container.classList.contains('sizes-missing') || !window.CSS || !CSS.supports('color', 'var(--fake-var)')) {
@@ -1090,10 +1172,10 @@ var JustifiedGrid = function JustifiedGrid(resized, jsLoaded, selector, lightbox
           idealHeight = Math.max(parseInt(windowHeight / 4), Photonic_JS.tile_min_height);
       var gap = Photonic_JS.tile_spacing * 2;
 
-      _Core.Core.waitForImages(container).then(function () {
+      _Core.Core.waitForImages(container).then(() => {
         var photos = [],
             images = Array.from(container.getElementsByTagName('img'));
-        images.forEach(function (image) {
+        images.forEach(image => {
           if (image.closest('.photonic-panel') !== null) {
             return;
           }
@@ -1107,14 +1189,10 @@ var JustifiedGrid = function JustifiedGrid(resized, jsLoaded, selector, lightbox
             });
           }
         });
-        var summedWidth = photos.reduce(function (sum, p) {
-          return sum += p.aspect_ratio * idealHeight + gap;
-        }, 0);
+        var summedWidth = photos.reduce((sum, p) => sum += p.aspect_ratio * idealHeight + gap, 0);
         var rows = Math.max(Math.round(summedWidth / viewportWidth), 1),
             // At least 1 row should be shown
-        weights = photos.map(function (p) {
-          return Math.round(p.aspect_ratio * 100);
-        });
+        weights = photos.map(p => Math.round(p.aspect_ratio * 100));
         var partition = part(weights, rows);
         var index = 0;
         var oLen = partition.length;
@@ -1124,9 +1202,7 @@ var JustifiedGrid = function JustifiedGrid(resized, jsLoaded, selector, lightbox
           var summedRatios = void 0;
           var rowBuffer = photos.slice(index, index + onePart.length);
           index = index + onePart.length;
-          summedRatios = rowBuffer.reduce(function (sum, p) {
-            return sum += p.aspect_ratio;
-          }, 0);
+          summedRatios = rowBuffer.reduce((sum, p) => sum += p.aspect_ratio, 0);
           var rLen = rowBuffer.length;
 
           for (var r = 0; r < rLen; r++) {
@@ -1137,32 +1213,13 @@ var JustifiedGrid = function JustifiedGrid(resized, jsLoaded, selector, lightbox
           }
         }
 
-        container.querySelectorAll('.photonic-thumb, .photonic-thumb img').forEach(function (thumb) {
-          return Util.fadeIn(thumb);
-        });
-
-        _Core.Core.blankSlideupTitle();
-
-        _Core.Core.showSlideupTitle();
-
-        if (!resized && !jsLoaded) {
-          _Core.Core.hideLoading();
-        }
+        container.querySelectorAll('.photonic-thumb, .photonic-thumb img').forEach(thumb => Util.fadeIn(thumb));
+        setupTitles();
       });
     } else {
-      _Core.Core.waitForImages(container).then(function () {
-        container.querySelectorAll('.photonic-thumb, .photonic-thumb img').forEach(function (thumb) {
-          return Util.fadeIn(thumb);
-        });
+      _Core.Core.watchForImages(container);
 
-        _Core.Core.blankSlideupTitle();
-
-        _Core.Core.showSlideupTitle();
-
-        if (!resized && !jsLoaded) {
-          _Core.Core.hideLoading();
-        }
-      });
+      setupTitles();
     }
 
     if (lightbox && !resized) {
@@ -1210,17 +1267,21 @@ var _Mosaic = __webpack_require__(/*! ./Mosaic */ "../include/js/front-end/src/L
 
 var _Masonry = __webpack_require__(/*! ./Masonry */ "../include/js/front-end/src/Layouts/Masonry.js");
 
+var _MasonryHorizontal = __webpack_require__(/*! ./MasonryHorizontal */ "../include/js/front-end/src/Layouts/MasonryHorizontal.js");
+
 var Slider = _interopRequireWildcard(__webpack_require__(/*! ./Slider */ "../include/js/front-end/src/Layouts/Slider.js"));
 
-var initializeLayouts = function initializeLayouts(lightbox) {
+var initializeLayouts = lightbox => {
   (0, _Justified.JustifiedGrid)(false, false, null, lightbox);
   (0, _Mosaic.Mosaic)(false, false);
   (0, _Masonry.Masonry)(false, false);
+  (0, _MasonryHorizontal.MasonryHorizontal)(false, false);
   Slider.initializeSliders();
-  window.addEventListener('resize', function () {
+  window.addEventListener('resize', () => {
     (0, _Justified.JustifiedGrid)(true, false, '.photonic-random-layout.sizes-missing');
     (0, _Mosaic.Mosaic)(true, false);
     (0, _Masonry.Masonry)(true, false);
+    (0, _MasonryHorizontal.MasonryHorizontal)(true, false);
   });
 };
 
@@ -1258,7 +1319,7 @@ var Util = _interopRequireWildcard(__webpack_require__(/*! ../Util */ "../includ
  *
  * License: GPL v3.0
  */
-var Masonry = function Masonry(resized, jsLoaded, selector) {
+var Masonry = (resized, jsLoaded, selector) => {
   if (console !== undefined && Photonic_JS.debug_on !== '0' && Photonic_JS.debug_on !== '') console.time('Masonry');
   var selection = document.querySelectorAll(selector);
 
@@ -1272,10 +1333,11 @@ var Masonry = function Masonry(resized, jsLoaded, selector) {
 
   var minWidth = isNaN(Photonic_JS.masonry_min_width) || parseInt(Photonic_JS.masonry_min_width) <= 0 ? 200 : Photonic_JS.masonry_min_width;
   minWidth = parseInt(minWidth);
-  selection.forEach(function (grid) {
-    _Core.Core.waitForImages(grid).then(function () {
-      var columns = grid.getAttribute('data-photonic-gallery-columns');
-      columns = isNaN(parseInt(columns)) || parseInt(columns) <= 0 ? 3 : parseInt(columns);
+  selection.forEach(grid => {
+    var columns = grid.getAttribute('data-photonic-gallery-columns');
+    columns = isNaN(parseInt(columns)) || parseInt(columns) <= 0 ? 3 : parseInt(columns);
+
+    var buildLayout = (grid, fadeIn) => {
       var viewportWidth = Math.floor(grid.getBoundingClientRect().width),
           idealColumns = viewportWidth / columns > minWidth ? columns : Math.floor(viewportWidth / minWidth);
 
@@ -1283,22 +1345,145 @@ var Masonry = function Masonry(resized, jsLoaded, selector) {
         grid.style.columnCount = idealColumns.toString();
       }
 
-      Array.from(grid.getElementsByTagName('img')).forEach(function (img) {
-        Util.fadeIn(img);
-        img.style.display = 'block';
-      });
+      if (fadeIn) {
+        Array.from(grid.getElementsByTagName('img')).forEach(img => {
+          Util.fadeIn(img);
+        });
+      }
 
       _Core.Core.showSlideupTitle();
 
       if (!resized && !jsLoaded) {
         _Core.Core.hideLoading();
       }
-    });
+    };
+
+    if (grid.classList.contains('sizes-present')) {
+      _Core.Core.watchForImages(grid);
+
+      buildLayout(grid, false);
+    } else {
+      _Core.Core.waitForImages(grid).then(() => {
+        buildLayout(grid, true);
+      });
+    }
   });
   if (console !== undefined && Photonic_JS.debug_on !== '0' && Photonic_JS.debug_on !== '') console.timeEnd('Masonry');
 };
 
 exports.Masonry = Masonry;
+
+/***/ }),
+
+/***/ "../include/js/front-end/src/Layouts/MasonryHorizontal.js":
+/*!****************************************************************!*\
+  !*** ../include/js/front-end/src/Layouts/MasonryHorizontal.js ***!
+  \****************************************************************/
+/*! flagged exports */
+/*! export MasonryHorizontal [provided] [no usage info] [missing usage info prevents renaming] */
+/*! export __esModule [provided] [no usage info] [missing usage info prevents renaming] */
+/*! other exports [not provided] [no usage info] */
+/*! runtime requirements: __webpack_exports__, __webpack_require__ */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+
+var _interopRequireWildcard = __webpack_require__(/*! @babel/runtime/helpers/interopRequireWildcard */ "../../../../../node_modules/@babel/runtime/helpers/interopRequireWildcard.js");
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.MasonryHorizontal = void 0;
+
+var _Core = __webpack_require__(/*! ../Core */ "../include/js/front-end/src/Core.js");
+
+var Util = _interopRequireWildcard(__webpack_require__(/*! ../Util */ "../include/js/front-end/src/Util.js"));
+
+/**
+ * Photonic Masonry Layout
+ * The Masonry layout is primarily controlled using CSS columns. The JS component is to facilitate responsive behaviour and breakpoints.
+ *
+ * License: GPL v3.0
+ */
+var MasonryHorizontal = (resized, jsLoaded, selector) => {
+  if (console !== undefined && Photonic_JS.debug_on !== '0' && Photonic_JS.debug_on !== '') console.time('Horizontal Masonry');
+  var selection = document.querySelectorAll(selector);
+
+  if (selector == null || selection.length === 0) {
+    selection = document.querySelectorAll('.photonic-masonry-horizontal-layout');
+  }
+
+  if (!resized && selection.length > 0) {
+    _Core.Core.showSpinner();
+  }
+
+  var minWidth = isNaN(Photonic_JS.masonry_min_width) || parseInt(Photonic_JS.masonry_min_width) <= 0 ? 200 : Photonic_JS.masonry_min_width;
+  minWidth = parseInt(minWidth);
+  selection.forEach(grid => {
+    var columns = grid.getAttribute('data-photonic-gallery-columns');
+    columns = isNaN(parseInt(columns)) || parseInt(columns) <= 0 ? 3 : parseInt(columns);
+
+    var buildLayout = (grid, fadeIn) => {
+      var figures = grid.querySelectorAll('figure');
+      var inputFigures = [],
+          outputFigures = [];
+      figures.forEach(figure => {
+        inputFigures[figure.getAttribute('data-photonic-idx')] = figure;
+      });
+      var viewportWidth = Math.floor(grid.getBoundingClientRect().width),
+          idealColumns = viewportWidth / columns > minWidth ? columns : Math.floor(viewportWidth / minWidth);
+
+      if (idealColumns !== undefined && idealColumns !== null) {
+        grid.style.columnCount = idealColumns.toString();
+        var col = 0;
+
+        while (col < idealColumns) {
+          for (var idx = 0; idx < inputFigures.length; idx += idealColumns) {
+            var _val = inputFigures[idx + col];
+
+            if (_val !== undefined) {
+              outputFigures.push(_val);
+            }
+          }
+
+          col++;
+        }
+
+        if (outputFigures.length === inputFigures.length) {
+          var fragment = document.createDocumentFragment();
+          outputFigures.forEach(figure => {
+            grid.appendChild(figure);
+          });
+        }
+      }
+
+      if (fadeIn) {
+        Array.from(grid.getElementsByTagName('img')).forEach(img => {
+          Util.fadeIn(img);
+        });
+      }
+
+      _Core.Core.showSlideupTitle();
+
+      if (!resized && !jsLoaded) {
+        _Core.Core.hideLoading();
+      }
+    };
+
+    if (grid.classList.contains('sizes-present')) {
+      _Core.Core.watchForImages(grid);
+
+      buildLayout(grid, !resized);
+    } else {
+      _Core.Core.waitForImages(grid).then(() => {
+        buildLayout(grid, true);
+      });
+    }
+  });
+  if (console !== undefined && Photonic_JS.debug_on !== '0' && Photonic_JS.debug_on !== '') console.timeEnd('Horizontal Masonry');
+};
+
+exports.MasonryHorizontal = MasonryHorizontal;
 
 /***/ }),
 
@@ -1332,7 +1517,7 @@ var Util = _interopRequireWildcard(__webpack_require__(/*! ../Util */ "../includ
  *
  * License: GPL V3.0
  */
-var getDistribution = function getDistribution(setSize, max, min) {
+var getDistribution = (setSize, max, min) => {
   var distribution = [];
   var processed = 0;
 
@@ -1351,17 +1536,11 @@ var getDistribution = function getDistribution(setSize, max, min) {
   return distribution;
 };
 
-var arrayAlternate = function arrayAlternate(array, remainder) {
-  return array.filter(function (value, index) {
-    return index % 2 === remainder;
-  });
-};
+var arrayAlternate = (array, remainder) => array.filter((value, index) => index % 2 === remainder);
 
-var setUniformHeightsForRow = function setUniformHeightsForRow(array) {
+var setUniformHeightsForRow = array => {
   // First, order the array by increasing height
-  array.sort(function (a, b) {
-    return a.height - b.height;
-  });
+  array.sort((a, b) => a.height - b.height);
   array[0].new_height = array[0].height;
   array[0].new_width = array[0].width;
 
@@ -1370,9 +1549,7 @@ var setUniformHeightsForRow = function setUniformHeightsForRow(array) {
     array[i].new_width = array[i].new_height * array[i].aspect_ratio;
   }
 
-  var new_width = array.reduce(function (sum, p) {
-    return sum += p.new_width;
-  }, 0);
+  var new_width = array.reduce((sum, p) => sum += p.new_width, 0);
   return {
     elements: array,
     height: array[0].new_height,
@@ -1381,7 +1558,7 @@ var setUniformHeightsForRow = function setUniformHeightsForRow(array) {
   };
 };
 
-var finalizeTiledLayout = function finalizeTiledLayout(components, containers) {
+var finalizeTiledLayout = (components, containers) => {
   var cLength = components.length;
 
   for (var c = 0; c < cLength; c++) {
@@ -1415,9 +1592,7 @@ var finalizeTiledLayout = function finalizeTiledLayout(components, containers) {
         element.x = component.x;
         element.y = rowY;
         rowY += element.new_height;
-        var totalWidth = element.elements.reduce(function (sum, p) {
-          return sum += p.new_width;
-        }, 0);
+        var totalWidth = element.elements.reduce((sum, p) => sum += p.new_width, 0);
         var rowX = 0;
         var eLength = element.elements.length;
 
@@ -1439,7 +1614,171 @@ var finalizeTiledLayout = function finalizeTiledLayout(components, containers) {
   }
 };
 
-var Mosaic = function Mosaic(resized, jsLoaded, selector) {
+var doImageLayout = (grid, needToWait) => {
+  var viewportWidth = Math.floor(grid.getBoundingClientRect().width),
+      triggerWidth = isNaN(Photonic_JS.mosaic_trigger_width) || parseInt(Photonic_JS.mosaic_trigger_width) <= 0 ? 200 : parseInt(Photonic_JS.mosaic_trigger_width),
+      maxInRow = Math.floor(viewportWidth / triggerWidth),
+      minInRow = viewportWidth >= triggerWidth * 2 ? 2 : 1,
+      photos = [];
+  var setSize;
+  var containers = [],
+      images = Array.from(grid.getElementsByTagName('img'));
+  images.forEach((image, position) => {
+    if (image.closest('.photonic-panel') != null) {
+      return;
+    }
+
+    var a = image.parentNode;
+    var div = a.parentNode;
+    div.setAttribute('data-photonic-photo-index', position);
+    containers[position] = div;
+    var height = needToWait ? image.naturalHeight : image.getAttribute('height'),
+        width = needToWait ? image.naturalWidth : image.getAttribute('width');
+
+    if (!(height === 0 || height === undefined || width === undefined)) {
+      var aspectRatio = width / height;
+      photos.push({
+        src: image.src,
+        width: width,
+        height: height,
+        aspect_ratio: aspectRatio,
+        photo_position: position
+      });
+    }
+  });
+  setSize = photos.length;
+  var distribution = getDistribution(setSize, maxInRow, minInRow); // We got our random distribution. Let's divide the photos up according to the distribution.
+
+  var groups = [],
+      startIdx = 0;
+  distribution.forEach(size => {
+    groups.push(photos.slice(startIdx, startIdx + size));
+    startIdx += size;
+  });
+  var groupY = 0; // We now have our groups of photos. We need to find the optimal layout for each group.
+
+  groups.forEach(group => {
+    // First, order the group by aspect ratio
+    group.sort((a, b) => a.aspect_ratio - b.aspect_ratio); // Next, pick a random layout
+
+    var groupLayout;
+
+    if (group.length === 1) {
+      groupLayout = [1];
+    } else if (group.length === 2) {
+      groupLayout = [1, 1];
+    } else {
+      groupLayout = getDistribution(group.length, group.length - 1, 1);
+    } // Now, LAYOUT, BABY!!!
+
+
+    var cliqueF = 0,
+        cliqueL = group.length - 1,
+        cliques = [],
+        indices = [];
+
+    for (var i = 2; i <= maxInRow; i++) {
+      var index = groupLayout.indexOf(i);
+
+      while (-1 < index && cliqueF < cliqueL) {
+        // Ideal Layout: one landscape, one portrait. But we will take any 2 with contrasting aspect ratios
+        var clique = [],
+            j = 0;
+
+        while (j < i && cliqueF <= cliqueL) {
+          clique.push(group[cliqueF++]); // One with a low aspect ratio
+
+          j++;
+
+          if (j < i && cliqueF <= cliqueL) {
+            clique.push(group[cliqueL--]); // One with a high aspect ratio
+
+            j++;
+          }
+        } // Clique is formed. Add it to the list of cliques.
+
+
+        cliques.push(clique);
+        indices.push(index); // Keep track of the position of the clique in the row
+
+        index = groupLayout.indexOf(i, index + 1);
+      }
+    } // The ones that are not in any clique (i.e. the ones in the middle) will be given their own columns in the row.
+
+
+    var remainder = group.slice(cliqueF, cliqueL + 1); // Now let's layout the cliques individually. Each clique is its own column.
+
+    var rowLayout = [];
+    cliques.forEach((clique, cliqueIdx) => {
+      var toss = Math.floor(Math.random() * 2); // 0 --> Groups of smallest and largest, or 1 --> Alternating
+
+      var oneRow, otherRow;
+
+      if (toss === 0) {
+        // Group the ones with the lowest aspect ratio together, and the ones with the highest aspect ratio together.
+        // Lay one group at the top and the other at the bottom
+        var wide = Math.max(Math.floor(Math.random() * (clique.length / 2 - 1)), 1);
+        oneRow = clique.slice(0, wide);
+        otherRow = clique.slice(wide);
+      } else {
+        // Group alternates together.
+        // Lay one group at the top and the other at the bottom
+        oneRow = arrayAlternate(clique, 0);
+        otherRow = arrayAlternate(clique, 1);
+      } // Make heights consistent within rows:
+
+
+      oneRow = setUniformHeightsForRow(oneRow);
+      otherRow = setUniformHeightsForRow(otherRow); // Now make widths consistent
+
+      oneRow.new_width = Math.min(oneRow.width, otherRow.width);
+      oneRow.new_height = oneRow.new_width / oneRow.aspect_ratio;
+      otherRow.new_width = oneRow.new_width;
+      otherRow.new_height = otherRow.new_width / otherRow.aspect_ratio;
+      rowLayout.push({
+        elements: [oneRow, otherRow],
+        height: oneRow.new_height + otherRow.new_height,
+        width: oneRow.new_width,
+        aspect_ratio: oneRow.new_width / (oneRow.new_height + otherRow.new_height),
+        element_position: indices[cliqueIdx]
+      });
+    });
+    rowLayout.sort((a, b) => a.element_position - b.element_position);
+    var orderedRowLayout = [];
+
+    for (var position = 0; position < groupLayout.length; position++) {
+      var cliqueExists = indices.indexOf(position) > -1;
+
+      if (cliqueExists) {
+        orderedRowLayout.push(rowLayout.shift());
+      } else {
+        var rem = remainder.shift();
+        orderedRowLayout.push({
+          elements: [rem],
+          height: rem.height,
+          width: rem.width,
+          aspect_ratio: rem.aspect_ratio
+        });
+      }
+    } // Main Row layout is fully constructed and ordered. Now we need to balance heights and widths of all cliques with the "remainder"
+
+
+    var totalAspect = orderedRowLayout.reduce((sum, p) => sum += p.aspect_ratio, 0);
+    var elementX = 0;
+    orderedRowLayout.forEach(component => {
+      component.new_width = component.aspect_ratio / totalAspect * viewportWidth;
+      component.new_height = component.new_width / component.aspect_ratio;
+      component.y = groupY;
+      component.x = elementX;
+      elementX += component.new_width;
+    });
+    groupY += orderedRowLayout[0].new_height;
+    finalizeTiledLayout(orderedRowLayout, containers);
+  });
+  grid.style.height = groupY + 'px';
+};
+
+var Mosaic = (resized, jsLoaded, selector) => {
   if (console !== undefined && Photonic_JS.debug_on !== '0' && Photonic_JS.debug_on !== '') console.time('Mosaic');
   var selection = document.querySelectorAll(selector);
 
@@ -1451,187 +1790,36 @@ var Mosaic = function Mosaic(resized, jsLoaded, selector) {
     _Core.Core.showSpinner();
   }
 
-  selection.forEach(function (grid) {
-    _Core.Core.waitForImages(grid).then(function () {
-      if (!grid.hasChildNodes()) {
-        return;
-      }
+  selection.forEach(grid => {
+    if (!grid.hasChildNodes()) {
+      return;
+    }
 
-      var viewportWidth = Math.floor(grid.getBoundingClientRect().width),
-          triggerWidth = isNaN(Photonic_JS.mosaic_trigger_width) || parseInt(Photonic_JS.mosaic_trigger_width) <= 0 ? 200 : parseInt(Photonic_JS.mosaic_trigger_width),
-          maxInRow = Math.floor(viewportWidth / triggerWidth),
-          minInRow = viewportWidth >= triggerWidth * 2 ? 2 : 1,
-          photos = [];
-      var setSize;
-      var containers = [],
-          images = Array.from(grid.getElementsByTagName('img'));
-      images.forEach(function (image, position) {
-        if (image.closest('.photonic-panel') != null) {
-          return;
-        }
+    if (grid.classList.contains('sizes-present')) {
+      _Core.Core.watchForImages(grid);
 
-        var a = image.parentNode;
-        var div = a.parentNode;
-        div.setAttribute('data-photonic-photo-index', position);
-        containers[position] = div;
-
-        if (!(image.naturalHeight === 0 || image.naturalHeight === undefined || image.naturalWidth === undefined)) {
-          var aspectRatio = image.naturalWidth / image.naturalHeight;
-          photos.push({
-            src: image.src,
-            width: image.naturalWidth,
-            height: image.naturalHeight,
-            aspect_ratio: aspectRatio,
-            photo_position: position
-          });
-        }
-      });
-      setSize = photos.length;
-      var distribution = getDistribution(setSize, maxInRow, minInRow); // We got our random distribution. Let's divide the photos up according to the distribution.
-
-      var groups = [],
-          startIdx = 0;
-      distribution.forEach(function (size) {
-        groups.push(photos.slice(startIdx, startIdx + size));
-        startIdx += size;
-      });
-      var groupY = 0; // We now have our groups of photos. We need to find the optimal layout for each group.
-
-      groups.forEach(function (group) {
-        // First, order the group by aspect ratio
-        group.sort(function (a, b) {
-          return a.aspect_ratio - b.aspect_ratio;
-        }); // Next, pick a random layout
-
-        var groupLayout;
-
-        if (group.length === 1) {
-          groupLayout = [1];
-        } else if (group.length === 2) {
-          groupLayout = [1, 1];
-        } else {
-          groupLayout = getDistribution(group.length, group.length - 1, 1);
-        } // Now, LAYOUT, BABY!!!
-
-
-        var cliqueF = 0,
-            cliqueL = group.length - 1,
-            cliques = [],
-            indices = [];
-
-        for (var i = 2; i <= maxInRow; i++) {
-          var index = groupLayout.indexOf(i);
-
-          while (-1 < index && cliqueF < cliqueL) {
-            // Ideal Layout: one landscape, one portrait. But we will take any 2 with contrasting aspect ratios
-            var clique = [],
-                j = 0;
-
-            while (j < i && cliqueF <= cliqueL) {
-              clique.push(group[cliqueF++]); // One with a low aspect ratio
-
-              j++;
-
-              if (j < i && cliqueF <= cliqueL) {
-                clique.push(group[cliqueL--]); // One with a high aspect ratio
-
-                j++;
-              }
-            } // Clique is formed. Add it to the list of cliques.
-
-
-            cliques.push(clique);
-            indices.push(index); // Keep track of the position of the clique in the row
-
-            index = groupLayout.indexOf(i, index + 1);
-          }
-        } // The ones that are not in any clique (i.e. the ones in the middle) will be given their own columns in the row.
-
-
-        var remainder = group.slice(cliqueF, cliqueL + 1); // Now let's layout the cliques individually. Each clique is its own column.
-
-        var rowLayout = [];
-        cliques.forEach(function (clique, cliqueIdx) {
-          var toss = Math.floor(Math.random() * 2); // 0 --> Groups of smallest and largest, or 1 --> Alternating
-
-          var oneRow, otherRow;
-
-          if (toss === 0) {
-            // Group the ones with the lowest aspect ratio together, and the ones with the highest aspect ratio together.
-            // Lay one group at the top and the other at the bottom
-            var wide = Math.max(Math.floor(Math.random() * (clique.length / 2 - 1)), 1);
-            oneRow = clique.slice(0, wide);
-            otherRow = clique.slice(wide);
-          } else {
-            // Group alternates together.
-            // Lay one group at the top and the other at the bottom
-            oneRow = arrayAlternate(clique, 0);
-            otherRow = arrayAlternate(clique, 1);
-          } // Make heights consistent within rows:
-
-
-          oneRow = setUniformHeightsForRow(oneRow);
-          otherRow = setUniformHeightsForRow(otherRow); // Now make widths consistent
-
-          oneRow.new_width = Math.min(oneRow.width, otherRow.width);
-          oneRow.new_height = oneRow.new_width / oneRow.aspect_ratio;
-          otherRow.new_width = oneRow.new_width;
-          otherRow.new_height = otherRow.new_width / otherRow.aspect_ratio;
-          rowLayout.push({
-            elements: [oneRow, otherRow],
-            height: oneRow.new_height + otherRow.new_height,
-            width: oneRow.new_width,
-            aspect_ratio: oneRow.new_width / (oneRow.new_height + otherRow.new_height),
-            element_position: indices[cliqueIdx]
-          });
-        });
-        rowLayout.sort(function (a, b) {
-          return a.element_position - b.element_position;
-        });
-        var orderedRowLayout = [];
-
-        for (var position = 0; position < groupLayout.length; position++) {
-          var cliqueExists = indices.indexOf(position) > -1;
-
-          if (cliqueExists) {
-            orderedRowLayout.push(rowLayout.shift());
-          } else {
-            var rem = remainder.shift();
-            orderedRowLayout.push({
-              elements: [rem],
-              height: rem.height,
-              width: rem.width,
-              aspect_ratio: rem.aspect_ratio
-            });
-          }
-        } // Main Row layout is fully constructed and ordered. Now we need to balance heights and widths of all cliques with the "remainder"
-
-
-        var totalAspect = orderedRowLayout.reduce(function (sum, p) {
-          return sum += p.aspect_ratio;
-        }, 0);
-        var elementX = 0;
-        orderedRowLayout.forEach(function (component) {
-          component.new_width = component.aspect_ratio / totalAspect * viewportWidth;
-          component.new_height = component.new_width / component.aspect_ratio;
-          component.y = groupY;
-          component.x = elementX;
-          elementX += component.new_width;
-        });
-        groupY += orderedRowLayout[0].new_height;
-        finalizeTiledLayout(orderedRowLayout, containers);
-      });
-      grid.style.height = groupY + 'px';
-      Array.from(grid.getElementsByTagName('img')).forEach(function (image) {
-        return Util.fadeIn(image);
-      });
+      doImageLayout(grid, false);
 
       _Core.Core.showSlideupTitle();
 
       if (!resized && !jsLoaded) {
         _Core.Core.hideLoading();
       }
-    });
+    } else {
+      _Core.Core.waitForImages(grid).then(() => {
+        if (!grid.classList.contains('sizes-present')) {
+          doImageLayout(grid, true);
+        }
+
+        Array.from(grid.getElementsByTagName('img')).forEach(image => Util.fadeIn(image));
+
+        _Core.Core.showSlideupTitle();
+
+        if (!resized && !jsLoaded) {
+          _Core.Core.hideLoading();
+        }
+      });
+    }
   });
   if (console !== undefined && Photonic_JS.debug_on !== '0' && Photonic_JS.debug_on !== '') console.timeEnd('Mosaic');
 }; //Mosaic(false);
@@ -1662,7 +1850,7 @@ exports.initializeSliders = exports.Slider = void 0;
 
 var _Core = __webpack_require__(/*! ../Core */ "../include/js/front-end/src/Core.js");
 
-var adaptiveHeight = function adaptiveHeight(slideshow, slide, splide) {
+var adaptiveHeight = (slideshow, slide, splide) => {
   var options = splide.options;
   var currentlyActive = splide.index;
 
@@ -1672,8 +1860,8 @@ var adaptiveHeight = function adaptiveHeight(slideshow, slide, splide) {
     var visibleSlides = allSlides.slice(currentlyActive, lastVisible);
     var maxHeight = 0; // Need requestAnimationFrame, otherwise offsetHeight returns 0 for first photo
 
-    requestAnimationFrame(function () {
-      Array.prototype.forEach.call(visibleSlides, function (visible) {
+    requestAnimationFrame(() => {
+      Array.prototype.forEach.call(visibleSlides, visible => {
         var visibleImage = visible.querySelector('img');
         var offsetHeight = visibleImage.offsetHeight;
 
@@ -1694,12 +1882,12 @@ var adaptiveHeight = function adaptiveHeight(slideshow, slide, splide) {
   }
 };
 
-var fixedHeight = function fixedHeight(slideshow, splideObj) {
+var fixedHeight = (slideshow, splideObj) => {
   var maxHeight = 0,
       maxAspect = 0,
       containerWidth = slideshow.offsetWidth,
       children = slideshow.querySelectorAll('.splide__slide img');
-  Array.prototype.forEach.call(children, function (img) {
+  Array.prototype.forEach.call(children, img => {
     if (img.naturalHeight !== 0) {
       var childAspect = img.naturalWidth / img.naturalHeight;
 
@@ -1716,21 +1904,21 @@ var fixedHeight = function fixedHeight(slideshow, splideObj) {
       }
     }
   });
-  Array.prototype.forEach.call(children, function (img) {
+  Array.prototype.forEach.call(children, img => {
     img.style.height = maxHeight + 'px';
   });
-  Array.prototype.forEach.call(slideshow.querySelectorAll('.splide__slide, .splide__list'), function (slideOrList) {
+  Array.prototype.forEach.call(slideshow.querySelectorAll('.splide__slide, .splide__list'), slideOrList => {
     slideOrList.style.height = maxHeight + 'px';
   });
   slideshow.style.height = maxHeight + 'px';
 };
 
-var Slider = function Slider(slideshow) {
+var Slider = slideshow => {
   if (slideshow) {
     var content = slideshow.querySelector('.photonic-slideshow-content');
 
     if (content) {
-      _Core.Core.waitForImages(slideshow).then(function () {
+      _Core.Core.waitForImages(slideshow).then(() => {
         var idStr = '#' + slideshow.getAttribute('id');
         var splideThumbs = document.querySelector(idStr + '-thumbs');
 
@@ -1757,7 +1945,7 @@ var Slider = function Slider(slideshow) {
           splide.sync(splideThumbs).mount();
         }
 
-        slideshow.querySelectorAll('img').forEach(function (img) {
+        slideshow.querySelectorAll('img').forEach(img => {
           img.style.display = 'inline';
         });
       });
@@ -1767,13 +1955,11 @@ var Slider = function Slider(slideshow) {
 
 exports.Slider = Slider;
 
-var initializeSliders = function initializeSliders() {
+var initializeSliders = () => {
   var primarySliders = document.querySelectorAll('.photonic-slideshow');
 
   if (typeof Splide != "undefined") {
-    primarySliders.forEach(function (slideshow) {
-      return Slider(slideshow);
-    });
+    primarySliders.forEach(slideshow => Slider(slideshow));
   } else if (console !== undefined && primarySliders.length > 0) {
     console.error('Splide not found! Please ensure that the Splide script is available and loaded before Photonic.');
   }
@@ -1814,7 +2000,7 @@ class Lightbox {
   }
 
   getVideoSize(url, baseline) {
-    return new Promise(function (resolve) {
+    return new Promise(resolve => {
       // create the video element
       var video = document.createElement('video'); // place a listener on it
 
@@ -2028,12 +2214,8 @@ class Lightbox {
 
   soloImages() {
     var a = document.querySelectorAll('a[href]');
-    var solos = Array.from(a).filter(function (elem) {
-      return /(\.jpg|\.jpeg|\.bmp|\.gif|\.png)/i.test(elem.getAttribute('href'));
-    }).filter(function (elem) {
-      return !elem.classList.contains('photonic-lb');
-    });
-    solos.forEach(function (solo) {
+    var solos = Array.from(a).filter(elem => /(\.jpg|\.jpeg|\.bmp|\.gif|\.png)/i.test(elem.getAttribute('href'))).filter(elem => !elem.classList.contains('photonic-lb'));
+    solos.forEach(solo => {
       solo.classList.add("photonic-" + Photonic_JS.lightbox_library);
       solo.classList.add("photonic-" + Photonic_JS.lightbox_library + '-solo');
       solo.classList.add(Photonic_JS.lightbox_library);
@@ -2152,7 +2334,7 @@ class PhotonicPhotoSwipe extends _Lightbox.Lightbox {
     this.pswp = document.querySelector(this.pswpSelector);
 
     if (this.pswp === null) {
-      this.pswp = '<!-- Root element of PhotoSwipe. Must have class pswp. -->\n' + '<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">\n' + '\n' + '    <!-- Background of PhotoSwipe. \n' + '         It\'s a separate element as animating opacity is faster than rgba(). -->\n' + '    <div class="pswp__bg"></div>\n' + '\n' + '    <!-- Slides wrapper with overflow:hidden. -->\n' + '    <div class="pswp__scroll-wrap">\n' + '\n' + '        <!-- Container that holds slides. \n' + '            PhotoSwipe keeps only 3 of them in the DOM to save memory.\n' + '            Don\'t modify these 3 pswp__item elements, data is added later on. -->\n' + '        <div class="pswp__container">\n' + '            <div class="pswp__item"></div>\n' + '            <div class="pswp__item"></div>\n' + '            <div class="pswp__item"></div>\n' + '        </div>\n' + '\n' + '        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->\n' + '        <div class="pswp__ui pswp__ui--hidden">\n' + '\n' + '            <div class="pswp__top-bar">\n' + '                <!--  Controls are self-explanatory. Order can be changed. -->\n' + '                <div class="pswp__counter"></div>\n' + '                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>\n' + '                <button class="pswp__button pswp__button--share" title="Share"></button>\n' + '                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>\n' + '                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>\n' + '\n' + '                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->\n' + '                <!-- element will get class pswp__preloader--active when preloader is running -->\n' + '                <div class="pswp__preloader">\n' + '                    <div class="pswp__preloader__icn">\n' + '                      <div class="pswp__preloader__cut">\n' + '                        <div class="pswp__preloader__donut"></div>\n' + '                      </div>\n' + '                    </div>\n' + '                </div>\n' + '            </div>\n' + '\n' + '            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">\n' + '                <div class="pswp__share-tooltip"></div> \n' + '            </div>\n' + '\n' + '            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">\n' + '            </button>\n' + '\n' + '            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">\n' + '            </button>\n' + '\n' + '            <div class="pswp__caption">\n' + '                <div class="pswp__caption__center"></div>\n' + '            </div>\n' + '\n' + '        </div>\n' + '\n' + '    </div>\n' + '\n' + '</div>';
+      this.pswp = '<!-- Root element of PhotoSwipe. Must have class pswp. -->\n' + '<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">\n' + '\n' + '    <!-- Background of PhotoSwipe. \n' + '         It\'s a separate element as animating opacity is faster than rgba(). -->\n' + '    <div class="pswp__bg"></div>\n' + '\n' + '    <!-- Slides wrapper with overflow:hidden. -->\n' + '    <div class="pswp__scroll-wrap">\n' + '\n' + '        <!-- Container that holds slides. \n' + '            PhotoSwipe keeps only 3 of them in the DOM to save memory.\n' + '            Don\'t modify these 3 pswp__item elements, data is added later on. -->\n' + '        <div class="pswp__container">\n' + '            <div class="pswp__item"></div>\n' + '            <div class="pswp__item"></div>\n' + '            <div class="pswp__item"></div>\n' + '        </div>\n' + '\n' + '        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->\n' + '        <div class="pswp__ui pswp__ui--hidden">\n' + '\n' + '            <div class="pswp__top-bar">\n' + '                <!--  Controls are self-explanatory. Order can be changed. -->\n' + '                <div class="pswp__counter"></div>\n' + '                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>\n' + '                <button class="pswp__button pswp__button--share" title="Share"></button>\n' + '                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>\n' + '                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>\n' + '\n' + '                <!-- Preloader demo https://codepen.io/dimsemenov/pen/yyBWoR -->\n' + '                <!-- element will get class pswp__preloader--active when preloader is running -->\n' + '                <div class="pswp__preloader">\n' + '                    <div class="pswp__preloader__icn">\n' + '                      <div class="pswp__preloader__cut">\n' + '                        <div class="pswp__preloader__donut"></div>\n' + '                      </div>\n' + '                    </div>\n' + '                </div>\n' + '            </div>\n' + '\n' + '            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">\n' + '                <div class="pswp__share-tooltip"></div> \n' + '            </div>\n' + '\n' + '            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">\n' + '            </button>\n' + '\n' + '            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">\n' + '            </button>\n' + '\n' + '            <div class="pswp__caption">\n' + '                <div class="pswp__caption__center"></div>\n' + '            </div>\n' + '\n' + '        </div>\n' + '\n' + '    </div>\n' + '\n' + '</div>';
       document.body.insertAdjacentHTML('beforeend', this.pswp);
       this.pswp = document.querySelector(this.pswpSelector);
     }
@@ -2205,14 +2387,14 @@ class PhotonicPhotoSwipe extends _Lightbox.Lightbox {
         if (link.getAttribute('data-html5-href') !== null) {
           item = {
             html: '<div class="photonic-video" id="ps-' + link.getAttribute('href').substring(1) + '">\n<video class="photonic" controls preload="none"><source src="' + link.getAttribute('data-html5-href') + '" type="video/mp4">Your browser does not support HTML5 videos</video>',
-            title: link.getAttribute('data-title')
+            title: Util.HTMLSanitizer.SanitizeHTML(link.getAttribute('data-title'))
           };
         } else {
           item = {
             src: link.getAttribute('href'),
             w: 0,
             h: 0,
-            title: link.getAttribute('data-title'),
+            title: Util.HTMLSanitizer.SanitizeHTML(link.getAttribute('data-title')),
             pid: pid[1]
           };
         }
@@ -2222,10 +2404,8 @@ class PhotonicPhotoSwipe extends _Lightbox.Lightbox {
       self.items[galleryId] = gallery; //			}
     });
     var a = document.querySelectorAll('a.photonic-photoswipe');
-    var solos = Array.from(a).filter(function (elem) {
-      return elem.closest('.photonic-level-1') === null;
-    });
-    solos.forEach(function (link) {
+    var solos = Array.from(a).filter(elem => elem.closest('.photonic-level-1') === null);
+    solos.forEach(link => {
       var item = {
         src: link.getAttribute('href'),
         w: 0,
@@ -2248,7 +2428,7 @@ class PhotonicPhotoSwipe extends _Lightbox.Lightbox {
         href = document.querySelector(href);
         item = {
           html: '<div class="photonic-video" id="ps-' + href.getAttribute('id') + '">\n<video class="photonic" controls preload="none"><source src="' + link.getAttribute('data-html5-href') + '" type="video/mp4">Your browser does not support HTML5 videos</video>',
-          title: link.getAttribute('data-title') || link.getAttribute('title') || ''
+          title: Util.HTMLSanitizer.SanitizeHTML(link.getAttribute('data-title')) || Util.getText(link.getAttribute('title')) || ''
         };
       }
 
@@ -2314,7 +2494,7 @@ class PhotonicPhotoSwipe extends _Lightbox.Lightbox {
       }, {
         id: 'pinterest',
         label: 'Pin it',
-        url: 'http://www.pinterest.com/pin/create/button/?url={{url}}&media={{image_url}}&description={{text}}'
+        url: 'https://www.pinterest.com/pin/create/button/?url={{url}}&media={{image_url}}&description={{text}}'
       }];
     }
 
@@ -2363,7 +2543,7 @@ class PhotonicPhotoSwipe extends _Lightbox.Lightbox {
             self.getVideoSize(videoSrc, {
               width: window.innerWidth,
               height: window.innerHeight
-            }).then(function (dimensions) {
+            }).then(dimensions => {
               item.h = dimensions.newHeight;
               item.w = dimensions.newWidth;
               var videoContainer = document.querySelector(html.getAttribute('id'));
@@ -2383,7 +2563,7 @@ class PhotonicPhotoSwipe extends _Lightbox.Lightbox {
 
   initializeForExisting() {
     var self = this;
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', e => {
       if (!(e.target instanceof Element) || !e.target.closest('a.photonic-photoswipe')) {
         return;
       }
@@ -2404,14 +2584,12 @@ class PhotonicPhotoSwipe extends _Lightbox.Lightbox {
         }
       } else {
         var a = document.querySelectorAll('a.photonic-photoswipe');
-        var solos = Array.from(a).filter(function (elem) {
-          return elem.closest('.photonic-level-1') === null;
-        });
+        var solos = Array.from(a).filter(elem => elem.closest('.photonic-level-1') === null);
         index = solos.indexOf(clicked);
         self.openPhotoSwipe(index, undefined);
       }
     });
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', e => {
       if (!(e.target instanceof Element) || !e.target.closest(self.videoSelector)) {
         return;
       }
@@ -2471,9 +2649,11 @@ var _Mosaic = __webpack_require__(/*! ./Layouts/Mosaic */ "../include/js/front-e
 
 var _Tooltip = __webpack_require__(/*! ./Components/Tooltip */ "../include/js/front-end/src/Components/Tooltip.js");
 
+var _MasonryHorizontal = __webpack_require__(/*! ./Layouts/MasonryHorizontal */ "../include/js/front-end/src/Layouts/MasonryHorizontal.js");
+
 // .photonic-level-2-thumb:not(".gallery-page")
-var addLevel2ClickListener = function addLevel2ClickListener() {
-  document.addEventListener('click', function (e) {
+var addLevel2ClickListener = () => {
+  document.addEventListener('click', e => {
     if (!(e.target instanceof Element) || !e.target.closest('.photonic-level-2-thumb') || Photonic_JS.lightbox_library === 'none') {
       return;
     }
@@ -2486,25 +2666,26 @@ var addLevel2ClickListener = function addLevel2ClickListener() {
 
     e.preventDefault();
     var container = clicked.closest('.photonic-level-2-container');
-    var provider = clicked.getAttribute('data-photonic-platform'),
-        singular = clicked.getAttribute('data-photonic-singular'),
+    var galleryData = JSON.parse(container.getAttribute('data-photonic'));
+    var provider = galleryData['platform'],
+        singular = galleryData['singular'],
         query = container.getAttribute('data-photonic-query');
     var args = {
       "panel_id": clicked.getAttribute('id'),
-      "popup": clicked.getAttribute('data-photonic-popup'),
-      "photo_count": clicked.getAttribute('data-photonic-photo-count'),
-      "photo_more": clicked.getAttribute('data-photonic-photo-more'),
+      "popup": galleryData['popup'],
+      "photo_count": galleryData['photo-count'],
+      "photo_more": galleryData['photo-more'] || '',
       "query": query
     };
-    if (provider === 'google' || provider === 'zenfolio') args.thumb_size = clicked.getAttribute('data-photonic-thumb-size');
+    if (provider === 'google' || provider === 'zenfolio') args.thumb_size = galleryData['thumb-size'];
 
     if (provider === 'flickr' || provider === 'smug' || provider === 'google' || provider === 'zenfolio') {
-      args.overlay_size = clicked.getAttribute('data-photonic-overlay-size');
-      args.overlay_video_size = clicked.getAttribute('data-photonic-overlay-video-size');
+      args.overlay_size = galleryData['overlay-size'];
+      args.overlay_video_size = galleryData['overlay-video-size'];
     }
 
     if (provider === 'google') {
-      args.overlay_crop = clicked.getAttribute('data-photonic-overlay-crop');
+      args.overlay_crop = galleryData['overlay-crop'];
     }
 
     Requests.displayLevel2(provider, singular, args);
@@ -2514,8 +2695,8 @@ var addLevel2ClickListener = function addLevel2ClickListener() {
 
 exports.addLevel2ClickListener = addLevel2ClickListener;
 
-var addPasswordSubmitListener = function addPasswordSubmitListener() {
-  document.addEventListener('click', function (e) {
+var addPasswordSubmitListener = () => {
+  document.addEventListener('click', e => {
     if (!(e.target instanceof Element) || !e.target.closest('.photonic-password-submit')) {
       return;
     }
@@ -2524,10 +2705,11 @@ var addPasswordSubmitListener = function addPasswordSubmitListener() {
     var clicked = e.target.closest('.photonic-password-submit');
     var modal = clicked.closest('.photonic-password-prompter'),
         container = clicked.closest('.photonic-level-2-container');
+    var galleryData = JSON.parse(container.getAttribute('data-photonic'));
     var album_id = modal.getAttribute('id');
     var components = album_id.split('-');
-    var provider = components[1],
-        singular_type = components[2],
+    var provider = galleryData['platform'],
+        singular_type = galleryData['singular'],
         album_key = components.slice(4).join('-'),
         thumb_id = "photonic-".concat(provider, "-").concat(singular_type, "-thumb-").concat(album_key),
         thumb = document.getElementById("".concat(thumb_id)),
@@ -2545,21 +2727,21 @@ var addPasswordSubmitListener = function addPasswordSubmitListener() {
 
     var args = {
       'panel_id': thumb_id,
-      "popup": thumb.getAttribute('data-photonic-popup'),
-      "photo_count": thumb.getAttribute('data-photonic-photo-count'),
-      "photo_more": thumb.getAttribute('data-photonic-photo-more'),
+      "popup": galleryData['popup'],
+      "photo_count": galleryData['photo-count'],
+      "photo_more": galleryData['photo-more'] || '',
       "query": query
     };
 
     if (provider === 'smug') {
       args.password = password;
-      args.overlay_size = thumb.getAttribute('data-photonic-overlay-size');
+      args.overlay_size = galleryData['overlay-size'];
     } else if (provider === 'zenfolio') {
       args.password = password;
       args.realm_id = thumb.getAttribute('data-photonic-realm');
-      args.thumb_size = thumb.getAttribute('data-photonic-thumb-size');
-      args.overlay_size = thumb.getAttribute('data-photonic-overlay-size');
-      args.overlay_video_size = clicked.getAttribute('data-photonic-overlay-video-size');
+      args.thumb_size = galleryData['thumb-size'];
+      args.overlay_size = galleryData['overlay-size'];
+      args.overlay_video_size = galleryData['overlay-video-size'];
     }
 
     Requests.processRequest(provider, singular_type, album_key, args);
@@ -2569,8 +2751,8 @@ var addPasswordSubmitListener = function addPasswordSubmitListener() {
 
 exports.addPasswordSubmitListener = addPasswordSubmitListener;
 
-var addLevel3ExpandListener = function addLevel3ExpandListener() {
-  document.addEventListener('click', function (e) {
+var addLevel3ExpandListener = () => {
+  document.addEventListener('click', e => {
     if (!(e.target instanceof Element) || !e.target.closest('a.photonic-level-3-expand')) {
       return;
     }
@@ -2608,8 +2790,8 @@ var addLevel3ExpandListener = function addLevel3ExpandListener() {
 
 exports.addLevel3ExpandListener = addLevel3ExpandListener;
 
-var addMoreButtonListener = function addMoreButtonListener() {
-  document.addEventListener('click', function (e) {
+var addMoreButtonListener = () => {
+  document.addEventListener('click', e => {
     if (!(e.target instanceof Element) || !e.target.closest('a.photonic-more-button.photonic-more-dynamic')) {
       return;
     }
@@ -2620,7 +2802,8 @@ var addMoreButtonListener = function addMoreButtonListener() {
     var query = container.getAttribute('data-photonic-query'),
         provider = container.getAttribute('data-photonic-platform'),
         level = container.classList.contains('photonic-level-1-container') ? 'level-1' : 'level-2',
-        containerId = container.getAttribute('id');
+        containerId = container.getAttribute('id'),
+        existing = container.querySelectorAll('figure');
 
     _Core.Core.showSpinner();
 
@@ -2628,7 +2811,7 @@ var addMoreButtonListener = function addMoreButtonListener() {
       'action': 'photonic_load_more',
       'provider': provider,
       'query': query
-    }, function (data) {
+    }, data => {
       var ret = Util.getElement(data),
           images = ret.querySelectorAll(".photonic-".concat(level)),
           more_button = ret.querySelector('.photonic-more-button'),
@@ -2636,7 +2819,7 @@ var addMoreButtonListener = function addMoreButtonListener() {
       var anchors = [];
 
       if (one_existing !== null) {
-        images.forEach(function (image) {
+        images.forEach(image => {
           var a = image.querySelector('a');
 
           if (a !== null) {
@@ -2658,9 +2841,7 @@ var addMoreButtonListener = function addMoreButtonListener() {
       } // Can't do this above, which is only for L1
 
 
-      images.forEach(function (image) {
-        return container.appendChild(image);
-      });
+      images.forEach(image => container.appendChild(image));
 
       _Core.Core.moveHTML5External();
 
@@ -2689,7 +2870,7 @@ var addMoreButtonListener = function addMoreButtonListener() {
         if (one_existing !== null) {
           lightbox = _Core.Core.getLightboxList()[one_existing.getAttribute('rel')];
           var galleryItems = [...lightbox.galleryItems];
-          images.forEach(function (image) {
+          images.forEach(image => {
             var a = image.querySelector('a');
             var img = a.querySelector('img');
             var videoAttr;
@@ -2733,7 +2914,7 @@ var addMoreButtonListener = function addMoreButtonListener() {
         lightbox.initialize();
       }
 
-      _Core.Core.waitForImages(images).then(function () {
+      function doImageLayout(images) {
         var new_query = ret.querySelector('.photonic-random-layout,.photonic-standard-layout,.photonic-masonry-layout,.photonic-mosaic-layout,.modal-gallery');
 
         if (new_query != null) {
@@ -2750,15 +2931,25 @@ var addMoreButtonListener = function addMoreButtonListener() {
         } else if (Util.hasClass(container, 'photonic-random-layout')) {
           (0, _Justified.JustifiedGrid)(false, false, '#' + containerId, lightbox);
         } else if (Util.hasClass(container, 'photonic-masonry-layout')) {
-          images.forEach(function (image) {
+          images.forEach(image => {
             var img = image.querySelector('img');
             Util.fadeIn(img);
             img.style.display = 'block';
           });
 
           _Core.Core.hideLoading();
+        } else if (Util.hasClass(container, 'photonic-masonry-horizontal-layout')) {
+          var existingCount = existing.length;
+          images.forEach((image, idx) => {
+            image.setAttribute('data-photonic-idx', existingCount + idx); // const img = image.querySelector('img');
+            // Util.fadeIn(img);
+            // img.style.display = 'block';
+          });
+          (0, _MasonryHorizontal.MasonryHorizontal)(false, false, '#' + containerId);
+
+          _Core.Core.hideLoading();
         } else {
-          container.querySelectorAll('.photonic-' + level).forEach(function (el) {
+          container.querySelectorAll('.photonic-' + level).forEach(el => {
             el.style.display = 'inline-block';
           });
 
@@ -2768,7 +2959,17 @@ var addMoreButtonListener = function addMoreButtonListener() {
         }
 
         (0, _Tooltip.Tooltip)('[data-photonic-tooltip]', '.photonic-tooltip-container');
-      });
+      }
+
+      if (container.classList.contains('sizes-present')) {
+        _Core.Core.watchForImages(images);
+
+        doImageLayout(images);
+      } else {
+        _Core.Core.waitForImages(images).then(() => {
+          doImageLayout(images);
+        });
+      }
     });
   });
 }; // input[type="button"].photonic-helper-more
@@ -2776,8 +2977,8 @@ var addMoreButtonListener = function addMoreButtonListener() {
 
 exports.addMoreButtonListener = addMoreButtonListener;
 
-var addHelperMoreButtonListener = function addHelperMoreButtonListener() {
-  document.addEventListener('click', function (e) {
+var addHelperMoreButtonListener = () => {
+  document.addEventListener('click', e => {
     if (!(e.target instanceof Element) || !e.target.closest('input[type="button"].photonic-helper-more')) {
       return;
     }
@@ -2802,7 +3003,7 @@ var addHelperMoreButtonListener = function addHelperMoreButtonListener() {
     }
 
     if (provider === 'google') {
-      Util.post(Photonic_JS.ajaxurl, args, function (data) {
+      Util.post(Photonic_JS.ajaxurl, args, data => {
         var ret = Util.getElement(data);
         ret = Array.from(ret.getElementsByTagName('tr'));
 
@@ -2813,7 +3014,7 @@ var addHelperMoreButtonListener = function addHelperMoreButtonListener() {
             tr.remove();
           }
 
-          ret.forEach(function (node, i) {
+          ret.forEach((node, i) => {
             if (i !== 0) {
               table.appendChild(node);
             }
@@ -2830,8 +3031,8 @@ var addHelperMoreButtonListener = function addHelperMoreButtonListener() {
 
 exports.addHelperMoreButtonListener = addHelperMoreButtonListener;
 
-var addSlideUpEnterListener = function addSlideUpEnterListener() {
-  document.addEventListener('mouseover', function (e) {
+var addSlideUpEnterListener = () => {
+  document.addEventListener('mouseover', e => {
     var slideup = '.title-display-hover-slideup-show a, .photonic-slideshow.title-display-hover-slideup-show li';
 
     if (e.target instanceof Element && e.target.closest(slideup)) {
@@ -2845,8 +3046,8 @@ var addSlideUpEnterListener = function addSlideUpEnterListener() {
 
 exports.addSlideUpEnterListener = addSlideUpEnterListener;
 
-var addSlideUpLeaveListener = function addSlideUpLeaveListener() {
-  document.addEventListener('mouseout', function (e) {
+var addSlideUpLeaveListener = () => {
+  document.addEventListener('mouseout', e => {
     var slideup = '.title-display-hover-slideup-show a, .photonic-slideshow.title-display-hover-slideup-show li';
 
     if (e.target instanceof Element && e.target.closest(slideup)) {
@@ -2860,13 +3061,13 @@ var addSlideUpLeaveListener = function addSlideUpLeaveListener() {
 
 exports.addSlideUpLeaveListener = addSlideUpLeaveListener;
 
-var addLazyLoadListener = function addLazyLoadListener() {
+var addLazyLoadListener = () => {
   var buttons = document.documentElement.querySelectorAll('input.photonic-show-gallery-button');
-  Array.prototype.forEach.call(buttons, function (button) {
+  Array.prototype.forEach.call(buttons, button => {
     button.addEventListener('click', Requests.lazyLoad);
   });
   buttons = document.documentElement.querySelectorAll('input.photonic-js-load-button');
-  Array.prototype.forEach.call(buttons, function (button) {
+  Array.prototype.forEach.call(buttons, button => {
     button.addEventListener('click', Requests.lazyLoad);
     button.click();
   });
@@ -2874,7 +3075,7 @@ var addLazyLoadListener = function addLazyLoadListener() {
 
 exports.addLazyLoadListener = addLazyLoadListener;
 
-var addAllListeners = function addAllListeners() {
+var addAllListeners = () => {
   addLevel2ClickListener();
   addPasswordSubmitListener();
   addLevel3ExpandListener();
@@ -2920,17 +3121,17 @@ var _Justified = __webpack_require__(/*! ./Layouts/Justified */ "../include/js/f
 
 var _Masonry = __webpack_require__(/*! ./Layouts/Masonry */ "../include/js/front-end/src/Layouts/Masonry.js");
 
+var _MasonryHorizontal = __webpack_require__(/*! ./Layouts/MasonryHorizontal */ "../include/js/front-end/src/Layouts/MasonryHorizontal.js");
+
 var _Mosaic = __webpack_require__(/*! ./Layouts/Mosaic */ "../include/js/front-end/src/Layouts/Mosaic.js");
 
 var _Tooltip = __webpack_require__(/*! ./Components/Tooltip */ "../include/js/front-end/src/Components/Tooltip.js");
 
 var _Modal = __webpack_require__(/*! ./Components/Modal */ "../include/js/front-end/src/Components/Modal.js");
 
-var _Slider = __webpack_require__(/*! ./Layouts/Slider */ "../include/js/front-end/src/Layouts/Slider.js");
-
 var spinners = 0;
 
-var bypassPopup = function bypassPopup(data) {
+var bypassPopup = data => {
   _Core.Core.hideLoading();
 
   var panel;
@@ -2942,6 +3143,13 @@ var bypassPopup = function bypassPopup(data) {
   }
 
   Util.hide(panel);
+  var images = panel.querySelectorAll('img');
+  images.forEach(image => {
+    if ((image.getAttribute('src') === null || image.getAttribute('src') === '') && image.getAttribute('data-src') !== null) {
+      image.setAttribute('src', image.getAttribute('data-src'));
+      image.removeAttribute('data-src');
+    }
+  });
   document.body.appendChild(panel);
 
   _Core.Core.moveHTML5External();
@@ -2967,13 +3175,13 @@ var bypassPopup = function bypassPopup(data) {
   }
 };
 
-var displayPopup = function displayPopup(data, provider, popup, panelId) {
-  var safePanelId = panelId.replace('.', '\\.'); // FOR EXISTING ELEMENTS WHCICH NEED SANITIZED PANELID
+var displayPopup = (data, provider, popup, panelId) => {
+  var safePanelId = panelId.replace('.', '\\.'); // FOR EXISTING ELEMENTS WHICH NEED SANITIZED PANELID
 
   var div = Util.getElement(data).firstElementChild;
   var grid = div.querySelector('.modal-gallery');
 
-  _Core.Core.waitForImages(grid).then(function () {
+  var doImageLayout = () => {
     var popupPanel = document.querySelector('#photonic-' + provider + '-' + popup + '-' + safePanelId);
 
     if (popupPanel) {
@@ -2999,10 +3207,20 @@ var displayPopup = function displayPopup(data, provider, popup, panelId) {
     (0, _Tooltip.Tooltip)('[data-photonic-tooltip]', '.photonic-tooltip-container');
 
     _Core.Core.hideLoading();
-  });
+  };
+
+  if (grid.classList.contains('sizes-present')) {
+    _Core.Core.watchForImages(grid);
+
+    doImageLayout();
+  } else {
+    _Core.Core.waitForImages(grid).then(() => {
+      doImageLayout();
+    });
+  }
 };
 
-var redisplayPopupContents = function redisplayPopupContents(provider, panelId, panel, args) {
+var redisplayPopupContents = (provider, panelId, panel, args) => {
   var panelEl = Util.getElement(panel);
 
   if ('show' === args['popup']) {
@@ -3019,7 +3237,7 @@ var redisplayPopupContents = function redisplayPopupContents(provider, panelId, 
   }
 };
 
-var processRequest = function processRequest(provider, type, identifier, args) {
+var processRequest = (provider, type, identifier, args) => {
   args['action'] = 'photonic_display_level_2_contents';
   Util.post(Photonic_JS.ajaxurl, args, function (data) {
     if (data.substr(0, Photonic_JS.password_failed.length) === Photonic_JS.password_failed) {
@@ -3047,7 +3265,7 @@ var processRequest = function processRequest(provider, type, identifier, args) {
 
 exports.processRequest = processRequest;
 
-var displayLevel2 = function displayLevel2(provider, type, args) {
+var displayLevel2 = (provider, type, args) => {
   var identifier = args['panel_id'].substr(('photonic-' + provider + '-' + type + '-thumb-').length);
   var panel = '#photonic-' + provider + '-panel-' + identifier;
   var existing = document.getElementById('photonic-' + provider + '-panel-' + identifier);
@@ -3071,7 +3289,7 @@ var displayLevel2 = function displayLevel2(provider, type, args) {
 
 exports.displayLevel2 = displayLevel2;
 
-var processL3Request = function processL3Request(clicked, header, args) {
+var processL3Request = (clicked, header, args) => {
   args['action'] = 'photonic_display_level_3_contents';
 
   _Core.Core.showSpinner();
@@ -3095,6 +3313,10 @@ var processL3Request = function processL3Request(clicked, header, args) {
         (0, _Mosaic.Mosaic)(false, false);
       } else if (layout.classList.contains('photonic-masonry-layout')) {
         (0, _Masonry.Masonry)(false, false);
+      } else if (layout.classList.contains('photonic-masonry-horizontal-layout')) {
+        (0, _MasonryHorizontal.MasonryHorizontal)(false, false);
+      } else if (layout.classList.contains('sizes-present')) {
+        _Core.Core.watchForImages(layout);
       }
 
       var level2 = returnedStream.querySelectorAll('.photonic-level-2');
@@ -3113,7 +3335,7 @@ var processL3Request = function processL3Request(clicked, header, args) {
 
 exports.processL3Request = processL3Request;
 
-var lazyLoad = function lazyLoad(evt) {
+var lazyLoad = evt => {
   spinners++;
 
   _Core.Core.showSpinner();
@@ -3124,7 +3346,16 @@ var lazyLoad = function lazyLoad(evt) {
     'action': 'photonic_lazy_load',
     'shortcode': shortcode
   };
-  Util.post(Photonic_JS.ajaxurl, args, function (data) {
+
+  var countdownSpinners = () => {
+    spinners--;
+
+    if (spinners <= 0) {
+      _Core.Core.hideLoading();
+    }
+  };
+
+  Util.post(Photonic_JS.ajaxurl, args, data => {
     var div = document.createElement('div');
     div.innerHTML = data;
     div = div.firstElementChild;
@@ -3134,7 +3365,7 @@ var lazyLoad = function lazyLoad(evt) {
       var divClass = divId.substring(0, divId.lastIndexOf('-'));
       var streams = document.documentElement.querySelectorAll('.' + divClass);
       var max = 0;
-      streams.forEach(function (stream) {
+      streams.forEach(stream => {
         var streamId = stream.getAttribute('id');
         streamId = streamId.substring(streamId.lastIndexOf('-') + 1);
         streamId = parseInt(streamId, 10);
@@ -3145,7 +3376,7 @@ var lazyLoad = function lazyLoad(evt) {
       div.innerHTML = data.replace(regex, divClass + '-' + max).replace('photonic-slideshow-' + divId.substring(divId.lastIndexOf('-') + 1), 'photonic-slideshow-' + max);
       div = div.firstElementChild; // Level 2 elements get their own ids, which need to be readjusted because the back-end always assigns them a gallery_index of 1
 
-      div.querySelectorAll('figure.photonic-level-2').forEach(function (figure) {
+      div.querySelectorAll('figure.photonic-level-2').forEach(figure => {
         if (figure.getAttribute('id') != null) {
           var figId = figure.getAttribute('id');
           var modId = figId.substring(0, figId.lastIndexOf('-') + 1) + max; // Replace last part of id with the "max"
@@ -3185,26 +3416,33 @@ var lazyLoad = function lazyLoad(evt) {
       } else if (document.querySelectorAll('#' + newDivId + ' .photonic-masonry-layout').length > 0) {
         (0, _Masonry.Masonry)(false, true, '#' + newDivId + ' .photonic-masonry-layout');
         spinners--;
+      } else if (document.querySelectorAll('#' + newDivId + ' .photonic-masonry-horizontal-layout').length > 0) {
+        (0, _MasonryHorizontal.MasonryHorizontal)(false, true, '#' + newDivId + ' .photonic-masonry-horizontal-layout');
+        spinners--;
       } else if (document.querySelectorAll('#' + newDivId + ' .photonic-mosaic-layout').length > 0) {
         (0, _Mosaic.Mosaic)(false, true, '#' + newDivId + ' .photonic-mosaic-layout');
         spinners--;
       } // Slider(document.querySelector('#photonic-slideshow-' + max));
 
 
-      _Core.Core.waitForImages(div).then(function () {
-        var standard = document.documentElement.querySelectorAll('#' + newDivId + ' .photonic-standard-layout .photonic-level-1, ' + '#' + newDivId + ' .photonic-standard-layout .photonic-level-2');
-        standard.forEach(function (image) {
-          image.style.display = 'inline-block';
-        });
+      if (div.classList.contains('sizes-present') || div.querySelector('.sizes-present') !== null) {
+        _Core.Core.watchForImages(div);
 
         _Core.Core.standardizeTitleWidths();
 
-        spinners--;
+        countdownSpinners();
+      } else {
+        _Core.Core.waitForImages(div).then(() => {
+          var standard = document.documentElement.querySelectorAll('#' + newDivId + ' .photonic-standard-layout .photonic-level-1, ' + '#' + newDivId + ' .photonic-standard-layout .photonic-level-2');
+          standard.forEach(image => {
+            image.style.display = 'inline-block';
+          });
 
-        if (spinners <= 0) {
-          _Core.Core.hideLoading();
-        }
-      });
+          _Core.Core.standardizeTitleWidths();
+
+          countdownSpinners();
+        });
+      }
 
       _Core.Core.moveHTML5External();
 
@@ -3227,6 +3465,7 @@ exports.lazyLoad = lazyLoad;
   !*** ../include/js/front-end/src/Util.js ***!
   \*******************************************/
 /*! flagged exports */
+/*! export HTMLSanitizer [provided] [no usage info] [missing usage info prevents renaming] */
 /*! export __esModule [provided] [no usage info] [missing usage info prevents renaming] */
 /*! export fadeIn [provided] [no usage info] [missing usage info prevents renaming] */
 /*! export fadeOut [provided] [no usage info] [missing usage info prevents renaming] */
@@ -3249,10 +3488,10 @@ exports.lazyLoad = lazyLoad;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.hide = exports.show = exports.fadeOut = exports.fadeIn = exports.slideUpTitle = exports.slideUpDown = exports.getText = exports.getElement = exports.next = exports.get = exports.post = exports.hasClass = void 0;
+exports.HTMLSanitizer = exports.hide = exports.show = exports.fadeOut = exports.fadeIn = exports.slideUpTitle = exports.slideUpDown = exports.getText = exports.getElement = exports.next = exports.get = exports.post = exports.hasClass = void 0;
 
 // Utilities for Photonic
-var hasClass = function hasClass(element, className) {
+var hasClass = (element, className) => {
   if (element.classList) {
     return element.classList.contains(className);
   } else {
@@ -3284,19 +3523,19 @@ function ajax(method, url, args, callback) {
   xhr.send(form);
 }
 
-var post = function post(url, args, callback) {
+var post = (url, args, callback) => {
   ajax('POST', url, args, callback);
 };
 
 exports.post = post;
 
-var get = function get(url, args, callback) {
+var get = (url, args, callback) => {
   ajax('GET', url, args, callback);
 };
 
 exports.get = get;
 
-var next = function next(elem, selector) {
+var next = (elem, selector) => {
   var sibling = elem.nextElementSibling;
   if (!selector) return sibling;
 
@@ -3308,7 +3547,7 @@ var next = function next(elem, selector) {
 
 exports.next = next;
 
-var getElement = function getElement(value) {
+var getElement = value => {
   var parser = new DOMParser();
   var doc = parser.parseFromString(value, 'text/html');
   return doc.body;
@@ -3316,15 +3555,24 @@ var getElement = function getElement(value) {
 
 exports.getElement = getElement;
 
-var getText = function getText(value) {
-  var txt = document.createElement("div");
-  txt.innerHTML = value;
-  return txt.innerText;
+var getText = value => {
+  // Not using innerHTML because of vulnerability to XSS
+
+  /*
+         const txt = document.createElement("div");
+         txt.innerHTML = value;
+         return txt.innerText;
+     */
+  if (value == null) {
+    return '';
+  }
+
+  return value.replace(/<[^>]+>/g, '');
 };
 
 exports.getText = getText;
 
-var slideUpDown = function slideUpDown(element, state) {
+var slideUpDown = (element, state) => {
   if (element != null && element.classList) {
     if (!element.classList.contains('photonic-can-slide')) {
       element.classList.add('photonic-can-slide');
@@ -3342,7 +3590,7 @@ var slideUpDown = function slideUpDown(element, state) {
 
 exports.slideUpDown = slideUpDown;
 
-var slideUpTitle = function slideUpTitle(element, state) {
+var slideUpTitle = (element, state) => {
   if (element && element.classList) {
     if ('show' === state) {
       var currentPadding = 0;
@@ -3362,16 +3610,17 @@ var slideUpTitle = function slideUpTitle(element, state) {
 
 exports.slideUpTitle = slideUpTitle;
 
-var fadeIn = function fadeIn(el) {
+var fadeIn = el => {
   if (!hasClass(el, 'fade-in')) {
     el.style.display = 'block';
+    el.style.visibility = 'visible';
     el.classList.add('fade-in');
   }
 };
 
 exports.fadeIn = fadeIn;
 
-var fadeOut = function fadeOut(el, duration) {
+var fadeOut = (el, duration) => {
   var s = el.style,
       step = 25 / (duration || 500);
   s.opacity = s.opacity || 1;
@@ -3391,7 +3640,7 @@ var fadeOut = function fadeOut(el, duration) {
 
 exports.fadeOut = fadeOut;
 
-var defaultDisplay = function defaultDisplay(tag) {
+var defaultDisplay = tag => {
   var iframe = document.createElement('iframe');
   iframe.setAttribute('frameborder', 0);
   iframe.setAttribute('width', 0);
@@ -3409,7 +3658,7 @@ var defaultDisplay = function defaultDisplay(tag) {
 }; // actual show/hide function used by show() and hide() below
 
 
-var showHide = function showHide(el, show) {
+var showHide = (el, show) => {
   var value = el.getAttribute('data-olddisplay'),
       display = el.style.display,
       computedDisplay = (window.getComputedStyle ? getComputedStyle(el, null) : el.currentStyle).display;
@@ -3425,17 +3674,180 @@ var showHide = function showHide(el, show) {
 }; // helper functions
 
 
-var show = function show(el) {
-  return showHide(el, true);
-};
+var show = el => showHide(el, true);
 
 exports.show = show;
 
-var hide = function hide(el) {
-  return showHide(el);
-};
+var hide = el => showHide(el); //JavaScript HTML Sanitizer v2.0.3, (c) Alexander Yumashev, Jitbit Software.
+//homepage https://github.com/jitbit/HtmlSanitizer
+//License: MIT https://github.com/jitbit/HtmlSanitizer/blob/master/LICENSE
+
 
 exports.hide = hide;
+var HTMLSanitizer = new function () {
+  var _tagWhitelist = {
+    'A': true,
+    'ABBR': true,
+    'B': true,
+    'BLOCKQUOTE': true,
+    'BODY': true,
+    'BR': true,
+    'CENTER': true,
+    'CODE': true,
+    'DD': true,
+    'DIV': true,
+    'DL': true,
+    'DT': true,
+    'EM': true,
+    'FONT': true,
+    'H1': true,
+    'H2': true,
+    'H3': true,
+    'H4': true,
+    'H5': true,
+    'H6': true,
+    'HR': true,
+    'I': true,
+    'IMG': true,
+    'LABEL': true,
+    'LI': true,
+    'OL': true,
+    'P': true,
+    'PRE': true,
+    'SMALL': true,
+    'SOURCE': true,
+    'SPAN': true,
+    'STRONG': true,
+    'SUB': true,
+    'SUP': true,
+    'TABLE': true,
+    'TBODY': true,
+    'TR': true,
+    'TD': true,
+    'TH': true,
+    'THEAD': true,
+    'UL': true,
+    'U': true,
+    'VIDEO': true
+  };
+  var _contentTagWhiteList = {
+    'FORM': true,
+    'GOOGLE-SHEETS-HTML-ORIGIN': true
+  }; //tags that will be converted to DIVs
+
+  var _attributeWhitelist = {
+    'align': true,
+    'color': true,
+    'controls': true,
+    'height': true,
+    'href': true,
+    'id': true,
+    'src': true,
+    'style': true,
+    'target': true,
+    'title': true,
+    'type': true,
+    'width': true
+  };
+  var _cssWhitelist = {
+    'background-color': true,
+    'color': true,
+    'font-size': true,
+    'font-weight': true,
+    'text-align': true,
+    'text-decoration': true,
+    'width': true
+  };
+  var _schemaWhiteList = ['http:', 'https:', 'data:', 'm-files:', 'file:', 'ftp:', 'mailto:', 'pw:']; //which "protocols" are allowed in "href", "src" etc
+
+  var _uriAttributes = {
+    'href': true,
+    'action': true
+  };
+
+  var _parser = new DOMParser();
+
+  this.SanitizeHTML = (input, extraSelector) => {
+    if (input == null) return null;
+    input = input.trim();
+    if (input === "") return ""; //to save performance
+    //firefox "bogus node" workaround for wysiwyg's
+
+    if (input === "<br>") return "";
+    if (input.indexOf("<body") === -1) input = "<body>" + input + "</body>"; //add "body" otherwise some tags are skipped, like <style>
+
+    var doc = _parser.parseFromString(input, "text/html"); //DOM clobbering check (damn you firefox)
+
+
+    if (doc.body.tagName !== 'BODY') doc.body.remove();
+    if (typeof doc.createElement !== 'function') doc.createElement.remove();
+
+    function makeSanitizedCopy(node) {
+      var newNode;
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        newNode = node.cloneNode(true);
+      } else if (node.nodeType === Node.ELEMENT_NODE && (_tagWhitelist[node.tagName] || _contentTagWhiteList[node.tagName] || extraSelector && node.matches(extraSelector))) {
+        //is tag allowed?
+        if (_contentTagWhiteList[node.tagName]) newNode = doc.createElement('DIV'); //convert to DIV
+        else newNode = doc.createElement(node.tagName);
+
+        for (var i = 0; i < node.attributes.length; i++) {
+          var attr = node.attributes[i];
+
+          if (_attributeWhitelist[attr.name]) {
+            if (attr.name === "style") {
+              for (var s = 0; s < node.style.length; s++) {
+                var styleName = node.style[s];
+                if (_cssWhitelist[styleName]) newNode.style.setProperty(styleName, node.style.getPropertyValue(styleName));
+              }
+            } else {
+              if (_uriAttributes[attr.name]) {
+                //if this is a "uri" attribute, that can have "javascript:" or something
+                if (attr.value.indexOf(":") > -1 && !startsWithAny(attr.value, _schemaWhiteList)) continue;
+              }
+
+              newNode.setAttribute(attr.name, attr.value);
+            }
+          }
+        }
+
+        for (var _i = 0; _i < node.childNodes.length; _i++) {
+          var subCopy = makeSanitizedCopy(node.childNodes[_i]);
+          newNode.appendChild(subCopy, false);
+        } //remove useless empty spans (lots of those when pasting from MS Outlook)
+
+
+        if ((newNode.tagName === "SPAN" || newNode.tagName === "B" || newNode.tagName === "I" || newNode.tagName === "U") && newNode.innerHTML.trim() === "") {
+          return doc.createDocumentFragment();
+        }
+      } else {
+        newNode = doc.createDocumentFragment();
+      }
+
+      return newNode;
+    }
+
+    var resultElement = makeSanitizedCopy(doc.body);
+    return resultElement.innerHTML.replace(/div><div/g, "div>\n<div"); //replace is just for cleaner code
+  };
+
+  function startsWithAny(str, substrings) {
+    for (var i = 0; i < substrings.length; i++) {
+      if (str.indexOf(substrings[i]) === 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  this.AllowedTags = _tagWhitelist;
+  this.AllowedAttributes = _attributeWhitelist;
+  this.AllowedCssStyles = _cssWhitelist;
+  this.AllowedSchemas = _schemaWhiteList;
+}();
+exports.HTMLSanitizer = HTMLSanitizer;
 
 /***/ })
 
@@ -3483,7 +3895,7 @@ var Listeners = _interopRequireWildcard(__webpack_require__(/*! ../Listeners */ 
 
 var Layout = _interopRequireWildcard(__webpack_require__(/*! ../Layouts/Layout */ "../include/js/front-end/src/Layouts/Layout.js"));
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   var lightbox = new _PhotoSwipe.PhotonicPhotoSwipe();
 
   _Core.Core.setLightbox(lightbox);

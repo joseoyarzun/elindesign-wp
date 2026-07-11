@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 function pmxi_pmxi_after_xml_import( $import_id, $import )
 {
     if ($import->options['custom_type'] == 'taxonomies') {
@@ -49,6 +50,7 @@ function pmxi_pmxi_after_xml_import( $import_id, $import )
         }
 
         $recount_terms_after_import = TRUE;
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         $recount_terms_after_import = apply_filters('wp_all_import_recount_terms_after_import', $recount_terms_after_import, $import_id);
         if ($recount_terms_after_import) {
             // Update term count after import process is complete.
@@ -76,6 +78,7 @@ function pmxi_pmxi_after_xml_import( $import_id, $import )
     // Re-count post comments.
     if ( in_array($import->options['custom_type'], array('comments', 'woo_reviews')) ) {
         $recount_comments_after_import = TRUE;
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         $recount_comments_after_import = apply_filters('wp_all_import_recount_comments_after_import', $recount_comments_after_import, $import_id);
         if ($recount_comments_after_import) {
             $comment_posts = get_option('wp_all_import_comment_posts_' . $import_id);

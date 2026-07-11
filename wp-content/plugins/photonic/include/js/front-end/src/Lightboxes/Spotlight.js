@@ -74,7 +74,7 @@ export class PhotonicSpotlight extends Lightbox {
 					if (link.getAttribute('data-photonic-media-type') === 'image') {
 						gallery.push({
 							src: link.getAttribute('href'),
-							title: link.getAttribute('data-title'),
+							title: Util.HTMLSanitizer.SanitizeHTML(link.getAttribute('data-title')),
 							deep: link.getAttribute('data-photonic-deep'),
 						});
 					}
@@ -83,7 +83,7 @@ export class PhotonicSpotlight extends Lightbox {
 							media: 'video',
 							"src-mp4": link.getAttribute('href'),
 							poster: link.getAttribute('data-poster'),
-							title: link.getAttribute('data-title'),
+							title: Util.HTMLSanitizer.SanitizeHTML(link.getAttribute('data-title')),
 							deep: link.getAttribute('data-photonic-deep'),
 						});
 					}
@@ -114,7 +114,7 @@ export class PhotonicSpotlight extends Lightbox {
 				onchange: (idx, options) => {
 					const current = gallery[idx - 1]; // idx is 1-based, not 0-based
 					const title = document.querySelector("#spotlight .spl-title");
-					title.innerHTML = current.title;
+					title.innerHTML = Util.HTMLSanitizer.SanitizeHTML(current.title);
 					self.setHash(current.deep);
 
 					const shareable = {

@@ -1,22 +1,18 @@
 <?php
 
-/**
- * Metabox class.
- */
-
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
 	exit;
 }
 
-if (!class_exists('UserFeedbackGutenbergMetabox')) {
-	class UserFeedbackGutenbergMetabox
+if (!class_exists('UserFeedbackGutenberg')) {
+	class UserFeedbackGutenberg
 	{
 		public function __construct()
 		{
+            $this->require_files();
+
 			add_action('enqueue_block_editor_assets', [$this, 'editor_assets']);
-			add_action('init', [$this, 'register_meta']);
-			add_action('save_post', [$this, 'save_custom_fields']);
 		}
 
 		public function editor_assets()
@@ -36,8 +32,7 @@ if (!class_exists('UserFeedbackGutenbergMetabox')) {
 				}
 			}
 
-			wp_enqueue_script( 'lodash', includes_url('js') . '/underscore.min.js' );
-			$plugins_style_path = '/assets/gutenberg/css/editor.css';
+		$plugins_style_path = '/assets/gutenberg/css/editor.css';
 			$version_path       = userfeedback_is_pro_version() ? 'pro' : 'lite';
 			if ("pro" === $version_path) {
 				$plugins_js_path    = '/assets/gutenberg/js/editor-pro.min.js';
@@ -45,8 +40,8 @@ if (!class_exists('UserFeedbackGutenbergMetabox')) {
 				$plugins_js_path    = '/assets/gutenberg/js/editor-lite.min.js';
 			}
 
-
 			$js_dependencies = array(
+				'lodash',
 				'wp-plugins',
 				'wp-element',
 				'wp-i18n',
@@ -64,7 +59,6 @@ if (!class_exists('UserFeedbackGutenbergMetabox')) {
 				!$wp_scripts->query('wp-edit-widgets', 'enqueued') &&
 				!$wp_scripts->query('wp-customize-widgets', 'enqueued')
 			) {
-				$js_dependencies[] = 'wp-editor';
 				$js_dependencies[] = 'wp-edit-post';
 			}
 
@@ -96,7 +90,7 @@ if (!class_exists('UserFeedbackGutenbergMetabox')) {
 			$survey_options = [
 				[
 					'value' => 0,
-					'label' => __('None', 'userfeedback'),
+					'label' => __('None', 'userfeedback-lite'),
 				]
 			];
 			$surveys = array_map(function ($survey) {
@@ -117,51 +111,26 @@ if (!class_exists('UserFeedbackGutenbergMetabox')) {
 					'nonce'                        => wp_create_nonce('userfeedback_gutenberg_headline_nonce'),
 					'allowed_post_types'           => apply_filters('userfeedback_metabox_post_types', array('post')),
 					'current_post_type'            => $posttype,
-					'translations'                 => wp_get_jed_locale_data(userfeedback_is_pro_version() ? 'userfeedback-premium' : 'userfeedback'),
+					'translations'                 => wp_get_jed_locale_data(userfeedback_is_pro_version() ? 'userfeedback-premium' : 'userfeedback-lite'),
 					'vue_assets_path'              => plugins_url($version_path . '/assets/vue/', USERFEEDBACK_PLUGIN_FILE),
 					'license_type'                 => (UserFeedback()->license->get_license_type()) ? 'pro' : 'lite',
 					'supports_custom_fields'       => post_type_supports($posttype, 'custom-fields'),
 					'public_post_type'             => $posttype ? is_post_type_viewable($posttype) : 0,
 					'upgrade_url'                  => userfeedback_get_upgrade_link('lite-metabox', 'disable-all-surveys', 'https://www.userfeedback.com/lite/'),
-					'addons_url'                   => admin_url('admin.php?page=userfeedback_settings#/addons'),
+					'addons_url'                   => admin_url('admin.php?page=userfeedback_addons'),
 					'create_survey_link'           => admin_url('admin.php?page=userfeedback_surveys#/new/setup'),
 					'all_surveys_link'             => admin_url('admin.php?page=userfeedback_surveys'),
 					'isnetwork'                    => is_network_admin(),
-					'addons'                       => userfeedback_get_parsed_addons(),
+					'addons'                       => ! userfeedback_is_pro_version() ? array() : userfeedback_get_parsed_addons(),
 					'surveys'                      => $survey_options
 				))
 			);
 		}
 
-		public function register_meta()
+		public function require_files()
 		{
-			register_post_meta(
-				'',
-				'_uf_show_specific_survey',
-				[
-					'auth_callback' => '__return_true',
-					'default'       => 0,
-					'show_in_rest'  => true,
-					'single'        => true,
-					'type'          => 'number',
-				]
-			);
-			register_post_meta(
-				'',
-				'_uf_disable_surveys',
-				[
-					'auth_callback' => '__return_true',
-					'default'       => false,
-					'show_in_rest'  => true,
-					'single'        => true,
-					'type'          => 'boolean',
-				]
-			);
-		}
-
-		public function save_custom_fields($current_post_id)
-		{
+			require_once plugin_dir_path(__FILE__) . 'metabox.php';
 		}
 	}
-	new UserFeedbackGutenbergMetabox();
+	new UserFeedbackGutenberg();
 }

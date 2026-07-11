@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 #[\AllowDynamicProperties]
 class Model implements \JsonSerializable {
 	/**
-	 * Fields that should be null when saving to the database.
+	 * Fields that can be null when saving to the database.
 	 *
 	 * @since 4.0.0
 	 *
@@ -41,13 +41,23 @@ class Model implements \JsonSerializable {
 	protected $booleanFields = [];
 
 	/**
-	 * Fields that should be numeric values.
+	 * Fields that should be integer values.
 	 *
-	 * @since 4.1.0
+	 * @since   4.1.0
+	 * @version 4.7.3 Renamed from numericFields to integerFields.
 	 *
 	 * @var array
 	 */
-	protected $numericFields = [];
+	protected $integerFields = [];
+
+	/**
+	 * Fields that should be float values.
+	 *
+	 * @since 4.7.3
+	 *
+	 * @var array
+	 */
+	protected $floatFields = [];
 
 	/**
 	 * Fields that should be hidden when serialized.
@@ -192,8 +202,13 @@ class Model implements \JsonSerializable {
 				continue;
 			}
 
-			if ( in_array( $key, $this->numericFields, true ) ) {
+			if ( in_array( $key, $this->integerFields, true ) ) {
 				$this->$key = (int) $value;
+				continue;
+			}
+
+			if ( in_array( $key, $this->floatFields, true ) ) {
+				$this->$key = (float) $value;
 				continue;
 			}
 		}
@@ -204,19 +219,17 @@ class Model implements \JsonSerializable {
 	 *
 	 * @since 4.0.0
 	 *
-	 * @param  string $key The table column.
+	 * @param  array $keys The array of keys to filter.
 	 * @return array       The array of valid columns for the database query.
 	 */
-	protected function filter( $key ) {
-		$table   = aioseo()->core->db->prefix . $this->table;
-		$results = aioseo()->core->db->execute( 'SHOW COLUMNS FROM `' . $table . '`', true );
-		$fields  = [];
-		$skip    = [ 'created', 'updated' ];
-		$columns = $results->result();
+	protected function filter( $keys ) {
+		$fields    = [];
+		$skip      = [ 'created', 'updated' ];
+		$dbColumns = aioseo()->core->db->getColumns( $this->table );
 
-		foreach ( $columns as $col ) {
-			if ( ! in_array( $col->Field, $skip, true ) && array_key_exists( $col->Field, $key ) ) {
-				$fields[ $col->Field ] = $key[ $col->Field ];
+		foreach ( $dbColumns as $column ) {
+			if ( ! in_array( $column, $skip, true ) && array_key_exists( $column, $keys ) ) {
+				$fields[ $column ] = $keys[ $column ];
 			}
 		}
 
@@ -234,6 +247,11 @@ class Model implements \JsonSerializable {
 	protected function transform( $data, $set = false ) {
 		foreach ( $this->nullFields as $field ) {
 			if ( isset( $data[ $field ] ) && empty( $data[ $field ] ) ) {
+				// Because sitemap prio can both be 0 and null, we need to make sure it's 0 if it's set.
+				if ( 'priority' === $field && 0.0 === $data[ $field ] ) {
+					continue;
+				}
+
 				$data[ $field ] = null;
 			}
 		}
@@ -250,7 +268,7 @@ class Model implements \JsonSerializable {
 			return $data;
 		}
 
-		foreach ( $this->numericFields as $field ) {
+		foreach ( $this->integerFields as $field ) {
 			if ( isset( $data[ $field ] ) ) {
 				$data[ $field ] = (int) $data[ $field ];
 			}
@@ -343,6 +361,7 @@ class Model implements \JsonSerializable {
 				$query = aioseo()->core->db
 					->start( $this->table )
 					->where( [ $pk => $pkv ] )
+					->resetCache()
 					->run();
 
 				if ( ! $query->nullSet() ) {
@@ -451,7 +470,12 @@ class Model implements \JsonSerializable {
 			self::$columns[ get_called_class() ] = [];
 
 			// Let's set the columns that are available by default.
-			$table   = aioseo()->core->db->prefix . $this->table;
+			$table = aioseo()->core->db->prefix . $this->table;
+
+			if ( ! aioseo()->core->db->tableExists( $this->table ) ) {
+				return self::$columns[ get_called_class() ];
+			}
+
 			$results = aioseo()->core->db->start( $table )
 				->output( 'OBJECT' )
 				->execute( 'SHOW COLUMNS FROM `' . $table . '`', true )

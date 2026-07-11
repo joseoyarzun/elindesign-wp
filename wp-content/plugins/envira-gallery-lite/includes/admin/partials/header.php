@@ -10,7 +10,12 @@
  * @author     David Bisset, Envira Team
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 $upgrade_link = Envira_Gallery_Common_Admin::get_instance()->get_upgrade_link( 'https://enviragallery.com/pricing', 'topbar', 'goPro' );
+$logo_link    = Envira_Gallery_Common_Admin::get_instance()->get_upgrade_link( 'https://enviragallery.com/lite', 'logo', 'liteplugin' );
 
 // Load the base class object.
 $base                = Envira_Gallery_Lite::get_instance();
@@ -32,7 +37,9 @@ if ( $notifications_count > 0 ) {
 
 <div id="envira-header" class="envira-header">
 	<h1 class="envira-logo" id="envira-logo">
-		<img src="<?php echo esc_url( $data['logo'] ); ?>" alt="<?php esc_attr_e( 'Envira Gallery', 'envira-gallery-lite' ); ?>" width="339"/>
+		<a class="envira-logo-link" href="<?php echo esc_url( $logo_link ); ?>" target="_blank" rel="noopener noreferrer">
+			<img src="<?php echo esc_url( $data['logo'] ); ?>" alt="<?php esc_attr_e( 'Envira Gallery', 'envira-gallery-lite' ); ?>" width="339"/>
+		</a>
 	</h1>
 
 	<div class="envira-right">

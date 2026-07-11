@@ -1,6 +1,11 @@
 <?php
 // phpcs:ignoreFile
+
 namespace MonsterInsightsHeadlineToolPlugin;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 // setup defines
 define( 'MONSTERINSIGHTS_HEADLINE_TOOL_DIR_PATH', plugin_dir_path( __FILE__ ) );

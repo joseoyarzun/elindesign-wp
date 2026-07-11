@@ -6,6 +6,8 @@
  * @copyright 2022 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Core\Util;
@@ -41,7 +43,7 @@ class Auto_Updates {
 	 * Auto updated not forced.
 	 *
 	 * @since 1.93.0
-	 * @var false
+	 * @var null
 	 */
 	const AUTO_UPDATE_NOT_FORCED = null;
 
@@ -102,6 +104,10 @@ class Auto_Updates {
 			return self::AUTO_UPDATE_NOT_FORCED;
 		}
 
+		if ( ! function_exists( 'get_plugin_data' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
 		$sitekit_plugin_data = get_plugin_data( GOOGLESITEKIT_PLUGIN_MAIN_FILE );
 		$sitekit_update_data = self::get_sitekit_update_data();
 		$item                = (object) array_merge( $sitekit_plugin_data, $sitekit_update_data );
@@ -156,5 +162,4 @@ class Auto_Updates {
 
 		return array_merge( $sitekit_update_data, (array) $transient_data );
 	}
-
 }

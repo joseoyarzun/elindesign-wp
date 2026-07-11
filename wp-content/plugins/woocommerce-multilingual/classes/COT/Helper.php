@@ -123,7 +123,7 @@ class Helper {
 	 * @return bool
 	 */
 	public static function isOrderListAdminScreen() {
-		return self::isOrderAdminScreen( null );
+		return self::isOrderAdminScreen( null ) || self::isOrderAdminScreen( '-1' );
 	}
 
 	/**

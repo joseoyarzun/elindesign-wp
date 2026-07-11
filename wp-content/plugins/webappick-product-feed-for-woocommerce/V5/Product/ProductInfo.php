@@ -183,6 +183,22 @@ class ProductInfo {
 	}
 
 	/**
+	 * Get product parent description.
+	 *
+	 * @return string
+	 * @since 8.0.0
+	 */
+	public function parent_description() {
+		if ( $this->product->is_type( 'variation' ) && $this->parent_product ) {
+			$description = CommonHelper::clean_content( $this->parent_product->get_description() );
+		} else {
+			$description = $this->description();
+		}
+
+		return apply_filters( 'woo_feed_filter_product_parent_description', $description, $this->product, $this->config, $this->parent_product );
+	}
+
+	/**
 	 * Get product description with HTML.
 	 *
 	 * @return string
@@ -520,7 +536,14 @@ class ProductInfo {
 	 * @since 8.0.0
 	 */
 	public function canonical_link() {
-		$permalink = $this->parent_link();
+
+        //$permalink = $this->parent_link();
+
+        $permalink = $this->product->get_permalink();
+
+        if ( $this->product->is_type( 'variation' ) && $this->parent_product ) {
+            $permalink = $this->parent_product->get_permalink();
+        }
 
 		return apply_filters( 'woo_feed_filter_product_canonical_link', $permalink, $this->product, $this->config );
 	}
@@ -654,7 +677,7 @@ class ProductInfo {
 		$is_bundle = 'no';
 		$type      = $this->product->get_type();
 
-		if ( in_array( $type, array( 'bundle', 'bundled', 'yith_bundle', 'woosb' ), true ) ) {
+		if ( in_array( $type, array( 'bundle', 'bundled', 'yith_bundle', 'woosb', 'easy_product_bundle' ), true ) ) {
 			$is_bundle = 'yes';
 		}
 
@@ -884,6 +907,10 @@ class ProductInfo {
 	public function quantity() {// phpcs:ignore
 		$quantity = $this->product->get_stock_quantity();
 		$status   = $this->product->get_stock_status();
+
+		if ( 'instock' === $status && $quantity === null) {
+			$quantity = 1;
+		}
 
 		if ( 'outofstock' === $status && $quantity === null ) {
 			$quantity = 0;
@@ -1942,6 +1969,20 @@ class ProductInfo {
 
 		return $output;
 	}
+
+	/**
+	 * Get product is a bundle.
+	 *
+	 * @return string
+	 * @since 8.0.0
+	 */
+	public function gtin_upc_ean_isbn() {
+
+		$gtin_upc_ean_isbn = get_post_meta( $this->product->get_id(), '_global_unique_id', true );
+
+		return apply_filters( 'woo_feed_filter_product_gtin_upc_ean_isbn', $gtin_upc_ean_isbn, $this->product, $this->config );
+	}
+
 
 
 }

@@ -18,7 +18,6 @@ namespace Google\Site_Kit\Modules\Analytics_4;
  * @ignore
  */
 interface Tag_Interface {
-
 	/**
 	 * Sets custom dimensions data.
 	 *
@@ -27,5 +26,4 @@ interface Tag_Interface {
 	 * @param string $custom_dimensions Custom dimensions data.
 	 */
 	public function set_custom_dimensions( $custom_dimensions );
-
 }

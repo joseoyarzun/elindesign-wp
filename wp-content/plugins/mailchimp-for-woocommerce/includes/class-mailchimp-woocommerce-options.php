@@ -16,7 +16,7 @@ abstract class MailChimp_WooCommerce_Options
     protected $api;
     protected $plugin_name = 'mailchimp-woocommerce';
     protected $environment = 'production';
-    protected $version = '1.0.0';
+    protected $version = '1.0.2';
     protected $plugin_options = null;
     protected $is_admin = false;
 
@@ -26,8 +26,8 @@ abstract class MailChimp_WooCommerce_Options
     public function adminReady()
     {
         $this->is_admin = current_user_can(mailchimp_get_allowed_capability());
-        if (get_option('mailchimp_woocommerce_plugin_do_activation_redirect', false)) {
-            delete_option('mailchimp_woocommerce_plugin_do_activation_redirect');
+        if (\Mailchimp_Woocommerce_DB_Helpers::get_option('mailchimp_woocommerce_plugin_do_activation_redirect', false)) {
+            \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp_woocommerce_plugin_do_activation_redirect');
 
             // don't do the redirect while activating the plugin through the rest API. ( Bartosz from Woo asked for this )
             if ((defined( 'REST_REQUEST' ) && REST_REQUEST)) {
@@ -111,9 +111,11 @@ abstract class MailChimp_WooCommerce_Options
     public function getOption($key, $default = null)
     {
         $options = $this->getOptions();
+
         if (isset($options[$key])) {
             return $options[$key];
         }
+
         return $default;
     }
 
@@ -132,7 +134,7 @@ abstract class MailChimp_WooCommerce_Options
      */
     public function resetOptions()
     {
-        return $this->plugin_options = get_option($this->plugin_name);
+        return $this->plugin_options = mailchimp_get_admin_options();
     }
 
     /**
@@ -141,8 +143,9 @@ abstract class MailChimp_WooCommerce_Options
     public function getOptions()
     {
         if (empty($this->plugin_options)) {
-            $this->plugin_options = get_option($this->plugin_name);
+            $this->plugin_options = mailchimp_get_admin_options();
         }
+
         return is_array($this->plugin_options) ? $this->plugin_options : array();
     }
 
@@ -153,7 +156,7 @@ abstract class MailChimp_WooCommerce_Options
      */
     public function setData($key, $value)
     {
-        update_option($this->plugin_name.'-'.$key, $value, 'yes');
+        \Mailchimp_Woocommerce_DB_Helpers::update_option($this->plugin_name.'-'.$key, $value, 'yes');
         return $this;
     }
 
@@ -164,7 +167,7 @@ abstract class MailChimp_WooCommerce_Options
      */
     public function getData($key, $default = null)
     {
-        return get_option($this->plugin_name.'-'.$key, $default);
+        return \Mailchimp_Woocommerce_DB_Helpers::get_option($this->plugin_name.'-'.$key, $default);
     }
 
 
@@ -174,7 +177,16 @@ abstract class MailChimp_WooCommerce_Options
      */
     public function removeData($key)
     {
-        return delete_option($this->plugin_name.'-'.$key);
+        return \Mailchimp_Woocommerce_DB_Helpers::delete_option($this->plugin_name.'-'.$key);
+    }
+
+    /**
+     * Transient key used for this cache entry. Keeping the legacy "cached-"
+     * infix so the key space doesn't collide with any non-cached option.
+     */
+    protected function cachedTransientKey($key)
+    {
+        return $this->plugin_name . '-cached-' . $key;
     }
 
     /**
@@ -184,17 +196,12 @@ abstract class MailChimp_WooCommerce_Options
      */
     public function getCached($key, $default = null)
     {
-        $cached = $this->getData("cached-$key", false);
-        if (empty($cached) || !($cached = unserialize($cached))) {
-            return $default;
-        }
+        $cached = get_transient($this->cachedTransientKey($key));
 
-        if (empty($cached['till']) || (time() > $cached['till'])) {
-            $this->removeData("cached-$key");
-            return $default;
-        }
-
-        return $cached['value'];
+        // Preserves the original "falsy means miss" semantics: a cached value
+        // of false/0/''/[] was never distinguishable from a miss in the old
+        // getData-based implementation, so callers already tolerate that.
+        return $cached === false ? $default : $cached;
     }
 
     /**
@@ -205,10 +212,7 @@ abstract class MailChimp_WooCommerce_Options
      */
     public function setCached($key, $value, $seconds = 60)
     {
-        $time = time();
-        $data = array('at' => $time, 'till' => $time + $seconds, 'value' => $value);
-        $this->setData("cached-$key", serialize($data));
-
+        set_transient($this->cachedTransientKey($key), $value, (int) $seconds);
         return $this;
     }
 
@@ -225,6 +229,14 @@ abstract class MailChimp_WooCommerce_Options
             $this->setCached($key, $value, $seconds);
         }
         return $value;
+    }
+
+    /**
+     * Drop a cached entry — equivalent to expiring it immediately.
+     */
+    public function removeCached($key)
+    {
+        return delete_transient($this->cachedTransientKey($key));
     }
 
     /**
@@ -278,15 +290,14 @@ abstract class MailChimp_WooCommerce_Options
      */
     public function removePointers($products = true, $orders = true)
     {
+        if ($orders) {
+            $this->removeOrderPointers();
+            $this->removeSyncPointers();
+        }
+
         if ($products) {
             $this->removeProductPointers();
         }
-
-        if ($orders) {
-            $this->removeOrderPointers();
-        }
-
-        $this->removeSyncPointers();
 
         $this->removeMiscPointers();
 
@@ -295,15 +306,19 @@ abstract class MailChimp_WooCommerce_Options
 
     public function removeProductPointers()
     {
-        delete_option('mailchimp-woocommerce-sync.products.completed_at');
-        delete_option('mailchimp-woocommerce-sync.products.current_page');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-sync.products.completed_at');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-sync.products-queueing.completed_at');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-sync.products.current_page');
+        mailchimp_flush_specific_resource_pointers('products');
+        mailchimp_flush_specific_resource_pointers('product_categories');
     }
 
     public function removeOrderPointers()
     {
-        delete_option('mailchimp-woocommerce-sync.orders.prevent');
-        delete_option('mailchimp-woocommerce-sync.orders.completed_at');
-        delete_option('mailchimp-woocommerce-sync.orders.current_page');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-sync.orders.prevent');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-sync.orders.completed_at');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-sync.orders-queueing.completed_at');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-sync.orders.current_page');
     }
 
     public function removeSyncPointers()
@@ -313,9 +328,29 @@ abstract class MailChimp_WooCommerce_Options
 
     public function removeMiscPointers()
     {
-        delete_option('mailchimp-woocommerce-errors.store_info');
-        delete_option('mailchimp-woocommerce-validation.api.ping');
-        delete_option('mailchimp-woocommerce-cached-api-lists');
-        delete_option('mailchimp-woocommerce-cached-api-ping-check');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-errors.store_info');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-validation.api.ping');
+
+        // Transient-backed caches.
+        delete_transient('mailchimp-woocommerce-cached-api-lists');
+        delete_transient('mailchimp-woocommerce-cached-api-ping-check');
+        delete_transient('mailchimp_woocommerce_store_id_verified');
+
+        // One-time-check throttle transients. Clearing these forces the
+        // next admin request to re-verify/retry any schema or migration
+        // work that was rate-limited.
+        delete_transient('mailchimp_woocommerce_jobs_table_verified');
+        delete_transient('mailchimp_woocommerce_cart_index_check_backoff');
+        delete_transient('mailchimp_woocommerce_carts_gc_ran');
+        delete_transient('mailchimp_woocommerce_carts_create_backoff');
+        delete_transient('mailchimp_woocommerce_currency_sync_backoff');
+
+        // Legacy rows written by the previous getCached/setCached implementation
+        // that stored serialized arrays directly in wp_options. Also includes
+        // the old store-id-last-verified timestamp option that has been
+        // replaced by a transient. Harmless if they're already gone.
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-cached-api-lists');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-cached-api-ping-check');
+        \Mailchimp_Woocommerce_DB_Helpers::delete_option('mailchimp-woocommerce-store-id-last-verified');
     }
 }

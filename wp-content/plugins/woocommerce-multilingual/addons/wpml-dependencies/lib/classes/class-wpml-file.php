@@ -29,7 +29,7 @@ class WPML_File {
 	 * @param WPML_WP_API|null          $wp_api     WPML WP API instance.
 	 * @param WP_Filesystem_Direct|null $filesystem WP_Filesystem_Direct instance.
 	 */
-	public function __construct( WPML_WP_API $wp_api = null, WP_Filesystem_Direct $filesystem = null ) {
+	public function __construct( ?WPML_WP_API $wp_api = null, ?WP_Filesystem_Direct $filesystem = null ) {
 		if ( ! $wp_api ) {
 			$wp_api = new WPML_WP_API();
 		}

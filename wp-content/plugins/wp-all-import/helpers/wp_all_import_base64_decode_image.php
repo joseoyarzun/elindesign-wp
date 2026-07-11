@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 if( !function_exists('wp_all_import_base64_decode_image')){
 	function wp_all_import_base64_decode_image( $image ){
 		// Only check the base64 portion of image references.

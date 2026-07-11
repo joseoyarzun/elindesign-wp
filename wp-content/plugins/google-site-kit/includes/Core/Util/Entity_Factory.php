@@ -10,7 +10,6 @@
 
 namespace Google\Site_Kit\Core\Util;
 
-use Google\Site_Kit\Context;
 use Google\Site_Kit\Plugin;
 use WP_Query;
 use WP_Post;
@@ -186,8 +185,10 @@ final class Entity_Factory {
 	 * @return Entity The entity for the post.
 	 */
 	public static function create_entity_for_post( WP_Post $post, $page ) {
+		$url = self::paginate_post_url( get_permalink( $post ), $post, $page );
+
 		return new Entity(
-			self::paginate_post_url( get_permalink( $post ), $post, $page ),
+			urldecode( $url ),
 			array(
 				'type'  => 'post',
 				'title' => $post->post_title,
@@ -264,13 +265,13 @@ final class Entity_Factory {
 	private static function create_entity_for_term( WP_Term $term, $page ) {
 		// See WordPress's `get_the_archive_title()` function for this behavior. The strings here intentionally omit
 		// the 'google-site-kit' text domain since they should use WordPress core translations.
+		$title = $term->name;
+
 		switch ( $term->taxonomy ) {
 			case 'category':
-				$title  = $term->name;
 				$prefix = _x( 'Category:', 'category archive title prefix', 'default' );
 				break;
 			case 'post_tag':
-				$title  = $term->name;
 				$prefix = _x( 'Tag:', 'tag archive title prefix', 'default' );
 				break;
 			case 'post_format':
@@ -307,7 +308,6 @@ final class Entity_Factory {
 				break;
 			default:
 				$tax    = get_taxonomy( $term->taxonomy );
-				$title  = $term->name;
 				$prefix = sprintf(
 					/* translators: %s: Taxonomy singular name. */
 					_x( '%s:', 'taxonomy term archive title prefix', 'default' ),

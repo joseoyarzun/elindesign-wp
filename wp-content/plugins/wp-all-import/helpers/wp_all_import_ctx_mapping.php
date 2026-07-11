@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 if ( ! function_exists('wp_all_import_ctx_mapping')){
 	function wp_all_import_ctx_mapping( $ctx, $mapping_rules, $tx_name ){

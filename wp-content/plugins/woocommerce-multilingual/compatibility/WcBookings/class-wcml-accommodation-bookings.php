@@ -18,7 +18,10 @@ class WCML_Accommodation_Bookings implements \IWPML_Action {
 		add_action( 'woocommerce_accommodation_bookings_after_bookings_pricing', [ $this, 'after_bookings_pricing' ] );
 
 		add_action( 'save_post', [ $this, 'save_custom_costs' ], 110, 2 );
-		add_filter( 'get_post_metadata', [ $this, 'product_price_filter' ], 9, 4 );
+
+		if ( ! is_admin() ) {
+			add_filter( 'get_post_metadata', [ $this, 'product_price_filter' ], 9, 4 );
+		}
 
 		add_action( 'init', [ $this, 'load_assets' ], 100 );
 	}
@@ -29,15 +32,15 @@ class WCML_Accommodation_Bookings implements \IWPML_Action {
 
     }
 
-    function wcml_price_field_after_booking_pricing_override_block_cost( $pricing, $post_id ){
+    public function wcml_price_field_after_booking_pricing_override_block_cost( $pricing, $post_id ){
 
         $this->echo_wcml_price_field( $post_id, 'wcml_wc_booking_pricing_override_block_cost', $pricing );
 
     }
 
-    function after_bookings_pricing( $post_id ){
+    public function after_bookings_pricing( $post_id ){
 
-        $product_terms = wp_get_post_terms( $post_id, 'product_type', array( "fields" => "names" ) );
+        $product_terms = wp_get_post_terms( $post_id, 'product_type', [ "fields" => "names" ] );
 
 	    if(
 		    in_array( 'accommodation-booking', $product_terms ) &&
@@ -65,7 +68,7 @@ class WCML_Accommodation_Bookings implements \IWPML_Action {
 
     }
 
-    function echo_wcml_price_field( $post_id, $field, $pricing = false, $check = true, $resource_id = false ){
+    private function echo_wcml_price_field( $post_id, $field, $pricing = false, $check = true, $resource_id = false ){
 
 	    if ( ! $check || $this->woocommerce_wpml->products->is_original_product( $post_id ) ) {
 
@@ -77,10 +80,10 @@ class WCML_Accommodation_Bookings implements \IWPML_Action {
 
                 switch( $field ){
                     case 'wcml_wc_booking_base_cost':
-                        woocommerce_wp_text_input( array( 'id' => 'wcml_wc_booking_base_cost', 'class'=>'wcml_bookings_custom_price', 'name' => 'wcml_wc_accommodation_booking_base_cost['.$currency_code.']', 'label' => get_woocommerce_currency_symbol($currency_code), 'description' => __( 'This is the cost per block booked. All other costs (for resources and persons) are added to this.', 'woocommerce-bookings' ), 'value' => get_post_meta( $post_id, '_wc_booking_base_cost_'.$currency_code, true ), 'type' => 'number', 'desc_tip' => true, 'custom_attributes' => array(
+                        woocommerce_wp_text_input( [ 'id' => 'wcml_wc_booking_base_cost', 'class'=>'wcml_bookings_custom_price', 'name' => 'wcml_wc_accommodation_booking_base_cost['.$currency_code.']', 'label' => get_woocommerce_currency_symbol($currency_code), 'description' => __( 'This is the cost per block booked. All other costs (for resources and persons) are added to this.', 'woocommerce-bookings' ), 'value' => get_post_meta( $post_id, '_wc_booking_base_cost_'.$currency_code, true ), 'type' => 'number', 'desc_tip' => true, 'custom_attributes' => [
                             'min'   => '',
-                            'step' 	=> '0.01'
-                        ) ) );
+                            'step' 	=> '0.01',
+                        ] ] );
                         break;
 
 
@@ -110,7 +113,7 @@ class WCML_Accommodation_Bookings implements \IWPML_Action {
         }
     }
 
-    function save_custom_costs( $post_id, $post ){
+    public function save_custom_costs( $post_id, $post ){
 
         $nonce = filter_input( INPUT_POST, '_wcml_custom_costs_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
@@ -130,7 +133,7 @@ class WCML_Accommodation_Bookings implements \IWPML_Action {
 
                 }
 
-                $updated_meta = array();
+                $updated_meta = [];
                 $booking_pricing = get_post_meta( $post_id, '_wc_booking_pricing', true );
 
                 foreach ( maybe_unserialize( $booking_pricing ) as $key => $prices ) {
@@ -152,16 +155,14 @@ class WCML_Accommodation_Bookings implements \IWPML_Action {
 
     }
 
-    function product_price_filter( $value, $object_id, $meta_key, $single ){
+    public function product_price_filter( $value, $object_id, $meta_key, $single ){
 
-	    if(
-		    $meta_key == '_price' &&
-		    !is_admin() &&
-		    get_post_type( $object_id ) == 'product' &&
-		    ( $currency = $this->woocommerce_wpml->multi_currency->get_client_currency() ) !== wcml_get_woocommerce_currency_option()
-	    ) {
-
-            remove_filter( 'get_post_metadata', array( $this, 'product_price_filter' ), 9 );
+	     if (
+				'_price' === $meta_key &&
+				'product' === get_post_type( $object_id ) &&
+				( $currency = $this->woocommerce_wpml->multi_currency->get_client_currency() ) !== wcml_get_woocommerce_currency_option()
+			) {
+            remove_filter( 'get_post_metadata', [ $this, 'product_price_filter' ], 9 );
 
             $original_product = $this->woocommerce_wpml->products->get_original_product_id( $object_id );
 
@@ -170,7 +171,7 @@ class WCML_Accommodation_Bookings implements \IWPML_Action {
                 $price = get_post_meta( $object_id, '_price_' . $currency , true );
             }
 
-            add_filter( 'get_post_metadata', array( $this, 'product_price_filter' ), 9, 4 );
+            add_filter( 'get_post_metadata', [ $this, 'product_price_filter' ], 9, 4 );
         }
 
         return isset( $price) ? $price : $value;

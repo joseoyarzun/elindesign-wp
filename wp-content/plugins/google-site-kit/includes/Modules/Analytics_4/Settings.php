@@ -6,7 +6,11 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
+
+// phpcs:disable Generic.Metrics.CyclomaticComplexity.MaxExceeded
 
 namespace Google\Site_Kit\Modules\Analytics_4;
 
@@ -14,8 +18,7 @@ use Google\Site_Kit\Core\Modules\Module_Settings;
 use Google\Site_Kit\Core\Storage\Setting_With_Owned_Keys_Interface;
 use Google\Site_Kit\Core\Storage\Setting_With_Owned_Keys_Trait;
 use Google\Site_Kit\Core\Storage\Setting_With_ViewOnly_Keys_Interface;
-use Google\Site_Kit\Core\Util\Feature_Flags;
-use Google\Site_Kit\Modules\Analytics\Settings as Analytics_Settings;
+use Google\Site_Kit\Core\Util\Method_Proxy_Trait;
 
 /**
  * Class for Analytics 4 settings.
@@ -27,6 +30,7 @@ use Google\Site_Kit\Modules\Analytics\Settings as Analytics_Settings;
 class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interface, Setting_With_ViewOnly_Keys_Interface {
 
 	use Setting_With_Owned_Keys_Trait;
+	use Method_Proxy_Trait;
 
 	const OPTION = 'googlesitekit_analytics-4_settings';
 
@@ -42,29 +46,6 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 	}
 
 	/**
-	 * Gets Analytics 4 settings.
-	 *
-	 * @since 1.99.0
-	 *
-	 * @return array Analytics 4 settings, or default if not set.
-	 */
-	public function get() {
-		$value = parent::get();
-
-		// This is a temporary solution to keep using the Analytics ownerID setting
-		// as the main source of truth for the Analytics 4 ownerID value.
-		//
-		// This is needed because currently the Analytics 4 functionality is separated
-		// from the Analytics module and we need to keep the ownerID synced between two
-		// modules. We will remove this hack when UA is sunset and only both modules
-		// are merged.
-		$analytics_settings = ( new Analytics_Settings( $this->options ) )->get();
-		$value['ownerID']   = $analytics_settings['ownerID'];
-
-		return $value;
-	}
-
-	/**
 	 * Returns keys for owned settings.
 	 *
 	 * @since 1.30.0
@@ -73,9 +54,7 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 	 */
 	public function get_owned_keys() {
 		return array(
-			// TODO: These can be uncommented when Analytics and Analytics 4 modules are officially separated.
-			/* 'accountID', */ // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-			/* 'adsConversionID', */ // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+			'accountID',
 			'propertyID',
 			'webDataStreamID',
 			'measurementID',
@@ -93,11 +72,13 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 	 * @return array An array of keys for view-only settings.
 	 */
 	public function get_view_only_keys() {
-		if ( Feature_Flags::enabled( 'keyMetrics' ) ) {
-			return array( 'availableCustomDimensions' );
-		}
-
-		return array();
+		return array(
+			'availableCustomDimensions',
+			'adSenseLinked',
+			'detectedEvents',
+			'newConversionEventsLastUpdateAt',
+			'lostConversionEventsLastUpdateAt',
+		);
 	}
 
 	/**
@@ -109,19 +90,36 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 	 */
 	protected function get_default() {
 		return array(
-			'ownerID'                   => 0,
-			// TODO: These can be uncommented when Analytics and Analytics 4 modules are officially separated.
-			/* 'accountID'              => '', */ // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-			/* 'adsConversionID'        => '', */ // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-			'propertyID'                => '',
-			'webDataStreamID'           => '',
-			'measurementID'             => '',
-			'useSnippet'                => true,
-			'googleTagID'               => '',
-			'googleTagAccountID'        => '',
-			'googleTagContainerID'      => '',
-			'googleTagLastSyncedAtMs'   => 0,
-			'availableCustomDimensions' => null,
+			'ownerID'                          => 0,
+			'accountID'                        => '',
+			/**
+			 * This setting is deprecated and only remains for backwards
+			 * compatibility with old migrations.
+			 *
+			 * See: https://github.com/google/site-kit-wp/pull/12394#pullrequestreview-4068317046
+			 *
+			 * @deprecated
+			 */
+			'adsConversionID'                  => '',
+			'propertyID'                       => '',
+			'webDataStreamID'                  => '',
+			'measurementID'                    => '',
+			'trackingDisabled'                 => array( 'loggedinUsers' ),
+			'useSnippet'                       => true,
+			'googleTagID'                      => '',
+			'googleTagAccountID'               => '',
+			'googleTagContainerID'             => '',
+			'googleTagContainerDestinationIDs' => null,
+			'googleTagLastSyncedAtMs'          => 0,
+			'availableCustomDimensions'        => null,
+			'propertyCreateTime'               => 0,
+			'adSenseLinked'                    => false,
+			'adSenseLinkedLastSyncedAt'        => 0,
+			'adsLinked'                        => false,
+			'adsLinkedLastSyncedAt'            => 0,
+			'detectedEvents'                   => array(),
+			'newConversionEventsLastUpdateAt'  => 0,
+			'lostConversionEventsLastUpdateAt' => 0,
 		);
 	}
 
@@ -133,15 +131,22 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 	 * @return callable|null
 	 */
 	protected function get_sanitize_callback() {
-		return function( $option ) {
+		return function ( $option ) {
 			if ( is_array( $option ) ) {
 				if ( isset( $option['useSnippet'] ) ) {
 					$option['useSnippet'] = (bool) $option['useSnippet'];
 				}
-
 				if ( isset( $option['googleTagID'] ) ) {
 					if ( ! preg_match( '/^(G|GT|AW)-[a-zA-Z0-9]+$/', $option['googleTagID'] ) ) {
 						$option['googleTagID'] = '';
+					}
+				}
+				if ( isset( $option['trackingDisabled'] ) ) {
+					// Prevent other options from being saved if 'loggedinUsers' is selected.
+					if ( in_array( 'loggedinUsers', $option['trackingDisabled'], true ) ) {
+						$option['trackingDisabled'] = array( 'loggedinUsers' );
+					} else {
+						$option['trackingDisabled'] = (array) $option['trackingDisabled'];
 					}
 				}
 
@@ -154,11 +159,17 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 					}
 				}
 
-				if ( Feature_Flags::enabled( 'keyMetrics' ) && isset( $option['availableCustomDimensions'] ) ) {
+				if ( isset( $option['googleTagContainerDestinationIDs'] ) ) {
+					if ( ! is_array( $option['googleTagContainerDestinationIDs'] ) ) {
+						$option['googleTagContainerDestinationIDs'] = null;
+					}
+				}
+
+				if ( isset( $option['availableCustomDimensions'] ) ) {
 					if ( is_array( $option['availableCustomDimensions'] ) ) {
 						$valid_dimensions = array_filter(
 							$option['availableCustomDimensions'],
-							function( $dimension ) {
+							function ( $dimension ) {
 								return is_string( $dimension ) && strpos( $dimension, 'googlesitekit_' ) === 0;
 							}
 						);
@@ -168,39 +179,41 @@ class Settings extends Module_Settings implements Setting_With_Owned_Keys_Interf
 						$option['availableCustomDimensions'] = null;
 					}
 				}
+
+				if ( isset( $option['adSenseLinked'] ) ) {
+					$option['adSenseLinked'] = (bool) $option['adSenseLinked'];
+				}
+
+				if ( isset( $option['adSenseLinkedLastSyncedAt'] ) ) {
+					if ( ! is_int( $option['adSenseLinkedLastSyncedAt'] ) ) {
+						$option['adSenseLinkedLastSyncedAt'] = 0;
+					}
+				}
+
+				if ( isset( $option['adsLinked'] ) ) {
+					$option['adsLinked'] = (bool) $option['adsLinked'];
+				}
+
+				if ( isset( $option['adsLinkedLastSyncedAt'] ) ) {
+					if ( ! is_int( $option['adsLinkedLastSyncedAt'] ) ) {
+						$option['adsLinkedLastSyncedAt'] = 0;
+					}
+				}
+
+				if ( isset( $option['newConversionEventsLastUpdateAt'] ) ) {
+					if ( ! is_int( $option['newConversionEventsLastUpdateAt'] ) ) {
+						$option['newConversionEventsLastUpdateAt'] = 0;
+					}
+				}
+
+				if ( isset( $option['lostConversionEventsLastUpdateAt'] ) ) {
+					if ( ! is_int( $option['lostConversionEventsLastUpdateAt'] ) ) {
+						$option['lostConversionEventsLastUpdateAt'] = 0;
+					}
+				}
 			}
 
 			return $option;
 		};
 	}
-
-	/**
-	 * Merges the current user ID into the module settings as the initial owner ID.
-	 *
-	 * @since 1.99.0
-	 */
-	protected function merge_initial_owner_id() {
-		// This is a temporary solution to sync owner IDs between Analytics and Analytics 4 modules.
-		// The owner ID setting of the Analytics module is the source of truth for the Analytics 4 module.
-		// This will change when Analytics is sunset and we merge both modules into one.
-		( new Analytics_Settings( $this->options ) )->merge( array( 'ownerID' => get_current_user_id() ) );
-	}
-
-	/**
-	 * Adds the current user ID as the module owner ID to the current module settings.
-	 *
-	 * @since 1.99.0
-	 *
-	 * @param array $settings The new module settings.
-	 * @return array Updated module settings with the current user ID as the ownerID setting.
-	 */
-	protected function update_owner_id_in_settings( $settings ) {
-		// This is a temporary solution to sync owner IDs between Analytics and Analytics 4 modules.
-		// The owner ID setting of the Analytics module is the source of truth for the Analytics 4 module.
-		// This will change when Analytics is sunset and we merge both modules into one.
-		( new Analytics_Settings( $this->options ) )->merge( array( 'ownerID' => get_current_user_id() ) );
-
-		return $settings;
-	}
-
 }

@@ -12,28 +12,35 @@ use WPForms_Template_Blank;
  */
 class Forms extends Base {
 
-    /**
-     * The addons required for the AI form generator.
-     *
-     * @since 1.9.2
-     *
-     * @var array
-     */
-    public const FORM_GENERATOR_REQUIRED_ADDONS = [ 'surveys-polls', 'signatures', 'coupons' ];
+	/**
+	 * The addons required for the AI form generator.
+	 *
+	 * @since 1.9.2
+	 *
+	 * @var array
+	 */
+	public const FORM_GENERATOR_REQUIRED_ADDONS = [
+		'surveys-polls',
+		'signatures',
+		'coupons',
+		'calculations',
+		'quiz',
+		'geolocation',
+	];
 
-    /**
-     * The addon fields.
-     *
-     * @since 1.9.4
-     *
-     * @var array
-     */
-    public const FORM_GENERATOR_ADDON_FIELDS = [
-	    'likert_scale'       => 'surveys-polls',
-	    'net_promoter_score' => 'surveys-polls',
-	    'signature'          => 'signatures',
-	    'payment-coupon'     => 'coupons',
-    ];
+	/**
+	 * The addon fields.
+	 *
+	 * @since 1.9.4
+	 *
+	 * @var array
+	 */
+	public const FORM_GENERATOR_ADDON_FIELDS = [
+		'likert_scale'       => 'surveys-polls',
+		'net_promoter_score' => 'surveys-polls',
+		'signature'          => 'signatures',
+		'payment-coupon'     => 'coupons',
+	];
 
 	/**
 	 * Forms API instance.
@@ -73,7 +80,7 @@ class Forms extends Base {
 	}
 
 	/**
-	 * Get form AJAX callback.
+	 * "Get form" AJAX callback.
 	 *
 	 * @since 1.9.2
 	 */
@@ -97,6 +104,16 @@ class Forms extends Base {
 		$form       = $this->forms_api->form( $prompt, $session_id );
 
 		$form['fieldsOrder'] = array_keys( $form['fields'] ?? [] );
+
+		/**
+		 * Filters the form data before outputting it.
+		 *
+		 * @since 1.9.7
+		 *
+		 * @param array  $form       Form data.
+		 * @param string $session_id Session ID.
+		 */
+		$form = apply_filters( 'wpforms_integrations_ai_admin_ajax_forms_get_form_before_send', $form, $session_id );
 
 		wp_send_json_success( $form );
 	}
@@ -172,7 +189,7 @@ class Forms extends Base {
 	 *
 	 * @return array
 	 */
-	private function prepare_field_data( array $field_data ): array { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+	private function prepare_field_data( array $field_data ): array {
 
 		$field_type = $field_data['type'] ?? '';
 
@@ -204,12 +221,16 @@ class Forms extends Base {
 	 */
 	private function prepare_form_settings( array $form_data ): array {
 
+		// Prepare the notifications.
 		if ( isset( $form_data['settings']['notifications']['1'] ) ) {
 			$form_data['settings']['notifications']['1']['subject'] = sprintf( /* translators: %s - form name. */
 				esc_html__( 'New Entry: %s', 'wpforms-lite' ),
 				esc_html( $form_data['form_title'] )
 			);
 		}
+
+		// Quiz settings.
+		$form_data = $this->prepare_quiz_settings( $form_data );
 
 		return $form_data['settings'];
 	}
@@ -252,7 +273,7 @@ class Forms extends Base {
 	 *
 	 * @return array Form ID and the generated form data.
 	 */
-	private function use_form_check_data(): array { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+	private function use_form_check_data(): array {
 
 		if ( ! $this->validate_nonce() ) {
 			wp_send_json_error(
@@ -269,36 +290,42 @@ class Forms extends Base {
 			);
 		}
 
-        if ( ! wpforms_current_user_can( 'edit_form_single', $form_id ) ) {
-            wp_send_json_error(
-                [ 'error' => esc_html__( 'Sorry, you are not allowed to edit this form.', 'wpforms-lite' ) ]
-            );
-        }
+		if ( empty( $form_id ) && ! wpforms_current_user_can( 'create_forms' ) ) {
+			wp_send_json_error(
+				[ 'error' => esc_html__( 'Sorry, you are not allowed to create new forms.', 'wpforms-lite' ) ]
+			);
+		}
 
-        $form_obj = wpforms()->obj( 'form' );
+		if ( ! empty( $form_id ) && ! wpforms_current_user_can( 'edit_form_single', $form_id ) ) {
+			wp_send_json_error(
+				[ 'error' => esc_html__( 'Sorry, you are not allowed to edit this form.', 'wpforms-lite' ) ]
+			);
+		}
 
-        if ( ! $form_obj ) {
-        	wp_send_json_error(
+		$form_obj = wpforms()->obj( 'form' );
+
+		if ( ! $form_obj ) {
+			wp_send_json_error(
 				[ 'error' => esc_html__( 'Form database object not found.', 'wpforms-lite' ) ]
 			);
-        }
+		}
 
-        $form_post = ! empty( $form_id ) ? $form_obj->get( $form_id ) : null;
+		$form_post = ! empty( $form_id ) ? $form_obj->get( $form_id ) : null;
 
-        if (
+		if (
 			( empty( $form_post ) && ! empty( $form_id ) ) ||
-            ( ! empty( $form_post->post_status ) && $form_post->post_status === 'trash' )
-        ) {
-            wp_send_json_error(
-                [ 'error' => esc_html__( 'It looks like the form you are trying to access is no longer available.', 'wpforms-lite' ) ]
-            );
-        }
+			( ! empty( $form_post->post_status ) && $form_post->post_status === 'trash' )
+		) {
+			wp_send_json_error(
+				[ 'error' => esc_html__( 'It looks like the form you are trying to access is no longer available.', 'wpforms-lite' ) ]
+			);
+		}
 
 		$session_id       = $this->get_post_data( 'sessionId' );
-        $response_history = $this->get_post_data( 'responseHistory', 'array' );
-        $chat_html        = $this->get_post_data( 'chatHtml', 'string' );
+		$response_history = $this->get_post_data( 'responseHistory', 'array' );
+		$chat_html        = $this->get_post_data( 'chatHtml', 'string' );
 
-        return [ $form_id, $form_data, $session_id, $response_history, $chat_html, $form_obj ];
+		return [ $form_id, $form_data, $session_id, $response_history, $chat_html, $form_obj ];
 	}
 
 	/**
@@ -386,7 +413,7 @@ class Forms extends Base {
 	 *
 	 * @since 1.9.2
 	 */
-	public function dismiss() {
+	public function dismiss(): void {
 
 		if ( ! $this->validate_nonce() ) {
 			wp_send_json_error(
@@ -408,10 +435,10 @@ class Forms extends Base {
 
 		// Check for permissions.
 		if ( ! wpforms_current_user_can( 'edit_forms' ) ) {
-            wp_send_json_error(
-                [ 'error' => esc_html__( 'Sorry, you are not allowed to dismiss.', 'wpforms-lite' ) ]
-            );
-        }
+			wp_send_json_error(
+				[ 'error' => esc_html__( 'Sorry, you are not allowed to dismiss.', 'wpforms-lite' ) ]
+			);
+		}
 
 		$user_id   = get_current_user_id();
 		$dismissed = get_user_meta( $user_id, 'wpforms_dismissed', true );
@@ -428,5 +455,115 @@ class Forms extends Base {
 
 		update_user_meta( $user_id, 'wpforms_dismissed', $dismissed );
 		wp_send_json_success();
+	}
+
+	/**
+	 * Prepare the quiz settings.
+	 *
+	 * @since 1.9.9
+	 *
+	 * @param array $form_data Form data.
+	 *
+	 * @return array
+	 */
+	private function prepare_quiz_settings( array $form_data ): array {
+
+		if ( empty( $form_data['settings']['quiz']['enabled'] ) ) {
+			return $form_data;
+		}
+
+		$outcomes = (array) ( $form_data['settings']['quiz']['outcomes'] ?? [] );
+
+		$default_outcome = [
+			'graded_message'      => '',
+			'personality_message' => '',
+			'weighted_message'    => '',
+			'conditionals'        => [],
+		];
+
+		// Decode the outcome messages.
+		foreach ( $outcomes as $key => $outcome ) {
+			$outcome = wp_parse_args( $outcome, $default_outcome );
+
+			$outcome['graded_message']      = htmlspecialchars_decode( $outcome['graded_message'] );
+			$outcome['personality_message'] = htmlspecialchars_decode( $outcome['personality_message'] );
+			$outcome['weighted_message']    = htmlspecialchars_decode( $outcome['weighted_message'] );
+			$outcome['conditionals']        = $this->prepare_field_cl( $outcome );
+
+			$outcomes[ $key ] = $outcome;
+		}
+
+		// Normalize outcome order for graded quizzes so the best grade (index 0) renders at the
+		// visual top. The outcomes panel uses CSS column-reverse, so the LAST entry in storage
+		// is the FIRST visually. We therefore sort DESCENDING by grade index here — worst grade
+		// (highest index) first in storage, best grade (index 0) last. Idempotent on already-
+		// sorted data. Weighted and personality types are left as the LLM emitted.
+		$quiz_type = $form_data['settings']['quiz']['type'] ?? '';
+
+		if ( $quiz_type === 'graded' ) {
+			uasort( $outcomes, [ $this, 'compare_graded_outcomes_by_index' ] );
+		}
+
+		$form_data['settings']['quiz']['outcomes'] = $outcomes;
+
+		return $form_data;
+	}
+
+	/**
+	 * Compare two graded outcomes by their first quiz_graded conditional rule value.
+	 *
+	 * Used by uasort() to sort graded-quiz outcomes DESCENDING by referenced grade
+	 * index, so the worst grade (highest index) ends up first in storage and the
+	 * best grade (index 0) ends up last. The outcomes panel uses CSS column-reverse,
+	 * which renders the LAST stored entry at the VISUAL TOP — so the user sees Grade A
+	 * on top. Outcomes without a quiz_graded rule sort to the visual bottom (storage top).
+	 *
+	 * @since 1.10.1
+	 *
+	 * @param array $a First outcome.
+	 * @param array $b Second outcome.
+	 *
+	 * @return int Negative if $a should sort first, positive if $b should sort first, zero if equal.
+	 */
+	private function compare_graded_outcomes_by_index( array $a, array $b ): int {
+
+		return $this->get_outcome_graded_index( $b ) <=> $this->get_outcome_graded_index( $a );
+	}
+
+	/**
+	 * Extract the grade index from an outcome's first quiz_graded conditional rule.
+	 *
+	 * Returns PHP_INT_MAX for outcomes without a quiz_graded rule. Under the
+	 * descending sort applied by compare_graded_outcomes_by_index(), PHP_INT_MAX
+	 * floats these outcomes to the top of storage — which renders at the visual
+	 * bottom thanks to CSS column-reverse on the outcomes panel.
+	 *
+	 * @since 1.10.1
+	 *
+	 * @param array $outcome Outcome data with a `conditionals` array of rule groups.
+	 *
+	 * @return int Grade index, or PHP_INT_MAX if no quiz_graded rule found.
+	 */
+	private function get_outcome_graded_index( array $outcome ): int {
+
+		$groups = $outcome['conditionals'] ?? [];
+
+		if ( ! is_array( $groups ) ) {
+			return PHP_INT_MAX;
+		}
+
+		foreach ( $groups as $group ) {
+			if ( ! is_array( $group ) ) {
+				continue;
+			}
+
+			foreach ( $group as $rule ) {
+				if ( ( $rule['field'] ?? '' ) === 'quiz_graded' && isset( $rule['value'] ) && is_numeric( $rule['value'] ) ) {
+					return (int) $rule['value'];
+				}
+			}
+		}
+
+		return PHP_INT_MAX;
 	}
 }

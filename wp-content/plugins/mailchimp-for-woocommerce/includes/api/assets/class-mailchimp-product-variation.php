@@ -54,6 +54,13 @@ class MailChimp_WooCommerce_ProductVariation {
 		return $this;
 	}
 
+	public function getProductId()
+	{
+		$product = MailChimp_WooCommerce_HPOS::get_product($this->id);
+
+		return $product ? $product->get_parent_id() : null;
+	}
+
 	/**
 	 * @return null
 	 */
@@ -203,7 +210,7 @@ class MailChimp_WooCommerce_ProductVariation {
 				'price'              => $this->getPrice(),
 				'inventory_quantity' => (int) $this->getInventoryQuantity(),
 				'image_url'          => (string) $this->getImageUrl(),
-				'backorders'         => $this->getBackorders() ? 'true' : 'false',
+				'backorders'         => $this->getBackorders() ? '1' : '0',
 				'visibility'         => (string) $this->getVisibility(),
 			)
 		);

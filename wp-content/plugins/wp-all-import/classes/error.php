@@ -26,13 +26,13 @@ class PMXI_Error{
             $error['message'] = str_replace('  ', ' ', $error['message']);
             echo "[[ERROR]]";
             if($error['message'] == '') {
-                $error['message'] = __('An unknown error occurred', 'wp_all_import_plugin');
+                $error['message'] = __('An unknown error occurred', 'wp-all-import');
             }
-            $this->terminate(json_encode(array('error' => '<span class="error">'.$error['message'].' of the Functions Editor'.'</span>', 'line' => $error['line'], 'title' => __('PHP Error','wp_all_import_plugin'))));
+            $this->terminate(json_encode(array('error' => '<span class="error">'.$error['message'].' of the Functions Editor'.'</span>', 'line' => $error['line'], 'title' => __('PHP Error','wp-all-import'))));
         } else if(strpos($error['file'], 'XMLWriter.php') !== false ) {
             if(strpos($error['message'],'syntax error, unexpected') !== false) {
                 echo "[[ERROR]]";
-                $this->terminate(json_encode(array('error'=>__('You probably forgot to close a quote', 'wp_all_import_plugin'),'title' => __('PHP Error','wp_all_import_plugin'))));
+                $this->terminate(json_encode(array('error'=>__('You probably forgot to close a quote', 'wp-all-import'),'title' => __('PHP Error','wp-all-import'))));
             }
         }
     }
@@ -60,7 +60,7 @@ class PMXI_Error{
      */
     protected function terminate($message)
     {
-        exit($message);
+        exit($message); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON payload consumed by JS client.
     }
 
     protected function trace(){
@@ -70,13 +70,15 @@ class PMXI_Error{
     }
 
     public function import_data_handler($errno, $errstr, $errfile, $errline) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         error_log('Found import exception: ' . $errstr . ' ' . $errno . ' ' . $errfile . ' ' . $errline . ' for record #' . $this->recordNumber);
 //        trigger_error('TEST');
 //        throw new XmlImportException($errstr, $errno, 0, $errfile, $errline);
     }
 
     public function parse_data_handler($errno, $errstr, $errfile, $errline) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         error_log('Found parse exception: ' . $errstr . ' ' . $errno . ' ' . $errfile . ' ' . $errline);
-        throw new XmlImportException($errstr, $errno);
+        throw new XmlImportException(esc_html($errstr), intval($errno));
     }
 }

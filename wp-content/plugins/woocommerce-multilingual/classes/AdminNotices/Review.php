@@ -7,6 +7,7 @@ use WPML_Notices;
 use IWPML_Backend_Action;
 use IWPML_Frontend_Action;
 use IWPML_DIC_Action;
+use function WCML\functions\isStandAlone;
 
 class Review implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Action, IStandAloneAction {
 
@@ -23,8 +24,10 @@ class Review implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_A
 	}
 
 	public function add_hooks() {
-		add_action( 'admin_notices', [ $this, 'addNotice' ] );
-		add_action( 'woocommerce_after_order_object_save', [ $this, 'onNewOrder' ] );
+		if ( isStandAlone() ) {
+			add_action( 'admin_notices', [ $this, 'addNotice' ] );
+			add_action( 'woocommerce_after_order_object_save', [ $this, 'onNewOrder' ] );
+		}
 	}
 
 	public function addNotice() {
@@ -41,7 +44,7 @@ class Review implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_A
 			$notice->set_dismissible( true );
 
 			$reviewLink   = 'https://wordpress.org/support/plugin/woocommerce-multilingual/reviews/?filter=5#new-post';
-			$reviewButton = $this->wpmlNotices->get_new_notice_action( __( 'Review WooCommerce Multilingual & Multicurrency', 'woocommerce-multilingual' ), $reviewLink, false, false, true );
+			$reviewButton = $this->wpmlNotices->get_new_notice_action( esc_html__( 'Review WPML Multilingual & Multicurrency for WooCommerce', 'woocommerce-multilingual' ), $reviewLink, false, false, true );
 			$notice->add_action( $reviewButton );
 
 			$notice->set_restrict_to_screen_ids( RestrictedScreens::get() );
@@ -50,31 +53,24 @@ class Review implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_A
 		}
 	}
 
-	/**
-	 * @return string
-	 */
-	private function getNoticeText() {
-		$text  = '<h2>';
-		$text .= __( 'Congrats! You\'ve just earned some money using WooCommerce Multilingual & Multicurrency.', 'woocommerce-multilingual' );
+	private function getNoticeText(): string {
+		$text = '<h2>';
+		$text .= esc_html__( 'Congrats on making your first multicurrency sale!', 'woocommerce-multilingual' );
 		$text .= '</h2>';
 
 		$text .= '<p>';
-		$text .= __( 'How do you feel getting your very first order in foreign language or currency?', 'woocommerce-multilingual' );
-		$text .= '<br />';
-		$text .= __( 'We for sure are super thrilled about your success! Will you help WCML improve and grow?', 'woocommerce-multilingual' );
+		$text .= sprintf(
+			/* translators: %1$s and %2$s are opening and closing HTML link tags */
+			esc_html__( 'Want to help <strong>WPML Multilingual & Multicurrency for WooCommerce</strong> plugin? %1$sGive us a review%2$s!', 'woocommerce-multilingual' ),
+			'<a href="https://wordpress.org/support/plugin/woocommerce-multilingual/reviews/?filter=5#new-post" class="wpml-external-link" target="_blank">',
+			'</a>'
+		);
 		$text .= '</p>';
-
-		$text .= '<p><strong>';
-		$text .= __( 'Give us <span class="rating">5.0 <i class="otgs-ico-star"></i></span> review now.', 'woocommerce-multilingual' );
-		$text .= '</strong></p>';
 
 		return $text;
 	}
 
-	/**
-	 * @return bool
-	 */
-	private function shouldDisplayNotice() {
+	private function shouldDisplayNotice(): bool {
 		return get_option( self::OPTION_NAME, false );
 	}
 
@@ -87,18 +83,14 @@ class Review implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_A
 		}
 	}
 
-	/**
-	 * @param \WC_Order $order
-	 */
-	private function maybeAddOptionToShowNotice( $order ) {
-		$isOrderInSecondLanguage = $order->get_meta( 'wpml_language' ) !== apply_filters( 'wpml_default_language', '' );
-
-		$isOrderInSecondCurrency = wcml_is_multi_currency_on()
-			&& $order->get_currency() !== wcml_get_woocommerce_currency_option();
-
-		if ( $isOrderInSecondLanguage || $isOrderInSecondCurrency ) {
+	private function maybeAddOptionToShowNotice( \WC_Order $order ) {
+		if ( $order->is_paid() && $this->isOrderInSecondCurrency( $order ) ) {
 			add_option( self::OPTION_NAME, true );
 		}
 	}
 
+	private function isOrderInSecondCurrency( \WC_Order $order ): bool {
+		return wcml_is_multi_currency_on()
+		       && $order->get_currency() !== wcml_get_woocommerce_currency_option();
+	}
 }

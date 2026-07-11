@@ -5,7 +5,7 @@
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @package FacebookCommerce
+ * @package MetaCommerce
  */
 
 namespace WooCommerce\Facebook\API;
@@ -82,6 +82,20 @@ class Response extends JSONResponse {
 	 */
 	public function get_api_error_code() {
 		return $this->error['code'] ?? null;
+	}
+
+
+	/**
+	 * Gets the API error subcode.
+	 *
+	 * @link https://developers.facebook.com/docs/graph-api/using-graph-api/error-handling#subcode
+	 *
+	 * @since 3.5.17
+	 *
+	 * @return int|null
+	 */
+	public function get_api_error_subcode() {
+		return $this->error['error_subcode'] ?? null;
 	}
 
 

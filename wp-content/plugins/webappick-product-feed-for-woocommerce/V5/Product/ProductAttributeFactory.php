@@ -27,6 +27,23 @@ class ProductAttributeFactory {
 	public $attributes;
 
 	/**
+	 * Safe unserialize that prevents PHP Object Injection.
+	 *
+	 * @param mixed $data The data to unserialize.
+	 * @return mixed The unserialized data or original if not serialized.
+	 */
+	private static function safe_unserialize( $data ) {
+		if ( ! is_string( $data ) ) {
+			return $data;
+		}
+		if ( ! is_serialized( $data ) ) {
+			return $data;
+		}
+		// Use allowed_classes = false to prevent object instantiation
+		return @unserialize( $data, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+	}
+
+	/**
 	 * Get Product Attributes
 	 *
 	 * @return string|array
@@ -47,6 +64,7 @@ class ProductAttributeFactory {
 				'title'                 => esc_html__( 'Product Title', 'woo-feed' ),
 				'parent_title'          => esc_html__( 'Parent Title', 'woo-feed' ),
 				'description'           => esc_html__( 'Product Description', 'woo-feed' ),
+				'parent_description'    => esc_html__( 'Parent Description', 'woo-feed' ),
 				'description_with_html' => esc_html__( 'Product Description (with HTML)', 'woo-feed' ),
 				'short_description'     => esc_html__( 'Product Short Description', 'woo-feed' ),
 				'primary_category'      => esc_html__( 'Parent Category', 'woo-feed' ),
@@ -86,6 +104,7 @@ class ProductAttributeFactory {
 				'product_status'        => esc_html__( 'Product Status', 'woo-feed' ),
 				'featured_status'        => esc_html__( 'Featured Status', 'woo-feed' ),
 				'checkout_link_template' => esc_html__( 'Checkout Link Template', 'woo-feed' ),
+				'gtin_upc_ean_isbn'      => esc_html__( 'GTIN,UPC,EAN, or ISBN', 'woo-feed' ),
 			]
 		];
 
@@ -431,7 +450,7 @@ class ProductAttributeFactory {
 		$customAttributes = $wpdb->get_results( $sql ); // phpcs:ignore
 		if ( ! empty( $customAttributes ) ) {
 			foreach ( $customAttributes as $value ) {
-				$product_attr = maybe_unserialize( $value->type );
+				$product_attr = self::safe_unserialize( $value->type );
 				if ( is_array( $product_attr ) ) {
 					foreach ( $product_attr as $key => $arr_value ) {
 						if ( strpos( $key, 'pa_' ) === false && isset( $arr_value['name'] ) ) {
@@ -521,8 +540,8 @@ class ProductAttributeFactory {
 		$data = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $wpdb->options WHERE option_name LIKE %s;", AttributeValueByType::PRODUCT_CATEGORY_MAPPING_PREFIX . '%' ) );  // phpcs:ignore
 		if ( count( $data ) ) {
 			foreach ( $data as $value ) {
-				$opts                        = maybe_unserialize( $value->option_value );
-				$opts                        = maybe_unserialize( $opts );
+				$opts                        = self::safe_unserialize( $value->option_value );
+				$opts                        = self::safe_unserialize( $opts );
 				$info[ $value->option_name ] = is_array( $opts ) && isset( $opts['mappingname'] ) ? $opts['mappingname'] : str_replace(
 					'wf_cmapping_',
 					'',
@@ -700,8 +719,8 @@ class ProductAttributeFactory {
 		$data = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $wpdb->options WHERE option_name LIKE %s;", AttributeValueByType::PRODUCT_DYNAMIC_ATTRIBUTE_PREFIX . '%' ) ); // phpcs:ignore
 		if ( count( $data ) ) {
 			foreach ( $data as $value ) {
-				$opts                        = maybe_unserialize( $value->option_value );
-				$opts                        = maybe_unserialize( $opts );
+				$opts                        = self::safe_unserialize( $value->option_value );
+				$opts                        = self::safe_unserialize( $opts );
 				$info[ $value->option_name ] = is_array( $opts ) && isset( $opts['wfDAttributeName'] ) ? $opts['wfDAttributeName'] : str_replace(
 					'wf_dattribute_',
 					'',
@@ -729,7 +748,7 @@ class ProductAttributeFactory {
 		$data = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $wpdb->options WHERE option_name LIKE %s;", AttributeValueByType::PRODUCT_ATTRIBUTE_MAPPING_PREFIX . '%' ) );  // phpcs:ignore
 		if ( count( $data ) ) {
 			foreach ( $data as $value ) {
-				$opts                        = maybe_unserialize( $value->option_value );
+				$opts                        = self::safe_unserialize( $value->option_value );
 				$info[ $value->option_name ] = is_array( $opts ) && isset( $opts['name'] ) ? $opts['name'] : str_replace( AttributeValueByType::PRODUCT_ATTRIBUTE_MAPPING_PREFIX, '', $value->option_name );
 			}
 		}

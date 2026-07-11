@@ -2,7 +2,8 @@
 
 namespace Photonic_Plugin\Lightboxes;
 
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Components\Photo;
+use Photonic_Plugin\Platforms\Base;
 use Photonic_Plugin\Lightboxes\Features\Show_Videos_Inline;
 
 require_once 'Lightbox.php';
@@ -21,23 +22,25 @@ class Fancybox3 extends Lightbox {
 
 	/**
 	 * @param $rel_id
-	 * @param Core $module
+	 * @param Base $module
 	 * @return array
 	 */
-	public function get_gallery_attributes($rel_id, $module) {
+	public function get_gallery_attributes($rel_id, Base $module): array {
 		return [
 			'class'    => $this->class = ['photonic-lb', 'photonic-fancybox', 'fancybox'],
 			'rel'      => ['lightbox-photonic-' . $module->provider . '-stream-' . (empty($rel_id) ? $module->gallery_index : $rel_id)],
 			'specific' => [
-				'data-fancybox' => ['lightbox-photonic-' . $module->provider . '-stream-' . (empty($rel_id) ? $module->gallery_index : $rel_id)]
+				'data-fancybox' => 'lightbox-photonic-' . $module->provider . '-stream-' . (empty($rel_id) ? $module->gallery_index : $rel_id)
 			],
 		];
 	}
 
-	public function get_photo_attributes($photo_data, $module) {
+	public function get_photo_attributes(array $photo_data, Base $module): array {
 		$out = parent::get_photo_attributes($photo_data, $module);
 		if (in_array($module->provider, ['google', 'flickr'], true)) {
-			return $out . (!empty($photo_data['video']) ? ' data-html5-href="' . $photo_data['video'] . '" ' : '');
+			if (!empty($photo_data['video'])) {
+				$out['data-html5-href'] = $photo_data['video'];
+			}
 		}
 		return $out;
 	}
@@ -45,7 +48,7 @@ class Fancybox3 extends Lightbox {
 	/**
 	 * {@inheritDoc}
 	 */
-	public function get_video_markup($photo, $module, $indent) {
+	public function get_video_markup(Photo $photo, Base $module, string $indent): string {
 		if (in_array($module->provider, ['flickr', 'google'], true)) {
 			return $this->get_inline_video_markup($photo, $module, $indent);
 		}
@@ -57,7 +60,7 @@ class Fancybox3 extends Lightbox {
 	/**
 	 * {@inheritDoc}
 	 */
-	public function get_grid_link($photo, $short_code, $module = null) {
+	public function get_grid_link(Photo $photo, array $short_code, Base $module): string {
 		if (!empty($photo->video) && in_array($module->provider, ['flickr', 'google'], true)) {
 			return $this->get_inline_video_grid_link($photo, $short_code, $module);
 		}

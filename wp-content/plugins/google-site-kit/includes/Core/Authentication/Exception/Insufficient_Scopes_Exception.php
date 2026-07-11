@@ -6,6 +6,8 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Core\Authentication\Exception;
@@ -39,10 +41,10 @@ class Insufficient_Scopes_Exception extends Exception implements WP_Errorable {
 	 *
 	 * @since 1.9.0
 	 *
-	 * @param string    $message  Optional. Exception message.
-	 * @param int       $code     Optional. Exception code.
-	 * @param Throwable $previous Optional. Previous exception used for chaining.
-	 * @param array     $scopes   Optional. Scopes that are missing.
+	 * @param string     $message  Optional. Exception message.
+	 * @param int        $code     Optional. Exception code.
+	 * @param \Throwable $previous Optional. Previous exception used for chaining.
+	 * @param array      $scopes   Optional. Scopes that are missing.
 	 */
 	public function __construct( $message = '', $code = 0, $previous = null, $scopes = array() ) {
 		parent::__construct( $message, $code, $previous );

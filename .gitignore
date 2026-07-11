@@ -1,26 +1,41 @@
-# WordPress
+# --- WordPress core and environment secrets ---
 wp-config.php
+wp-config-local.php
 .htaccess
 .DS_Store
 
-# Uploads y cache
+# --- Runtime/generated content (never deploy from git) ---
 wp-content/uploads/
 wp-content/cache/
 wp-content/backups-dup-lite/
 wp-content/upgrade/
 wp-content/upgrade-temp-backup/
 wp-content/wflogs/
+wp-content/ai1wm-backups/
+wp-content/debug.log
 
-# Logs
+# --- Logs ---
 *.log
-debug.log
 
-# Archivos temporales
+# --- Temporary/editor files ---
 *.bak
 *.tmp
 *.swp
 *~
 .wp-config.php.un~
 
-# Node modules (si los usas)
+# --- Dependency/build folders ---
 node_modules/
+vendor/
+
+# --- Archives and dumps ---
+*.zip
+*.tar
+*.tar.gz
+*.sql
+*.sql.gz
+
+# --- OS/IDE noise ---
+.idea/
+.vscode/
+Thumbs.db

@@ -25,7 +25,7 @@ if ( ! class_exists( 'Ocean_Extra_Social_Widget' ) ) {
 			$this->social_services_array = apply_filters( 'ocean_social_widget_profiles',
 				array(
 					'twitter' => array(
-						'name' => 'Twitter',
+						'name' => 'X',
 						'url'  => '',
 					),
 					'facebook' => array(
@@ -110,10 +110,6 @@ if ( ! class_exists( 'Ocean_Extra_Social_Widget' ) ) {
 					),
 					'line'       => array(
 						'name'      => 'Line',
-						'url'       => ''
-					),
-					'tripadvisor'       => array(
-						'name'      => 'Tripadvisor',
 						'url'       => ''
 					),
 					'medium'       => array(
@@ -345,7 +341,7 @@ if ( ! class_exists( 'Ocean_Extra_Social_Widget' ) ) {
 
 							echo '<li class="oceanwp-'. esc_attr( $key ) .'">';
 
-								echo '<a href="'. $link .'" aria-label="'. esc_attr( $name ) .'" '. wp_kses_post( $add_style ) . ' target="_'. esc_attr( $target ) .'" '. $link_rel .'>';
+								echo '<a href="'. esc_url( $link ) .'" aria-label="'. esc_attr( $name ) .'" '. wp_kses_post( $add_style ) . ' target="_'. esc_attr( $target ) .'" '. $link_rel .'>';
 
 									Ocean_Extra::oe_svg_icon( $icon );
 
@@ -539,6 +535,9 @@ if ( ! class_exists( 'Ocean_Extra_Social_Widget' ) ) {
 
 				// Loop through social services to display inputs.
 				foreach( $display_services as $key => $val ) {
+					if ( ! isset( $social_services_array[ $key ] ) ) {
+						continue;
+					}
 					$url  = ! empty( $display_services[$key]['url'] ) ? $display_services[$key]['url'] : null;
 					$name = ! empty( $social_services_array[$key]['name'] ) ? $social_services_array[$key]['name'] : null;
 					?>

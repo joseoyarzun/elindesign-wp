@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use WP_Rocket\Engine\License\API\User;
 
 /**
@@ -31,6 +35,16 @@ class UserFeedback_Results {
 				'methods'             => 'GET',
 				'callback'            => array( $this, 'get_results_summary' ),
 				'permission_callback' => array( $this, 'view_results_permission_check' ),
+				'args'                => array(
+					'orderby' => array(
+						'type'              => 'string',
+						'sanitize_callback' => array( $this, 'sanitize_orderby_param' ),
+					),
+					'order' => array(
+						'type'              => 'string',
+						'sanitize_callback' => array( $this, 'sanitize_order_param' ),
+					),
+				),
 			)
 		);
 
@@ -51,9 +65,23 @@ class UserFeedback_Results {
 				'methods'             => 'GET',
 				'callback'            => array( $this, 'get_survey_responses' ),
 				'permission_callback' => array( $this, 'view_results_permission_check' ),
+				'args'                => array(
+					'filter' => array(
+						'type'              => 'object',
+						'sanitize_callback' => array( $this, 'sanitize_filter_param' ),
+					),
+					'per_page' => array(
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
+					'page' => array(
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
+				),
 			)
 		);
-		
+
 		register_rest_route(
 			'userfeedback/v1',
 			'/surveys/(?P<id>\w+)/responses/trash',
@@ -65,7 +93,7 @@ class UserFeedback_Results {
 					'response_ids' => array(
 						'required'          => true,
 						'type'              => 'array',
-						'description'       => __('Survey response ids.', 'userfeedback'),
+						'description'       => __('Survey response ids.', 'userfeedback-lite'),
 						'sanitize_callback' => function($ids) {
 							return array_map('esc_attr', $ids);
 						},
@@ -74,7 +102,7 @@ class UserFeedback_Results {
 				)
 			)
 		);
-		
+
 		register_rest_route(
 			'userfeedback/v1',
 			'/surveys/(?P<id>\w+)/responses/restore',
@@ -86,7 +114,7 @@ class UserFeedback_Results {
 					'response_ids' => array(
 						'required'          => true,
 						'type'              => 'array',
-						'description'       => __('Survey response ids.', 'userfeedback'),
+						'description'       => __('Survey response ids.', 'userfeedback-lite'),
 						'sanitize_callback' => function($ids) {
 							return array_map('esc_attr', $ids);
 						},
@@ -95,7 +123,7 @@ class UserFeedback_Results {
 				)
 			)
 		);
-		
+
 		register_rest_route(
 			'userfeedback/v1',
 			'/surveys/(?P<id>\w+)/responses',
@@ -107,7 +135,7 @@ class UserFeedback_Results {
 					'response_ids' => array(
 						'required'          => true,
 						'type'              => 'array',
-						'description'       => __('Survey response ids.', 'userfeedback'),
+						'description'       => __('Survey response ids.', 'userfeedback-lite'),
 						'sanitize_callback' => function($ids) {
 							return array_map('esc_attr', $ids);
 						},
@@ -124,51 +152,93 @@ class UserFeedback_Results {
 	 * @param $survey_id
 	 * @return mixed|null
 	 */
-	public static function get_survey_results_data( $survey_id ) {
-
+	public static function get_survey_results_data( $survey_id, $from_date = '', $to_date = '' ) {
 		$start_date_7_days  = ( new DateTime() )->modify( '-7 days' );
 		$start_date_30_days = ( new DateTime() )->modify( '-30 days' );
 		$end_date           = new DateTime();
 
-		$survey = UserFeedback_Survey::where(
+		$survey_query = UserFeedback_Survey::where(
 			array(
-				'id' => $survey_id,
+				'id' => $survey_id
 			)
-		)->select( array( 'title', 'status', 'impressions', 'questions' ) )
-			->with_count_where(
-				'responses',
-				array(
+		)->select( array( 'title', 'status', 'impressions', 'questions', 'type' ) );
+
+		$survey = $survey_query->single();
+
+		if ( 'nps' === $survey->type ) {
+			$where_conditions = array( 'survey_id' => $survey_id );
+
+			// By default, nps will return last 30 days results including today
+			if ( empty( $from_date ) && empty( $to_date ) ) {
+				$today = new DateTime();
+				$todayFormatted = $today->format('Y-m-d');
+
+				$dateBefore30Days = new DateTime();
+				$dateBefore30Days->modify('-30 days');
+				$dateBefore30DaysFormatted = $dateBefore30Days->format('Y-m-d');
+
+				$from_date = $dateBefore30DaysFormatted;
+				$to_date = $todayFormatted;
+			}
+
+			if ( ! empty( $from_date ) ) {
+				$where_conditions[] = array(
+					'DATE(submitted_at)',
+					'>=',
+					$from_date,
+				);
+			}
+
+			if ( ! empty( $to_date ) ) {
+				$where_conditions[] = array(
+					'DATE(submitted_at)',
+					'<=',
+					$to_date,
+				);
+			}
+
+			$responses = UserFeedback_Response::where( $where_conditions )
+				->select( array( 'id', 'survey_id', 'answers', 'submitted_at', 'status' ) )
+				->get();
+
+			$survey->nps_overview = self::get_nps_survey_overview( $responses );
+			$survey->responses = $responses;
+		} else {
+			$survey = $survey_query->with_count_where(
+					'responses',
 					array(
-						'submitted_at',
-						'>=',
-						$start_date_7_days->format( 'Y-m-d' ),
+						array(
+							'submitted_at',
+							'>=',
+							$start_date_7_days->format( 'Y-m-d' ),
+						),
+						array(
+							'submitted_at',
+							'<=',
+							$end_date->format( 'Y-m-d' ),
+						),
 					),
+					'responses_count_7_days'
+				)
+				->with_count_where(
+					'responses',
 					array(
-						'submitted_at',
-						'<=',
-						$end_date->format( 'Y-m-d' ),
+						array(
+							'submitted_at',
+							'>=',
+							$start_date_30_days->format( 'Y-m-d' ),
+						),
+						array(
+							'submitted_at',
+							'<=',
+							$end_date->format( 'Y-m-d' ),
+						),
 					),
-				),
-				'responses_count_7_days'
-			)
-			->with_count_where(
-				'responses',
-				array(
-					array(
-						'submitted_at',
-						'>=',
-						$start_date_30_days->format( 'Y-m-d' ),
-					),
-					array(
-						'submitted_at',
-						'<=',
-						$end_date->format( 'Y-m-d' ),
-					),
-				),
-				'responses_count_30_days'
-			)
-			->with( array( 'responses' ) )
-			->single();
+					'responses_count_30_days'
+				)
+				->with( array( 'responses' ) )
+				->single();
+		}
 
 		if ( $survey === null ) {
 			return null;
@@ -179,7 +249,7 @@ class UserFeedback_Results {
 		$survey->responses_count = $total_responses;
 
 		// Survey question stats
-		$quantitative_question_types = array( 'radio-button', 'checkbox', 'nps', 'star-rating' );
+		$quantitative_question_types = array( 'radio-button', 'image-radio', 'icon-choice', 'checkbox', 'nps', 'star-rating' );
 		$question_stats              = array();
 
 		$questions = $survey->questions;
@@ -203,6 +273,8 @@ class UserFeedback_Results {
 			if ( $is_quantitative ) {
 				switch ( $type ) {
 					case 'radio-button':
+					case 'image-radio':
+					case 'icon-choice':
 					case 'checkbox':
 						$question_data['options'] = array_map(
 							function ( $option ) {
@@ -237,9 +309,9 @@ class UserFeedback_Results {
 						);
 						break;
 				}
-			} else {
-				$question_data['answers'] = array();
 			}
+
+			$question_data['answers'] = array();
 
 			foreach ( $responses as $response ) {
 				$question_answer_index = array_search( $id, array_column( $response->answers, 'question_id' ) );
@@ -260,7 +332,15 @@ class UserFeedback_Results {
 							$question_data['options'][ $option_index ]['count']++;
 						}
 					} else {
-						$option_index = array_search( $value, array_column( $question_data['options'], 'value' ) );
+						if ( in_array( $type, array( 'icon-choice', 'image-radio' ), true ) ) {
+							$question_options = array_map(function($option) {
+								return $option['value']->label;
+							}, $question_data['options']);
+						} else {
+							$question_options = array_column( $question_data['options'], 'value' );
+						}
+
+						$option_index = array_search( $value, $question_options );
 						$question_data['options'][ $option_index ]['count']++;
 					}
 				}
@@ -277,8 +357,53 @@ class UserFeedback_Results {
 		}
 
 		$survey->question_stats = $question_stats;
-
 		return $survey;
+	}
+
+	private static function get_nps_survey_overview( $responses = array() )
+	{
+		$totalCount = count($responses);
+
+		if ($totalCount > 0) {
+			$detractors = 0;
+			$passives = 0;
+			$promoters = 0;
+
+			foreach ($responses as $item) {
+				if (!isset($item->answers[0]->value)) {
+					continue;
+				}
+
+				$value = $item->answers[0]->value;
+
+				if ($value >= 1 && $value <= 6) {
+					$detractors++;
+				} elseif ($value >= 7 && $value <= 8) {
+					$passives++;
+				} elseif ($value >= 9 && $value <= 10) {
+					$promoters++;
+				}
+			}
+
+			// Calculate percentages and round to 2 decimal places
+			$detractorsPercentage = floor(($detractors / $totalCount) * 100);
+			$passivesPercentage = floor(($passives / $totalCount) * 100);
+			$promotersPercentage = floor(($promoters / $totalCount) * 100);
+
+			return array(
+				'detractor' => $detractorsPercentage,
+				'passive' => $passivesPercentage,
+				'promoter' => $promotersPercentage,
+				'nps' => floor($promotersPercentage - $detractorsPercentage),
+			);
+		}
+
+		return array(
+			'detractor' => 0,
+			'passive' => 0,
+			'promoter' => 0,
+			'nps' => 'N/A',
+		);
 	}
 
 	/**
@@ -289,8 +414,67 @@ class UserFeedback_Results {
 	public function view_results_permission_check() {
 		return current_user_can( 'userfeedback_view_results' );
 	}
-	
-	
+
+	/**
+	 * Sanitize filter parameter to prevent SQL injection
+	 *
+	 * @param mixed $filters The filter parameter value
+	 * @return array Sanitized filters with only allowed keys
+	 */
+	public function sanitize_filter_param( $filters ) {
+		if ( ! is_array( $filters ) ) {
+			return array();
+		}
+
+		$allowed_filters = array(
+			'status' => array( 'all', 'publish', 'draft', 'trash' ),
+		);
+		$sanitized       = array();
+
+		foreach ( $filters as $key => $value ) {
+			$sanitized_key = sanitize_key( $key );
+			if ( ! isset( $allowed_filters[ $sanitized_key ] ) ) {
+				continue;
+			}
+
+			$sanitized_value = strtolower( sanitize_text_field( $value ) );
+
+			if ( is_array( $allowed_filters[ $sanitized_key ] ) && ! in_array( $sanitized_value, $allowed_filters[ $sanitized_key ], true ) ) {
+				continue;
+			}
+
+			$sanitized[ $sanitized_key ] = $sanitized_value;
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Sanitize orderby parameter to prevent SQL injection
+	 *
+	 * @param string $orderby
+	 * @return string
+	 */
+	public function sanitize_orderby_param( $orderby ) {
+		// Allowed columns for survey queries
+		$allowed_orderby = array( 'id', 'title', 'status', 'type', 'impressions', 'publish_at', 'created_at' );
+
+		$orderby = sanitize_key( $orderby );
+
+		return in_array( $orderby, $allowed_orderby, true ) ? $orderby : 'created_at';
+	}
+
+	/**
+	 * Sanitize order parameter
+	 *
+	 * @param string $order
+	 * @return string
+	 */
+	public function sanitize_order_param( $order ) {
+		$order = strtolower( sanitize_key( $order ) );
+		return in_array( $order, array( 'asc', 'desc' ), true ) ? $order : 'desc';
+	}
+
 	/**
 	 * Validate response ids callback
 	 *
@@ -298,10 +482,12 @@ class UserFeedback_Results {
 	 */
 	public function validate_response_ids($ids) {
 		global $wpdb;
-		$table_name = (new UserFeedback_Response())->get_table();
-		$placeholders = array_fill(0, count($ids), '%d');
-		$query = $wpdb->prepare("SELECT * FROM $table_name WHERE id IN (" . implode(', ', $placeholders) . ")", $ids);
-		$result = $wpdb->get_results($query);
+		$table_name   = $wpdb->prefix . 'userfeedback_survey_responses';
+		$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is hardcoded safe prefix + known table name.
+		$query  = $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id IN ({$placeholders})", ...$ids );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared via $wpdb->prepare() above; direct query required for IN() validation.
+		$result = $wpdb->get_results( $query ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter
 		return count($result) === count($ids);
 	}
 
@@ -316,6 +502,11 @@ class UserFeedback_Results {
 		$start_date = $request->get_param( 'start_date' );
 		$end_date   = $request->get_param( 'end_date' );
 		$survey_id  = $request->get_param( 'survey_id' );
+		$orderby    = $request->get_param( 'orderby' );
+		$order      = $request->get_param( 'order' );
+
+		$orderby = empty( $orderby ) ? 'created_at' : $orderby;
+		$order   = empty( $order ) ? 'desc' : $order;
 
 		$start_date = $start_date ? new DateTime( $start_date ) : ( new DateTime() )->modify( '-7 days' )->setTime( 0, 0 );
 
@@ -393,10 +584,10 @@ class UserFeedback_Results {
 			)
 		);
 
-		$surveys_query->select( array( 'title', 'status', 'created_at' ) )
+		$surveys_query->select( array( 'title', 'type', 'status', 'created_at' ) )
 			->with_count( array( 'responses' ) )
 			->with_count_where( 'responses', $where_config, 'range_responses_count' )
-			->sort( 'id', 'desc' );
+			->sort( $orderby, $order );
 
 		return new WP_REST_Response(
 			array(
@@ -415,8 +606,10 @@ class UserFeedback_Results {
 	 */
 	public function get_survey_results( WP_REST_Request $request ) {
 		$survey_id = $request['id'];
+		$from_date = $request['from'];
+		$to_date = $request['to'];
 
-		$survey = self::get_survey_results_data( $survey_id );
+		$survey = self::get_survey_results_data( $survey_id, $from_date, $to_date );
 
 		if ( $survey === null ) {
 			return new WP_REST_Response( null, 404 );
@@ -441,63 +634,39 @@ class UserFeedback_Results {
 
 		$survey_id = $request->get_param( 'id' );
 
+		$filters = $request->get_param( 'filter' );
+		$filters = is_array( $filters ) ? $filters : array();
+		$where   = array( 'survey_id' => $survey_id );
+
+		// Apply status filter or default to excluding trash
+		if ( isset( $filters['status'] ) && 'all' !== $filters['status'] ) {
+			$where[] = array( 'status', '=', $filters['status'] );
+		} else {
+			$where[] = array( 'status', '!=', 'trash' );
+		}
+
+		// Apply any other allowed filters generically
+		foreach ( $filters as $key => $value ) {
+			if ( 'status' === $key ) {
+				continue;
+			}
+			$where[] = array( $key, '=', $value );
+		}
+
 		// Get responses
-		$query = UserFeedback_Response::where(
-			array(
-				'survey_id' => $survey_id,
-				array( 'status', '!=', 'trash' ), // Get only published and drafts by default
-			)
-		)
+		$query = UserFeedback_Response::where( $where )
 		->sort( 'id', 'desc' )
 		->paginate(
 			$request->get_param( 'per_page' ),
 			$request->get_param( 'page' )
 		);
 
-		if ( $request->has_param( 'filter' ) ) {
-			$filters = $request->get_param( 'filter' );
-			foreach ($filters as $attr => $value) {
-				if ($value === 'all') {
-					$query->add_where(
-						array(
-							'status'     => 'publish'
-						),
-						true
-					);
-					break;
-				}
-
-				if ( $attr === 'status' && $value === 'publish' ) {
-					$query->add_where(
-						array(
-							'status'     => 'publish'
-						),
-						true
-					);
-				} else {
-					$query->add_where(
-						array(
-							$attr => $value,
-						),
-						true
-					);
-				}
-
-			}
-		} else {
-			$query->add_where(
-				array(
-					'status'     => 'publish'
-				),
-				true
-			);
-		}
-
 		$responses = $query->get();
 
 		// Data for quick filters
 		$count_by_status_result = UserFeedback_Response::query()
 			->select( array( 'status', 'count' ) )
+			->where( array( 'survey_id' => $survey_id ) )
 			->group_by( 'status' )
 			->get();
 
@@ -525,8 +694,8 @@ class UserFeedback_Results {
 
 		return new WP_REST_Response( $responses );
 	}
-	
-	
+
+
 	/**
 	 * Trash responses
 	 *
@@ -552,7 +721,7 @@ class UserFeedback_Results {
 		$responses = UserFeedback_Response::restore($response_ids);
 		return new WP_REST_Response( $responses );
 	}
-	
+
 	/**
 	 * Delete responses by Id
 	 *

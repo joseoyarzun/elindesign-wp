@@ -165,7 +165,7 @@ class OMAPI_WooCommerce_Save {
 			} else {
 
 				// Get the shop hostname.
-				$site = OMAPI_Utils::parse_url( $url );
+				$site = wp_parse_url( $url );
 				$host = isset( $site['host'] ) ? $site['host'] : '';
 
 				// Set up the connected WooCommerce options.

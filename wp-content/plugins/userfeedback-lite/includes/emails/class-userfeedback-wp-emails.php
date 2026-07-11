@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Emails.
  *
@@ -342,7 +346,7 @@ class UserFeedback_WP_Emails {
 		do_action( 'userfeedback_email_body', $email_parts['body'] );
 
 		$body    = implode( $email_parts );
-		$message = $this->process_tag( $message, false );
+		$message = $this->process_tag( $message ?? '', false );
 		$message = nl2br( $message );
 		$message = str_replace( '{email}', $message, $body );
 		// $message = make_clickable( $message );
@@ -365,7 +369,7 @@ class UserFeedback_WP_Emails {
 	public function send( $to, $subject, $message = null, $attachments = array() ) {
 
 		if ( ! did_action( 'init' ) && ! did_action( 'admin_init' ) ) {
-			_doing_it_wrong( __FUNCTION__, esc_html__( 'You cannot send emails with MI_WP_Emails() until init/admin_init has been reached.', 'userfeedback' ), null );
+			_doing_it_wrong( __FUNCTION__, esc_html__( 'You cannot send emails with MI_WP_Emails() until init/admin_init has been reached.', 'userfeedback-lite' ), null );
 
 			return false;
 		}

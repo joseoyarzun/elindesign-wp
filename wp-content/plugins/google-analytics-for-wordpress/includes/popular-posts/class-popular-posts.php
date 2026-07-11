@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * This is the base class for the Popular Posts output functionality.
  * Each actual Popular Posts option extends this class (inline, widget, products).

@@ -21,7 +21,7 @@ trait SocialProfiles {
 	 */
 	private $baseUrls = [
 		'facebookPageUrl' => 'https://facebook.com/',
-		'twitterUrl'      => 'https://twitter.com/',
+		'twitterUrl'      => 'https://x.com/',
 		'instagramUrl'    => 'https://instagram.com/',
 		'tiktokUrl'       => 'https://tiktok.com/@',
 		'pinterestUrl'    => 'https://pinterest.com/',
@@ -31,7 +31,10 @@ trait SocialProfiles {
 		'yelpPageUrl'     => 'https://yelp.com/biz/',
 		'soundCloudUrl'   => 'https://soundcloud.com/',
 		'wikipediaUrl'    => 'https://en.wikipedia.org/wiki/',
-		'myspaceUrl'      => 'https://myspace.com/'
+		'myspaceUrl'      => 'https://myspace.com/',
+		'wordPressUrl'    => 'https://profiles.wordpress.org/',
+		'blueskyUrl'      => 'https://bsky.app/profile/',
+		'threadsUrl'      => 'https://threads.com/@',
 	];
 
 	/**
@@ -54,7 +57,10 @@ trait SocialProfiles {
 			'yelpPageUrl'     => aioseo()->options->social->profiles->urls->yelpPageUrl,
 			'soundCloudUrl'   => aioseo()->options->social->profiles->urls->soundCloudUrl,
 			'wikipediaUrl'    => aioseo()->options->social->profiles->urls->wikipediaUrl,
-			'myspaceUrl'      => aioseo()->options->social->profiles->urls->myspaceUrl
+			'myspaceUrl'      => aioseo()->options->social->profiles->urls->myspaceUrl,
+			'wordPressUrl'    => aioseo()->options->social->profiles->urls->wordPressUrl,
+			'blueskyUrl'      => aioseo()->options->social->profiles->urls->blueskyUrl,
+			'threadsUrl'      => aioseo()->options->social->profiles->urls->threadsUrl,
 		];
 
 		if ( aioseo()->options->social->profiles->sameUsername->enable ) {
@@ -71,7 +77,7 @@ trait SocialProfiles {
 		}
 
 		if ( aioseo()->options->social->profiles->additionalUrls ) {
-			$additionalUrls = preg_split( '/\n|\r|\r\n/', aioseo()->options->social->profiles->additionalUrls );
+			$additionalUrls = preg_split( '/\n|\r|\r\n/', (string) aioseo()->options->social->profiles->additionalUrls );
 			$socialProfiles = array_merge( $socialProfiles, $additionalUrls );
 		}
 
@@ -114,7 +120,7 @@ trait SocialProfiles {
 
 		$additionalUrls = get_user_meta( $userId, 'aioseo_profiles_additional_urls', true );
 		if ( $additionalUrls ) {
-			$additionalUrls = preg_split( '/\n|\r|\r\n/', $additionalUrls );
+			$additionalUrls = preg_split( '/\n|\r|\r\n/', (string) $additionalUrls );
 			foreach ( $additionalUrls as $additionalUrl ) {
 				// We need to set a random key because otherwise we'll override the ones from the organization.
 				$socialProfiles[ uniqid() ] = $additionalUrl;

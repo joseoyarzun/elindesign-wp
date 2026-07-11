@@ -49,7 +49,7 @@ export class PhotonicColorbox extends Lightbox {
 						maxWidth: '95%',
 						maxHeight: '95%',
 						photo: true,
-						title: $(this).data('title'),
+						title: Util.HTMLSanitizer.SanitizeHTML($(this).data('title')),
 						transition: Photonic_JS.cb_transition_effect,
 						speed: Photonic_JS.cb_transition_speed,
 						slideshow: Photonic_JS.slideshow_mode === '1',
@@ -76,7 +76,7 @@ export class PhotonicColorbox extends Lightbox {
 						maxWidth: '90%',
 						maxHeight: '90%',
 						inline: true,
-						title: $(this).data('title'),
+						title: Util.HTMLSanitizer.SanitizeHTML($(this).data('title')),
 						transition: Photonic_JS.cb_transition_effect,
 						speed: Photonic_JS.cb_transition_speed,
 						slideshow: Photonic_JS.slideshow_mode,
@@ -118,7 +118,7 @@ export class PhotonicColorbox extends Lightbox {
 				opacity: 0.8,
 				maxWidth: '95%',
 				maxHeight: '95%',
-				title: $(this).data('title'),
+				title: Util.HTMLSanitizer.SanitizeHTML($(this).data('title')),
 				iframe: true, innerWidth: 640, innerHeight: 390, scrolling: false
 			});
 
@@ -126,7 +126,7 @@ export class PhotonicColorbox extends Lightbox {
 				opacity: 0.8,
 				maxWidth: '95%',
 				maxHeight: '95%',
-				title: $(this).data('title'),
+				title: Util.HTMLSanitizer.SanitizeHTML($(this).data('title')),
 				inline: true, href: $(this).attr('href'),
 				scrolling: false,
 				onLoad: function () {

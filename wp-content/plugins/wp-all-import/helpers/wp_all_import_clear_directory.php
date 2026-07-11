@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! function_exists('wp_all_import_clear_directory') ){
 	function wp_all_import_clear_directory($path){
 		if (($dir = @opendir($path . '/')) !== false or ($dir = @opendir($path)) !== false) {				
@@ -8,8 +10,8 @@ if ( ! function_exists('wp_all_import_clear_directory') ){
 					wp_all_import_rmdir($filePath);
 				}
 				elseif( is_file($filePath) ){
-					@unlink($filePath);
-				}					
+					wp_delete_file($filePath);
+				}
 			}
 		}
 	}

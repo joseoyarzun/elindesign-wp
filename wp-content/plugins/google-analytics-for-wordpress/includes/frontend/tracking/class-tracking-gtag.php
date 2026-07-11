@@ -211,7 +211,7 @@ class MonsterInsights_Tracking_Gtag extends MonsterInsights_Tracking_Abstract {
 				$reason = __( 'Note: MonsterInsights is not currently configured on this site. The site owner needs to authenticate with Google Analytics in the MonsterInsights settings panel.', 'google-analytics-for-wordpress' );
 				$output .= '<!-- ' . esc_html( $reason ) . ' -->' . PHP_EOL;
 			} elseif ( current_user_can( 'monsterinsights_save_settings' ) ) {
-				$reason = __( 'Note: MonsterInsights does not track you as a logged-in site administrator to prevent site owners from accidentally skewing their own Google Analytics data.' . PHP_EOL . 'If you are testing Google Analytics code, please do so either logged out or in the private browsing/incognito mode of your web browser.', 'google-analytics-for-wordpress' );
+				$reason = __( 'Note: MonsterInsights does not track you as a logged-in site administrator to prevent site owners from accidentally skewing their own Google Analytics data. If you are testing Google Analytics code, please do so either logged out or in the private browsing/incognito mode of your web browser.', 'google-analytics-for-wordpress' );
 				$output .= '<!-- ' . esc_html( $reason ) . ' -->' . PHP_EOL;
 			} else {
 				$reason = __( 'Note: The site owner has disabled Google Analytics tracking for your user role.', 'google-analytics-for-wordpress' );

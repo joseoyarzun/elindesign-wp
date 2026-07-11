@@ -10,6 +10,10 @@
  * @author  Envira Team
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 ?>
 <p><?php esc_html_e( 'You can place this gallery anywhere into your posts, pages, custom post types or widgets by using one of the shortcode(s) below:', 'envira-gallery-lite' ); ?></p>
 <div class="envira-code">

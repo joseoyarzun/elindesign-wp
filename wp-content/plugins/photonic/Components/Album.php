@@ -10,15 +10,17 @@ class Album {
 
 	public $thumb_size;
 	public $tile_size;
+	public $thumbnail_id;
 
 	public $main_page;
 	public $gallery_url;
 
 	public $title;
+	public $description;
 	public $counter;
 
-	public $classes;
+	public $classes = [];
 	public $passworded;
 	public $realm_id;
-	public $data_attributes;
+	public $data_attributes = [];
 }

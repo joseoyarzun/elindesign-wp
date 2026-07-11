@@ -7,8 +7,8 @@ if (!current_user_can('edit_posts')) {
 }
 
 use Photonic_Plugin\Core\Photonic;
-use Photonic_Plugin\Modules\Google_Photos;
-use Photonic_Plugin\Modules\SmugMug;
+use Photonic_Plugin\Platforms\Google_Photos;
+use Photonic_Plugin\Platforms\SmugMug;
 use WP_Error;
 
 require_once 'Admin_Page.php';
@@ -38,21 +38,6 @@ class Helper extends Admin_Page {
 					<th class="photonic-helper-row-header"
 						scope="row"><?php esc_html_e('Find your Group ID', 'photonic'); ?></th>
 					<td class="photonic-helper-area"><?php $this->display_flickr_group_helper(); ?></td>
-				</tr>
-				</tbody>
-			</table>
-
-			<table class="photonic-helper">
-				<thead>
-				<tr>
-					<th class="photonic-helper-header" colspan="2">Google Photos</th>
-				</tr>
-				</thead>
-				<tbody>
-				<tr>
-					<th class="photonic-helper-row-header"
-						scope="row"><?php esc_html_e('Find your Album IDs', 'photonic'); ?></th>
-					<td class="photonic-helper-area"><?php $this->display_google_photos_album_helper(); ?></td>
 				</tr>
 				</tbody>
 			</table>
@@ -182,7 +167,7 @@ class Helper extends Admin_Page {
 						$smugmug_api_key = $photonic_options['smug_api_key'];
 						$user = sanitize_text_field($_POST['photonic-smugmug-user'] ?? '');
 						if (!empty($user)) {
-							require_once PHOTONIC_PATH . '/Modules/SmugMug.php';
+							require_once PHOTONIC_PATH . '/Platforms/SmugMug.php';
 							$module = SmugMug::get_instance();
 
 							global $photonic_smug_nesting_levels;
@@ -231,41 +216,6 @@ class Helper extends Admin_Page {
 								$this->get_wp_errors($response);
 							}
 						}
-						break;
-
-					case 'photonic-google-album-find':
-					case 'photonic-google-album-more':
-						$url = 'https://photoslibrary.googleapis.com/v1/albums';
-
-						global $photonic_google_refresh_token;
-						require_once PHOTONIC_PATH . '/Modules/Google_Photos.php';
-						$module = Google_Photos::get_instance();
-						$module->authenticate($photonic_google_refresh_token);
-						if (!empty($module->access_token)) {
-							$query_args = [
-								'access_token' => $module->access_token,
-								'pageSize'     => 50,
-							];
-							if (!empty($_POST['nextPageToken'])) {
-								$query_args['pageToken'] = sanitize_text_field($_POST['nextPageToken']);
-							}
-
-							$url = add_query_arg(
-								$query_args,
-								$url
-							);
-						}
-
-						$response = wp_remote_request($url, ['sslverify' => PHOTONIC_SSL_VERIFY]);
-						if (!is_wp_error($response) && 200 === $response['response']['code']) {
-							$response = $response['body'];
-							$this->process_google_response($response, !empty($_POST['nextPageToken']));
-						}
-						else {
-							echo esc_html__("Encountered error: ", 'photonic') . "<br/>";
-							$this->get_wp_errors($response);
-						}
-
 						break;
 
 					case 'photonic-zenfolio-categories-find':
@@ -355,7 +305,7 @@ class Helper extends Admin_Page {
 		}
 	}
 
-	private function process_smugmug_node($node) {
+	private function process_smugmug_node($node): string {
 		$ret = '';
 		if ('Folder' === $node->Type) {
 			$albums = [];

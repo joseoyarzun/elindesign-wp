@@ -49,6 +49,103 @@ body.wpallimport-plugin {
 
 }
 
+/*
+	New footer styles
+ */
+.wpallimport-plugin .wpallimport-cta-text-link {
+	display: flex;
+	justify-content: right;
+	align-content: center;
+	flex-wrap: wrap;
+	flex-direction: row;
+	font-size: 13px;
+}
+
+.wpallimport-plugin .wpallimport-cta-text-link a {
+	font-size: 13px;
+}
+
+.wpallimport-plugin .wpallimport-cta-text-link p {
+	font-size: 13px !important;
+}
+
+.wpallimport-plugin .wpallimport-text-link a {
+	font-size: 13px;
+	top: 28px;
+	position: relative;
+}
+
+.wpallimport-plugin .wpallimport-negative-margin .wpallimport-cta-text-link {
+	margin-top: -45px;
+}
+
+.wpallimport-plugin .wpallimport-negative-margin.sixty .wpallimport-cta-text-link {
+	margin-top: -60px;
+}
+
+.wpallimport-plugin .wpallimport-cta-text-link img {
+	padding-top: 14px;
+	padding-bottom: 10px;
+	padding-right: 5px;
+	height: 15px;
+}
+
+.wpallimport-plugin .wpallimport-footer {
+	display: flex;
+	justify-content: center;
+	flex-direction: column-reverse;
+}
+
+.wpallimport-plugin .wpallimport-negative-margin.sixty .wpallimport-footer {
+	margin-top: -60px;
+}
+
+.wpallimport-plugin .wpallimport-negative-margin.fifteen .wpallimport-footer {
+	margin-top: -15px;
+}
+
+.wpallimport-plugin .wpallimport-display-columns .wpallimport-footer div {
+	width: 33%;
+}
+
+.wpallimport-plugin .wpallimport-display-columns .wpallimport-footer{
+	flex-direction: row;
+}
+
+.wpallimport-plugin .wpallimport-display-columns .wpallimport-footer .wpallimport-soflyy {
+	margin-bottom: 15px;
+}
+
+.wpallimport-plugin .wpallimport-margin-top-forty .wpallimport-footer {
+	margin-top: 40px;
+}
+
+.wpallimport-plugin .wpallimport-cta-text-link-inline {
+	display: inline-flex;
+	top: 2px;
+
+}
+
+.wpallimport-plugin .wpallimport-cta-text-link-inline img {
+	height: 15px;
+	padding-left: 2px;
+	padding-right: 5px;
+	vertical-align: middle;
+}
+
+.wpallimport-plugin .wpallimport-cta-text-link-inline p {
+	margin: 0;
+	line-height: 1.7;
+}
+
+.wpallimport-plugin .show-created-by-only .wpallimport-cta-text-link{
+	display:none;
+}
+
+.wpallimport-plugin .show-created-by-only .wpallimport-text-link{
+	display:none;
+}
+
 .wpallimport-plugin .ui-datepicker {
 	/* Overwrite jQuery UI font family */
 	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
@@ -138,20 +235,31 @@ body.wpallimport-plugin {
 	text-decoration: none;
 }
 .wpallimport-plugin .wpallimport-large-button{
-	box-shadow: none;
-	vertical-align:bottom !important;
-	height: 40px;
-	line-height: 39px;
-	/*margin-left: 10px;*/
-	background: url('../img/ui_4.0/continue.png') no-repeat 93% 50% #425f9a;
-	border: none;
+	display: inline-block;
+	box-sizing: border-box;
+	box-shadow: none !important;
+	vertical-align: bottom !important;
+	min-height: 46px !important;
+	line-height: 3.14285714 !important;
+	padding: 0 36px !important;
+	background: url('../img/ui_4.0/continue.png') no-repeat 93% 50% #425f9a !important;
+	color: #fff !important;
+	border: none !important;
+	border-radius: 3px;
+	outline: none !important;
+	font-size: 14px !important;
+	font-weight: normal;
+	text-decoration: none;
+	cursor: pointer;
 }
 .wpallimport-plugin .wpallimport-large-button:hover,
 .wpallimport-plugin .wpallimport-large-button:active,
-.wpallimport-plugin .wpallimport-large-button:focus {
-	background: url('../img/ui_4.0/continue.png') no-repeat 93% 50% #425f9a;
-	border: none;
-	box-shadow: none;
+.wpallimport-plugin .wpallimport-large-button:focus{
+	background: url('../img/ui_4.0/continue.png') no-repeat 93% 50% #374f85 !important;
+	color: #fff !important;
+	border: none !important;
+	box-shadow: none !important;
+	outline: none !important;
 }
 
 /*@+ header */
@@ -165,6 +273,7 @@ body.wpallimport-plugin {
   float: left;
   margin-right: 8px;
 }
+
 .wpallimport-plugin .wpallimport-title > h2:before,
 .wpallimport-plugin .wpallimport-title > h3:before {
 	content: '';
@@ -174,33 +283,35 @@ body.wpallimport-plugin {
   height: 25px;
   display: block;
 }
-.wpallimport-plugin .wpallimport-title{
-	float: left;
+
+.wpallimport-plugin .wpallimport-title p{
+	font-size: 18px !important;
+	line-height: 16px;
+	color: #777;
+	margin-top: 0;
+	margin-bottom: 0;
 }
-	.wpallimport-plugin .wpallimport-title p{
-		font-size: 18px !important;
-		line-height: 16px;
-		color: #777;
-		margin-top: 0;
-		margin-bottom: 0;
-	}
-	.wpallimport-plugin .wpallimport-title h2,
-	.wpallimport-plugin .wpallimport-title h3{
-		font-size: 33px;
-		color: #425f9a;
-		font-weight: bold;
-		padding-top: 5px;
-		padding-right: 0;
-		margin-left: 2px;
-	}
+.wpallimport-plugin .wpallimport-title h2,
+.wpallimport-plugin .wpallimport-title h3{
+	font-size: 33px;
+	color: #425f9a;
+	font-weight: bold;
+	padding-top: 5px;
+	padding-right: 0;
+	margin-left: 2px;
+}
 .wpallimport-plugin .wpallimport-title h2,
 .wpallimport-plugin .wpallimport-title h3{
 	margin: 8px 0 !important;
 }
+
+.wpallimport-plugin .wpallimport-title{
+	float: left;
+}
 .wpallimport-plugin .wpallimport-links{
 	float: right;
 	margin-right: 3px;
-	margin-top: 33px;
+	margin-top: 10px;
 }
 .wpallimport-plugin .wpallimport-links a{
 	font-size: 12px;
@@ -423,8 +534,14 @@ body.wpallimport-plugin {
 		color: #777;
 	}
 
-.wpallimport-plugin div.input > label{
-	color: #000;
+.wpallimport-unique-key-wrapper {
+	padding-bottom: 1.5em;
+}
+.wpallimport-plugin div > label{
+	color: #3c434a;
+}
+.wpallimport-plugin div.input > label.disabled{
+	color: #777;
 }
 .wpallimport-plugin div.input.pmxi_checked > label{
 	color: #000;
@@ -443,11 +560,25 @@ body.wpallimport-plugin {
 	color: #40acad;
 	text-decoration: none;
 }
+.wpallimport-plugin .wpallimport-collapsed-content h4{
+	margin-top: 1.5em;
+	margin-bottom: 0.5em;
+}
 .wpallimport-plugin div.error,
 .wpallimport-plugin div.updated{
 	margin-top: 15px;
 }
 
+.wpallimport-plugin div.error.license-status,
+.wpallimport-plugin div.updated.license-status{
+	margin: 0 0 0 2px;
+	display: inline-block;
+	text-transform: capitalize;
+	padding: 2px 10px;
+	height: 18px;
+	vertical-align: 1px;
+	line-height: 17px;
+}
 .wpallimport-plugin .wp-pointer-content ul,
 .wpallimport-plugin .wpallimport-pointer-content ul{
 	list-style: disc inside none;
@@ -484,9 +615,8 @@ body.wpallimport-plugin {
 .wpallimport-plugin .options select{
 	border: 1px solid #ddd;
 	font-size: 12px;
-	/*height: 25px;*/
 	width: auto;
-	padding: 4px 25px 4px 6px;
+	padding: 4px 25px 4px 12px;
 	color: #000;
 }
 .wpallimport-plugin .wpallimport-template input[type="text"],
@@ -663,7 +793,6 @@ body.wpallimport-plugin {
 	gap: 12px;
 }
 
-
 .wpallimport-plugin .wpallimport-delete-posts-warning{
 	display: none;
 }
@@ -676,12 +805,6 @@ body.wpallimport-plugin {
 	color: #000 !important;
 	font-size: 1.3em !important;
 }
-p.upgrade_link {
-	margin-top: 0;
-}
-.wpallimport-plugin a.upgrade_link {
-	text-decoration: underline;
-}
 .wpallimport-plugin .auto-generate-template{
 	display: none;
 }
@@ -689,6 +812,11 @@ p.upgrade_link {
 	border: 1px solid #c7c7c7;
 	margin-top: 10px;
 }
+/*.wpallimport-plugin .CodeMirror-scroll {
+  height: auto;
+  overflow-y: hidden;
+  overflow-x: auto;
+}*/
 .wpallimport-plugin .wp_all_import_functions_preloader{
 	background: url("../img/preloader.gif") no-repeat scroll 0 0 rgba(0, 0, 0, 0);
 	margin-top: 6px;
@@ -775,44 +903,15 @@ p.upgrade_link {
 .wpallimport-plugin .wpallimport-dynamic-notice{
 	display: none;
 }
-.wpallimport-plugin .wpallimport-import-orders-notice{
-	display: none;
-}
-.wpallimport-plugin .wpallimport-step-4 .wpallimport-upgrade-notice{
-	background-color: #FFB8B8;
-	border: 1px solid #FF8383;
-	color: #000;
-	display: none;
-	line-height: 40px;
-	margin: 30px auto 0 -4px;
-	padding: 15px;
-	text-align: center;
-	width: 560px;
-}
-.wpallimport-plugin .wpallimport-choose-file .wpallimport-upgrade-notice{
-	background-color: #FFB8B8;
-	border: 1px solid #FF8383;
-	color: #000;
-	display: none;
-	line-height: 40px;
-	margin: 30px auto 0 29.8%;
-	padding: 15px;
-	text-align: center;
-	width: 650px;
-}
-.wpallimport-plugin .wpallimport-upgrade-notice p{
-	color: #000 !important;
-	font-size: 1.3em !important;
-	margin-bottom: 0;
-}
-.wpallimport-plugin .wpallimport-upgrade-notice .upgrade_link{
-	color: #000 !important;
-	font-size: 1.3em !important;
-	text-decoration: underline;
-}
-
 .wpallimport-plugin .taxonomy_to_import_wrapper{
 	display: none;
+	text-align: left;
+	margin-top: 20px;
+}
+.wpallimport-plugin .gravity_form_to_import_wrapper{
+	display: none;
+	text-align: left;
+	margin-top: 20px;
 }
 .wpallimport-plugin .wp_all_import_change_taxonomy_type{
 	display: table;
@@ -820,12 +919,7 @@ p.upgrade_link {
 .wpallimport-plugin .wp_all_import_change_taxonomy_type #taxonomy_to_import{
 	margin: 0;
 }
-.wpallimport-plugin .wp_all_import_change_taxonomy_type #taxonomy_to_import .dd-select{
-	padding: 5px 0;
-}
-.wpallimport-plugin .wp_all_import_change_taxonomy_type #taxonomy_to_import .dd-options li a{
-	padding: 5px;
-}
+
 .wpallimport-plugin .important-warning {
 	color: #b32d2e;
 	font-weight: bold;
@@ -838,65 +932,6 @@ p.upgrade_link {
 }
 .wpallimport-plugin .delete-missing-error-wrapper input[type="checkbox"] {
 	border: 1px solid red;
-}
-.wpai-shake {
-	-webkit-animation: wpai_shake 0.4s 1 linear;
-	-moz-animation: wpai_shake 0.4s 1 linear;
-	-o-animation: wpai_shake 0.4s 1 linear;
-}
-@-webkit-keyframes wpai_shake {
-	0% { -webkit-transform: translate(30px); }
-	20% { -webkit-transform: translate(-30px); }
-	40% { -webkit-transform: translate(15px); }
-	60% { -webkit-transform: translate(-15px); }
-	80% { -webkit-transform: translate(8px); }
-	100% { -webkit-transform: translate(0px); }
-}
-@-moz-keyframes wpai_shake {
-	0% { -moz-transform: translate(30px); }
-	20% { -moz-transform: translate(-30px); }
-	40% { -moz-transform: translate(15px); }
-	60% { -moz-transform: translate(-15px); }
-	80% { -moz-transform: translate(8px); }
-	100% { -moz-transform: translate(0px); }
-}
-@-o-keyframes wpai_shake {
-	0% { -o-transform: translate(30px); }
-	20% { -o-transform: translate(-30px); }
-	40% { -o-transform: translate(15px); }
-	60% { -o-transform: translate(-15px); }
-	80% { -o-transform: translate(8px); }
-	100% { -o-origin-transform: translate(0px); }
-}
-
-.wpai-shake-small {
-	-webkit-animation: wpai_shake_small 0.4s 1 linear;
-	-moz-animation: wpai_shake_small 0.4s 1 linear;
-	-o-animation: wpai_shake_small 0.4s 1 linear;
-}
-@-webkit-keyframes wpai_shake_small {
-	0% { -webkit-transform: translate(10px); }
-	20% { -webkit-transform: translate(-10px); }
-	40% { -webkit-transform: translate(5px); }
-	60% { -webkit-transform: translate(-5px); }
-	80% { -webkit-transform: translate(3px); }
-	100% { -webkit-transform: translate(0px); }
-}
-@-moz-keyframes wpai_shake_small {
-	0% { -moz-transform: translate(10px); }
-	20% { -moz-transform: translate(-10px); }
-	40% { -moz-transform: translate(5px); }
-	60% { -moz-transform: translate(-5px); }
-	80% { -moz-transform: translate(3px); }
-	100% { -moz-transform: translate(0px); }
-}
-@-o-keyframes wpai_shake_small {
-	0% { -o-transform: translate(10px); }
-	20% { -o-transform: translate(-10px); }
-	40% { -o-transform: translate(5px); }
-	60% { -o-transform: translate(-5px); }
-	80% { -o-transform: translate(3px); }
-	100% { -o-origin-transform: translate(0px); }
 }
 /*--------------------------------------------------------------------------
 *
@@ -1171,7 +1206,7 @@ p.upgrade_link {
 	width: 100%;
 }
 
-.wpallimport-plugin table.wpallimport-layout.wpallimport-step-1,
+.wpallimport-plugin table.wpallimport-step-1,
 .wpallimport-plugin .wpallimport-step-2,
 .wpallimport-plugin .wpallimport-step-3,
 .wpallimport-plugin .wpallimport-step-4,
@@ -1179,6 +1214,8 @@ p.upgrade_link {
 .wpallimport-plugin .wpallimport-step-6{
 	margin: 10px 0 0 0px;
 }
+
+
 	.wpallimport-plugin table.wpallimport-layout td {
 		vertical-align: top;
 		border: none;
@@ -1305,12 +1342,38 @@ p.upgrade_link {
 }
 .wpallimport-plugin input[type="radio"]{
 	margin-left: 4px;
+	margin-top: -3px;
 }
 
 .wpallimport-plugin .wpallimport-wrapper{
 	width: 1200px;
 }
-
+.wpallimport-plugin .wpallimport-step-4 .wpallimport-upgrade-notice,
+.wpallimport-plugin .wpallimport-choose-file .wpallimport-upgrade-notice {
+	background-color: #FFB8B8;
+	border: 1px solid #FF8383;
+	color: #000;
+	display: none;
+	line-height: 40px;
+	margin: 30px auto 0 0;
+	padding: 15px;
+	text-align: center;
+	width: 570px;
+}
+.wpallimport-plugin .wpallimport-upgrade-notice p{
+	color: #000 !important;
+	font-size: 1.3em !important;
+	margin-bottom: 0;
+}
+.wpallimport-plugin .wpallimport-upgrade-notice .upgrade_link{
+	color: #000 !important;
+	font-size: 1.3em !important;
+	text-decoration: underline;
+}
+.wpallimport-plugin .wpallimport-upgrade-notice .wpallimport-upgrade-links-container .upgrade_link,
+.wpallimport-plugin .wpallimport-free-edition-notice .wpallimport-upgrade-links-container .upgrade_link {
+    font-size: 1em !important;
+}
 /*--------------------------------------------------------------------------
 *
 *	Step 1 - choose file
@@ -1381,6 +1444,7 @@ p.upgrade_link {
 	-khtml-border-radius: 8px;
 	-webkit-border-radius: 8px;
 	border-radius: 8px;
+	margin-bottom: 30px;
 }
 .wpallimport-plugin #progressbar{
 	border: medium none;
@@ -1402,7 +1466,7 @@ p.upgrade_link {
 
 
 .wpallimport-plugin .wpallimport-import-types{
-	margin: 37px 0 10px;
+	margin: 37px 0 37px;
 	text-align: center;
 }
 	.wpallimport-plugin .wpallimport-import-types h2,
@@ -1426,16 +1490,19 @@ p.upgrade_link {
 	-khtml-border-radius: 4px;
 	-webkit-border-radius: 4px;
 	font-size: 20px;
-	display: inline-block;
-	height: 65px;
+	display: inline-flex;
+	height: 85px;
 	width: 350px;
 	text-decoration: none;
 	margin: 5px;
 	vertical-align: top;
-	padding-top: 10px;
+	padding: 40px 60px;
+	box-sizing: border-box;
+	text-align: left;
+	position: relative;
+	align-items: center;
 }
-	.wpallimport-plugin a.wpallimport-import-from.bind,
-	.wpallimport-plugin a.wpallimport-download-from {
+	.wpallimport-plugin a.wpallimport-import-from.bind{
 		color: #888;
 		border-color: #cfceca;
 	}
@@ -1444,55 +1511,120 @@ p.upgrade_link {
 		background: #46ba69;
 		border: 1px solid #3da55c;
 	}
-	.wpallimport-plugin a.wpallimport-import-from span{
+	.wpallimport-plugin a.wpallimport-import-from span.wpallimport-icon{
+		display: inline-block;
+		position: relative;
+		flex-shrink: 0;
+		margin-right: 20px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-text-content{
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+	.wpallimport-plugin a.wpallimport-import-from span.wpallimport-icon-label,
+	.wpallimport-plugin a.wpallimport-import-from span.wpallimport-helper-text{
+		display: block;
+	}
+	.wpallimport-drag-drop-area {
 		display: inline-block;
 		position: relative;
 	}
-	.wpallimport-plugin a.wpallimport-import-from.wpallimport-upload-type{
-		padding-top: 15px;
-		height: 60px;
+
+	/* Extend drag area to fullscreen when active, but keep it in normal flow */
+	.wpallimport-drag-drop-area.fullscreen-active::after {
+		content: '';
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		z-index: 999998;
+		background: transparent;
+		pointer-events: auto;
+	}
+
+	/* Fullscreen drag overlay - purely visual */
+	.wpallimport-fullscreen-drag-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		background: rgba(70, 186, 105, 0.1);
+		border: 3px dashed #46ba69;
+		z-index: 999999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	.wpallimport-fullscreen-drag-overlay .wpallimport-drag-message {
+		background: #46ba69;
+		color: white;
+		padding: 30px 50px;
+		border-radius: 12px;
+		font-size: 20px;
+		font-weight: bold;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+		text-align: center;
+		display: flex;
+		align-items: center;
+		gap: 15px;
+	}
+
+	.wpallimport-fullscreen-drag-overlay .wpallimport-drag-icon {
+		width: 40px;
+		height: 30px;
+		background: url('../img/ui_4.0/upload_sprite.png') 0 0 no-repeat;
+		display: inline-block;
+		flex-shrink: 0;
 	}
 	.wpallimport-plugin a.wpallimport-import-from.wpallimport-upload-type span.wpallimport-icon{
 		background: url('../img/ui_4.0/upload_sprite.png') 0 -30px no-repeat;
 		width: 40px;
 		height: 30px;
-		top: 6px;
-		left: -10px;
 	}
 	.wpallimport-plugin a.wpallimport-import-from.wpallimport-upload-type.selected span.wpallimport-icon{
 		background: url('../img/ui_4.0/upload_sprite.png') 0 0 no-repeat;
 		width: 40px;
 		height: 30px;
-		top: 6px;
-		left: -10px;
 	}
 	.wpallimport-plugin a.wpallimport-import-from.wpallimport-url-type span.wpallimport-icon{
 		background: url('../img/ui_4.0/url_sprite.png') 0 -34px no-repeat;
 		width: 40px;
 		height: 34px;
-		top:10px;
-		left: -10px;
 	}
 	.wpallimport-plugin a.wpallimport-import-from.wpallimport-url-type.selected span.wpallimport-icon{
 		background: url('../img/ui_4.0/url_sprite.png') 0 0 no-repeat;
 		width: 40px;
 		height: 34px;
-		top:10px;
-		left: -10px;
 	}
 	.wpallimport-plugin a.wpallimport-import-from.wpallimport-file-type span.wpallimport-icon{
 		background: url('../img/ui_4.0/file_sprite.png') 0 -34px no-repeat;
 		width: 32px;
 		height: 34px;
-		top:10px;
-		left: -10px;
 	}
 	.wpallimport-plugin a.wpallimport-import-from.wpallimport-file-type.selected span.wpallimport-icon{
 		background: url('../img/ui_4.0/file_sprite.png') 0 0 no-repeat;
 		width: 32px;
 		height: 34px;
-		top:10px;
-		left: -10px;
+	}
+	/* Helper text under button labels */
+	.wpallimport-plugin .wpallimport-helper-text {
+		font-size: 14px;
+		color: #999;
+		margin-top: 2px;
+		font-weight: normal;
+		line-height: 1.2;
+	}
+	.wpallimport-plugin a.wpallimport-import-from.selected .wpallimport-helper-text {
+		color: rgba(255, 255, 255, 0.8);
+	}
+	.wpallimport-plugin .wpallimport-icon-label {
+		line-height: 1.3;
+		font-size: 20px;
 	}
 
 .wpallimport-plugin .wpallimport-upload-resource-step-one,
@@ -1561,19 +1693,27 @@ p.upgrade_link {
 	-webkit-border-top-right-radius: 4px !important;
 }
 
-.wpallimport-plugin .wpallimport-choose-post-type{ padding-top: 40px; }
+.wpallimport-plugin .wpallimport-choose-post-type{ text-align:left; }
 .wpallimport-plugin .wpallimport-file-upload-result{ padding-top: 30px; overflow: hidden; }
-.wpallimport-plugin .wpallimport-upload-resource-step-one{ padding-bottom: 40px; }
-.wpallimport-plugin .wpallimport-upload-resource-step-two{ display: none; }
+.wpallimport-plugin .wpallimport-upload-resource-step-one{ padding-bottom: 52px; }
+.wpallimport-plugin .wpallimport-upload-resource-step-two{
+	display: none;
+	width: 600px;
+	margin: 0 auto;
+}
 .wpallimport-plugin .wpallimport-upload-resource-step-two h2{
-	text-align: center;
+	text-align: left;
 	color: #4db278;
 	padding: 0;
-	margin: 20px 0;
+	margin: 0 0 10px;
 }
-.wpallimport-plugin .dd-select{
-	border: 1px solid #ddd;
+
+.wpallimport-plugin .wp_all_import_change_gravity_form h2,
+.wpallimport-plugin .wp_all_import_change_taxonomy_type h2{
+	color: #4ab278;
+	margin-bottom: 10px;
 }
+
 .wpallimport-plugin #custom_type_selector,
 .wpallimport-plugin #file_selector,
 .wpallimport-plugin #taxonomy_to_import{
@@ -1584,85 +1724,18 @@ p.upgrade_link {
 .wpallimport-plugin .wpallimport-change-custom-type #custom_type_selector{
 	margin: 0;
 }
-.wpallimport-plugin .wpallimport-change-custom-type #custom_type_selector .dd-option{
-	padding: 10px 0 0 10px;
+.wpallimport-plugin .wpallimport-change-custom-type .select2-container{
+	margin-left: -5px;
 }
-.wpallimport-plugin .wpallimport-change-custom-type #custom_type_selector .dd-select{
-	padding: 5px 0 0;
-}
+
 .wpallimport-plugin #file_selector,
 .wpallimport-plugin #taxonomy_to_import{
 	margin-top: 30px;
 }
-.wpallimport-plugin #taxonomy_to_import .dd-options{
-	max-height: 300px;
-}
-.wpallimport-plugin #custom_type_selector .dd-options li,
-.wpallimport-plugin #file_selector .dd-options li,
-.wpallimport-plugin #taxonomy_to_import .dd-options li{
-	margin-bottom: 0;
-}
-.wpallimport-plugin #custom_type_selector .dd-options li .dd-option,
-.wpallimport-plugin #file_selector .dd-options li .dd-option,
-.wpallimport-plugin #taxonomy_to_import .dd-options li .dd-option{
-	font-size: 18px;
-	color: #555;
-	border: none;
-}
-/*.wpallimport-plugin #file_selector .dd-options li .dd-option{
-	font-size: 18px;
-	color: #ccc;
-	border: none;
-}*/
-	.wpallimport-plugin #custom_type_selector .dd-options li .dd-option:hover,
-	.wpallimport-plugin #custom_type_selector .dd-options li .dd-option-selected,
-	.wpallimport-plugin #file_selector .dd-options li .dd-option:hover,
-	.wpallimport-plugin #file_selector .dd-options li .dd-option-selected,
-	.wpallimport-plugin #taxonomy_to_import .dd-options li .dd-option:hover,
-	.wpallimport-plugin #taxonomy_to_import .dd-options li .dd-option-selected{
-		background: #eee;
-		color: #555;
-	}
-	/*.wpallimport-plugin #file_selector .dd-options li .dd-option:hover,
-	.wpallimport-plugin #file_selector .dd-options li .dd-option-selected{
-		background: #40acad;
-		color: #fff;
-	}*/
-.wpallimport-plugin #custom_type_selector .dd-select,
-.wpallimport-plugin #file_selector .dd-select,
-.wpallimport-plugin #taxonomy_to_import .dd-select{
-	background: #fff !important;
-	padding: 10px 0;
-	margin-left: -5px;
-}
-.wpallimport-plugin #custom_type_selector .dd-selected,
-.wpallimport-plugin #file_selector .dd-selected,
-.wpallimport-plugin #taxonomy_to_import .dd-selected{
-	color: #000;
-	font-weight: normal;
-	font-size: 18px;
-	padding: 0;
-	padding: 0 10px;
-	line-height: 24px;
-}
-.wpallimport-plugin .change_file #file_selector .dd-select,
-.wpallimport-plugin .change_file #taxonomy_to_import .dd-select{
-	padding: 5px 0 0;
-}
-	.wpallimport-plugin .change_file #file_selector .dd-options .dd-option,
-	.wpallimport-plugin .change_file #taxonomy_to_import .dd-options .dd-option{
-		padding: 0 10px;
-	}
-.wpallimport-plugin .dd-options{
-	left: -5px;
-}
-.wpallimport-plugin #custom_type_selector .dd-selected .dd-selected-image{
-	margin-left: 10px;
-}
-.wpallimport-plugin #custom_type_selector .dd-options .dd-option .dd-option-text{
-	position: relative;
-	top: -2px;
-}
+
+
+
+
 .wpallimport-plugin .wpallimport-import-to{
 	background: none repeat scroll 0 0 #f6f5f1;
 	border: 1px solid #ddd;
@@ -1771,85 +1844,8 @@ p.upgrade_link {
 	position: absolute;
 	top: 33px;
 }
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon:before {
-    font-family: "dashicons";
-	font-size: 24px;
-	float: left;
-	margin: 2px 5px 2px 2px;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-post:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-post:before{
-	font-family: "dashicons";
-	content: "\f109";
-	color: #555;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-page:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-page:before{
-	font-family: "dashicons";
-	content: "\f105";
-	color: #555;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-product:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-product:before{
-	font-family: "WooCommerce";
-	content: "\e006";
-	color: #555;
-	margin-top: 0;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-shop_coupon:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-shop_coupon:before,
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-shop_order:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-shop_order:before,
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-shop_customer:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-shop_customer:before{
-	font-family: "WooCommerce";
-	content: "\e03d";
-	color: #555;
-	margin-top: 2px;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-cpt:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-cpt:before{
-	font-family: "dashicons";
-	content: "\f111";
-	color: #555;
-	margin-top: 0;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-import_users:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-import_users:before{
-	font-family: "dashicons";
-	content: "\f110";
-	color: #555;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-comments:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-comments:before{
-	font-family: "dashicons";
-	content: "\f101";
-	color: #555;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-woo_reviews:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-woo_reviews:before{
-	font-family: "dashicons";
-	content: "\f155";
-	color: #555;
-}
-.wpallimport-plugin #custom_type_selector .dd-option .dashicon-taxonomies:before,
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon-taxonomies:before{
-	font-family: "dashicons";
-	content: "\f318";
-	color: #555;
-}
-.wpallimport-plugin #custom_type_selector .dd-option:hover .dashicon:before,
-.wpallimport-plugin #custom_type_selector .dd-option-selected .dashicon:before{
-	color: #555;
-}
-.wpallimport-plugin #custom_type_selector .dd-selected .dashicon:before{
-	color:#46ba69;
-	line-height: 24px;
-}
-.wpallimport-plugin .wpallimport-download-resource-step-two {
-	padding: 0 55px;
-}
+
+
 .wpallimport-plugin input[name=url],
 .wpallimport-plugin .wpallimport-download-resource-step-two-ftp input{
 	font-size: 18px !important;
@@ -2008,6 +2004,10 @@ p.upgrade_link {
 }
 .wpallimport-plugin .wpallimport-uploaded-file-name{
 	color: #333;
+}
+
+.wpallimport-plugin .wpallimport-choose-import-direction{
+	text-align: center;
 }
 .wpallimport-plugin .wpallimport-choose-import-direction[rel="new"]{
 	margin-left: -13%;
@@ -2203,6 +2203,7 @@ p.upgrade_link {
 	word-wrap: break-word;
 	vertical-align: top;
 	max-width: 20vw;
+	padding-right: 15px;
 }
 .wpallimport-plugin .filtering_rules .drag-element .condition{
 	display: inline-block;
@@ -2403,15 +2404,7 @@ p.upgrade_link {
 .wpallimport-plugin form.wpallimport-template.edit {
 	/*width: 700px;*/
 }
-.wpallimport-plugin form.wpallimport-template .load-template {
-	display: block;
-	font-size: 12px;
-}
-.wpallimport-plugin form.wpallimport-template .load-template select {
-	width: auto;
-	height: 40px;
-	padding: 4px 25px 4px 6px;
-}
+
 .wpallimport-plugin #poststuff{
 	min-width: 200px;
 }
@@ -2806,11 +2799,11 @@ p.upgrade_link {
 .wpallimport-plugin .ui-menu-item a{
 	text-decoration: none;
 	color: #777;
-
 	font-size: 12px;
 
 	/* Overwrite jQuery UI font family */
 	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+
 }
 .wpallimport-plugin .ui-menu-item a.ui-state-focus,
 .wpallimport-plugin .ui-menu-item a.ui-state-active{
@@ -2888,14 +2881,30 @@ p.upgrade_link {
 	border-radius: 0px;
 	border: 0px;
 }
-.wpallimport-plugin .wpallimport-not-empty{
-	/*display: block;
-	padding: 5px;*/
+.wpallimport-plugin .comments-import-fields {
+	width: 100%;
+	margin-top: 0;
 }
-.wpallimport-plugin .ui-datepicker-trigger {
-	position: relative;
-	top: -2px;
-	right: 30px;
+
+.wpallimport-plugin .comments-import-fields input[type="text"],
+.wpallimport-plugin .comments-import-fields select {
+	height: 40px;
+}
+.wpallimport-plugin .comments-import-fields select {
+	font-size: 15px !important;
+}
+.wpallimport-plugin .comments-import-fields textarea {
+	font-size: 14px !important;
+	padding: 6px !important;
+}
+.wpallimport-plugin .comments-import-fields .datepicker {
+	width: 300px;
+}
+.wpallimport-plugin .comments-import-fields .input {
+	margin-bottom: 10px;
+}
+.wpallimport-plugin .comments-import-fields .input .input {
+	margin-bottom: 0px;
 }
 .wpallimport-plugin .load-template-container {
     display: flex;
@@ -2904,6 +2913,7 @@ p.upgrade_link {
 .wpallimport-plugin form.wpallimport-template .load-template select {
     width: auto;
     padding: 4px 25px 4px 12px;
+
     /*
      * Overwrite previous !important rule required for the rest of the pulldowns
      */
@@ -2911,11 +2921,11 @@ p.upgrade_link {
     height: 34px;
     background-size: 14px 14px;
 }
-/*--------------------------------------------------------------------------
-*
-*	Step 4 - Import Options
-*
-*-------------------------------------------------------------------------*/
+	/*--------------------------------------------------------------------------
+    *
+    *	Step 4 - Import Options
+    *
+    *-------------------------------------------------------------------------*/
 
 .wpallimport-plugin .options .tag{
 	margin-top: 0px;
@@ -2991,13 +3001,86 @@ p.upgrade_link {
 	overflow: hidden;
 }
 .wpallimport-plugin form.edit{
-	overflow: hidden;
+	/* overflow: hidden; */
 }
 .wpallimport-plugin .switcher-target-is_keep_former_posts{
 	padding-left: 25px;
 }
+
+/* Matching method sub-fields alignment */
+.wpallimport-plugin .switcher-target-duplicate_indicator_custom_field {
+	margin-left: 28px;
+	padding: 5px 0 5px 0;
+	position: relative;
+	display: block;
+}
+
+.wpallimport-plugin .switcher-target-duplicate_indicator_pid {
+	margin-left: 20px;
+	padding: 5px 0 5px 0;
+	position: relative;
+	display: block;
+}
+
+.wpallimport-plugin .switcher-target-duplicate_indicator_custom_field input[type="text"],
+.wpallimport-plugin .switcher-target-duplicate_indicator_pid input[type="text"] {
+	margin-left: 8px;
+	margin-right: 8px;
+}
+
+/* Wizard type matching description text */
+.wpallimport-plugin .wpallimport-wizard-type-description {
+	margin: 0;
+	color: #40acad;
+	font-size: 13px;
+}
+
+/* Wizard type matching options container */
+.wpallimport-plugin .wpallimport-wizard-type-options {
+	margin-top: 10px;
+	margin-left: -4px;
+}
+
+/* Remove left margin for wizard type radio inputs */
+.wpallimport-plugin input[type="radio"]#wizard_type_new,
+.wpallimport-plugin input[type="radio"]#wizard_type_matching {
+	margin-left: 0;
+}
+
+/* Remove left margin for delete missing section radio inputs */
+.wpallimport-plugin .switcher-target-is_delete_missing input[type="radio"] {
+	margin-left: 0;
+}
 .wpallimport-plugin .wpallimport-change-custom-type{
 	margin-left: 6px;
+}
+
+.wpallimport-plugin .wpai-warning-check > .ui-widget-header > button.ui-button {
+    display: none;
+}
+
+.wpallimport-plugin .wpai-warning-check button.wpai-warning-cancel-button,
+.wpallimport-plugin .wpai-warning-check button.wpai-warning-cancel-button:hover,
+.wpallimport-plugin .wpai-warning-check button.wpai-warning-cancel-button:active {
+    background: #e4e6e6;
+    padding: 8px 16px;
+    color: #777;
+    border: none;
+    font-weight: 400;
+}
+
+.wpallimport-plugin .wpai-warning-check button.wpai-warning-confirm-button,
+.wpallimport-plugin .wpai-warning-check button.wpai-warning-confirm-button:hover,
+.wpallimport-plugin .wpai-warning-check button.wpai-warning-confirm-button:active {
+    background: #425f9a;
+    padding: 8px 16px;
+    color: #fff;
+    border: none;
+    font-weight: 400;
+}
+
+.wpallimport-plugin .wpai-warning-check .confirm-error {
+    border-color: red;
 }
 
 /*--------------------------------------------------------------------------
@@ -3023,20 +3106,29 @@ p.upgrade_link {
 	padding-top: 10px;
 }
 	.wpallimport-plugin .wpallimport-step-5 .wpallimport-section .wpallimport-collapsed-content p{
-	    margin:  1.4em 0;
+	  margin:  1.4em 0;
 	}
 
 .wpallimport-plugin .wpallimport-step-5 .wpallimport-section .wpallimport-collapsed-content p:before {
 	content: '';
 	width: 24px;
 	background: url(../img/s-check.png) no-repeat;
-  background-size: auto;
-	background-size: auto;
 	background-size: 24px;
 	height: 24px;
 	margin-right: 10px;
 	vertical-align: -42%;
 	display: inline-block;
+}
+
+.wpallimport-plugin p.exclamation:before {
+	content: '';
+	width: 24px;
+	height: 24px;
+	margin-right: 10px;
+	vertical-align: -42%;
+	display: inline-block;
+	background: url(../img/ui_4.0/exclamation.png) no-repeat !important;
+	background-size: 23px !important;
 }
 
 .wpallimport-plugin form.confirm{
@@ -3097,6 +3189,9 @@ p.upgrade_link {
 	float: left;
 	margin: 12px 40px 12px 0px;
 }
+.wpallimport-plugin .unable-to-connect {
+	color: #f2b03d;
+}
 /*--------------------------------------------------------------------------
 *
 *	Step 6 - Processing
@@ -3125,27 +3220,26 @@ p.upgrade_link {
 	position: relative;
 	overflow: hidden;
 }
-	.wpallimport-plugin #processbar div{
-		background: #76d771;
-		height: 70px;
-		width: 0%;
-		border-radius: 0;
-		-moz-border-radius: 0;
-		-khtml-border-radius: 0;
-		-webkit-border-radius: 0;
-		position: absolute;
-		top:0;
-	}
+.wpallimport-plugin #processbar div{
+	background: #76d771;
+	height: 70px;
+	width: 0%;
+	border-radius: 0;
+	-moz-border-radius: 0;
+	-khtml-border-radius: 0;
+	-webkit-border-radius: 0;
+	position: absolute;
+	top:0;
+}
 .wpallimport-plugin .progress_processed {
-	margin-top:20px;
 	margin-bottom: 20px;
-
+	text-align: right;
 }
 .wpallimport-plugin .progress_details {
-
+	text-align: right;
 }
 .wpallimport-plugin .progress_details .progress_details_item {
-	margin-left: 0;
+	margin-left: 10px;
 }
 .wpallimport-plugin #import_progress{
 	color: #000000;
@@ -3166,7 +3260,7 @@ p.upgrade_link {
 		font-size: 60px;
 	}
 .wpallimport-plugin #right_progress{
-	text-align:center;
+	position: absolute;
 	right: 0;
 	color:#777;
 }
@@ -3174,7 +3268,7 @@ p.upgrade_link {
 		color:#000;
 	}
 .wpallimport-plugin #left_progress{
-	text-align:center;
+	position: absolute;
 	left: 0;
 	color: #777;
 }
@@ -3196,6 +3290,10 @@ p.upgrade_link {
 	}
 	.wpallimport-plugin #import_finished #download_log{
 		background: url('../img/ui_4.0/view_log.png') no-repeat 2px 0px;
+		padding-left: 25px;
+	}
+	.wpallimport-plugin #import_finished #re_run_import{
+		background: url('../img/ui_4.0/import_history.png') no-repeat 2px 0px;
 		padding-left: 25px;
 	}
 	.wpallimport-plugin #import_finished #import_history{
@@ -3323,12 +3421,11 @@ p.upgrade_link {
 
 /*@+ XML representation */
 .wpallimport-plugin .tag {
-	position: fixed;
-	max-width: 450px;
+	position: relative;
 	padding-bottom: 20px;
 	margin-right: 15px;
 	margin-top: 10px;
-	width: 22%;
+	width: 100%;
 }
 .wpallimport-plugin #wp-content-editor-tools{
 	background: #fff !important;
@@ -3351,7 +3448,7 @@ p.upgrade_link {
 }
 .wpallimport-plugin .tag .wpallimport-xml {
 	/*max-height: 525px;*/
-	max-width: 450px;
+	/*max-width: 450px;*/
 	overflow: auto;
 	border: 1px solid #ddd;
 	border-top:none;
@@ -3402,6 +3499,12 @@ p.upgrade_link {
   	.wpallimport-plugin .tag .wpallimport-xml {
   		/*max-height: 400px;*/
   	}
+}
+
+@media screen and (min-width: 783px) {
+	.wpallimport-plugin input[type="checkbox"] {
+		max-width: 1rem;
+	}
 }
 
 .wpallimport-plugin .wpallimport-xml {
@@ -3623,11 +3726,6 @@ p.upgrade_link {
 	padding: 10px;
 }
 
-.wpallimport-plugin .scheduling-disabled {
-    color: #555;
-    text-decoration: none;
-    cursor: default;
-}
 /*--------------------------------------------------------------------------
 *
 *	Setting Page
@@ -3746,30 +3844,15 @@ p.upgrade_link {
 	border-color: #0071a1;
 	color: #fff;
 }
+
 .wpallimport-plugin .wp_all_import_saving_status {
 	padding: 10px;
 	display: block;
 }
-/*--------------------------------------------------------------------------
-*
-*	RTL
-*
-*-------------------------------------------------------------------------*/
-
-body.rtl.wpallimport-plugin .wpallimport-collapsed .wpallimport-collapsed-header
-{
-	padding-left: 0;
-	padding-right: 60px;
-}
-body.rtl.wpallimport-plugin .show_hints
-{
-	right: auto;
-	left: -1px;
-}
 
 .wpallimport-plugin .settings .submit-buttons {
-    margin-top: 30px;
-    margin-bottom: 30px;
+	margin-top: 30px;
+	margin-bottom: 30px;
 }
 .delete-missing-helper-texts {
 	padding: 5px;
@@ -3783,6 +3866,22 @@ body.rtl.wpallimport-plugin .show_hints
 }
 .wpallimport-plugin .delete-missing-confirmation-modal {
 	display: none;
+}
+	/*--------------------------------------------------------------------------
+    *
+    *	RTL
+    *
+    *-------------------------------------------------------------------------*/
+
+body.rtl.wpallimport-plugin .wpallimport-collapsed .wpallimport-collapsed-header
+{
+	padding-left: 0;
+	padding-right: 60px;
+}
+body.rtl.wpallimport-plugin .show_hints
+{
+	right: auto;
+	left: -1px;
 }
 /*--------------------------------------------------------------------------
 *
@@ -3822,6 +3921,7 @@ body.rtl.wpallimport-plugin .show_hints
 	}
 	.wpallimport-plugin a.wpallimport-import-from{
 		width: 340px;
+		padding: 40px 40px;
 	}
 	.wpallimport-plugin .change_file a.wpallimport-import-from{
 		width: 220px;
@@ -3838,8 +3938,8 @@ body.rtl.wpallimport-plugin .show_hints
 		width: 36%;
 	}
 	.wpallimport-plugin .wpallimport-choose-file .wpallimport-upgrade-notice{
-		margin: 30px auto 0 28.4%;
-		width: 650px;
+		margin: 30px auto 0 0;
+		width: 570px;
 	}
 	.wpallimport-plugin .wpallimport-extra-text-right{
 		width: 37%;
@@ -3861,6 +3961,7 @@ body.rtl.wpallimport-plugin .show_hints
 	}
 	.wpallimport-plugin a.wpallimport-import-from{
 		width: 300px;
+		padding: 40px 30px;
 	}
 	.wpallimport-plugin .wpallimport-ready-to-go h4{
 		font-size: 18px;
@@ -3883,8 +3984,8 @@ body.rtl.wpallimport-plugin .show_hints
 		width: 35%;
 	}
 	.wpallimport-plugin .wpallimport-choose-file .wpallimport-upgrade-notice{
-		margin: 30px auto 0 26.7%;
-		width: 666px;
+		margin: 30px auto 0 0;
+		width: 570px;
 	}
 	.wpallimport-plugin .wpallimport-extra-text-right{
 		width: 35%;
@@ -3925,6 +4026,17 @@ body.rtl.wpallimport-plugin .show_hints
 	}
 	.wpallimport-plugin a.wpallimport-import-from{
 		width: 260px;
+		padding: 30px 15px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-icon-label {
+		font-size: 19px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-helper-text {
+		font-size: 13px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-icon {
+		transform: scale(0.85);
+		margin-right: 5px;
 	}
 	.wpallimport-plugin .wpallimport-upload-type-container{
 		padding: 0 40px;
@@ -3965,8 +4077,8 @@ body.rtl.wpallimport-plugin .show_hints
 		width: 33%;
 	}
 	.wpallimport-plugin .wpallimport-choose-file .wpallimport-upgrade-notice{
-		margin: 30px auto 0 24.7%;
-		width: 625px;
+		margin: 30px auto 0 0;
+		width: 570px;
 	}
 	.wpallimport-plugin .wpallimport-extra-text-right{
 		width: 34%;
@@ -3998,6 +4110,17 @@ body.rtl.wpallimport-plugin .show_hints
 	.wpallimport-plugin a.wpallimport-import-from{
 		width: 230px;
 		font-size: 15px;
+		padding: 25px 15px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-icon-label {
+		font-size: 17px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-helper-text {
+		font-size: 12px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-icon {
+		transform: scale(0.8);
+		margin-right: 3px;
 	}
 	.wpallimport-plugin .wpallimport-upload-type-container{
 		padding: 0 40px;
@@ -4044,8 +4167,8 @@ body.rtl.wpallimport-plugin .show_hints
 		width: 30%;
 	}
 	.wpallimport-plugin .wpallimport-choose-file .wpallimport-upgrade-notice{
-		margin: 30px auto 0 22.7%;
-		width: 553px;
+		margin: 30px auto 0 0;
+		width: 570px;
 	}
 	.wpallimport-plugin .wpallimport-extra-text-right{
 		width: 31%;
@@ -4085,6 +4208,17 @@ body.rtl.wpallimport-plugin .show_hints
 	.wpallimport-plugin a.wpallimport-import-from{
 		width: 220px;
 		font-size: 15px;
+		padding: 20px 10px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-icon-label {
+		font-size: 16px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-helper-text {
+		font-size: 11px;
+	}
+	.wpallimport-plugin a.wpallimport-import-from .wpallimport-icon {
+		transform: scale(0.75);
+		margin-right: 2px;
 	}
 	.wpallimport-plugin .wpallimport-upload-type-container{
 		padding: 0 40px;
@@ -4147,8 +4281,8 @@ body.rtl.wpallimport-plugin .show_hints
 		width: 29%;
 	}
 	.wpallimport-plugin .wpallimport-choose-file .wpallimport-upgrade-notice{
-		margin: 30px auto 0 22%;
-		width: 530px;
+		margin: 30px auto 0 0;
+		width: 570px;
 	}
 	.wpallimport-plugin .wpallimport-extra-text-right{
 		width: 30%;
@@ -4184,187 +4318,181 @@ body.rtl.wpallimport-plugin .show_hints
 		font-size: 16px;
 	}*/
 }
-
-@media screen and (min-width: 783px) {
-	.wpallimport-plugin input[type="checkbox"]{
-		max-width: 1rem;
-	}
+.wpallimport-plugin .custom-error-notice{
+	background-color: #fff;
+	border: 1px solid #c3c4c7;
+	border-left: 4px solid #d63638;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+	color: #3c434a;
+	font-size: 13px;
+	line-height: 1.4em;
+	padding: 12px;
+	margin: 15px 0px 15px 0px;
+	display: inline-block;
+	width: -webkit-fill-available;
 }
 
+.wpallimport-plugin .cross-sale-notice.codebox{
+	background-color: #122031;
+	color: #fff;
+	padding:20px;
+	font-family: 'Inter';
+	display:none;
+}
 
-/* 
-	CTA for FB Group
- */
-#wpallimport-cta-link{
-
-	line-height: 1.75;
-	word-wrap: break-word;
-	box-sizing: border-box;
-	touch-action: manipulation;
+.wpallimport-plugin .cross-sale-notice.codebox .codebox-inner{
 	display: flex;
-	flex-wrap: wrap;
-	text-align: center;
-	text-decoration: none;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	font-weight: 600;
-	background-color: #00b3b6;
-	padding-top: 6px;
-	padding-bottom: 6px;
-	border-radius: 5px;
-	transition-duration: 0.2s;
-	transition-timing-function: ease;
-	transition-property: all;
-	color: #ffffff;
-	font-size: 17px;
-	padding-right: 15px;
-	padding-left: 15px;
-	margin: 0 auto;
-	width:100%;
+	position:relative;
 }
 
-#wpallimport-cta-text{
-
-	font-weight: 400;
-	color: #02182b;
-	word-wrap: break-word;
-	box-sizing: inherit;
-
-	line-height: 1.25;
-	font-size: 14px;
-	padding-bottom: 30px;
-	margin: 0 auto;
-}
-
-#wpallimport-cta-headline{
-
-	word-wrap: break-word;
-	box-sizing: inherit;
-	font-weight: 700;
-	color: #02182b;
-	line-height: 1.3em;
-	font-size: 16px;
-
-	padding-bottom: 20px;
-	margin: 0 auto;
-}
-
-#wpallimport-cta-div{
-
-	line-height: 1.75;
-	font-size: 16px;
-	font-weight: 400;
-	color: #02182b;
-	word-wrap: break-word;
-	box-sizing: inherit;
-	display: flex;
-	flex-wrap: nowrap;
-	flex-direction: column;
-	align-items: flex-start;
-	background-color: #f9fafc;
-	padding-top: 20px;
-	padding-left: 20px;
+.wpallimport-plugin .cross-sale-notice.codebox .codebox-inner .codebox-left{
+	flex: 1; 
 	padding-right: 20px;
-	padding-bottom: 20px;
-
-	margin-top:10px;
-
+	min-width: 310px;
 }
 
-/*
-	New footer styles
- */
-.wpallimport-plugin .wpallimport-cta-text-link {
+.wpallimport-plugin .cross-sale-notice.codebox .codebox-inner .codebox-right{
+	flex: 1;
+	padding-left: 20px;
+	border-left: 1px solid #ddd;
 	display: flex;
-	justify-content: right;
-	align-content: center;
-	flex-wrap: wrap;
-	flex-direction: row;
-	font-size: 13px;
+	flex-direction: column;
+	padding-top: 42px;
+	
 }
 
-.wpallimport-plugin .wpallimport-cta-text-link a {
-	font-size: 13px;
+.wpallimport-plugin .cross-sale-notice.codebox .codebox-inner .codebox-image-container{
+	display: flex;align-items: center;
 }
 
-.wpallimport-plugin .wpallimport-cta-text-link p {
-	font-size: 13px !important;
+.wpallimport-plugin .cross-sale-notice.codebox .codebox-inner img{
+	width: 60px; height: 60px; border-radius: 50%; margin-right: 15px;
 }
 
-.wpallimport-plugin .wpallimport-text-link a {
-	font-size: 13px;
-	top: 28px;
+.wpallimport-plugin .wpallimport-collapsed-content-inner .cross-sale-notice.codebox{
+	margin:0;
+	border:1px solid lightgray;
+}
+
+.wpallimport-plugin .cross-sale-notice.codebox h1{
+	margin: 0;
+	color: #fff;
+}
+
+.wpallimport-plugin .cross-sale-notice.codebox p{
+	font-size: 16px !important;
+}
+
+.wpallimport-plugin .cross-sale-notice.codebox .codebox-button-container{
+	position: absolute;
+	bottom: -5px;
+}
+
+.wpallimport-plugin .cross-sale-notice.codebox a {
+	background-color: #859eff;
+	color: #000;
+	padding: 10px 20px;
+	text-decoration: none;
+	margin-top: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 270px;
+	position: relative;
+	font-weight: 600;
+	margin-bottom: 20px;
+}
+
+.wpallimport-plugin .cross-sale-notice.codebox a span {
+	font-size: 16px !important;
+	display: inline-flex;
+	align-items: center;
 	position: relative;
 }
 
-.wpallimport-plugin .wpallimport-negative-margin .wpallimport-cta-text-link {
-	margin-top: -45px;
+.wpallimport-plugin .cross-sale-notice.codebox a:hover{
+	cursor: pointer;
 }
 
-.wpallimport-plugin .wpallimport-negative-margin.sixty .wpallimport-cta-text-link {
-	margin-top: -60px;
+.wpallimport-plugin .cross-sale-notice.codebox a:hover span::after {
+	transform: translateX(5px);
 }
 
-.wpallimport-plugin .wpallimport-cta-text-link img {
-	padding-top: 14px;
+.wpallimport-plugin .cross-sale-notice.codebox a span::after {
+	mask-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20d%3D%22M502.6%20278.6c12.5-12.5%2012.5-32.8%200-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3%200s-12.5%2032.8%200%2045.3L402.7%20224%2032%20224c-17.7%200-32%2014.3-32%2032s14.3%2032%2032%2032l370.7%200-73.4%2073.4c-12.5%2012.5-12.5%2032.8%200%2045.3s32.8%2012.5%2045.3%200l128-128z%22%2F%3E%3C%2Fsvg%3E');
+	content: '';
+	background-color: #000;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	mask-size: 100%;
+	width: 14px;
+	height: 10px;
+	display: inline-block;
+	margin-left: 10px;
+	transition: transform 0.3s ease;
+	position: relative;
+}
+
+/* Select Import File label styling */
+.wpallimport-file-selector-label {
+	text-align: left;
+	color: #4db278;
+	padding: 0;
+	margin: 0 0 10px;
+}
+
+/* Removed conditional width - upload containers now use responsive padding instead of fixed width */
+
+/* Specific width constraint for file selector section only */
+.wpallimport-plugin .wpallimport-upload-type-container[rel="file_type"] {
+	width: 600px;
+	margin: 0 auto;
+	padding: 0;
+}
+
+/* Wizard target padding - using padding instead of margin to avoid animation conflicts */
+.wpallimport-plugin .switcher-target-wizard_type_new .wpallimport-unique-key-wrapper {
+	padding-left: 26px;
+	padding-top: 20px;
+	padding-bottom: 20px !important;
+}
+
+.wpallimport-plugin .wpallimport-wizard-type-options {
+	padding-left: 26px;
+}
+
+.wpallimport-plugin .wpallimport-wizard-description {
 	padding-bottom: 10px;
-	padding-right: 5px;
-	height: 15px;
+	padding-left: 26px;
+	font-size: 13px;
 }
 
-.wpallimport-plugin .wpallimport-footer {
-	display: flex;
-	justify-content: center;
-	flex-direction: column-reverse;
+.wpallimport-plugin .wpallimport-wizard-section-spacing {
+	padding-top: 10px;
 }
 
-.wpallimport-plugin .wpallimport-negative-margin.sixty .wpallimport-footer {
-	margin-top: -60px;
+.wpallimport-plugin .wpallimport-wizard-content-wrapper {
+	/* No padding needed */
 }
 
-.wpallimport-plugin .wpallimport-negative-margin.fifteen .wpallimport-footer {
-	margin-top: -15px;
+.wpallimport-plugin .wpallimport-unique-key-input {
+	width: 300px;
+	padding-left: 10px;
 }
 
-.wpallimport-plugin .wpallimport-display-columns .wpallimport-footer div {
-	width: 33%;
+/* Fix for Content/Description editor display issues */
+.wpallimport-plugin #poststuff .postarea {
+	min-height: 250px;
 }
 
-.wpallimport-plugin .wpallimport-display-columns .wpallimport-footer{
-	flex-direction: row;
+.wpallimport-plugin .wp-editor-container {
+	background: #fff !important;
 }
 
-.wpallimport-plugin .wpallimport-display-columns .wpallimport-footer .wpallimport-soflyy {
-	margin-bottom: 15px;
+.wpallimport-plugin .wp-editor-area {
+	min-height: 200px !important;
 }
 
-.wpallimport-plugin .wpallimport-margin-top-forty .wpallimport-footer {
-	margin-top: 40px;
-}
 
-.wpallimport-plugin .wpallimport-cta-text-link-inline {
-	display: inline-flex;
-	top: 2px;
 
-}
 
-.wpallimport-plugin .wpallimport-cta-text-link-inline img {
-	height: 15px;
-	padding-left: 2px;
-	padding-right: 5px;
-	vertical-align: middle;
-}
-
-.wpallimport-plugin .wpallimport-cta-text-link-inline p {
-	margin: 0;
-	line-height: 1.7;
-}
-
-.wpallimport-plugin .show-created-by-only .wpallimport-cta-text-link{
-	display:none;
-}
-
-.wpallimport-plugin .show-created-by-only .wpallimport-text-link{
-	display:none;
-}

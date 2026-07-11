@@ -102,7 +102,6 @@ class Products extends Handler {
 		$langCode       = $getParam( 'lang' );
 		$translationOf  = $getParam( 'translation_of' );
 		$trid           = null;
-		$sourceLangCode = null;
 
 		if ( $langCode ) {
 
@@ -122,6 +121,6 @@ class Products extends Handler {
 			throw new Generic( __( 'Using "translation_of" requires providing a "lang" parameter too', 'woocommerce-multilingual' ) );
 		}
 
-		$this->productSaveActions->run( $object, $trid, $langCode, $translationOf );
+		$this->productSaveActions->run( $object, $trid, $langCode, $translationOf, $request );
 	}
 }

@@ -853,21 +853,23 @@ class OMAPI_Rules {
 		$show    = $this->caught instanceof OMAPI_Rules_True;
 		$reasons = $this->caught->get_exception_messages();
 
+		// phpcs:disable WordPress.PHP.DevelopmentFunctions.error_log_var_export
 		?>
-		<xmp class="_om-debugging _om-campaign-sep"><?php echo esc_html( str_repeat( '-', 10 ) . $this->optin->post_name . str_repeat( '-', 10 ) ); ?></xmp>
-		<xmp class="_om-debugging _om-post-id">$post_id: <?php echo esc_html( print_r( $this->post_id, true ) ); ?></xmp>
-		<xmp class="_om-debugging _om-post-id">$debug_setting_enabled: <?php echo esc_html( print_r( OMAPI::get_instance()->get_option( 'api', 'omwpdebug' ), true ) ); ?></xmp>
-		<xmp class="_om-debugging _om-campaign-status" style="color: <?php echo ( $show ? 'green' : 'red' ); ?>;"><?php echo esc_html( $this->optin->post_name . ":\n" . print_r( $this->caught->getMessage(), true ) ); ?><?php echo ! empty( $reasons ) ? ":\n\t- " . implode( "\n\t- ", array_map( 'esc_html', $reasons ) ) : ''; ?>
-		</xmp>
+		<pre class="_om-debugging _om-campaign-sep"><?php echo esc_html( str_repeat( '-', 10 ) . $this->optin->post_name . str_repeat( '-', 10 ) ); ?></pre>
+		<pre class="_om-debugging _om-post-id">$post_id: <?php echo esc_html( var_export( $this->post_id, true ) ); ?></pre>
+		<pre class="_om-debugging _om-post-id">$debug_setting_enabled: <?php echo esc_html( var_export( OMAPI::get_instance()->get_option( 'api', 'omwpdebug' ), true ) ); ?></pre>
+		<pre class="_om-debugging _om-campaign-status" style="color: <?php echo ( $show ? 'green' : 'red' ); ?>;"><?php echo esc_html( $this->optin->post_name . ":\n" . var_export( $this->caught->getMessage(), true ) ); ?><?php echo ! empty( $reasons ) ? ":\n\t- " . implode( "\n\t- ", array_map( 'esc_html', $reasons ) ) : ''; ?>
+		</pre>
 		<?php if ( ! empty( $this->advanced_settings ) ) { ?>
-			<xmp class="_om-debugging _om-advanced-settings">$advanced_settings: <?php print_r( $this->advanced_settings ); ?></xmp>
+			<pre class="_om-debugging _om-advanced-settings">$advanced_settings: <?php echo esc_html( var_export( $this->advanced_settings, true ) ); ?></pre>
 		<?php } ?>
 		<?php if ( ! empty( $this->field_values ) ) { ?>
-			<xmp class="_om-debugging _om-field-values" style="display:none;">$field_values: <?php print_r( $this->field_values ); ?></xmp>
+			<pre class="_om-debugging _om-field-values" style="display:none;">$field_values: <?php echo esc_html( var_export( $this->field_values, true ) ); ?></pre>
 		<?php } ?>
-		<xmp class="_om-debugging _om-is-inline-check" style="display:none;">$is_inline_check?: <?php echo esc_html( print_r( $this->is_inline_check, true ) ); ?></xmp>
-		<xmp class="_om-debugging _om-global-override" style="display:none;">$global_override?: <?php echo esc_html( print_r( $this->global_override, true ) ); ?></xmp>
-		<xmp class="_om-debugging _om-optin" style="display:none;">$optin: <?php print_r( $this->optin ); ?></xmp>
+		<pre class="_om-debugging _om-is-inline-check" style="display:none;">$is_inline_check?: <?php echo esc_html( var_export( $this->is_inline_check, true ) ); ?></pre>
+		<pre class="_om-debugging _om-global-override" style="display:none;">$global_override?: <?php echo esc_html( var_export( $this->global_override, true ) ); ?></pre>
+		<pre class="_om-debugging _om-optin" style="display:none;">$optin: <?php echo esc_html( var_export( $this->optin, true ) ); ?></pre>
 		<?php
+		// phpcs:enable WordPress.PHP.DevelopmentFunctions.error_log_var_export
 	}
 }

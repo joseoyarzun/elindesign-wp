@@ -17,7 +17,7 @@ if ( ! function_exists( 'WPML\Container\make' ) ) {
 	 * @return mixed
 	 * @throws \WPML\Auryn\InjectionException
 	 */
-	function make( $class_name = null, array $args = null ) {
+	function make( $class_name = null, ?array $args = null ) {
 		$make = function ( $class_name, $args = [] ) {
 			if ( class_exists( $class_name ) || interface_exists( $class_name ) ) {
 				return Container::make( $class_name, $args );

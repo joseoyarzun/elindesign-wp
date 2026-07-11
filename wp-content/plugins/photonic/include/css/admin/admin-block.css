@@ -2,7 +2,7 @@
 .photonic-gallery .photonic-placeholder-icon {
 	width: 120px;
 	height: 120px;
-	background-image: url('../../images/Admin.svg');
+	background-image: url('../../images/Admin.svg?ver=3.20');
 	background-size: 100%;
 	display: block;
 	text-decoration: none;
@@ -19,4 +19,5 @@
 .photonic-placeholder-icon.photonic-zenfolio { background-position: 0 -480px; }
 .photonic-placeholder-icon.photonic-instagram { background-position: 0 -240px; }
 .photonic-placeholder-icon.photonic-wp { background-position: 0 -600px; }
+.photonic-placeholder-icon.photonic-deviantart { background-position: 0 -3120px; }
 

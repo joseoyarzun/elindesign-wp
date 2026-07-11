@@ -81,7 +81,7 @@ export class PhotonicFancybox2 extends Lightbox {
 			},
 			beforeLoad: function() {
 				if (Photonic_JS.fbox_show_title) {
-					this.title = $(this.element).data('title');
+					this.title = Util.HTMLSanitizer.SanitizeHTML($(this.element).data('title'));
 				}
 				if (this.element !== null && this.element.length > 0) {
 					self.setHash(this.element[0]);

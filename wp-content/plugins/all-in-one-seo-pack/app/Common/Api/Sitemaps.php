@@ -35,9 +35,9 @@ class Sitemaps {
 		$detectedFiles = [];
 		if ( ! $isGeneralSitemapStatic ) {
 			foreach ( $files as $filename ) {
-				if ( preg_match( '#.*sitemap.*#', $filename ) ) {
+				if ( preg_match( '#.*sitemap.*#', (string) $filename ) ) {
 					// We don't want to delete the video sitemap here at all.
-					$isVideoSitemap = preg_match( '#.*video.*#', $filename ) ? true : false;
+					$isVideoSitemap = preg_match( '#.*video.*#', (string) $filename ) ? true : false;
 					if ( ! $isVideoSitemap ) {
 						$detectedFiles[] = $filename;
 					}
@@ -81,7 +81,7 @@ class Sitemaps {
 	 */
 	public static function deactivateConflictingPlugins() {
 		$error = esc_html__( 'Deactivation failed. Please check permissions and try again.', 'all-in-one-seo-pack' );
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! current_user_can( 'activate_plugins' ) ) {
 			return new \WP_REST_Response( [
 				'success' => false,
 				'message' => $error
@@ -134,7 +134,7 @@ class Sitemaps {
 			], 400 );
 		}
 
-		$pathExists = self::pathExists( $parsedPageUrl['path'], $isUrl );
+		$pathExists = self::pathExists( $parsedPageUrl['path'], false );
 
 		return new \WP_REST_Response( [
 			'exists' => $pathExists
@@ -152,8 +152,9 @@ class Sitemaps {
 	 * @return boolean       Whether the path exists.
 	 */
 	private static function pathExists( $path, $isUrl ) {
-		$path = trim( $path, '/' );
+		$path = trim( aioseo()->helpers->excludeHomePath( $path ), '/' );
 		$url  = $isUrl ? $path : trailingslashit( home_url() ) . $path;
+		$url  = user_trailingslashit( $url );
 
 		// Let's do another check here, just to be sure that the domain matches.
 		if ( ! aioseo()->helpers->isInternalUrl( $url ) ) {
@@ -162,6 +163,7 @@ class Sitemaps {
 
 		$response = wp_safe_remote_head( $url );
 		$status   = wp_remote_retrieve_response_code( $response );
+
 		if ( ! $status ) {
 			// If there is no status code, we might be in a local environment with CURL misconfigured.
 			// In that case we can still check if a post exists for the path by quering the DB.

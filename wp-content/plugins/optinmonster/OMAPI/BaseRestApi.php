@@ -74,7 +74,7 @@ abstract class OMAPI_BaseRestApi {
 	 *
 	 * @param  WP_REST_Request $request The REST Request.
 	 *
-	 * @return bool
+	 * @return WP_Error|bool
 	 */
 	public function can_update_settings( $request ) {
 		try {
@@ -96,7 +96,7 @@ abstract class OMAPI_BaseRestApi {
 	 *
 	 * @param  WP_REST_Request $request The REST Request.
 	 *
-	 * @return bool
+	 * @return WP_Error|bool
 	 */
 	public function has_valid_api_key( $request ) {
 		$header = $request->get_header( 'X-OptinMonster-ApiKey' );
@@ -141,6 +141,33 @@ abstract class OMAPI_BaseRestApi {
 	 */
 	public function logged_in_and_can_access_route( $request ) {
 		return OMAPI::get_instance()->can_access( $request->get_route() );
+	}
+
+	/**
+	 * Determine if the passed connection token is valid.
+	 *
+	 * @since 2.16.6
+	 *
+	 * @param WP_REST_Request $request The REST Request.
+	 *
+	 * @return WP_Error|bool
+	 */
+	public function has_connection_token( $request ) {
+		$request_connection_token = $request->get_param( 'connectionToken' );
+
+		$connection_token = $this->base->get_option( 'connectionToken' );
+
+		if ( 'omwpoct_' . $connection_token !== $request_connection_token ) {
+			return new WP_Error(
+				'omapp_rest_forbidden',
+				esc_html__( 'Could not verify your connection token.', 'optin-monster-api' ),
+				array(
+					'status' => rest_authorization_required_code(),
+				)
+			);
+		}
+
+		return true;
 	}
 
 	/**
@@ -246,6 +273,8 @@ abstract class OMAPI_BaseRestApi {
 	 * @param  WP_REST_Request $request The REST request.
 	 *
 	 * @return void
+	 *
+	 * @throws Exception If the nonce is missing or invalid.
 	 */
 	public function verify_request_nonce( $request ) {
 		$nonce = $request->get_param( 'nonce' );

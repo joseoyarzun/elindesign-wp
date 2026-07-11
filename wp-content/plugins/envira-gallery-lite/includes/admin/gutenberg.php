@@ -79,8 +79,11 @@ class Envira_Gutenberg {
 	 */
 	public function get_galleries() {
 		$current_screen = get_current_screen();
-		if ( ! is_null( $current_screen ) && method_exists( $current_screen, 'is_block_editor' ) && $current_screen->is_block_editor() ) {
-			$request = new WP_REST_Request( 'GET', '/wp/v2/envira-gallery' );
+
+		global $wp_version;
+
+		if ( ! is_null( $current_screen ) && method_exists( $current_screen, 'is_block_editor' ) && ( $current_screen->is_block_editor() || ( version_compare( $wp_version, '5.8.0', '>' ) && 'widgets' === $current_screen->base || 'customize' === $current_screen->base ) ) ) {
+			$request = new \WP_REST_Request( 'GET', '/wp/v2/envira-gallery' ); // request.
 			$request->set_query_params( [ 'per_page' => 10 ] );
 			$response        = rest_do_request( $request );
 			$server          = rest_get_server();
@@ -99,13 +102,44 @@ class Envira_Gutenberg {
 	 */
 	public function editor_assets() {
 
+		$current_screen = get_current_screen();
+
+		$dependencies = [ 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-components', 'wp-data', 'wp-api-fetch', 'wp-hooks', 'wp-block-editor', 'wp-compose' ];
+		if ( isset( $current_screen->id ) && 'widgets' !== $current_screen->id ) {
+			$dependencies[] = 'wp-editor';
+		}
+
 		wp_enqueue_script(
 			'envira_gutenberg-block-js',
 			plugins_url( 'assets/js/envira-gutenberg.js', $this->base->file ), // Block.build.js: we register the block here and built with Webpack.
-			[ 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-components', 'wp-editor' ], // dependencies, defined above.
+			$dependencies, // dependencies, defined above.
 			$this->base->version,
 			true // Enqueue the script in the footer.
 		);
+
+		$current_post_id = get_the_ID();
+
+		if ( ! $current_post_id ) {
+			$current_post_id = 0;
+		}
+
+		// Localize data to pass to the block script.
+		$localized_data = [
+			'postId'              => $current_post_id,
+			'panelTitle'          => __( 'Envira Gallery', 'envira-gallery-lite' ),
+			'contentHeading'      => __( 'Convert this gallery to an Envira Gallery', 'envira-gallery-lite' ),
+			'contentDescription'  => __( 'Make your gallery shine with awesome customizations, drag and drop management, and much more.', 'envira-gallery-lite' ),
+			'contentButtonText'   => __( 'Convert to Envira Gallery', 'envira-gallery-lite' ),
+			'convertLoading'      => __( 'Converting...', 'envira-gallery-lite' ),
+			'convertRestNonce'    => wp_create_nonce( 'wp_rest' ),
+			'convertApiUrl'       => '/envira-convert/v1/convert-gallery',
+			'errorMessage'        => __( 'Failed to convert the gallery. Please try again.', 'envira-gallery-lite' ),
+			'confirmationMessage' => __( 'Are you sure you want to convert this gallery to an Envira Gallery?', 'envira-gallery-lite' ),
+			'invalidBlockMessage' => __( 'This block is not a WordPress Gallery block.', 'envira-gallery-lite' ),
+			'noImagesMessage'     => __( 'This gallery has no images.', 'envira-gallery-lite' ),
+		];
+
+		wp_localize_script( 'envira_gutenberg-block-js', 'enviraBlockData', $localized_data );
 
 		$columns = $this->common->get_columns();
 
@@ -135,15 +169,17 @@ class Envira_Gutenberg {
 				'value' => $options['value'],
 			];
 		}
-		$options    = [
+		$options = [
 			'columns'         => $new_columns,
 			'lightbox_themes' => $new_lightbox,
 			'image_sizes'     => $new_sizes,
 			'sorting_options' => $this->common->get_sorting_options(),
 			'galleries'       => is_array( $this->galleries ) ? $this->galleries : [],
 		];
+
 		$args_array = [
 			'options'   => $options,
+			'isLite'    => true,
 			'admin_url' => admin_url(),
 		];
 		wp_localize_script(

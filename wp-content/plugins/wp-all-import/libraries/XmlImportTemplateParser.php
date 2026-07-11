@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
 /**
  * @author Olexandr Zanichkovsky <olexandr.zanichkovsky@zophiatech.com>
  * @package General
@@ -79,7 +80,7 @@ class XmlImportTemplateParser
     $result = $this->parseSequence();
 
     if (count($this->clauseStack) > 0)
-      throw new XmlImportException("Unexpected end of template.");
+      throw new XmlImportException(esc_html("Unexpected end of template."));
     return $result;
   }
 
@@ -91,7 +92,7 @@ class XmlImportTemplateParser
   private function parseSequence()
   {    
     if (($this->index + 1) == count($this->tokens))
-      throw new XmlImportException("Reached end of template but statement sequence expected");
+      throw new XmlImportException(esc_html("Reached end of template but statement sequence expected"));
     $sequence = new XmlImportAstSequence();
     array_push($this->sequenceStack, $sequence);	
     if (count($this->clauseStack) == 0)
@@ -170,12 +171,12 @@ class XmlImportTemplateParser
       }
       else
       {
-        throw new XmlImportException("ELSEIF or ELSE is not allowed again after ELSE");
+        throw new XmlImportException(esc_html("ELSEIF or ELSE is not allowed again after ELSE"));
       }
       return null;
     }
     else
-      throw new XmlImportException ("Unexpected token {$this->tokens[$this->index + 1]->getKind()}, statement was expected.");
+      throw new XmlImportException(esc_html("Unexpected token {$this->tokens[$this->index + 1]->getKind()}, statement was expected."));
   }
 
   /**
@@ -186,7 +187,7 @@ class XmlImportTemplateParser
   private function parseExpression()
   {
     if ($this->index + 1 == count($this->tokens))
-      throw new XmlImportException("Reached end of template but expression was expected");
+      throw new XmlImportException(esc_html("Reached end of template but expression was expected"));
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_FUNCTION)
     {
       return $this->parseFunction();
@@ -218,7 +219,7 @@ class XmlImportTemplateParser
       return new XmlImportAstFloat($this->tokens[++$this->index]->getValue());
     }
     else
-      throw new XmlImportException("Unexpected token " . $this->tokens[$this->index + 1]->getKind());
+      throw new XmlImportException(esc_html("Unexpected token " . $this->tokens[$this->index + 1]->getKind()));
   }
 
   /**
@@ -231,7 +232,7 @@ class XmlImportTemplateParser
     $function = new XmlImportAstFunction($this->tokens[++$this->index]->getValue());    
 
     if ($this->tokens[$this->index + 1]->getKind() != XmlImportToken::KIND_OPEN)
-      throw new XmlImportException ("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+      throw new XmlImportException(esc_html("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
     $this->index++;
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_CLOSE)
     {
@@ -252,9 +253,9 @@ class XmlImportTemplateParser
         elseif ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_COMMA)
           $this->index++;
         else
-          throw new XmlImportException("Comma or closing brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+          throw new XmlImportException(esc_html("Comma or closing brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
       }
-      throw new XmlImportException("Unexpected end of {$function->getName()} function argument list");
+      throw new XmlImportException(esc_html("Unexpected end of {$function->getName()} function argument list"));
     }
   }
   
@@ -267,7 +268,7 @@ class XmlImportTemplateParser
   {
     $math = new XmlImportAstMath($this->tokens[++$this->index]->getValue());
     if ($this->tokens[$this->index + 1]->getKind() != XmlImportToken::KIND_OPEN)
-      throw new XmlImportException ("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+      throw new XmlImportException(esc_html("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
     $this->index++;
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_CLOSE)
     {
@@ -288,9 +289,9 @@ class XmlImportTemplateParser
         elseif ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_COMMA)
           $this->index++;
         else
-          throw new XmlImportException("Comma or closing brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+          throw new XmlImportException(esc_html("Comma or closing brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
       }
-      throw new XmlImportException("Unexpected end of MATH argument list");
+      throw new XmlImportException(esc_html("Unexpected end of MATH argument list"));
     }
   }
 
@@ -303,7 +304,7 @@ class XmlImportTemplateParser
   {
     $spintax = new XmlImportAstSpintax($this->tokens[++$this->index]->getValue());
     if ($this->tokens[$this->index + 1]->getKind() != XmlImportToken::KIND_OPEN)
-      throw new XmlImportException ("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+      throw new XmlImportException(esc_html("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
     $this->index++;
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_CLOSE)
     {
@@ -324,9 +325,9 @@ class XmlImportTemplateParser
         elseif ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_COMMA)
           $this->index++;        
         else
-          throw new XmlImportException("Comma or closing brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+          throw new XmlImportException(esc_html("Comma or closing brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
       }
-      throw new XmlImportException("Unexpected end of {$function->getName()} function argument list");
+      throw new XmlImportException(esc_html("Unexpected end of {$function->getName()} function argument list"));
     }
   }
 
@@ -340,23 +341,23 @@ class XmlImportTemplateParser
     $this->index++;
 
     if ($this->index + 1 == count($this->tokens))
-      throw new XmlImportException("Reached end of template but expression was expected");
+      throw new XmlImportException(esc_html("Reached end of template but expression was expected"));
       
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_OPEN)
       $this->index++;
     else
-      throw new XmlImportException("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+      throw new XmlImportException(esc_html("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_XPATH)
     {
       $xpath = new XmlImportAstXPath($this->tokens[++$this->index]->getValue());
       $this->sequenceStack[count($this->sequenceStack) - 1]->addVariable($xpath);      
     }
     else
-      throw new XmlImportException("XPath expression expected instead of " . $this->tokens[$this->index + 1]->getKind());
+      throw new XmlImportException(esc_html("XPath expression expected instead of " . $this->tokens[$this->index + 1]->getKind()));
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_CLOSE)
       $this->index++;
     else
-      throw new XmlImportException("Close brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+      throw new XmlImportException(esc_html("Close brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
     return $xpath;
   }
 
@@ -398,18 +399,18 @@ class XmlImportTemplateParser
     array_push($this->clauseStack, XmlImportToken::KIND_ENDIF);
 
     if ($this->index + 1 == count($this->tokens))
-      throw new XmlImportException("Reached end of template but expression was expected");
+      throw new XmlImportException(esc_html("Reached end of template but expression was expected"));
       
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_OPEN)
       $this->index++;
     else
-      throw new XmlImportException("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+      throw new XmlImportException(esc_html("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
 
     $if = new XmlImportAstIf($this->parseExpression());
     if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_CLOSE)
       $this->index++;
     else
-      throw new XmlImportException("Close brace expected instead of " . $this->tokens[$this->index + 1]->getKind());            
+      throw new XmlImportException(esc_html("Close brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));            
     $if->addIfBody($this->parseSequence());
 
     if ($this->index + 1 != count($this->tokens))
@@ -420,12 +421,12 @@ class XmlImportTemplateParser
         if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_OPEN)
           $this->index++;
         else
-          throw new XmlImportException("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+          throw new XmlImportException(esc_html("Open brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
         $condition = $this->parseExpression();
         if ($this->tokens[$this->index + 1]->getKind() == XmlImportToken::KIND_CLOSE)
           $this->index++;
         else
-          throw new XmlImportException("Close brace expected instead of " . $this->tokens[$this->index + 1]->getKind());
+          throw new XmlImportException(esc_html("Close brace expected instead of " . $this->tokens[$this->index + 1]->getKind()));
 
         $elseif = new XmlImportAstElseif($condition, $this->parseSequence());
         $if->addElseif($elseif);

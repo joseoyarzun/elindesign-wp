@@ -61,10 +61,10 @@ class Defaults {
 			// Generic - Photo Template
 			'gallery_template_page'                           => '',
 			'page_title'                                      => 'replace-if-available',
+			'page_meta_title'                                 => 'append-if-available',
 			'page_content'                                    => 'replace-if-available',
 
 			// Generic - Advanced
-			'js_type'                                         => 'all',
 			'load_mode'                                       => 'php',
 			'ssl_verify_off'                                  => '',
 			'curl_timeout'                                    => '30',
@@ -97,7 +97,6 @@ class Defaults {
 			'flickr_collection_set_title_display'             => 'tooltip',
 			'flickr_hide_collection_set_photos_count_display' => '',
 			'flickr_collection_set_per_row_constraint'        => 'padding',
-			'flickr_collection_set_constrain_by_padding'      => '10',
 			'flickr_collection_set_constrain_by_count'        => '5',
 
 			// Flickr - Single Photosets
@@ -109,7 +108,6 @@ class Defaults {
 			'flickr_gallery_title_display'                    => 'tooltip',
 			'flickr_hide_gallery_photos_count_display'        => '',
 			'flickr_galleries_per_row_constraint'             => 'padding',
-			'flickr_galleries_constrain_by_padding'           => '10',
 			'flickr_galleries_constrain_by_count'             => '5',
 
 			// Flickr - Single Galleries
@@ -120,7 +118,6 @@ class Defaults {
 			// Flickr - Photos on main page
 			'flickr_photo_title_display'                      => 'tooltip',
 			'flickr_photos_per_row_constraint'                => 'padding',
-			'flickr_photos_constrain_by_padding'              => '10',
 			'flickr_photos_constrain_by_count'                => '5',
 
 			// Flickr - Photos in overlay
@@ -148,7 +145,6 @@ class Defaults {
 			'smug_hide_password_protected_thumbnail'          => '',
 			'smug_album_sort_order'                           => 'Last Updated (Descending)',
 			'smug_albums_album_per_row_constraint'            => 'padding',
-			'smug_albums_album_constrain_by_padding'          => '10',
 			'smug_albums_album_constrain_by_count'            => '5',
 
 			// SmugMug - Multiple Photos
@@ -157,7 +153,6 @@ class Defaults {
 			'smug_hide_album_photo_count'                     => '',
 			'smug_photo_title_display'                        => 'tooltip',
 			'smug_photos_per_row_constraint'                  => 'padding',
-			'smug_photos_constrain_by_padding'                => '10',
 			'smug_photos_constrain_by_count'                  => '5',
 
 			// SmugMug - Multiple Photos in overlay
@@ -179,7 +174,6 @@ class Defaults {
 			// Google - Photos
 			'google_photo_title_display'                      => 'tooltip',
 			'google_photos_per_row_constraint'                => 'padding',
-			'google_photos_constrain_by_padding'              => '10',
 			'google_photos_constrain_by_count'                => '5',
 
 			// Google - Photos in overlay
@@ -190,7 +184,6 @@ class Defaults {
 			'zenfolio_media'                                  => 'photos',
 			'zenfolio_disable_title_link'                     => '',
 			'zenfolio_photos_per_row_constraint'              => 'padding',
-			'zenfolio_photos_constrain_by_padding'            => '10',
 			'zenfolio_photos_constrain_by_count'              => '5',
 			'zenfolio_thumb_size'                             => '1',
 			'zenfolio_main_size'                              => '4',
@@ -213,7 +206,6 @@ class Defaults {
 			'zenfolio_hide_set_photos_count_display'          => '',
 			'zenfolio_hide_password_protected_thumbnail'      => '',
 			'zenfolio_sets_per_row_constraint'                => 'padding',
-			'zenfolio_sets_constrain_by_padding'              => '10',
 			'zenfolio_sets_constrain_by_count'                => '5',
 
 			// Zenfolio - Single set
@@ -230,6 +222,11 @@ class Defaults {
 			'instagram_video_size'                            => 'standard_resolution',
 			'instagram_tile_size'                             => 'same',
 			'instagram_photo_title_display'                   => 'tooltip',
+
+			// DeviantArt
+			'deviantart_client_id'                                => '',
+			'deviantart_client_secret'                            => '',
+			'deviantart_refresh_token'                            => '',
 
 			// Lightbox - common
 			'slideshow_mode'                                  => '',
@@ -271,6 +268,9 @@ class Defaults {
 			'enable_lg_thumbnail'                             => '',
 			'enable_lg_zoom'                                  => '',
 			'disable_lg_download'                             => '',
+			'lg_mobile_show_controls'                         => '',
+			'lg_mobile_show_close'                            => '',
+			'lg_mobile_show_download'                         => '',
 			'lg_hide_bars_delay'                              => '6000',
 
 			// Lightbox - PrettyPhoto
@@ -337,6 +337,10 @@ class Defaults {
 
 			// Instagram
 			'instagram-settings',
+
+			// DeviantArt
+			'deviantart-how-to',
+			'deviantart-settings',
 
 			// Lightboxes
 			'lb-settings',

@@ -58,6 +58,22 @@ function monsterinsights_get_reports()
  */
 function monsterinsights_reports_page()
 {
+	// Redirect root route (#/ or empty hash) to the overview report page.
+	// PHP cannot read the hash fragment, so we use JavaScript.
+	// Non-root routes (e.g. #/ecommerce, #/ai-insights) are intentionally preserved.
+	// TODO: Remove this once the reports pages are fully migrated to the new app.
+	$overview_url = admin_url( 'admin.php?page=monsterinsights_overview_report' );
+	?>
+	<script>
+	(function () {
+		var hash = window.location.hash;
+		if ( hash === '' || hash === '#' || hash === '#/' ) {
+			window.location.replace( <?php echo wp_json_encode( $overview_url ); ?> );
+		}
+	})();
+	</script>
+	<?php
+
 	/**
 	 * Developer Alert:
 	 *

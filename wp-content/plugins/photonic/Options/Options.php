@@ -42,6 +42,10 @@ class Options {
 			$options = Zenfolio::get_instance()->get_options();
 			$this->add_options($options, $photonic_setup_options);
 
+			require_once 'DeviantArt.php';
+			$options = DeviantArt::get_instance()->get_options();
+			$this->add_options($options, $photonic_setup_options);
+
 			require_once 'Lightbox.php';
 			$options = Lightbox::get_instance()->get_options();
 			$this->add_options($options, $photonic_setup_options);

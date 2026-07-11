@@ -5,9 +5,7 @@ namespace Photonic_Plugin\Options;
 use Photonic_Plugin\Core\Utilities;
 
 class SmugMug extends Option_Tab {
-	private static $instance;
-
-	private function __construct() {
+	protected function __construct() {
 		$this->options = [
 			[
 				'name'     => "How To",
@@ -180,21 +178,7 @@ class SmugMug extends Option_Tab {
 				'options'  => Utilities::title_caption_options()
 			],
 
-			[
-				'name'     => "Layout processing mode",
-				'desc'     => "When possible, Photonic tries to use CSS to build the advanced layouts (like Justified Grids). 
-					This has the advantage of being fast and can work well with lazy-loading and AJAX-based plugins, particularly if the loading mode (<em>Photonic &rarr; Settings &rarr; Generic Options &rarr; Advanced &rarr; Loading Mode</em>) is PHP. 
-					<br/><br/>The downside is that CSS-based rendering is occasionally incorrect, particularly if the source has incorrect sizes. 
-					If this is a frequent issue, you can default to a JS-generated layout (which is always more accurate). This can be managed individually for each gallery.
-					<br/><br/>Pick your default processor:",
-				'id'       => 'smug_layout_engine',
-				'grouping' => 'smug-settings',
-				'type'     => 'select',
-				'options'  => [
-					'css' => 'Use CSS unless overridden by a gallery individually',
-					'js'  => 'Use JS unless overridden by a gallery individually',
-				]
-			],
+			$this->get_layout_engine_options('smug_layout_engine', 'smug-settings'),
 
 			[
 				'name'     => "Album Thumbnails (with other Albums)",
@@ -260,23 +244,14 @@ class SmugMug extends Option_Tab {
 				'grouping' => 'smug-albums',
 				'type'     => 'select',
 				'options'  => [
-					'padding' => 'Fix the padding around the thumbnails',
+					'padding' => 'Automatically calculate thumbnails per row',
 					'count'   => 'Fix the number of thumbnails per row',
 				]
 			],
 
 			[
-				'name'     => "Constrain by padding",
-				'desc'     => " If you have constrained by padding above, enter the number of pixels here to pad the thumbs by",
-				'id'       => 'smug_albums_album_constrain_by_padding',
-				'grouping' => 'smug-albums',
-				'type'     => 'text',
-				'hint'     => "Enter the number of pixels here (don't enter 'px'). Non-integers will be ignored."
-			],
-
-			[
-				'name'     => "Constrain by number of thumbnails",
-				'desc'     => " If you have constrained by number of thumbnails per row above, enter the number of thumbnails",
+				'name'     => "Fixed number of thumbnails",
+				'desc'     => " If you have fixed the number of thumbnails per row above, enter the number of thumbnails",
 				'id'       => 'smug_albums_album_constrain_by_count',
 				'grouping' => 'smug-albums',
 				'type'     => 'select',
@@ -340,23 +315,14 @@ class SmugMug extends Option_Tab {
 				'grouping' => 'smug-photos',
 				'type'     => 'select',
 				'options'  => [
-					'padding' => 'Fix the padding around the thumbnails',
+					'padding' => 'Automatically calculate thumbnails per row',
 					'count'   => 'Fix the number of thumbnails per row',
 				]
 			],
 
 			[
-				'name'     => "Constrain by padding",
-				'desc'     => " If you have constrained by padding above, enter the number of pixels here to pad the thumbs by",
-				'id'       => 'smug_photos_constrain_by_padding',
-				'grouping' => 'smug-photos',
-				'type'     => 'text',
-				'hint'     => "Enter the number of pixels here (don't enter 'px'). Non-integers will be ignored."
-			],
-
-			[
-				'name'     => "Constrain by number of thumbnails",
-				'desc'     => " If you have constrained by number of thumbnails per row above, enter the number of thumbnails",
+				'name'     => "Fixed number of thumbnails",
+				'desc'     => " If you have fixed the number of thumbnails per row above, enter the number of thumbnails",
 				'id'       => 'smug_photos_constrain_by_count',
 				'grouping' => 'smug-photos',
 				'type'     => 'select',
@@ -409,12 +375,5 @@ class SmugMug extends Option_Tab {
 			],
 
 		];
-	}
-
-	public static function get_instance() {
-		if (null === self::$instance) {
-			self::$instance = new SmugMug();
-		}
-		return self::$instance;
 	}
 }

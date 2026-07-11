@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Ask for some love.
  *
@@ -86,7 +90,8 @@ class UserFeedback_Review {
 					<?php
 					echo wp_kses(
 						sprintf(
-							__( 'Hey - we noticed you\'ve been using %1$s for a while - that\'s great! Could you do us a BIG favor and give it a 5-star review on WordPress to help us spread the word and boost our motivation?', 'userfeedback' ),
+							// translators: %1$s is the plugin name wrapped in strong tags.
+							__( 'Hey - we noticed you\'ve been using %1$s for a while - that\'s great! Could you do us a BIG favor and give it a 5-star review on WordPress to help us spread the word and boost our motivation?', 'userfeedback-lite' ),
 							'<strong>' . USERFEEDBACK_PLUGIN_NAME . '</strong>'
 						),
 						array( 'strong' => array() )
@@ -94,32 +99,31 @@ class UserFeedback_Review {
 					?>
 				</p>
 				<p>
-					<strong><?php echo wp_kses( __( '~ Syed Balkhi<br>Founder of UserFeedback', 'userfeedback' ), array( 'br' => array() ) ); ?></strong>
-				</p>
-				<p>
-					<a href="https://wordpress.org/support/plugin/userfeedback-lite/reviews/?filter=5#new-post"
+					<a href="https://wordpress.org/support/plugin/userfeedback-lite/reviews/#new-post"
 					   class="userfeedback-dismiss-review-notice userfeedback-review-out" target="_blank"
-					   rel="noopener noreferrer"><?php esc_html_e( 'Ok, you deserve it', 'userfeedback' ); ?></a><br>
+					   rel="noopener noreferrer"><?php esc_html_e( 'Ok, you deserve it', 'userfeedback-lite' ); ?></a><br>
 					<a href="#" class="userfeedback-dismiss-review-notice userfeedback-review-later"
-					   rel="noopener noreferrer"><?php esc_html_e( 'Nope, maybe later', 'userfeedback' ); ?></a><br>
+					   rel="noopener noreferrer"><?php esc_html_e( 'Nope, maybe later', 'userfeedback-lite' ); ?></a><br>
 					<a href="#" class="userfeedback-dismiss-review-notice"
-					   rel="noopener noreferrer"><?php esc_html_e( 'I already did', 'userfeedback' ); ?></a>
+					   rel="noopener noreferrer"><?php esc_html_e( 'I already did', 'userfeedback-lite' ); ?></a>
 				</p>
 			</div>
 		</div>
 		<script type="text/javascript">
-            jQuery(document).ready(function ($) {
-                $(document).on('click', '.userfeedback-dismiss-review-notice', function (event) {
-                    if (!$(this).hasClass('userfeedback-review-out')) {
-                        event.preventDefault();
-                    }
-                    $.post(ajaxurl, {
-                        action: 'userfeedback_review_dismiss',
-                        review_later: $(this).hasClass('userfeedback-review-later')
-                    });
-                    $('.userfeedback-review-notice').remove();
-                });
-            });
+			document.addEventListener('click', function(event) {
+				var el = event.target.closest('.userfeedback-dismiss-review-notice');
+				if (!el) return;
+				if (!el.classList.contains('userfeedback-review-out')) {
+					event.preventDefault();
+				}
+				var formData = new FormData();
+				formData.append('action', 'userfeedback_review_dismiss');
+				formData.append('nonce', '<?php echo esc_js( wp_create_nonce( 'userfeedback_review_nonce' ) ); ?>');
+				formData.append('review_later', el.classList.contains('userfeedback-review-later') ? '1' : '');
+				fetch(ajaxurl, { method: 'POST', body: formData });
+				var notice = document.querySelector('.userfeedback-review-notice');
+				if (notice) notice.remove();
+			});
 		</script>
 		<?php
 	}
@@ -130,9 +134,11 @@ class UserFeedback_Review {
 	 * @since 1.0.1
 	 */
 	public function review_dismiss() {
+		check_ajax_referer( 'userfeedback_review_nonce', 'nonce' );
+
 		$review = get_option( 'userfeedback_review', array() );
 
-		if ( isset( $_POST['review_later'] ) && "true" === $_POST['review_later'] ) {
+		if ( isset( $_POST['review_later'] ) && "true" === $_POST['review_later'] ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Compared as string equality only.
 			$review['time']      = time() + ( DAY_IN_SECONDS * 7 ); // Add 7 days.
 			$review['dismissed'] = false;
 		} else {

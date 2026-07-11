@@ -3,7 +3,8 @@
 namespace Photonic_Plugin\Lightboxes;
 
 use Photonic_Plugin\Components\Photo;
-use Photonic_Plugin\Modules\Core;
+use Photonic_Plugin\Core\Photonic;
+use Photonic_Plugin\Platforms\Base;
 
 abstract class Lightbox {
 	/** @var array */
@@ -18,8 +19,8 @@ abstract class Lightbox {
 	 * Lightbox constructor.
 	 */
 	protected function __construct() {
-		require_once PHOTONIC_PATH . '/Modules/Core.php';
-		$this->class                 = ['photonic-lb', 'photonic-' . $this->library, $this->library];
+		require_once PHOTONIC_PATH . '/Platforms/Base.php';
+		$this->class                 = ['photonic-lb', sanitize_html_class('photonic-' . $this->library), sanitize_html_class($this->library)];
 		$this->default_lightbox_text = apply_filters('photonic_default_lightbox_text', esc_attr__('View', 'photonic'));
 	}
 
@@ -35,10 +36,10 @@ abstract class Lightbox {
 
 	/**
 	 * @param $rel_id
-	 * @param Core $module
+	 * @param Base $module
 	 * @return array
 	 */
-	public function get_gallery_attributes($rel_id, $module) {
+	public function get_gallery_attributes($rel_id, Base $module): array {
 		return [
 			'class'    => $this->class,
 			'rel'      => ['lightbox-photonic-' . $module->provider . '-stream-' . (empty($rel_id) ? $module->gallery_index : esc_attr($rel_id))],
@@ -46,8 +47,8 @@ abstract class Lightbox {
 		];
 	}
 
-	public function get_container_classes() {
-		return "";
+	public function get_container_classes(): string {
+		return '';
 	}
 
 	/**
@@ -55,17 +56,19 @@ abstract class Lightbox {
 	 * This method returns such additional information. Not to be confused with <code>get_lightbox_attributes</code>, which
 	 * returns information for the gallery as a whole.
 	 *
-	 * @param $photo_data
-	 * @param Core $module
-	 * @return string
+	 * @param array $photo_data
+	 * @param Base $module
+	 * @return array
 	 */
-	public function get_photo_attributes($photo_data, $module) {
+	public function get_photo_attributes(array $photo_data, Base $module): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+		$out = [];
 		if (!empty($photo_data['video'])) {
-			return ' data-photonic-media-type="video" ';
+			$out['data-photonic-media-type'] = 'video';
 		}
 		else {
-			return ' data-photonic-media-type="image" ';
+			$out['data-photonic-media-type'] = 'image';
 		}
+		return $out;
 	}
 
 	/**
@@ -73,16 +76,16 @@ abstract class Lightbox {
 	 * without any special handling, the default method suffices. But in some cases the lightbox may need to display video as an inline
 	 * element, in which case the respective lightbox file overrides this (typically via the Show_Videos_Inline trait).
 	 *
-	 * @param $photo
-	 * @param $module
-	 * @param $indent
+	 * @param Photo $photo
+	 * @param Base $module
+	 * @param string $indent
 	 * @return string
 	 */
-	public function get_video_markup($photo, $module, $indent) {
+	public function get_video_markup(Photo $photo, Base $module, string $indent): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
 		return '';
 	}
 
-	public function get_lightbox_title($photo, $module, $title, $alt_title, $target) {
+	public function get_lightbox_title(Photo $photo, Base $module, $title, $alt_title, $target) {
 		$url = $this->get_title_link($photo);
 		if (empty($title)) {
 			$shown_title = $module->link_lightbox_title ? $this->default_lightbox_text : $alt_title;
@@ -94,7 +97,8 @@ abstract class Lightbox {
 		if (!empty($shown_title)) {
 			// In the following esc_attr() is correct, because this information is used within attributes.
 			if ($module->link_lightbox_title && !empty($url)) {
-				$title_markup = esc_attr("<a href='$url' $target>") . esc_attr(stripslashes(wp_filter_nohtml_kses($shown_title))) . esc_attr("</a>");
+				// $title_markup = esc_attr("<a href='$url' $target>") . esc_attr(stripslashes(wp_filter_nohtml_kses($shown_title))) . esc_attr("</a>");
+				$title_markup = esc_attr("<a href='$url' $target>") . esc_attr(stripslashes(wp_kses($shown_title, Photonic::$safe_title_tags))) . esc_attr("</a>");
 
 				if ($module->show_buy_link && !empty($photo->buy_link)) {
 					$title_markup .= esc_attr('<a class="photonic-buy-link" href="' . esc_url_raw($photo->buy_link) . '" target="_blank" title="' . __('Buy', 'photonic') . '"><div class="icon-buy"></div></a>');
@@ -113,10 +117,10 @@ abstract class Lightbox {
 	/**
 	 * @param Photo $photo
 	 * @param array $short_code
-	 * @param $module
+	 * @param Base $module
 	 * @return mixed
 	 */
-	public function get_grid_link($photo, $short_code, $module) {
+	public function get_grid_link(Photo $photo, array $short_code, Base $module): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
 		if ('none' === $this->library && !empty($photo->main_page) && !empty($short_code['link']) && 'page' === $short_code['link']) {
 			return esc_url($photo->main_page);
 		}
@@ -125,9 +129,9 @@ abstract class Lightbox {
 
 	/**
 	 * @param $photo
-	 * @return mixed|string
+	 * @return string
 	 */
-	public function get_title_link($photo) {
+	public function get_title_link($photo): string {
 		return esc_url($photo->main_page ?: '');
 	}
 }

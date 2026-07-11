@@ -11,27 +11,31 @@ echo wp_kses_post( $description );
 
 echo "\n\n";
 
-echo "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
+if ( ! empty( $summaries ) ) {
 
-foreach ( $summaries as $survey ) {
-	echo wp_kses_post(
-		"\t" .
-		__( 'Survey: ' ) .
-		$survey['name'] .
-		"\n\n"
-	);
+    echo "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
 
-	echo wp_kses_post(
-		"\t" .
-		__( 'Responses: ' ) .
-		$survey['responses'] .
-		"\n\n"
-	);
+    foreach ( $summaries as $survey ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variable set by caller.
+        echo wp_kses_post(
+            "\t" .
+            __( 'Survey: ', 'userfeedback-lite' ) .
+            $survey['name'] .
+            "\n\n"
+        );
+
+        echo wp_kses_post(
+            "\t" .
+            __( 'Responses: ', 'userfeedback-lite' ) .
+            $survey['responses'] .
+            "\n\n"
+        );
+    }
 }
 
 echo "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
 
 echo sprintf(
-	esc_html__( 'Sent from %s', 'userfeedback' ),
+	// translators: %s is the site URL.
+	esc_html__( 'Sent from %s', 'userfeedback-lite' ),
 	esc_url_raw(get_site_url())
 );

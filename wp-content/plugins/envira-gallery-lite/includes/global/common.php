@@ -165,6 +165,31 @@ class Envira_Gallery_Common {
 	}
 
 	/**
+	 * Sanitizes the justified gallery theme parameter to prevent XSS.
+	 *
+	 * @since 1.12.4
+	 *
+	 * @param string $theme The theme value to sanitize.
+	 * @return string Sanitized theme value.
+	 */
+	public function sanitize_justified_gallery_theme( $theme ) {
+		// Get valid themes
+		$valid_themes       = $this->get_justified_gallery_themes();
+		$valid_theme_values = wp_list_pluck( $valid_themes, 'value' );
+
+		// Sanitize the input - remove any HTML tags and trim whitespace
+		$theme = sanitize_text_field( trim( $theme ) );
+
+		// Check if theme is in the list of valid themes
+		if ( in_array( $theme, $valid_theme_values, true ) ) {
+			return $theme;
+		}
+
+		// Default to 'normal' if invalid theme provided
+		return $this->get_config_default( 'justified_gallery_theme' );
+	}
+
+	/**
 	 * Helper method for retrieving display description options.
 	 *
 	 * @since 1.3.7.3
@@ -338,7 +363,7 @@ class Envira_Gallery_Common {
 
 		$sizes[] = [
 			'value' => 'full',
-			'name'  => __( 'Original Image', 'envira-gallery' ),
+			'name'  => __( 'Original Image', 'envira-gallery-lite' ),
 		];
 
 		return apply_filters( 'envira_gallery_image_sizes', $sizes );
@@ -536,8 +561,9 @@ class Envira_Gallery_Common {
 		global $id, $post;
 
 		// Get the current post ID. If ajax, grab it from the $_POST variable.
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_POST['post_id'] ) ) { // @codingStandardsIgnoreLine
-			$post_id = absint( $_POST['post_id'] ); // @codingStandardsIgnoreLine
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_POST['post_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- get_config_default() is a read-only helper; nonce verification is the responsibility of the AJAX action handler that calls this method.
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- See note above; read-only helper, nonce belongs to calling AJAX handler. Value is sanitized with absint().
+			$post_id = absint( wp_unslash( $_POST['post_id'] ) );
 		} else {
 			$post_id = isset( $post->ID ) ? $post->ID : (int) $id;
 		}
@@ -943,9 +969,19 @@ class Envira_Gallery_Common {
 
 		}
 
-		// Attempt to stream and import the image if it does not exist based on URL provided.
-		if ( ! file_exists( $file_path ) ) {
-			return new WP_Error( 'envira-gallery-error-no-file', __( 'No file could be found for the image URL specified.', 'envira-gallery-lite' ) );
+		// Resolve the canonical path and reject anything that escapes the uploads directory.
+		// $url is a function argument that ultimately traces back to gallery image data which can be
+		// attacker-influenced (e.g. via edit_posts); the regex .+ above captures ../ sequences,
+		// allowing traversal to files like wp-config.php that getimagesize() would then read.
+		$real_uploads_base = realpath( $wp_upload_dir['basedir'] );
+		if ( $file_path ) {
+			$real_file_path = realpath( $file_path );
+			if ( $real_file_path && $real_uploads_base && 0 !== strpos( $real_file_path, trailingslashit( $real_uploads_base ) ) ) {
+				return new WP_Error( 'envira-gallery-error-invalid-path', __( 'The image path is outside the allowed uploads directory.', 'envira-gallery-lite' ) );
+			}
+			if ( $real_file_path ) {
+				$file_path = $real_file_path;
+			}
 		}
 
 		// Attempt to stream and import the image if it does not exist based on URL provided.

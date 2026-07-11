@@ -10,8 +10,8 @@
     transition: background-color 100ms linear;
 	&:focus,
 	&:hover {
-		background: #95dc5e;
-		border-color: #95dc5e;
+		background: #1C803D;
+		border-color: #1C803D;
 		color: #fff;
 		box-shadow: none;
 	}
@@ -26,8 +26,8 @@
     transition: background-color 100ms linear;
 	&:focus,
 	&:hover {
-		background: #95dc5e;
-		border-color: #95dc5e;
+		background: #1C803D;
+		border-color: #1C803D;
 		color: #fff;
 		box-shadow: none;
 	}
@@ -50,18 +50,18 @@
 	}
 }
 .wp-core-ui .envira-button-dark {
-	border-color: $dark_green;
+	border-color: $primary_color;
 	color: $white;
-	background-color: $dark_green;
+	background-color: $primary_color;
 	border-radius: 4px;
 	-webkit-transition: background-color 100ms linear;
     -ms-transition: background-color 100ms linear;
     transition: background-color 100ms linear;
 	&:focus,
 	&:hover {
-		background: #95dc5e;
-		border-color: #95dc5e;
-		color: #fff;
+		background: $primary_button_color_hover;
+		border-color: $primary_button_color_hover;
+		color: $white;
 		box-shadow: none;
 	}
 }

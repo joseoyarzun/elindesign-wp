@@ -20,28 +20,6 @@ if ( ! class_exists( 'WC_Facebookcommerce_Utils' ) ) {
  * @since 2.5.0
  */
 class ProductValidator {
-
-	/**
-	 * The meta key used to flag whether a product should be synced in Facebook
-	 *
-	 * @var string
-	 */
-	public const SYNC_ENABLED_META_KEY = '_wc_facebook_sync_enabled';
-
-	/**
-	 * Maximum length of product description.
-	 *
-	 * @var int
-	 */
-	public const MAX_DESCRIPTION_LENGTH = 5000;
-
-	/**
-	 * Maximum length of product title.
-	 *
-	 * @var int
-	 */
-	public const MAX_TITLE_LENGTH = 150;
-
 	/**
 	 * Maximum allowed attributes in a variation;
 	 *
@@ -132,14 +110,11 @@ class ProductValidator {
 	 */
 	public function validate() {
 		$this->validate_sync_enabled_globally();
-		$this->validate_product_status();
-		$this->validate_product_stock_status();
 		$this->validate_product_sync_field();
-		$this->validate_product_price();
+		$this->validate_product_status();
 		$this->validate_product_visibility();
 		$this->validate_product_terms();
-		$this->validate_product_description();
-		$this->validate_product_title();
+		$this->validate_product_language();
 	}
 
 	/**
@@ -151,13 +126,9 @@ class ProductValidator {
 	 */
 	public function validate_but_skip_status_check() {
 		$this->validate_sync_enabled_globally();
-		$this->validate_product_stock_status();
 		$this->validate_product_sync_field();
-		$this->validate_product_price();
 		$this->validate_product_visibility();
 		$this->validate_product_terms();
-		$this->validate_product_description();
-		$this->validate_product_title();
 	}
 
 	/**
@@ -168,12 +139,8 @@ class ProductValidator {
 	 */
 	public function validate_but_skip_sync_field() {
 		$this->validate_sync_enabled_globally();
-		$this->validate_product_stock_status();
-		$this->validate_product_price();
 		$this->validate_product_visibility();
 		$this->validate_product_terms();
-		$this->validate_product_description();
-		$this->validate_product_title();
 	}
 
 	/**
@@ -250,6 +217,10 @@ class ProductValidator {
 	 * @throws ProductExcludedException If product should not be synced.
 	 */
 	protected function validate_sync_enabled_globally() {
+		if ( $this->integration->is_woo_all_products_enabled() ) {
+			return true;
+		}
+
 		if ( ! $this->integration->is_product_sync_enabled() ) {
 			throw new ProductExcludedException( __( 'Product sync is globally disabled.', 'facebook-for-woocommerce' ) );
 		}
@@ -269,17 +240,6 @@ class ProductValidator {
 	}
 
 	/**
-	 * Check whether the product should be excluded due to being out of stock.
-	 *
-	 * @throws ProductExcludedException If product should not be synced.
-	 */
-	protected function validate_product_stock_status() {
-		if ( 'yes' === get_option( 'woocommerce_hide_out_of_stock_items' ) && ! $this->product->is_in_stock() ) {
-			throw new ProductExcludedException( __( 'Product must be in stock.', 'facebook-for-woocommerce' ) );
-		}
-	}
-
-	/**
 	 * Check whether the product's visibility excludes it from sync.
 	 *
 	 * Products are excluded if they are hidden from the store catalog or from search results.
@@ -289,7 +249,30 @@ class ProductValidator {
 	protected function validate_product_visibility() {
 		$product = $this->product_parent ? $this->product_parent : $this->product;
 
-		if ( ! $product->is_visible() ) {
+		/**
+		 * Instead of directly calling $product->is_visible(), copying the logic of is_visible() here
+		 * excluding the logic for woocommerce_hide_out_of_stock_items because we want to sync out of
+		 * stock items as well irrespective of Inventory settings.
+		 * ===Logic Starts here===
+		 */
+		$visible = 'visible' === $product->get_catalog_visibility() || ( is_search() && 'search' === $product->get_catalog_visibility() ) || ( ! is_search() && 'catalog' === $product->get_catalog_visibility() );
+		if ( 'trash' === $product->get_status() ) {
+			$visible = false;
+		} elseif ( 'publish' !== $product->get_status() && ! current_user_can( 'edit_post', $product->get_id() ) ) {
+			$visible = false;
+		}
+		if ( $product->get_parent_id() ) {
+			$parent_product = wc_get_product( $product->get_parent_id() );
+
+			if ( $parent_product && 'publish' !== $parent_product->get_status() && ! current_user_can( 'edit_post', $parent_product->get_id() ) ) {
+				$visible = false;
+			}
+		}
+		/**
+		 * ===Logic Ends here===
+		 */
+
+		if ( ! $visible ) {
 			throw new ProductExcludedException( __( 'This product cannot be synced to Facebook because it is hidden from your store catalog.', 'facebook-for-woocommerce' ) );
 		}
 	}
@@ -300,6 +283,11 @@ class ProductValidator {
 	 * @throws ProductExcludedException If product should not be synced.
 	 */
 	protected function validate_product_terms() {
+
+		if ( $this->integration->is_woo_all_products_enabled() ) {
+			return;
+		}
+
 		$product = $this->product_parent ? $this->product_parent : $this->product;
 
 		$excluded_categories = $this->integration->get_excluded_product_category_ids();
@@ -335,11 +323,14 @@ class ProductValidator {
 		if ( ! apply_filters( 'wc_facebook_should_sync_product', true, $this->product ) ) {
 			throw new ProductExcludedException( __( 'Product excluded by wc_facebook_should_sync_product filter.', 'facebook-for-woocommerce' ) );
 		}
-
+		/**
+		 * The variable check will be used when we have create update of a product
+		 * Either from Product details page or bulk editor
+		 */
 		if ( $this->product->is_type( 'variable' ) ) {
 			foreach ( $this->product->get_children() as $child_id ) {
 				$child_product = wc_get_product( $child_id );
-				if ( $child_product && 'no' !== $child_product->get_meta( self::SYNC_ENABLED_META_KEY ) ) {
+				if ( $child_product && 'no' !== $child_product->get_meta( Products::get_product_sync_meta_key() ) ) {
 					// At least one product is "sync-enabled" so bail before exception.
 					return;
 				}
@@ -347,76 +338,42 @@ class ProductValidator {
 
 			// Variable product has no variations with sync enabled so it shouldn't be synced.
 			throw $invalid_exception;
-		} else {
-			if ( 'no' === $this->product->get_meta( self::SYNC_ENABLED_META_KEY ) ) {
+		} elseif ( $this->product->get_type() === 'variation' ) {
+			/**
+			 * This check will run for background jobs like sync all and feeds
+			 */
+			// Check if product_parent exists before calling get_meta() to prevent "Call to a member function get_meta() on null" error
+			$parent_sync = $this->product_parent ? $this->product_parent->get_meta( Products::get_product_sync_meta_key() ) : null;
+
+			if ( 'yes' === $parent_sync ) {
+				return;
+			} elseif ( 'no' === $parent_sync ) {
 				throw $invalid_exception;
+			} else {
+				$variation_sync = false;
+				foreach ( $this->product_parent->get_children() as $child_id ) {
+					$child_product = wc_get_product( $child_id );
+					if ( $child_product && 'no' !== $child_product->get_meta( Products::get_product_sync_meta_key() ) ) {
+						// At least one product is "sync-enabled" so bail before exception.
+						$variation_sync = true;
+						break;
+					}
+				}
+
+				/**
+				 * Updating parent level sync for UI issues and
+				 * Future variation checks for sync
+				 */
+				update_post_meta( $this->product_parent->get_id(), Products::get_product_sync_meta_key(), $variation_sync ? 'yes' : 'no' );
+				if ( $variation_sync ) {
+					return;
+				}
 			}
-		}
-	}
 
-	/**
-	 * "allow simple or variable products (and their variations) with zero or empty price - exclude other product types with zero or empty price"
-	 * unsure why but that's what we're doing
-	 *
-	 * @throws ProductExcludedException If product should not be synced.
-	 */
-	protected function validate_product_price() {
-		$primary_product = $this->product_parent ? $this->product_parent : $this->product;
-
-		// Variable and simple products are allowed to have no price.
-		if ( in_array( $primary_product->get_type(), [ 'simple', 'variable' ], true ) ) {
-			return;
-		}
-
-		if ( ! Products::get_product_price( $this->product ) ) {
-			throw new ProductExcludedException( __( 'If product is not simple, variable or variation it must have a price.', 'facebook-for-woocommerce' ) );
-		}
-	}
-
-	/**
-	 * Check if the description field has correct format according to:
-	 * Product Description Specifications for Catalogs : https://www.facebook.com/business/help/2302017289821154
-	 *
-	 * @throws ProductInvalidException If product description does not meet the requirements.
-	 */
-	protected function validate_product_description() {
-		/*
-		 * First step is to select the description that we want to evaluate.
-		 * Main description is the one provided for the product in the Facebook.
-		 * If it is blank, product description will be used.
-		 * If product description is blank, shortname will be used.
-		 */
-		$description = $this->facebook_product->get_fb_description();
-
-		/*
-		 * Requirements:
-		 * - No all caps descriptions.
-		 * - Max length 5000.
-		 * - Min length 30 ( tested and not required, will not enforce until this will become a hard requirement )
-		 */
-		if ( \WC_Facebookcommerce_Utils::is_all_caps( $description ) ) {
-			throw new ProductInvalidException( __( 'Product description is all capital letters. Please change the description to sentence case in order to allow synchronization of your product.', 'facebook-for-woocommerce' ) );
-		}
-		if ( strlen( $description ) > self::MAX_DESCRIPTION_LENGTH ) {
-			throw new ProductInvalidException( __( 'Product description is too long. Maximum allowed length is 5000 characters.', 'facebook-for-woocommerce' ) );
-		}
-	}
-
-	/**
-	 * Check if the title field has correct format according to:
-	 * Product Title Specifications for Catalogs : https://www.facebook.com/business/help/2104231189874655
-	 *
-	 * @throws ProductInvalidException If product title does not meet the requirements.
-	 */
-	protected function validate_product_title() {
-		$title = $this->product->get_title();
-
-		/*
-		 * Requirements:
-		 * - Max length 150.
-		 */
-		if ( mb_strlen( $title, 'UTF-8' ) > self::MAX_TITLE_LENGTH ) {
-			throw new ProductInvalidException( __( 'Product title is too long. Maximum allowed length is 150 characters.', 'facebook-for-woocommerce' ) );
+			// Variable product has no variations with sync enabled so it shouldn't be synced.
+			throw $invalid_exception;
+		} elseif ( 'no' === $this->product->get_meta( Products::get_product_sync_meta_key() ) ) {
+				throw $invalid_exception;
 		}
 	}
 
@@ -444,4 +401,77 @@ class ProductValidator {
 		}
 	}
 
+	/**
+	 * Validate if the product is in the default language when a localization plugin is active.
+	 *
+	 * Only products in the default language should be synced to the main product catalog.
+	 * Translated products are handled separately via language override feeds.
+	 *
+	 * @throws ProductExcludedException If product is not in the default language.
+	 */
+	protected function validate_product_language() {
+		// Get the product to check (use parent for variations)
+		$product_to_check = $this->product_parent ? $this->product_parent : $this->product;
+		$product_id       = $product_to_check->get_id();
+
+		// Only validate language if language override feed generation is enabled
+		// Use the integration method instead of get_option() to handle all necessary checks
+		$is_language_feed_enabled = $this->integration->is_language_override_feed_generation_enabled();
+
+		if ( ! $is_language_feed_enabled ) {
+			return;
+		}
+
+		$integration = \WooCommerce\Facebook\Integrations\IntegrationRegistry::get_active_localization_integration();
+
+		// If no localization plugin is active, skip language validation
+		if ( ! $integration ) {
+			return;
+		}
+
+		$default_language = $integration->get_default_language();
+
+		// If we can't determine the default language, skip validation to avoid blocking sync
+		if ( ! $default_language ) {
+			return;
+		}
+
+		// Get the product's language using the integration's method
+		$product_language = $integration->get_product_language( $product_id );
+
+		// If we can't determine the product's language, skip validation to avoid blocking sync
+		if ( ! $product_language ) {
+			return;
+		}
+
+		// Compare product language with default language
+		// Use Locale utility to extract language code for consistent comparison
+		$default_lang_code = $this->extract_language_code( $default_language );
+		$product_lang_code = $this->extract_language_code( $product_language );
+
+		if ( $product_lang_code !== $default_lang_code ) {
+			throw new ProductExcludedException(
+				sprintf(
+					/* translators: 1: product language, 2: default language */
+					__( 'Product is in language "%1$s" but only default language "%2$s" products are synced to the main catalog.', 'facebook-for-woocommerce' ),
+					$product_language,
+					$default_language
+				)
+			);
+		}
+	}
+
+	/**
+	 * Extract language code from locale string.
+	 *
+	 * Converts locale format (en_US) to language code (en) for consistent comparison.
+	 * This uses the same logic as Locale::convert_to_facebook_language_code().
+	 *
+	 * @param string $locale_or_language Locale string or language code.
+	 * @return string Language code (lowercase).
+	 */
+	private function extract_language_code( string $locale_or_language ): string {
+		$parts = explode( '_', $locale_or_language );
+		return strtolower( $parts[0] );
+	}
 }

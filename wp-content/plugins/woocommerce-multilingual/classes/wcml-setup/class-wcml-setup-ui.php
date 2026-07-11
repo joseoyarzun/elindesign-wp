@@ -2,17 +2,7 @@
 
 class WCML_Setup_UI {
 
-	/** @var  woocommerce_wpml */
-	private $woocommerce_wpml;
-
-	/**
-	 * WCML_Setup_UI constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
-	public function __construct( woocommerce_wpml $woocommerce_wpml ) {
-		$this->woocommerce_wpml = $woocommerce_wpml;
-	}
+	const SLUG = 'wcml-setup';
 
 	public function add_hooks() {
 		if ( current_user_can( 'manage_options' ) && $this->is_wcml_setup_page() ) {
@@ -44,11 +34,11 @@ class WCML_Setup_UI {
 	 */
 	private function is_wcml_setup_page() {
 		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
-		return isset( $_GET['page'] ) && $_GET['page'] === 'wcml-setup';
+		return isset( $_GET['page'] ) && $_GET['page'] === self::SLUG;
 	}
 
 	public function admin_menus() {
-		add_dashboard_page( '', '', 'manage_options', 'wcml-setup', '' );
+		add_dashboard_page( '', '', 'manage_options', self::SLUG, '' );
 	}
 
 	/**
@@ -60,7 +50,7 @@ class WCML_Setup_UI {
 	 * @throws \WPML\Core\Twig_Error_Syntax Exception.
 	 */
 	public function setup_header( $steps, $step ) {
-		set_current_screen( 'wcml-setup' );
+		set_current_screen( self::SLUG );
 		$header = new WCML_Setup_Header_UI( $steps, $step );
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $header->get_view();

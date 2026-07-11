@@ -1,12 +1,13 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 function pmxi_wp_ajax_import_failed(){
 
 	if ( ! check_ajax_referer( 'wp_all_import_secure', 'security', false )){
-		exit( json_encode(array('result' => false, 'msg' => __('Security check', 'wp_all_import_plugin'))) );
+		exit( json_encode(array('result' => false, 'msg' => __('Security check', 'wp-all-import'))) );
 	}
 
 	if ( ! current_user_can( PMXI_Plugin::$capabilities ) ){
-		exit( json_encode(array('result' => false, 'msg' => __('Security check', 'wp_all_import_plugin'))) );
+		exit( json_encode(array('result' => false, 'msg' => __('Security check', 'wp-all-import'))) );
 	}
 
     $result = false;
@@ -16,9 +17,9 @@ function pmxi_wp_ajax_import_failed(){
         if ( ! $import->isEmpty()) {
             $import->set(array(
                 'executing' => 0,
-                'last_activity' => date('Y-m-d H:i:s'),
+                'last_activity' => gmdate('Y-m-d H:i:s'),
                 'failed' => 1,
-                'failed_on' => date('Y-m-d H:i:s')
+                'failed_on' => gmdate('Y-m-d H:i:s')
             ))->save();
             $result = true;
             do_action('pmxi_import_failed', intval($_POST['id']));

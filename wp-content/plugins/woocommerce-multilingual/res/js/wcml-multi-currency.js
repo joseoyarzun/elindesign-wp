@@ -3,10 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function wcml_switch_currency_handler(event) {
-    var targetElement = event.target;
+    var eventTargetElement = event.target;
 
-    if (targetElement.matches('.wcml_currency_switcher a')) {
+    if (eventTargetElement.matches('.wcml_currency_switcher a, .wcml_currency_switcher a *')) {
         event.preventDefault();
+        var targetElement = eventTargetElement.closest('.wcml_currency_switcher a');
 
         if (targetElement.disabled ||
             targetElement.parentElement.classList.contains('wcml-cs-active-currency') ||
@@ -30,7 +31,7 @@ function wcml_load_currency(currency, force_switch) {
 
     var switchers = document.querySelectorAll('.wcml_currency_switcher');
     switchers.forEach(function(switcher) {
-        switcher.appendChild(ajax_loader);
+        switcher.appendChild(ajax_loader.cloneNode(true));
     });
 
     var formData = new FormData();

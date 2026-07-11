@@ -75,15 +75,15 @@ export class PhotonicPhotoSwipe5 extends Lightbox {
 						const currSlideElement = lightbox.pswp.currSlide.data.element;
 						let captionHTML = '';
 						if (currSlideElement) {
-							const hiddenCaption = currSlideElement.getAttribute('data-title');
+							const hiddenCaption = Util.HTMLSanitizer.SanitizeHTML(currSlideElement.getAttribute('data-title'));
 							if (hiddenCaption) {
 								captionHTML = hiddenCaption;
 							}
 							else if (currSlideElement.getAttribute('title')) {
-								captionHTML = currSlideElement.getAttribute('title');
+								captionHTML = Util.getText(currSlideElement.getAttribute('title'));
 							}
 							else {
-								captionHTML = currSlideElement.querySelector('img').getAttribute('alt');
+								captionHTML = Util.getText(currSlideElement.querySelector('img').getAttribute('alt'));
 							}
 						}
 

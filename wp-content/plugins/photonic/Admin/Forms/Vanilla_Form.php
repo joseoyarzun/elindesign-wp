@@ -706,7 +706,7 @@ class Vanilla_Form {
 					'id'   => 'nick_name',
 					'name' => esc_html__('Nickname', 'photonic'),
 					'type' => 'text',
-					'hint' => esc_html__('If your SmugMug URL is http://joe-sixpack.smugmug.com, this is "joe-sixpack". Required if the "Display" is "Tree" or "All albums".', 'photonic')
+					'hint' => esc_html__('If your SmugMug URL is https://joe-sixpack.smugmug.com, this is "joe-sixpack". Required if the "Display" is "Tree" or "All albums".', 'photonic')
 				],
 
 				[

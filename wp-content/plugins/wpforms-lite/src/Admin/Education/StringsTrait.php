@@ -16,7 +16,7 @@ trait StringsTrait {
 	 *
 	 * @return array
 	 */
-	protected function get_js_strings(): array { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+	protected function get_js_strings(): array {
 
 		$strings = [];
 		$name    = '%name%';
@@ -24,6 +24,7 @@ trait StringsTrait {
 		$strings['ok']               = esc_html__( 'Ok', 'wpforms-lite' );
 		$strings['cancel']           = esc_html__( 'Cancel', 'wpforms-lite' );
 		$strings['close']            = esc_html__( 'Close', 'wpforms-lite' );
+		$strings['view_demo']        = esc_html__( 'View Demo', 'wpforms-lite' );
 		$strings['ajax_url']         = admin_url( 'admin-ajax.php' );
 		$strings['nonce']            = wp_create_nonce( 'wpforms-education' );
 		$strings['activate_prompt']  = '<p>' . esc_html(
@@ -177,6 +178,7 @@ trait StringsTrait {
 			),
 			'url'            => wpforms_admin_upgrade_link( $upgrade_utm_medium ),
 			'url_template'   => wpforms_is_admin_page( 'templates' ) ? wpforms_admin_upgrade_link( 'Form Templates Subpage' ) : wpforms_admin_upgrade_link( 'builder-modal-template' ),
+			'url_themes'     => wpforms_admin_upgrade_link( 'Builder Themes' ),
 			'modal'          => wpforms_get_upgrade_modal_text( strtolower( $level ) ),
 		];
 	}

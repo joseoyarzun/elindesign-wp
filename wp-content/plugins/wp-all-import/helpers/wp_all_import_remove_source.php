@@ -1,8 +1,10 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals
+if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! function_exists('wp_all_import_remove_source')){
 	function wp_all_import_remove_source($file, $remove_dir = true){
 		
-		@unlink($file);
+		wp_delete_file($file);
         
         $path_parts = pathinfo($file);
 
@@ -13,7 +15,7 @@ if ( ! function_exists('wp_all_import_remove_source')){
             if ( wp_all_import_isValidMd5($dirname)){                              
             	if ($remove_dir or count(@scandir($path_parts['dirname'])) == 3){
             	    if (file_exists($path_parts['dirname'] . DIRECTORY_SEPARATOR . 'index.php')){
-                        @unlink($path_parts['dirname'] . DIRECTORY_SEPARATOR . 'index.php' );
+                        wp_delete_file($path_parts['dirname'] . DIRECTORY_SEPARATOR . 'index.php' );
                     }
             	}
                 if ($remove_dir or count(@scandir($path_parts['dirname'])) == 2){

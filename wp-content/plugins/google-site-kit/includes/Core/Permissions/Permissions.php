@@ -6,6 +6,8 @@
  * @copyright 2021 Google LLC
  * @license   https://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
  * @link      https://sitekit.withgoogle.com
+ *
+ * phpcs:disable PHPCS.Commenting.RequireDocTagDescription -- Pre-existing violations; tracked for follow-up cleanup.
  */
 
 namespace Google\Site_Kit\Core\Permissions;
@@ -203,7 +205,7 @@ final class Permissions {
 	public function register() {
 		add_filter(
 			'map_meta_cap',
-			function( array $caps, $cap, $user_id, $args ) {
+			function ( array $caps, $cap, $user_id, $args ) {
 				return $this->map_meta_capabilities( $caps, $cap, $user_id, $args );
 			},
 			10,
@@ -212,7 +214,7 @@ final class Permissions {
 
 		add_filter(
 			'googlesitekit_rest_routes',
-			function( $routes ) {
+			function ( $routes ) {
 				return array_merge( $routes, $this->get_rest_routes() );
 			}
 		);
@@ -236,7 +238,7 @@ final class Permissions {
 
 		add_filter(
 			'user_has_cap',
-			function( array $allcaps ) {
+			function ( array $allcaps ) {
 				return $this->grant_additional_caps( $allcaps );
 			}
 		);
@@ -336,7 +338,7 @@ final class Permissions {
 				$caps[] = self::SETUP;
 			}
 
-			if ( ! in_array( $cap, array( self::AUTHENTICATE, self::SETUP, self::VIEW_DASHBOARD, self::VIEW_POSTS_INSIGHTS ), true ) ) {
+			if ( ! in_array( $cap, array( self::AUTHENTICATE, self::SETUP, self::VIEW_DASHBOARD, self::VIEW_POSTS_INSIGHTS, self::VIEW_WP_DASHBOARD_WIDGET, self::VIEW_ADMIN_BAR_MENU ), true ) ) {
 				// For regular users, require being authenticated.
 				if ( ! $this->is_user_authenticated( $user_id ) ) {
 					return array_merge( $caps, array( 'do_not_allow' ) );
@@ -364,14 +366,16 @@ final class Permissions {
 			// Intentional fallthrough - viewing the dashboard widget and admin bar menu require
 			// a user to be authenticated.
 			case self::VIEW_AUTHENTICATED_DASHBOARD:
-			case self::VIEW_WP_DASHBOARD_WIDGET:
-			case self::VIEW_ADMIN_BAR_MENU:
 				$caps = array_merge( $caps, $this->check_view_authenticated_dashboard_capability( $user_id ) );
 				break;
 			// Intentional fallthrough.
 			case self::VIEW_DASHBOARD:
 			case self::VIEW_POSTS_INSIGHTS:
 				$caps = array_merge( $caps, $this->check_view_dashboard_capability( $user_id ) );
+				break;
+			case self::VIEW_WP_DASHBOARD_WIDGET:
+			case self::VIEW_ADMIN_BAR_MENU:
+				$caps = array_merge( $caps, $this->check_view_wp_dashboard_widget_and_admin_bar_capability( $user_id ) );
 				break;
 		}
 
@@ -389,9 +393,7 @@ final class Permissions {
 	 * @return array Array with a 'do_not_allow' element if checks fail, empty array if checks pass.
 	 */
 	private function check_dashboard_sharing_capability( $cap, $user_id, $args ) {
-		if ( isset( $args[0] ) ) {
-			$module_slug = $args[0];
-		}
+		$module_slug = $args[0] ?? '';
 
 		switch ( $cap ) {
 			case self::VIEW_SHARED_DASHBOARD:
@@ -448,6 +450,33 @@ final class Permissions {
 		}
 
 		return $view_authenticated_dashboard;
+	}
+
+	/**
+	 * Checks if the VIEW_WP_DASHBOARD_WIDGET and VIEW_ADMIN_BAR_MENU capabilities are allowed for the user.
+	 *
+	 * Allows access to the VIEW_WP_DASHBOARD_WIDGET and VIEW_ADMIN_BAR_MENU capabilities if the user can view
+	 * either the authenticated or shared dashboard and if the user has a shared role for either the Analytics
+	 * or Search Console module.
+	 *
+	 * @since 1.120.0
+	 *
+	 * @param int $user_id User ID of the user the capability is checked for.
+	 * @return array Array with a 'do_not_allow' element if checks fail, empty array if checks pass.
+	 */
+	private function check_view_wp_dashboard_widget_and_admin_bar_capability( $user_id ) {
+		$view_dashboard_capability = $this->check_view_dashboard_capability( $user_id );
+
+		if ( in_array( self::AUTHENTICATE, $view_dashboard_capability, true ) || in_array( 'do_not_allow', $view_dashboard_capability, true ) ) {
+			return $view_dashboard_capability;
+		}
+
+		if ( ! $this->user_has_shared_role_for_module( $user_id, 'analytics-4' ) &&
+			! $this->user_has_shared_role_for_module( $user_id, 'search-console' ) ) {
+			return array( 'do_not_allow' );
+		}
+
+		return array();
 	}
 
 	/**
@@ -572,7 +601,7 @@ final class Permissions {
 	 * @param string[]|null $shared_roles Optional. List of shared role IDs to check against the user's. Defaults to all shared module roles.
 	 * @return bool
 	 */
-	private function user_has_shared_role( $user_id, array $shared_roles = null ) {
+	private function user_has_shared_role( $user_id, ?array $shared_roles = null ) {
 		if ( ! is_array( $shared_roles ) ) {
 			$shared_roles = $this->modules->get_module_sharing_settings()->get_all_shared_roles();
 		}
@@ -681,10 +710,10 @@ final class Permissions {
 				array(
 					array(
 						'methods'             => WP_REST_Server::READABLE,
-						'callback'            => function() {
+						'callback'            => function () {
 							return new WP_REST_Response( $this->check_all_for_current_user() );
 						},
-						'permission_callback' => function() {
+						'permission_callback' => function () {
 							return current_user_can( Permissions::VIEW_SPLASH ) || current_user_can( Permissions::VIEW_DASHBOARD );
 						},
 					),

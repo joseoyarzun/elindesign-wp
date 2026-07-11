@@ -87,8 +87,31 @@ class Envira_Gallery_Posttype {
 			'show_in_rest'        => true,
 			'rest_base'           => 'envira-gallery',
 			'menu_position'       => apply_filters( 'envira_gallery_post_type_menu_position', 247 ),
-			'menu_icon'           => plugins_url( 'assets/css/images/menu-icon@2x.png', $this->base->file ),
+			'menu_icon'           => plugins_url( 'assets/css/images/envira-green.png', $this->base->file ),
 			'supports'            => [ 'title' ],
+			'map_meta_cap'        => true,
+		];
+
+		$args['capabilities'] = [
+			// Meta caps.
+			'edit_post'              => 'edit_envira_gallery',
+			'read_post'              => 'read_envira_gallery',
+			'delete_post'            => 'delete_envira_gallery',
+
+			// Primitive caps outside map_meta_cap().
+			'edit_posts'             => 'edit_envira_galleries',
+			'edit_others_posts'      => 'edit_other_envira_galleries',
+			'publish_posts'          => 'publish_envira_galleries',
+			'read_private_posts'     => 'read_private_envira_galleries',
+
+			// Primitive caps used within map_meta_cap().
+			'read'                   => 'read',
+			'delete_posts'           => 'delete_envira_galleries',
+			'delete_private_posts'   => 'delete_private_envira_galleries',
+			'delete_published_posts' => 'delete_published_envira_galleries',
+			'delete_others_posts'    => 'delete_others_envira_galleries',
+			'edit_private_posts'     => 'edit_private_envira_galleries',
+			'edit_published_posts'   => 'edit_published_envira_galleries',
 		];
 
 		// Filter arguments.

@@ -68,6 +68,7 @@ class Field extends WPForms_Field {
 
 		// Customize HTML field values.
 		add_filter( 'wpforms_html_field_value', [ $this, 'field_html_value' ], 10, 4 );
+		add_filter( "wpforms_{$this->type}_field_html_value_images", [ $this, 'field_html_value_images' ], 10, 3 );
 
 		// Define additional field properties.
 		add_filter( "wpforms_field_properties_{$this->type}", [ $this, 'field_properties' ], 5, 3 );
@@ -87,7 +88,7 @@ class Field extends WPForms_Field {
 	 *
 	 * @return array
 	 */
-	public function field_properties( $properties, $field, $form_data ) { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+	public function field_properties( $properties, $field, $form_data ) { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
 
 		// Define data.
 		$form_id  = absint( $form_data['id'] );
@@ -104,6 +105,12 @@ class Field extends WPForms_Field {
 			'attr'  => [],
 			'id'    => "wpforms-{$form_id}-field_{$field_id}",
 		];
+
+		$is_choice_limit_set = ! empty( $field['choice_limit'] ) && (int) $field['choice_limit'] > 0;
+
+		if ( $is_choice_limit_set ) {
+			$properties['input_container']['data']['choice-limit'] = $field['choice_limit'];
+		}
 
 		// Set input properties.
 		foreach ( $choices as $key => $choice ) {
@@ -151,6 +158,11 @@ class Field extends WPForms_Field {
 				'required'   => ! empty( $field['required'] ) ? 'required' : '',
 				'default'    => isset( $choice['default'] ),
 			];
+
+			// Rule for validator only if needed.
+			if ( $is_choice_limit_set ) {
+				$properties['inputs'][ $key ]['data']['rule-check-limit'] = 'true';
+			}
 		}
 
 		// Required class for pagebreak validation.
@@ -271,7 +283,7 @@ class Field extends WPForms_Field {
 			[
 				'slug'    => 'show_price_after_labels',
 				'value'   => isset( $field['show_price_after_labels'] ) ? '1' : '0',
-				'desc'    => esc_html__( 'Show price after item labels', 'wpforms-lite' ),
+				'desc'    => esc_html__( 'Show Price After Item Labels', 'wpforms-lite' ),
 				'tooltip' => esc_html__( 'Check this option to show price of the item after the label.', 'wpforms-lite' ),
 			],
 			false
@@ -285,6 +297,9 @@ class Field extends WPForms_Field {
 
 		// Choices Images.
 		$this->field_option( 'choices_images', $field );
+
+		// Hide Choices Images.
+		$this->field_option( 'choices_images_hide', $field );
 
 		// Choice Images Style (theme).
 		$this->field_option( 'choices_images_style', $field );
@@ -331,6 +346,9 @@ class Field extends WPForms_Field {
 
 		// Input columns.
 		$this->field_option( 'input_columns', $field );
+
+		// Choice Limit.
+		$this->field_option( 'choice_limit', $field );
 
 		// Custom CSS classes.
 		$this->field_option( 'css', $field );
@@ -379,7 +397,7 @@ class Field extends WPForms_Field {
 	 * @noinspection HtmlUnknownAttribute
 	 * @noinspection HtmlUnknownTarget
 	 */
-	public function field_display( $field, $deprecated, $form_data ) { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+	public function field_display( $field, $deprecated, $form_data ) {
 
 		// Define data.
 		$container = $field['properties']['input_container'];
@@ -478,7 +496,8 @@ class Field extends WPForms_Field {
 	 */
 	public function validate( $field_id, $field_submit, $form_data ) {
 
-		$error = '';
+		$field_id = (int) $field_id;
+		$error    = '';
 
 		// Basic required check - If field is marked as required, check for entry data.
 		if ( ! empty( $form_data['fields'][ $field_id ]['required'] ) && empty( $field_submit ) ) {
@@ -495,6 +514,10 @@ class Field extends WPForms_Field {
 				}
 			}
 		}
+
+		$field_submit = (array) $field_submit;
+
+		$this->validate_field_choice_limit( $field_id, $field_submit, $form_data );
 
 		if ( ! empty( $error ) ) {
 			wpforms()->obj( 'process' )->errors[ $form_data['id'] ][ $field_id ] = $error;

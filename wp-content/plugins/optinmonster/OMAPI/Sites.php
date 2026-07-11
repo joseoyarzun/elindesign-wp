@@ -184,7 +184,7 @@ class OMAPI_Sites {
 	 * @return mixed         Site-created response or WP_Error.
 	 */
 	public function attempt_create_site( $creds ) {
-		$settings              = OMAPI_Api::getUrlArgs();
+		$settings              = OMAPI_Api::get_url_args();
 		$settings['wordpress'] = 1;
 
 		$site_args = array(
@@ -212,7 +212,7 @@ class OMAPI_Sites {
 	 */
 	public function get_domain() {
 		$url      = site_url();
-		$parsed   = OMAPI_Utils::parse_url( $url );
+		$parsed   = wp_parse_url( $url );
 		$hostname = ! empty( $parsed['host'] ) ? $parsed['host'] : $url;
 		$domain   = preg_replace( '/^www\./', '', $hostname );
 

@@ -8,6 +8,10 @@
  * @author  Devin Vinson
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 /**
  * Review Class
  *
@@ -92,11 +96,13 @@ class Envira_Lite_Review {
 				'dismissed' => false,
 			];
 			$load   = true;
-		} else {
+		} elseif (
+			( isset( $review['dismissed'] ) && ! $review['dismissed'] )
+			&& ( isset( $review['time'] )
+			&& ( ( $review['time'] + DAY_IN_SECONDS ) <= $time ) )
+		) {
 			// Check if it has been dismissed or not.
-			if ( ( isset( $review['dismissed'] ) && ! $review['dismissed'] ) && ( isset( $review['time'] ) && ( ( $review['time'] + DAY_IN_SECONDS ) <= $time ) ) ) {
-				$load = true;
-			}
+			$load = true;
 		}
 
 		// If we cannot load, return early.
@@ -139,8 +145,7 @@ class Envira_Lite_Review {
 		// We have a candidate! Output a review message.
 		?>
 		<div class="notice notice-info is-dismissible envira-review-notice">
-			<p><?php esc_html_e( 'Hey, I noticed you created a photo gallery with Envira - that’s awesome! Could you please do me a BIG favor and give it a 5-star rating on WordPress to help us spread the word and boost our motivation?', 'envira-gallery-lite' ); ?></p>
-			<p><strong><?php esc_html_e( '~ Syed Balkhi, CEO of Envira Gallery', 'envira-gallery-lite' ); ?></strong></p>
+			<p><?php esc_html_e( 'Hey congrats on creating a photo gallery with Envira — that’s awesome! Could you do us a BIG favor and give us a 5-star rating on WordPress to help us spread the word and boost our motivation?', 'envira-gallery-lite' ); ?></p>
 			<p>
 				<a href="https://wordpress.org/support/plugin/envira-gallery-lite/reviews/?filter=5#new-post" class="envira-dismiss-review-notice envira-review-out" target="_blank" rel="noopener"><?php esc_html_e( 'Ok, you deserve it', 'envira-gallery-lite' ); ?></a><br>
 				<a href="#" class="envira-dismiss-review-notice" target="_blank" rel="noopener"><?php esc_html_e( 'Nope, maybe later', 'envira-gallery-lite' ); ?></a><br>
@@ -155,7 +160,8 @@ class Envira_Lite_Review {
 					}
 
 					$.post( ajaxurl, {
-						action: 'envira_dismiss_review'
+						action: 'envira_dismiss_review',
+						nonce:  '<?php echo esc_js( wp_create_nonce( 'envira-gallery-dismiss-review' ) ); ?>' // Nonce generated at output time; verified server-side to prevent CSRF.
 					});
 
 					$('.envira-review-notice').remove();
@@ -171,6 +177,9 @@ class Envira_Lite_Review {
 	 * @since 1.1.6.1
 	 */
 	public function dismiss_review() {
+
+		// Verify nonce to prevent CSRF — capability check alone does not validate request origin.
+		check_ajax_referer( 'envira-gallery-dismiss-review', 'nonce' );
 
 		$review = get_option( 'envira_gallery_review' );
 		if ( ! $review ) {

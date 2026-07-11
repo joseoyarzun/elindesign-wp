@@ -48,9 +48,9 @@ class GeneralSettings {
 		$this->migrateRssContentSettings();
 		$this->migrateRedirectToParent();
 		$this->migrateDisabledPosts();
+		$this->migrateNoPaginationForCanonicalUrls();
 
 		$settings = [
-			'aiosp_no_paged_canonical_links'   => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'noPaginationForCanonical' ] ],
 			'aiosp_admin_bar'                  => [ 'type' => 'boolean', 'newOption' => [ 'advanced', 'adminBarMenu' ] ],
 			'aiosp_google_verify'              => [ 'type' => 'string', 'newOption' => [ 'webmasterTools', 'google' ] ],
 			'aiosp_bing_verify'                => [ 'type' => 'string', 'newOption' => [ 'webmasterTools', 'bing' ] ],
@@ -62,7 +62,6 @@ class GeneralSettings {
 			'aiosp_schema_person_manual_name'  => [ 'type' => 'string', 'newOption' => [ 'searchAppearance', 'global', 'schema', 'personName' ] ],
 			'aiosp_schema_organization_logo'   => [ 'type' => 'string', 'newOption' => [ 'searchAppearance', 'global', 'schema', 'organizationLogo' ] ],
 			'aiosp_schema_person_manual_image' => [ 'type' => 'string', 'newOption' => [ 'searchAppearance', 'global', 'schema', 'personLogo' ] ],
-			'aiosp_schema_search_results_page' => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'sitelinks' ] ],
 			'aiosp_togglekeywords'             => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'useKeywords' ] ],
 			'aiosp_use_categories'             => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'useCategoriesForMetaKeywords' ] ],
 			'aiosp_use_tags_as_keywords'       => [ 'type' => 'boolean', 'newOption' => [ 'searchAppearance', 'advanced', 'useTagsForMetaKeywords' ] ],
@@ -122,7 +121,7 @@ class GeneralSettings {
 			->start( 'postmeta' . ' as pm' )
 			->select( 'pm.meta_key, pm.meta_value' )
 			->where( 'pm.post_id', $post->ID )
-			->whereRaw( "`pm`.`meta_key` LIKE '_aioseop_%'" )
+			->whereLike( 'pm.meta_key', '_aioseop_%', true )
 			->run()
 			->result();
 
@@ -397,9 +396,9 @@ class GeneralSettings {
 		foreach ( $this->oldOptions as $name => $value ) {
 			if (
 				! in_array( $name, array_keys( $settings ), true ) &&
-				preg_match( '#aiosp_(.*)_title_format#', $name, $slug )
+				preg_match( '#aiosp_(.*)_title_format#', (string) $name, $slug )
 			) {
-				if ( empty( $slug ) && empty( $slug[1] ) ) {
+				if ( empty( $slug[1] ) ) {
 					continue;
 				}
 
@@ -475,7 +474,7 @@ class GeneralSettings {
 			empty( $this->oldOptions['aiosp_skip_excerpt'] )
 		) {
 			foreach ( aioseo()->helpers->getPublicPostTypes() as $postType ) {
-				if ( empty( $postType['hasExcerpt'] ) ) {
+				if ( empty( $postType['supports']['excerpt'] ) ) {
 					continue;
 				}
 
@@ -649,13 +648,16 @@ class GeneralSettings {
 			'soundcloud.com' => 'soundCloudUrl',
 			'wikipedia.org'  => 'wikipediaUrl',
 			'myspace.com'    => 'myspaceUrl',
+			'wordpress.org'  => 'wordpressUrl',
+			'bsky.app'       => 'blueskyUrl',
+			'threads.net'    => 'threadsUrl'
 		];
 
 		$found = false;
 		foreach ( $supportedNetworks as $url => $settingName ) {
 			$url = aioseo()->helpers->escapeRegex( $url );
 			foreach ( $socialUrls as $socialUrl ) {
-				if ( preg_match( "/.*$url.*/", $socialUrl ) ) {
+				if ( preg_match( "/.*$url.*/", (string) $socialUrl ) ) {
 					aioseo()->options->social->profiles->urls->$settingName = esc_url( wp_strip_all_tags( $socialUrl ) );
 					$found = true;
 				}
@@ -694,11 +696,6 @@ class GeneralSettings {
 				aioseo()->options->searchAppearance->global->schema->person = intval( $this->oldOptions['aiosp_schema_person_user'] );
 			}
 		}
-
-		if ( ! empty( $this->oldOptions['aiosp_schema_contact_type'] ) ) {
-			aioseo()->options->searchAppearance->global->schema->contactType       = 'manual';
-			aioseo()->options->searchAppearance->global->schema->contactTypeManual = aioseo()->helpers->sanitizeOption( $this->oldOptions['aiosp_schema_contact_type'] );
-		}
 	}
 
 	/**
@@ -714,7 +711,7 @@ class GeneralSettings {
 		}
 
 		$phoneNumber = aioseo()->helpers->sanitizeOption( $this->oldOptions['aiosp_schema_phone_number'] );
-		if ( ! preg_match( '#\+\d+#', $phoneNumber ) ) {
+		if ( ! preg_match( '#\+\d+#', (string) $phoneNumber ) ) {
 			$notification = Models\Notification::getNotificationByName( 'v3-migration-schema-number' );
 			if ( $notification->notification_name ) {
 				return;
@@ -861,5 +858,26 @@ class GeneralSettings {
 			}
 		}
 		aioseo()->options->deprecated->searchAppearance->advanced->excludePosts = $excludedPosts;
+	}
+
+	/**
+	 * Migrates the deprecated "No Pagination for Canonical URLs" setting.
+	 *
+	 * @since 4.5.9
+	 *
+	 * @return void
+	 */
+	private function migrateNoPaginationForCanonicalUrls() {
+		if ( empty( $this->oldOptions['aiosp_no_paged_canonical_links'] ) ) {
+			return;
+		}
+
+		$deprecatedOptions = aioseo()->internalOptions->deprecatedOptions;
+		if ( ! in_array( 'noPaginationForCanonical', $deprecatedOptions, true ) ) {
+			$deprecatedOptions[]                         = 'noPaginationForCanonical';
+			aioseo()->internalOptions->deprecatedOptions = $deprecatedOptions;
+		}
+
+		aioseo()->options->deprecated->searchAppearance->advanced->noPaginationForCanonical = true;
 	}
 }

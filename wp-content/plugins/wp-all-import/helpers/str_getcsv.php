@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable WordPress.WP.AlternativeFunctions
+if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! function_exists('str_getcsv')):
 /**
  * str_getcsv function for PHP less than 5.3

@@ -15,12 +15,12 @@ body.iframe { background: #fff; }
 	display: none;
 }
 
-.photonic-flow-option-name {font-weight: bold;}
-.photonic-flow-option-name input, .photonic-flow-option-name select {font-weight: normal; }
+.photonic-wizard-option-name {font-weight: bold;}
+.photonic-wizard-option-name input, .photonic-wizard-option-name select {font-weight: normal; }
 .photonic-required { color: #d00; margin: auto 0.5em; }
 .photonic-required abbr[title] { text-decoration: underline dotted #666; }
 
-.photonic-flow-provider .photonic-provider { width: 120px; height: 120px; background: url(../../images/Admin.svg) no-repeat; background-size: 100%; margin: 0 auto; display: inline-block; cursor: pointer; }
+.photonic-flow-provider .photonic-provider { width: 120px; height: 120px; background: url(../../images/Admin.svg?ver=3.20) no-repeat; background-size: 100%; margin: 0 auto; display: inline-block; cursor: pointer; }
 .photonic-flow-provider-wp .photonic-provider, .photonic-flow-provider-default .photonic-provider { background-position: 0 -600px; }
 .photonic-flow-provider-flickr .photonic-provider { background-position: 0 -120px; }
 .photonic-flow-provider-smugmug .photonic-provider { background-position: 0 -360px; }
@@ -28,6 +28,7 @@ body.iframe { background: #fff; }
 .photonic-flow-provider-google .photonic-provider { background-position: 0 -840px; }
 .photonic-flow-provider-zenfolio .photonic-provider { background-position: 0 -480px; }
 .photonic-flow-provider-instagram .photonic-provider { background-position: 0 -240px; }
+.photonic-flow-provider-deviantart .photonic-provider { background-position: 0 -3120px; }
 
 #photonic-flow-navigation { bottom: 0; left: 0; position: fixed; display: inline-block; width: 100%; background: #fff; padding: 1em 0; }
 #photonic-flow-navigation a { padding: 1em 2em; background: #0085ba; border-color: #0073aa #006799 #006799; color: #fff; font-size: 1.2em; text-decoration: none; }
@@ -58,9 +59,10 @@ body.iframe { background: #fff; }
 span[aria-hidden="true"] {display:none;}
 span[aria-hidden="false"] {display:block;}
 
-.photonic-flow-error { color: #c00; padding: 1em; border: 0 solid #c00; border-left-width: 3px; background: lavenderblush; }
+.photonic-flow-error, .photonic-flow-notice { color: #c00; padding: 1em; border: 0 solid #c00; border-left-width: 3px; background: lavenderblush; }
 .photonic-editor-info { color: #00c; border: 0 solid #00c; border-left-width: 3px; background: aliceblue; }
 .photonic-editor-info div { padding: 1em; }
+.photonic-editor-info ul { list-style: disc inside; }
 
 .photonic-flow-selector-container { display: inline-block; width: 100%; margin: 1em 0.5em; }
 .photonic-flow-selector-info { margin: 0 0.2em; }
@@ -91,7 +93,7 @@ a.photonic-remove-date-filter span, a.photonic-remove-date-range-filter span { v
 .photonic-flow-strip-style .photonic-strip-style {
 	width: 150px;
 	height: 150px;
-	background: url(../../images/Admin.svg) no-repeat;
+	background: url(../../images/Admin.svg?ver=3.10) no-repeat;
 	background-size: 100%;
 	margin: 0 auto;
 	display: inline-block;
@@ -101,6 +103,7 @@ a.photonic-remove-date-filter span, a.photonic-remove-date-range-filter span { v
 .photonic-flow-layout-circle .photonic-layout { background-position: 0 -1500px; }
 .photonic-flow-layout-random .photonic-layout { background-position: 0 -1650px; }
 .photonic-flow-layout-masonry .photonic-layout { background-position: 0 -1800px; }
+.photonic-flow-layout-masonry-horizontal .photonic-layout { background-position: 0 -3750px; }
 .photonic-flow-layout-mosaic .photonic-layout { background-position: 0 -1950px; }
 .photonic-flow-layout-slideshow .photonic-layout { background-position: 0 -1200px; }
 
@@ -117,3 +120,12 @@ a.photonic-remove-date-filter span, a.photonic-remove-date-range-filter span { v
 
 .thumb-controls { text-align: right; }
 .photonic-flow-field input[type="text"].search-thumbs { display: inline; background: url(../../images/Admin.svg) no-repeat right -576px; background-size: 24px; height: 24px; }
+
+.fade-in {
+	animation: fadeIn ease 1s;
+}
+
+@keyframes fadeIn {
+	0% {opacity:0;}
+	100% {opacity:1;}
+}

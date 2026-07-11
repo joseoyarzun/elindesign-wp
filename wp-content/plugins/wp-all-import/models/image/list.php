@@ -45,6 +45,7 @@ class PMXI_Image_List extends PMXI_Model_List {
         foreach($this->getBy($args)->convertRecords() as $imageRecord) {
             if ( ! $imageRecord->isEmpty() ) {
                 // only allow the filter if not matching by Filename
+                // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
                 $attid = ($allow_filter) ? apply_filters('wp_all_import_get_existing_image', $imageRecord->attachment_id) : $imageRecord->attachment_id;
 
                 $attch = get_post($attid);

@@ -1,10 +1,10 @@
-=== User Feedback - Create Interactive Feedback Form, User Surveys, and Polls in Seconds  ===
+=== UserFeedback - Create Interactive Feedback Form, User Surveys, and Polls in Seconds  ===
 Contributors: chriscct7, smub
 Donate link: http://www.wpbeginner.com/wpbeginner-needs-your-help/
-Tags: analytics,feedback,surveys,user feedback, website feedback,insights
+Tags: analytics,feedback,surveys,user feedback, website feedback,heatmaps
 Requires at least: 5.9.0
-Tested Up To: 6.4.1
-Stable tag: 1.0.12
+Tested Up To: 6.9
+Stable tag: 1.11.2
 Requires PHP: 5.6
 License: GPL v3
 
@@ -23,9 +23,9 @@ The UserFeedback survey widget will show up on your website automatically, allow
 
 You can create an unlimited number of UserFeedback surveys, so that you can gather user feedback for specific types of products, certain blog posts, or even target users who have already made a purchase.
 
-Want to run an NPS&reg; survey? No problem! With our built in templates and reporting you can launch a survey like this in seconds.  
+Want to run an NPS&reg; survey? No problem! With our built in templates and reporting you can launch a survey like this in seconds.
 
-Want to run a custom poll from your website visitors? With in-depth analytics reporting, you can easily run any type of survey and collect user feedback.  
+Want to run a custom poll from your website visitors? With in-depth analytics reporting, you can easily run any type of survey and collect user feedback.
 
 
 > <strong>UserFeedback Pro</strong><br />
@@ -49,19 +49,24 @@ We want to help small businesses compete against the big guys. That's why we don
 * Powerful Reporting - See feedback and results in realtime, right inside your WordPress Dashboard
 * Unlimited Surveys - Create an unlimited number of user feedback surveys on your website
 * Unlimited Questions - Ask any number of questions inside each survey
+* Heatmaps - Visually see exactly what your users are clicking and focusing with device and UTM filtering
+* Net Promoter Scores &reg; and Reports - Use our beautiful custom report to see feedback sorted by passives, promoters, and detractors
 * Question types - Use text boxes, radio buttons, checkboxes, star ratings to collect feedback
 * Page Level targeting - Specify surveys to run on your entire site or certain pages like your posts
 * Device targeting -  Launch surveys for specific devices like mobile, desktop, or tablet for feedback
 * Conditional Logic - Display surveys automatically to users who have not completed a specific survey
 * Time based Targeting - Run user feedback surveys during certain dates or times or schedule in the future
+* Advanced Targeting - Cookie based survey targeting, URL based, and more options for power users
 * Question Templates - Use our 20+ prebuilt templates to collect feedback instantly for all types of situations and websites
 * Notifications - Send user feedback responses instantly to your team for immediate action or follow up
 * MonsterInsights Integration - Automatically works with Google Analytics and MonsterInsights so you can segment survey takers
 * Branding and Customization - Add your logo and colors to match your website's branding standards
-* Customized Confirmations - Customize thank you message or redirect users to a special page
+* Customized Confirmations - Customize thank you message or redirect users to a specific page page
 * Required Fields and Random Answers - Ensure all of your questions are answered fully
 * Data / Export - Analyze your results offline with our CSV export
-* Shortcodes - Embed a survey on a page or pop-up to collect in-the-moment feedback.
+* Geo Restricted Surveys - Easily limit surveys to a specific country to improve relevance
+* Shortcodes - Embed a survey on a page or pop-up to collect in-the-moment feedback
+* AI Summaries - Summarize verbatim feedback with actionable insights with a single click
 * Have an idea for something else? Let us know and we'll build it!
 
 After reading this full feature list, you can probably imagine how powerful our UserFeedback will be for getting new insights to start optimizing your website engagement in no time.
@@ -114,6 +119,95 @@ For documentation, tutorials, FAQ and videos check out: [UserFeedback Documentat
 4. Want more features? <a href=href="https://www.userFeedback.com/?utm_source=wprepo&utm_medium=link&utm_campaign=lite" rel="friend" title="UserFeedback">Purchase UserFeedback Pro</a>!
 
 == Changelog ==
+= 1.11.2: May 21, 2026 =
+- Updates: Various bug fixes and improvements.
+
+= 1.11.1: March 12, 2026 =
+- Updates: Various bug fixes and improvements.
+
+= 1.11.0: March 11, 2026 =
+- New: Email Survey Widget, an easy way to capture instant feedback directly from email campaigns.
+- Updates: Various bug fixes and improvements.
+
+= 1.10.1: December 9, 2025 =
+- Fixed: Various bug fixes and enhancements
+
+= 1.10.0: November 19, 2025 =
+- New: Date Question Type
+- Fixed: Various bug fixes and enhancements
+
+= 1.9.0: October 14, 2025 =
+- New: Easily send survey notifications and results to Slack (or any webhook)!
+- Fixed: Various bug fixes and enhancements
+
+= 1.8.0: September 2, 2025 =
+- New: Google Spreadsheets integration! Automatically store your Survey replies in a Google Spreadsheet
+- Fixed: Minor updates and bug fixes
+
+= 1.7.0: July 9, 2025 =
+- New: Our Post Ratings feature allows you to collect feedback automatically on every blog post to increase engagement from your website.
+- Fixed: Minor updates and bug fixes
+
+= 1.6.0: May 26, 2025 =
+- New: Geo Restrictions! Display surveys based on your visitors' location
+- Fixed: Minor updates and bug fixes
+
+= 1.5.2: April 11, 2025 =
+- Fixed: Minor updates and bug fixes
+
+= 1.5.1: March 27, 2025 =
+- Fixed: Minor updates and bug fixes
+
+= 1.5.0: March 26, 2025 =
+- New: Heatmaps! See exactly where your visitors are clicking and engaging
+- Fixed: Minor updates and bug fixes
+
+= 1.4.0: January 9, 2025 =
+- New: Image and Icon question types
+- New: Conditional Redirect options
+- Fixed: Minor updates and bug fixes
+
+= 1.3.0: December 11, 2024 =
+- New: Advanced Targeting Options
+- Fixed: Minor updates and bug fixes
+
+= 1.2.0: October 28, 2024 =
+- New: NPS Survey and Reports! Now you can collect NPS survey results.
+- Fixed: Minor updates and bug fixes
+
+= 1.1.1: July 29, 2024 =
+- Fix: Bug fixes
+
+= 1.1.0: July 29, 2024 =
+- New: Survey Summaries Powered by AI. Get actionable insights in seconds and uncover hidden trends.
+
+= 1.0.18: July 24, 2024 =
+- Enhancement: We improved the addons fetch requests.
+
+= 1.0.17: July 17, 2024 =
+- Update: Bug fixes.
+
+= 1.0.16: July 2, 2024 =
+- Update: Bug fixes.
+
+= 1.0.15: April 25, 2024 =
+- Enhancement: We have improved the trigger for a user's exit intent to show Surveys.
+- Fix: We fixed an issue occurring in the API survey/responses endpoint.
+- Fix: We fixed an issue related to the question type: Net Promoter Score.
+- Fix: We fixed an issue related to the Weekly Email Summaries.
+- Fix: We fixed an issue related with the dashboard widget UI.
+- Fix: We fixed an issue related to the survey conditional logic.
+- Fix: We fixed an issue related to the Notifications.
+- Fix: We fixed some JavaScript error occurring while editing a survey.
+
+= 1.0.14: February 20, 2024 =
+- Enhancement: We improved the plugin security.
+- Fix: We solved an issue occurring with MonsterInsights.
+
+= 1.0.13: December 21, 2023 =
+- Fix: We fixed an issue with checkbox questions
+- Fix: We fixed a layout issue in the Survey/Notifications screen.
+
 = 1.0.12: November 30, 2023 =
 - Enhancement: We improved compatibility towards WordPress 6.4.1.
 - Enhancement: We have improved some elements of the UI.

@@ -1,12 +1,19 @@
 <?php
 
-class UserFeedback_Survey_Template_Restaurant_Menu extends UserFeedback_Survey_Template {
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
+class UserFeedback_Survey_Template_Restaurant_Menu extends UserFeedback_Survey_Template {
 
 	/**
 	 * @inheritdoc
 	 */
 	protected $template_key = 'restaurant-menu';
+
+	protected $categories = array(
+		'ecommerce'
+	);
 
 	/**
 	 * @inheritdoc
@@ -17,14 +24,16 @@ class UserFeedback_Survey_Template_Restaurant_Menu extends UserFeedback_Survey_T
 	 * @inheritdoc
 	 */
 	public function get_name() {
-		return __( 'Restaurant Menu Survey', 'userfeedback' );
+		return __( 'Restaurant Menu Survey', 'userfeedback-lite' );
 	}
 
 	/**
 	 * @inheritdoc
 	 */
 	public function get_description() {
-		return __( 'See which items to add to your menu.', 'userfeedback' );
+		return array(
+			'title' => __( 'See which items to add to your menu.', 'userfeedback-lite' )
+		);
 	}
 
 	/**
@@ -37,7 +46,7 @@ class UserFeedback_Survey_Template_Restaurant_Menu extends UserFeedback_Survey_T
 			'questions' => array(
 				array(
 					'type'  => 'long-text',
-					'title' => __( 'What items should we add to our menu? ', 'userfeedback' ),
+					'title' => __( 'What items should we add to our menu? ', 'userfeedback-lite' ),
 				),
 			),
 		);

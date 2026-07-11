@@ -99,7 +99,7 @@ class Field extends WPForms_Field {
 	 *
 	 * @return array
 	 */
-	public function field_properties( $properties, $field, $form_data ) { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+	public function field_properties( $properties, $field, $form_data ) {
 
 		// Remove primary input.
 		unset( $properties['inputs']['primary'] );
@@ -248,7 +248,7 @@ class Field extends WPForms_Field {
 			[
 				'slug'    => 'show_price_after_labels',
 				'value'   => isset( $field['show_price_after_labels'] ) ? '1' : '0',
-				'desc'    => esc_html__( 'Show price after item labels', 'wpforms-lite' ),
+				'desc'    => esc_html__( 'Show Price After Item Labels', 'wpforms-lite' ),
 				'tooltip' => esc_html__( 'Check this option to show price of the item after the label.', 'wpforms-lite' ),
 			],
 			false
@@ -373,7 +373,7 @@ class Field extends WPForms_Field {
 	 * @param array $form_data  Form data and settings.
 	 *
 	 * @noinspection HtmlUnknownAttribute*/
-	public function field_display( $field, $deprecated, $form_data ) { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+	public function field_display( $field, $deprecated, $form_data ) { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
 
 		$container         = $field['properties']['input_container'];
 		$field_placeholder = ! empty( $field['placeholder'] ) ? $field['placeholder'] : '';

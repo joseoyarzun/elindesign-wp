@@ -1,6 +1,4 @@
 <?php
-// phpcs:ignoreFile
-
 namespace WooCommerce\Facebook\Jobs;
 
 use Automattic\WooCommerce\ActionSchedulerJobFramework\Utilities\BatchQueryOffset;
@@ -16,7 +14,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class GenerateProductFeed extends AbstractChainedJob {
 
-	use BatchQueryOffset, LoggingTrait;
+	use BatchQueryOffset;
+	use LoggingTrait;
 
 	/**
 	 * Called before starting the job.
@@ -35,6 +34,8 @@ class GenerateProductFeed extends AbstractChainedJob {
 		$feed_handler = new \WC_Facebook_Product_Feed();
 		$feed_handler->rename_temporary_feed_file_to_final_feed_file();
 		facebook_for_woocommerce()->get_tracker()->save_batch_generation_time();
+
+		do_action( 'wc_facebook_feed_generation_completed' );
 	}
 
 	/**
@@ -70,7 +71,7 @@ class GenerateProductFeed extends AbstractChainedJob {
 		return array_map( 'intval', $product_ids );
 	}
 
-/**
+	/**
 	 * Processes a batch of items.
 	 *
 	 * @since 1.1.0
@@ -83,24 +84,44 @@ class GenerateProductFeed extends AbstractChainedJob {
 	protected function process_items( array $items, array $args ) {
 		// Grab start time.
 		$start_time = microtime( true );
+
 		/*
 		 * Pre-fetch full product objects.
 		 * Variable products will be filtered out here since we don't need them for the feed. It's important to not
 		 * filter out variable products in ::get_items_for_batch() because if a batch only contains variable products
 		 * the job will end prematurely thinking it has nothing more to process.
 		 */
-		$products = wc_get_products(
-			array(
-				'type'    => array( 'simple', 'variation' ),
-				'include' => $items,
-				'orderby' => 'none',
-				'limit'   => $this->get_batch_size(),
-			)
+		$query_args = array(
+			'type'    => array( 'simple', 'variation' ),
+			'include' => $items,
+			'orderby' => 'none',
+			'limit'   => $this->get_batch_size(),
 		);
+
+		// Add language parameter to prevent Polylang/WPML from filtering by current language context
+		$integration              = \WooCommerce\Facebook\Integrations\IntegrationRegistry::get_active_localization_integration();
+		$is_language_feed_enabled = facebook_for_woocommerce()->get_integration()->is_language_override_feed_generation_enabled();
+
+		if ( $integration && $is_language_feed_enabled ) {
+			// When localization plugin is active AND language override feeds are enabled,
+			// only retrieve default language products
+			$default_language = $integration->get_default_language();
+			if ( $default_language ) {
+				$query_args['lang'] = $default_language;
+			}
+		} else {
+			// When no localization plugin is active OR language override feeds are disabled,
+			// retrieve all products
+			$query_args['lang'] = 'all';
+		}
+
+		$products     = wc_get_products( $query_args );
 		$feed_handler = new \WC_Facebook_Product_Feed();
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 		$temp_feed_file = fopen( $feed_handler->get_temp_file_path(), 'a' );
 		$feed_handler->write_products_feed_to_temp_file( $products, $temp_feed_file );
 		if ( is_resource( $temp_feed_file ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			fclose( $temp_feed_file );
 		}
 		facebook_for_woocommerce()->get_tracker()->increment_batch_generation_time( microtime( true ) - $start_time );
@@ -109,6 +130,9 @@ class GenerateProductFeed extends AbstractChainedJob {
 	/**
 	 * Empty function to satisfy parent class requirements.
 	 * We don't use it because we are processing the whole batch at once in process_items.
+	 *
+	 * @param mixed $item The item to process.
+	 * @param array $args The args for the job.
 	 */
 	protected function process_item( $item, array $args ) {}
 
@@ -138,5 +162,4 @@ class GenerateProductFeed extends AbstractChainedJob {
 	protected function get_batch_size(): int {
 		return 15;
 	}
-
 }
