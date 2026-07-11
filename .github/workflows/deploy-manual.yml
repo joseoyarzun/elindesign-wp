@@ -11,10 +11,17 @@ on:
 
 jobs:
   deploy:
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show branch guard
+        shell: bash
+        run: |
+          echo "Deploy branch: ${{ github.ref_name }}"
+          echo "This workflow is restricted to branch 'main'."
 
       - name: Validate required secrets
         shell: bash
