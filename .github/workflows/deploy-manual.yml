@@ -3,6 +3,14 @@ name: Deploy WP Code (Manual)
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: "Deployment target"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
       ref:
         description: "Branch, tag, or commit to deploy (default: main)"
         required: true
@@ -16,45 +24,56 @@ on:
 
 jobs:
   deploy:
-    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ inputs.target == 'dev' && secrets.DEPLOY_DEV_HOST || secrets.DEPLOY_HOST }}
+      DEPLOY_PORT: ${{ inputs.target == 'dev' && secrets.DEPLOY_DEV_PORT || secrets.DEPLOY_PORT }}
+      DEPLOY_USER: ${{ inputs.target == 'dev' && secrets.DEPLOY_DEV_USER || secrets.DEPLOY_USER }}
+      DEPLOY_PATH: ${{ inputs.target == 'dev' && secrets.DEPLOY_DEV_PATH || secrets.DEPLOY_PATH }}
+      DEPLOY_SSH_KEY: ${{ inputs.target == 'dev' && secrets.DEPLOY_DEV_SSH_KEY || secrets.DEPLOY_SSH_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Show branch guard
+      - name: Validate deployment rules
         shell: bash
         run: |
-          echo "Deploy branch: ${{ github.ref_name }}"
+          echo "Deploy trigger branch: ${{ github.ref_name }}"
+          echo "Deploy target: ${{ inputs.target }}"
           echo "Deploy ref: ${{ inputs.ref }}"
-          echo "This workflow is restricted to branch 'main'."
+
+          if [[ "${{ inputs.target }}" == "prod" && "${{ inputs.ref }}" != "main" ]]; then
+            echo "Production deployments are allowed only with ref=main"
+            exit 1
+          fi
 
       - name: Validate required secrets
         shell: bash
         run: |
-          test -n "${{ secrets.DEPLOY_HOST }}" || (echo "Missing DEPLOY_HOST" && exit 1)
-          test -n "${{ secrets.DEPLOY_USER }}" || (echo "Missing DEPLOY_USER" && exit 1)
-          test -n "${{ secrets.DEPLOY_PATH }}" || (echo "Missing DEPLOY_PATH" && exit 1)
-          test -n "${{ secrets.DEPLOY_SSH_KEY }}" || (echo "Missing DEPLOY_SSH_KEY" && exit 1)
+          test -n "${DEPLOY_HOST}" || (echo "Missing deploy host secret for target=${{ inputs.target }}" && exit 1)
+          test -n "${DEPLOY_USER}" || (echo "Missing deploy user secret for target=${{ inputs.target }}" && exit 1)
+          test -n "${DEPLOY_PATH}" || (echo "Missing deploy path secret for target=${{ inputs.target }}" && exit 1)
+          test -n "${DEPLOY_SSH_KEY}" || (echo "Missing deploy SSH key secret for target=${{ inputs.target }}" && exit 1)
 
       - name: Prepare SSH key
         shell: bash
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "${DEPLOY_SSH_KEY}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p "${{ secrets.DEPLOY_PORT || '22' }}" "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          PORT="${DEPLOY_PORT:-22}"
+          ssh-keyscan -p "${PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
 
       - name: Sync full WordPress mirror to server
         shell: bash
         run: |
           set -euo pipefail
-          PORT="${{ secrets.DEPLOY_PORT || '22' }}"
-          HOST="${{ secrets.DEPLOY_HOST }}"
-          USER="${{ secrets.DEPLOY_USER }}"
-          REMOTE_PATH="${{ secrets.DEPLOY_PATH }}"
+          PORT="${DEPLOY_PORT:-22}"
+          HOST="${DEPLOY_HOST}"
+          USER="${DEPLOY_USER}"
+          REMOTE_PATH="${DEPLOY_PATH}"
 
           if [[ "${{ inputs.dry_run }}" == "true" ]]; then
             DRY='--dry-run'
@@ -74,8 +93,8 @@ jobs:
         if: ${{ inputs.dry_run == false }}
         shell: bash
         run: |
-          PORT="${{ secrets.DEPLOY_PORT || '22' }}"
-          HOST="${{ secrets.DEPLOY_HOST }}"
-          USER="${{ secrets.DEPLOY_USER }}"
-          REMOTE_PATH="${{ secrets.DEPLOY_PATH }}"
+          PORT="${DEPLOY_PORT:-22}"
+          HOST="${DEPLOY_HOST}"
+          USER="${DEPLOY_USER}"
+          REMOTE_PATH="${DEPLOY_PATH}"
           ssh -p "${PORT}" "${USER}@${HOST}" "rm -rf ${REMOTE_PATH}/wp-content/cache/* || true"

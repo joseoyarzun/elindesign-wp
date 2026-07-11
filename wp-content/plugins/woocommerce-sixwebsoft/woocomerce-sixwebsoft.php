@@ -74,15 +74,15 @@ function custom_attribute($product) {
 
 function calc_price($array) {
 
-	$goldprice = $array['goldprice'];
-	$laborcost = $array['laborcost'];
-	$size = $array['size'];
-	$width = $array['width'];
-	$thickness = $array['thickness'];
+	$goldprice = six_to_float($array['goldprice']);
+	$laborcost = six_to_float($array['laborcost']);
+	$size = six_to_float($array['size']);
+	$width = six_to_float($array['width']);
+	$thickness = six_to_float($array['thickness']);
 	$metal = $array['metal'];
-	$engravement = $array['engravement'];
-	$stone = $array['stone'];
-	$density = $array['density'];
+	$engravement = six_to_float($array['engravement']);
+	$stone = six_to_float($array['stone']);
+	$density = six_to_float($array['density']);
 
 	/*if($engravement == 'Straight' || $engravement == 'Cursive')
 											{
@@ -100,11 +100,21 @@ function calc_price($array) {
 	$total_price = $total_price + $engravement;
 	$total_price = $total_price + $stone;
 
-	$formated_price = number_format($total_price,0,'.',' ');
-	
-	//return $total_price = round($formated_price);
-	return $total_price = $formated_price;
+	return max(0, round($total_price, 2));
 
+}
+
+function six_to_float($value) {
+	if (is_array($value)) {
+		$value = reset($value);
+	}
+	$value = trim((string) $value);
+	$value = str_replace(' ', '', $value);
+	$value = str_replace(',', '.', $value);
+	if ($value === '' || !is_numeric($value)) {
+		return 0.0;
+	}
+	return (float) $value;
 }
 
 //  The following goes inside the constructor ##
@@ -226,8 +236,8 @@ function update_custom_price($cart_object) {
 				'density' => get_options_six($POST['metal'])[2],
 			);
 			$pp = calc_price($data);
-			
-			$value['data']->set_price($pp);
+
+			$value['data']->set_price((float) $pp);
 		}
 
 	}
@@ -253,8 +263,8 @@ function sv_change_product_price_cart($price, $cart_item, $cart_item_key) {
 			'density' => get_options_six($POST['metal'])[2],
 		);
 		$pp = calc_price($data);
-		
-		return '<span class="woocommerce-Price-amount amount">' . $pp . '&nbsp;<span class="woocommerce-Price-currencySymbol">' . get_woocommerce_currency_symbol() . '</span></span>';
+
+		return wc_price((float) $pp);
 	} else {
 		return $price;
 	}
@@ -638,7 +648,14 @@ if (!empty($_GET['action']) && $_GET['action'] == 'auto_varient') {
 	$data['stone'] = get_options_six($POST['stone'])[0];
 	$data['engravement'] = get_options_six($POST['engravement'])[0];
 	$data['surface'] = $POST['surface'];
-	echo json_encode(array("status" => "true", "price" => $total_price, "data" => $data));
+	$formatted_price = number_format((float) $total_price, 0, '.', ' ');
+	echo json_encode(array(
+		"status" => "true",
+		"price" => $formatted_price,
+		"raw_price" => (float) $total_price,
+		"price_html" => wc_price((float) $total_price),
+		"data" => $data,
+	));
 	die();
 
 }

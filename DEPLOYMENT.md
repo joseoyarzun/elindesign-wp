@@ -32,20 +32,31 @@ Repository model
   git push origin main
 
 4) Configure GitHub Secrets
-- DEPLOY_HOST: server hostname or IP
-- DEPLOY_PORT: ssh port (optional, defaults to 22)
-- DEPLOY_USER: ssh user
-- DEPLOY_PATH: absolute path to WP root on server
-- DEPLOY_SSH_KEY: private key for DEPLOY_USER
+- Production target secrets:
+  - DEPLOY_HOST
+  - DEPLOY_PORT (optional, defaults to 22)
+  - DEPLOY_USER
+  - DEPLOY_PATH
+  - DEPLOY_SSH_KEY
+- Development target secrets (for dev.elindesign.se):
+  - DEPLOY_DEV_HOST
+  - DEPLOY_DEV_PORT (optional, defaults to 22)
+  - DEPLOY_DEV_USER
+  - DEPLOY_DEV_PATH
+  - DEPLOY_DEV_SSH_KEY
 
 5) Deploy full mirror from GitHub Actions
 - Open Actions -> Deploy WP Code (Manual)
-- Run with:
-  - ref=main
+- For development deploys (dev.elindesign.se):
+  - target=dev
+  - ref=your-branch-or-main
   - dry_run=true (preview)
-- If output is correct, run again with:
-  - ref=main
-  - dry_run=false
+  - then dry_run=false
+- For production deploys:
+  - target=prod
+  - ref=main (enforced)
+  - dry_run=true (preview)
+  - then dry_run=false
 
 Rollback
 - Create a tag before risky changes:
@@ -54,6 +65,7 @@ Rollback
 - To rollback, run workflow with ref=pre-upgrade-YYYYMMDD.
 
 Important
-- Workflow is restricted to branch main.
+- Production deploys are restricted to ref=main.
+- Development deploys can use any branch ref.
 - Deploy excludes are managed in .github/deploy-excludes.txt.
 - DB changes are not handled by this workflow.

@@ -87,9 +87,18 @@ foreach ($fields[0] as $key => $value) {
 									data: jQuery(".cart").serialize(),
 									success:function(r){
 										console.log(r);
-										if(r.status){
-											jQuery(".summary.entry-summary .woocommerce-Price-amount.amount").html(r.price+'&nbsp;<span class="woocommerce-Price-currencySymbol"><?=get_woocommerce_currency_symbol();?></span>');
-											jQuery(".summary.entry-summary del").html();
+											if(r.status){
+												var rawPrice = parseFloat(r.raw_price || 0);
+												if (isNaN(rawPrice) || rawPrice <= 0) {
+													return;
+												}
+
+												if (r.price_html) {
+													jQuery(".summary.entry-summary p.price").html(r.price_html);
+												} else {
+													jQuery(".summary.entry-summary .woocommerce-Price-amount.amount").html(r.price+'&nbsp;<span class="woocommerce-Price-currencySymbol"><?=get_woocommerce_currency_symbol();?></span>');
+												}
+												jQuery(".summary.entry-summary del").html();
 											jQuery("#cus__metal").val(r.data.metal);
 											jQuery("#cus__stone").val(r.data.stone);
 											jQuery("#cus__engravement").val(r.data.engravement);
@@ -97,7 +106,7 @@ foreach ($fields[0] as $key => $value) {
 											jQuery("#cus__size").val(r.data.size);
 											jQuery("#cus__thickness").val(r.data.thickness);
 											jQuery("#cus__width").val(r.data.width);
-											jQuery("#cus__price").val(r.price);
+											jQuery("#cus__price").val(rawPrice);
 											jQuery("#cus__laborcost").val(r.data.laborcost);
 										}
 
