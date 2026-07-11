@@ -39,3 +39,13 @@ vendor/
 .idea/
 .vscode/
 Thumbs.db
+wp-admin/
+wp-includes/
+wp-content/languages/
+wp-content/plugins/*
+!wp-content/plugins/woocommerce-scancoordesign/
+!wp-content/plugins/woocommerce-scancoordesign/**
+!wp-content/plugins/woocommerce-sixwebsoft/
+!wp-content/plugins/woocommerce-sixwebsoft/**
+!wp-content/plugins/product-categories-bottom-description-woo-comerce/
+!wp-content/plugins/product-categories-bottom-description-woo-comerce/**
